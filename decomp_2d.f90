@@ -169,7 +169,7 @@ module decomp_2d
   integer, allocatable, dimension(:) :: local_to_global_col, local_to_global_row
   type(ncclUniqueId) :: nccl_uid_2decomp
   type(ncclComm) :: nccl_comm_2decomp
-  integer cuda_stat, ierr
+  integer cuda_stat
   integer(kind=cuda_stream_kind) :: cuda_stream_2decomp
 #endif
 #endif
@@ -458,9 +458,13 @@ contains
 #if defined(_GPU)
 #if defined(_NCCL)
     call MPI_COMM_RANK(DECOMP_2D_COMM_COL,col_rank,ierror)
+    if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_COMM_RANK")
     call MPI_COMM_RANK(DECOMP_2D_COMM_ROW,row_rank,ierror)
+    if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_COMM_RANK")
     call MPI_COMM_SIZE(DECOMP_2D_COMM_COL,col_comm_size,ierror)
+    if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_COMM_SIZE")
     call MPI_COMM_SIZE(DECOMP_2D_COMM_ROW,row_comm_size,ierror)
+    if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_COMM_SIZE")
 
     allocate(local_to_global_col(col_comm_size), local_to_global_row(row_comm_size))
     
@@ -469,13 +473,16 @@ contains
     local_to_global_col(col_rank+1) = nrank
     local_to_global_row(row_rank+1) = nrank
     
-    call mpi_allreduce(MPI_IN_PLACE,local_to_global_col,col_comm_size,MPI_INTEGER,MPI_SUM,DECOMP_2D_COMM_COL,ierr)
-    call mpi_allreduce(MPI_IN_PLACE,local_to_global_row,row_comm_size,MPI_INTEGER,MPI_SUM,DECOMP_2D_COMM_ROW,ierr)
+    call mpi_allreduce(MPI_IN_PLACE,local_to_global_col,col_comm_size,MPI_INTEGER,MPI_SUM,DECOMP_2D_COMM_COL,ierror)
+    if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_ALLREDUCE")
+    call mpi_allreduce(MPI_IN_PLACE,local_to_global_row,row_comm_size,MPI_INTEGER,MPI_SUM,DECOMP_2D_COMM_ROW,ierror)
+    if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_ALLREDUCE")
 
     if (nrank .eq. 0) then
        nccl_stat = ncclGetUniqueId(nccl_uid_2decomp)
     end if
-    call MPI_Bcast(nccl_uid_2decomp, int(sizeof(ncclUniqueId)), MPI_BYTE, 0, MPI_COMM_WORLD, ierr)
+    call MPI_Bcast(nccl_uid_2decomp, int(sizeof(ncclUniqueId)), MPI_BYTE, 0, MPI_COMM_WORLD, ierror)
+    if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_ALLREDUCE")
 
     nccl_stat = ncclCommInitRank(nccl_comm_2decomp, nproc, nccl_uid_2decomp, nrank)
     cuda_stat = cudaStreamCreate(cuda_stream_2decomp)

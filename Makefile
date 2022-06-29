@@ -27,6 +27,15 @@ AR = ar
 LIBOPT = rcs
 
 #######CMP settings###########
+
+DEBUG_BUILD =
+ifeq ($(BUILD),debug)
+  DEBUG_BUILD = yes
+endif
+ifeq ($(BUILD),dev)
+  DEBUG_BUILD = yes
+endif
+
 ifeq ($(CMP),intel)
   FC = mpiifort
   FFLAGS += -fpp -O3 -mavx2 -march=core-avx2 -mtune=core-avx2
@@ -38,15 +47,24 @@ else ifeq ($(CMP),gcc)
   ifeq "$(shell expr `gfortran -dumpversion | cut -f1 -d.` \>= 10)" "1"
     FFLAGS += -fallow-argument-mismatch
   endif
+
   ifeq ($(BUILD),debug)
     DEFS += -DDEBUG
-    FFLAGS += -g3 -Og
+    FFLAGS += -g -Og
     FFLAGS += -ffpe-trap=invalid,zero -fcheck=all -fimplicit-none
   else
     FFLAGS += -O3 -march=native
     FFLAGS += -fopenmp -ftree-parallelize-loops=12
     LFLAGS += -fopenmp
   endif
+
+  ifeq ($(BUILD),dev)
+    # Add additional, stricter flags
+    FFLAGS += -Wall -Wpedantic
+    FFLAGS += -Wimplicit-procedure -Wimplicit-interface
+    FFLAGS += -Werror
+  endif
+
 else ifeq ($(CMP),nagfor)
   FC = mpinagfor
   FFLAGS += -fpp

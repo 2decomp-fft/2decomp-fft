@@ -11,7 +11,7 @@ GIT_VERSION := $(shell git describe --tag --long --always)
 DEFS = -DDOUBLE_PREC -DVERSION=\"$(GIT_VERSION)\"
 
 LCL = local# local,lad,sdu,archer
-CMP = nvhpc# intel,gcc,nagfor,cray,nvhpc
+CMP = gcc# intel,gcc,nagfor,cray,nvhpc
 FFT = generic# fftw3,fftw3_f03,generic,mkl
 PARAMOD = mpi # multicore,gpu
 

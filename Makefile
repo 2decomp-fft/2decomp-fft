@@ -73,7 +73,7 @@ endif
 
 ### List of files for the main code
 SRCDECOMP = ./decomp_2d.f90 ./glassman.f90 ./fft_$(FFT).f90 
-OBJDECOMP = $(SRCDECOMP:%.f90=%.o)
+OBJDECOMP = $(SRCDECOMP:%.f90=$(OBJDIR)/%.o)
 
 #######FFT settings##########
 ifeq ($(FFT),fftw3)
@@ -100,20 +100,30 @@ else ifeq ($(FFT),cufft)
 endif
 
 #######OPTIONS settings###########
-OPT = -I.
+OPT =
 LINKOPT = $(FFLAGS)
 #-----------------------------------------------------------------------
 # Normally no need to change anything below
 
-all: $(LIBDECOMP)
+OBJDIR = obj
+DECOMPINC = mod
+FFLAGS += -J$(DECOMPINC) -I$(DECOMPINC)
+
+all: $(DECOMPINC) $(OBJDIR) $(LIBDECOMP)
+
+$(DECOMPINC):
+	mkdir $(DECOMPINC)
 
 $(LIBDECOMP) : $(OBJDECOMP)
 	$(AR) $(LIBOPT) $@ $^
 
-$(OBJDECOMP) : ./%.o : ./%.f90
-	$(FC) $(FFLAGS) $(OPT) $(DEFS) $(INC) -c $<
+$(OBJDIR):
+	mkdir $(OBJDIR)
+
+$(OBJDECOMP) : $(OBJDIR)/%.o : ./%.f90
+	$(FC) $(FFLAGS) $(OPT) $(DEFS) $(INC) -c $< -o $@
 
 .PHONY: clean
 
 clean:
-	rm -f *.o *.mod $(LIBDECOMP)
+	rm -f $(OBJDECOMP) $(DECOMPINC)/*.mod $(LIBDECOMP)

@@ -45,5 +45,3 @@ else ifeq ($(CMP),nvhpc)
   #FFLAGS += -cpp -O3 -Minfo=accel -stdpar -acc -target=multicore
   #FFLAGS = -cpp -Mfree -Kieee -Minfo=accel -g -acc -target=gpu -fast -O3 -Minstrument
 endif
-
-CMPSET = yes

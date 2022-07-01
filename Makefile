@@ -27,9 +27,8 @@ AR = ar
 LIBOPT = rcs
 
 #######CMP settings###########
-ifndef CMPSET
-  include Makefile.compilers
-endif
+CMPINC = Makefile.compilers
+include $(CMPINC)
 
 ### List of files for the main code
 SRCDECOMP = ./decomp_2d.f90 ./glassman.f90 ./fft_$(FFT).f90 

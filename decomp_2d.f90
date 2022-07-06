@@ -1487,14 +1487,19 @@ contains
     integer :: ierror
 
     call FIPC_init(comm, ierror)
+    if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "FIPC_init")
 
     ! intra_comm: communicator for processes on this shared memory node
     ! extra_comm: communicator for all rank 0 on each shared memory node
     call FIPC_ctxt_intra_comm(FIPC_ctxt_world, intra_comm, ierror)
+    if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "FIPC_ctxt_intra_comm")
     call FIPC_ctxt_extra_comm(FIPC_ctxt_world, extra_comm, ierror)
+    if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "FIPC_ctxt_extra_comm")
 
     call MPI_COMM_SIZE(intra_comm,  ncores, ierror)
+    if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_COMM_SIZE")
     call MPI_COMM_RANK(intra_comm, my_core, ierror)
+    if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_COMM_RANK")
 
     ! only rank 0 on each shared memory node member of extra_comm
     ! for others extra_comm = MPI_COMM_NULL
@@ -1517,6 +1522,7 @@ contains
     if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_ALLREDUCE")
 
     call FIPC_finalize(ierror)
+    if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "FIPC_finalize")
 
     return
 
@@ -1694,6 +1700,7 @@ contains
     integer :: handle, ierror
 
     call NBC_TEST(handle,ierror)
+    if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "NBC_TEST")
 
     return
   end subroutine transpose_test

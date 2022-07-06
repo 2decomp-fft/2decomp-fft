@@ -1,7 +1,7 @@
 !=======================================================================
 ! This is part of the 2DECOMP&FFT library
-! 
-! 2DECOMP&FFT is a software framework for general-purpose 2D (pencil) 
+!
+! 2DECOMP&FFT is a software framework for general-purpose 2D (pencil)
 ! decomposition. It also implements a highly scalable distributed
 ! three-dimensional Fast Fourier Transform (FFT).
 !
@@ -53,20 +53,20 @@ module decomp_2d
   ! some key global variables
   integer, save, public :: nx_global, ny_global, nz_global  ! global size
 
-  integer, save, public :: nrank  ! local MPI rank 
+  integer, save, public :: nrank  ! local MPI rank
   integer, save, public :: nproc  ! total number of processors
 
-  ! parameters for 2D Cartesian topology 
+  ! parameters for 2D Cartesian topology
   integer, save, dimension(2) :: dims, coord
   logical, save, dimension(2) :: periodic
   integer, save, public :: DECOMP_2D_COMM_CART_X, &
-       DECOMP_2D_COMM_CART_Y, DECOMP_2D_COMM_CART_Z 
+       DECOMP_2D_COMM_CART_Y, DECOMP_2D_COMM_CART_Z
   integer, save :: DECOMP_2D_COMM_ROW, DECOMP_2D_COMM_COL
 
   ! define neighboring blocks (to be used in halo-cell support)
   !  first dimension 1=X-pencil, 2=Y-pencil, 3=Z-pencil
-  ! second dimension 1=east, 2=west, 3=north, 4=south, 5=top, 6=bottom 
-  integer, save, dimension(3,6) :: neighbour 
+  ! second dimension 1=east, 2=west, 3=north, 4=south, 5=top, 6=bottom
+  integer, save, dimension(3,6) :: neighbour
 
   ! flags for periodic condition in three dimensions
   logical, save :: periodic_x, periodic_y, periodic_z
@@ -92,7 +92,7 @@ module decomp_2d
      integer MAXCORE           ! maximum no. cores on any SMP-node
      integer N_SND             ! size of SMP shared memory buffer
      integer N_RCV             ! size of SMP shared memory buffer
-     integer(8) SND_P          ! SNDBUF address (cray pointer), for real 
+     integer(8) SND_P          ! SNDBUF address (cray pointer), for real
      integer(8) RCV_P          ! RCVBUF address (cray pointer), for real
      integer(8) SND_P_c        ! for complex
      integer(8) RCV_P_c        ! for complex
@@ -106,8 +106,8 @@ module decomp_2d
      integer, dimension(3) :: yst, yen, ysz  ! y-pencil
      integer, dimension(3) :: zst, zen, zsz  ! z-pencil
 
-     ! in addition to local information, processors also need to know 
-     ! some global information for global communications to work 
+     ! in addition to local information, processors also need to know
+     ! some global information for global communications to work
 
      ! how each dimension is distributed along pencils
      integer, allocatable, dimension(:) :: &
@@ -125,6 +125,9 @@ module decomp_2d
 
      ! evenly distributed data
      logical :: even
+
+     ! number of halo cells in each direction (index 1,2,3), for each pencil (x,y,z)
+     integer, dimension(3) :: xlevel, ylevel, zlevel
 
 #ifdef SHM
      ! For shared-memory implementation
@@ -149,7 +152,7 @@ module decomp_2d
   TYPE(DECOMP_INFO), save, public :: phG,ph1,ph2,ph3,ph4
 
   ! staring/ending index and size of data held by current processor
-  ! duplicate 'decomp_main', needed by apps to define data structure 
+  ! duplicate 'decomp_main', needed by apps to define data structure
   integer, save, dimension(3), public :: xstart, xend, xsize  ! x-pencil
   integer, save, dimension(3), public :: ystart, yend, ysize  ! y-pencil
   integer, save, dimension(3), public :: zstart, zend, zsize  ! z-pencil
@@ -192,12 +195,12 @@ module decomp_2d
        init_coarser_mesh_statV,fine_to_coarseV,&
        init_coarser_mesh_statP,fine_to_coarseP,&
        alloc_x, alloc_y, alloc_z, &
-       update_halo, decomp_2d_abort, &
-       decomp_2d_warning, get_decomp_info
+       update_halo, exchange_halo_x, exchange_halo_y, exchange_halo_z,&
+       decomp_2d_abort, decomp_2d_warning, get_decomp_info
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   ! These are routines to perform global data transpositions
-  ! 
+  !
   !   Four combinations are available, enough to cover all situations
   !    - transpose_x_to_y (X-pencil --> Y-pencil)
   !    - transpose_y_to_z (Y-pencil --> Z-pencil)
@@ -208,9 +211,9 @@ module decomp_2d
   !    - real and complex types supported through generic interface
   !    - single/double precision supported through pre-processing
   !       * see 'mytype' variable at the beginning
-  !    - an optional argument can be supplied to transpose data whose 
-  !      global size is not the default nx*ny*nz 
-  !       * as the case in fft r2c/c2r interface 
+  !    - an optional argument can be supplied to transpose data whose
+  !      global size is not the default nx*ny*nz
+  !       * as the case in fft r2c/c2r interface
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
   interface transpose_x_to_y
@@ -237,6 +240,21 @@ module decomp_2d
      module procedure update_halo_real
      module procedure update_halo_complex
   end interface update_halo
+
+  interface exchange_halo_x
+     module procedure exchange_halo_x_real
+     module procedure exchange_halo_x_complex
+  end interface exchange_halo_x
+
+  interface exchange_halo_y
+      module procedure exchange_halo_y_real
+      module procedure exchange_halo_y_complex
+  end interface exchange_halo_y
+
+  interface exchange_halo_z
+      module procedure exchange_halo_z_real
+      module procedure exchange_halo_z_complex
+  end interface exchange_halo_z
 
   interface alloc_x
      module procedure alloc_x_real
@@ -292,7 +310,7 @@ contains
   !     library ready to use
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   subroutine decomp_2d_init(nx,ny,nz,p_row,p_col,periodic_bc)
-    
+
     implicit none
 
     integer, intent(IN) :: nx,ny,nz
@@ -379,7 +397,7 @@ contains
 
     ! make a copy of the decomposition information associated with the
     ! default global size in these global variables so applications can
-    ! use them to create data structures 
+    ! use them to create data structures
     xstart = decomp_main%xst
     ystart = decomp_main%yst
     zstart = decomp_main%zst
@@ -447,13 +465,13 @@ contains
 
     ! determine the number of bytes per float number
     ! do not use 'mytype' which is compiler dependent
-    ! also possible to use inquire(iolength=...) 
+    ! also possible to use inquire(iolength=...)
     call MPI_TYPE_SIZE(real_type,mytype_bytes,ierror)
     if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_TYPE_SIZE")
 
 #ifdef EVEN
     if (nrank==0) write(*,*) 'Padded ALLTOALL optimisation on'
-#endif 
+#endif
 
 #if defined(_GPU)
 #if defined(_NCCL)
@@ -463,12 +481,12 @@ contains
     call MPI_COMM_SIZE(DECOMP_2D_COMM_ROW,row_comm_size,ierror)
 
     allocate(local_to_global_col(col_comm_size), local_to_global_row(row_comm_size))
-    
+
     local_to_global_col(:) = 0
     local_to_global_row(:) = 0
     local_to_global_col(col_rank+1) = nrank
     local_to_global_row(row_rank+1) = nrank
-    
+
     call mpi_allreduce(MPI_IN_PLACE,local_to_global_col,col_comm_size,MPI_INTEGER,MPI_SUM,DECOMP_2D_COMM_COL,ierr)
     call mpi_allreduce(MPI_IN_PLACE,local_to_global_row,row_comm_size,MPI_INTEGER,MPI_SUM,DECOMP_2D_COMM_ROW,ierr)
 
@@ -490,9 +508,9 @@ contains
   ! Routine to be called by applications to clean things up
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   subroutine decomp_2d_finalize
-    
+
     implicit none
- 
+
     integer :: ierror
 
     call MPI_COMM_FREE(DECOMP_2D_COMM_ROW, ierror)
@@ -583,6 +601,11 @@ contains
     call partition(nx, ny, nz, (/ 2,3,1 /), &
          decomp%zst, decomp%zen, decomp%zsz)
 
+    ! set halo levels to zero by default
+    decomp%xlevel = 0
+    decomp%ylevel = 0
+    decomp%zlevel = 0
+
     ! prepare send/receive buffer displacement and count for ALLTOALL(V)
     allocate(decomp%x1cnts(0:dims(1)-1),decomp%y1cnts(0:dims(1)-1), &
          decomp%y2cnts(0:dims(2)-1),decomp%z2cnts(0:dims(2)-1))
@@ -604,11 +627,11 @@ contains
 #ifdef EVEN
     ! padded alltoall optimisation may need larger buffer space
     buf_size = max(buf_size, &
-         max(decomp%x1count*dims(1),decomp%y2count*dims(2)) ) 
+         max(decomp%x1count*dims(1),decomp%y2count*dims(2)) )
 #endif
 
     ! check if additional memory is required
-    ! *** TODO: consider how to share the real/complex buffers 
+    ! *** TODO: consider how to share the real/complex buffers
     if (buf_size > decomp_buf_size) then
        decomp_buf_size = buf_size
 #if defined(_GPU)
@@ -1169,16 +1192,16 @@ contains
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   ! Find sub-domain information held by current processor
-  !   INPUT: 
+  !   INPUT:
   !     nx, ny, nz - global data dimension
-  !     pdim(3)    - number of processor grid in each dimension, 
-  !                  valid values: 1 - distibute locally; 
-  !                                2 - distribute across p_row; 
+  !     pdim(3)    - number of processor grid in each dimension,
+  !                  valid values: 1 - distibute locally;
+  !                                2 - distribute across p_row;
   !                                3 - distribute across p_col
   !   OUTPUT:
   !     lstart(3)  - starting index
   !     lend(3)    - ending index
-  !     lsize(3)   - size of the sub-block (redundant) 
+  !     lsize(3)   - size of the sub-block (redundant)
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   subroutine partition(nx, ny, nz, pdim, lstart, lend, lsize)
 
@@ -1226,14 +1249,14 @@ contains
        end if
 
     end do
-    return   
+    return
 
   end subroutine partition
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   !   - distibutes grid points in one dimension
-  !   - handles uneven distribution properly 
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! 
+  !   - handles uneven distribution properly
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   subroutine distribute(data1,proc,st,en,sz)
 
     implicit none
@@ -1262,7 +1285,7 @@ contains
        sz(i) = size1
        en(i) = en(i-1) + size1
     end do
-    en(proc-1)= data1 
+    en(proc-1)= data1
     sz(proc-1)= data1-st(proc-1)+1
 
     return
@@ -1309,7 +1332,7 @@ contains
     !       * la fonction sortait des valeurs 'aleatoires'
     !         et le calcul plantait dans MPI_ALLTOALLV
     !       * pas de plantage en O2
-    
+
     character(len=100) :: tmp_char
     if (nrank==0) then
        open(newunit=i, file='temp.dat', form='unformatted')
@@ -1349,11 +1372,11 @@ contains
     ! For evenly distributed data, following is an easier implementation.
     ! But it should be covered by the more general formulation below.
     !decomp%x1count = decomp%xsz(1)*decomp%xsz(2)*decomp%xsz(3)/dims(1)
-    !decomp%y1count = decomp%ysz(1)*decomp%ysz(2)*decomp%ysz(3)/dims(1) 
+    !decomp%y1count = decomp%ysz(1)*decomp%ysz(2)*decomp%ysz(3)/dims(1)
     !decomp%y2count = decomp%ysz(1)*decomp%ysz(2)*decomp%ysz(3)/dims(2)
     !decomp%z2count = decomp%zsz(1)*decomp%zsz(2)*decomp%zsz(3)/dims(2)
 
-    ! For unevenly distributed data, pad smaller messages. Note the 
+    ! For unevenly distributed data, pad smaller messages. Note the
     ! last blocks along pencils always get assigned more mesh points
     ! for X <=> Y transposes
     decomp%x1count = decomp%x1dist(dims(1)-1) * &
@@ -1370,7 +1393,7 @@ contains
 #ifdef SHM
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  !  Generate shared-memory information 
+  !  Generate shared-memory information
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   subroutine decomp_info_init_shm(decomp)
 
@@ -1694,7 +1717,7 @@ contains
 
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  ! Transposition routines 
+  ! Transposition routines
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 #include "transpose_x_to_y.f90"
 #include "transpose_y_to_z.f90"
@@ -1717,7 +1740,7 @@ contains
 
     if (nrank==0) write(*,*) 'In auto-tuning mode......'
 
-    i = int(sqrt(real(iproc))) + 10  ! enough space to save all factors 
+    i = int(sqrt(real(iproc))) + 10  ! enough space to save all factors
     allocate(factors(i))
     call findfactor(iproc, factors, nfact)
     if (nrank==0) write(*,*) 'factors: ', (factors(i), i=1,nfact)
@@ -1731,7 +1754,7 @@ contains
     if ((best_p_col==1).and.(nrank==0)) then
        print *,'WARNING: current 2D DECOMP set-up might not work'
     endif
-    
+
     deallocate(factors)
 
     return
@@ -1842,7 +1865,6 @@ contains
   ! Utility routines to help allocate 3D arrays
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 #include "alloc.f90"
-    
-  
-end module decomp_2d
 
+
+end module decomp_2d

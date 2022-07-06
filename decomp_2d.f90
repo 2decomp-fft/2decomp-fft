@@ -269,6 +269,7 @@ contains
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   ! For debugging, print the shared-memory structure
   subroutine print_smp_info(s)
+    implicit none
     TYPE(SMP_INFO) :: s
     write(10,*) 'size of current communicator:', s%NCPU
     write(10,*) 'rank in current communicator:', s%NODE_ME
@@ -1281,6 +1282,8 @@ contains
   !    such global information is required locally at MPI_ALLTOALLV time
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   subroutine get_dist(nx,ny,nz,decomp)
+
+    implicit none
 
     integer, intent(IN) :: nx, ny, nz
     TYPE(DECOMP_INFO), intent(INOUT) :: decomp

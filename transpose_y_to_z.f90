@@ -90,7 +90,7 @@
        call MPI_ALLTOALL(work1_r, decomp%y2count, &
             real_type, work2_r, decomp%z2count, &
             real_type, DECOMP_2D_COMM_ROW, ierror)
-       if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPi_ALLTOALL")
+       if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_ALLTOALL")
     end if
 #else
 
@@ -212,7 +212,7 @@
        call MPI_ALLTOALLV(work1, decomp%y2cnts_s, decomp%y2disp_s, &
             complex_type, work2, decomp%z2cnts_s, decomp%z2disp_s, &
             complex_type, decomp%ROW_INFO%SMP_COMM, ierror)
-       if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPi_ALLTOALLV")
+       if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_ALLTOALLV")
     end if
 #else
 #ifdef EVEN

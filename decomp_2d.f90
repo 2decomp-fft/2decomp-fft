@@ -426,7 +426,7 @@ contains
        nccl_stat = ncclGetUniqueId(nccl_uid_2decomp)
     end if
     call MPI_Bcast(nccl_uid_2decomp, int(sizeof(ncclUniqueId)), MPI_BYTE, 0, MPI_COMM_WORLD, ierror)
-    if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_ALLREDUCE")
+    if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_BCAST")
 
     nccl_stat = ncclCommInitRank(nccl_comm_2decomp, nproc, nccl_uid_2decomp, nrank)
     cuda_stat = cudaStreamCreate(cuda_stream_2decomp)

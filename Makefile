@@ -72,7 +72,7 @@ else ifeq ($(CMP),nvhpc)
 endif
 
 ### List of files for the main code
-SRCDECOMP = ./decomp_2d.f90 ./glassman.f90 ./fft_$(FFT).f90 
+SRCDECOMP = ./decomp_2d.f90 ./d2d_log.f90 ./glassman.f90 ./fft_$(FFT).f90 
 OBJDECOMP = $(SRCDECOMP:%.f90=$(OBJDIR)/%.o)
 
 #######FFT settings##########

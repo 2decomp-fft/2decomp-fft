@@ -76,32 +76,30 @@ SRCDECOMP = ./decomp_2d.f90 ./d2d_log.f90
 
 #######FFT settings##########
 ifeq ($(FFT),fftw3)
-  SRCDECOMP := $(SRCDECOMP) ./fft_$(FFT).f90
   FFTW3_PATH=/usr/local/Cellar/fftw/3.3.7_1
   INC=-I$(FFTW3_PATH)/include
   LIBFFT=-L$(FFTW3_PATH) -lfftw3 -lfftw3f
 else ifeq ($(FFT),fftw3_f03)
-  SRCDECOMP := $(SRCDECOMP) ./fft_$(FFT).f90
   FFTW3_PATH=/usr                                #ubuntu # apt install libfftw3-dev
   #FFTW3_PATH=/usr/lib64                         #fedora # dnf install fftw fftw-devel
   #FFTW3_PATH=/usr/local/Cellar/fftw/3.3.7_1     #macOS  # brew install fftw
   INC=-I$(FFTW3_PATH)/include
   LIBFFT=-L$(FFTW3_PATH)/lib -lfftw3 -lfftw3f
 else ifeq ($(FFT),generic)
-  SRCDECOMP := $(SRCDECOMP) ./glassman.f90 ./fft_$(FFT).f90
+  SRCDECOMP := $(SRCDECOMP) ./glassman.f90
   INC=
   LIBFFT=
 else ifeq ($(FFT),mkl)
-  SRCDECOMP := $(DECOMPDIR)/mkl_dfti.f90 $(SRCDECOMP) ./fft_$(FFT).f90
+  SRCDECOMP := $(DECOMPDIR)/mkl_dfti.f90 $(SRCDECOMP)
   LIBFFT=-Wl,--start-group $(MKLROOT)/lib/intel64/libmkl_intel_lp64.a $(MKLROOT)/lib/intel64/libmkl_sequential.a $(MKLROOT)/lib/intel64/libmkl_core.a -Wl,--end-group -lpthread
   INC=-I$(MKLROOT)/include
 else ifeq ($(FFT),cufft)
-  SRCDECOMP := $(SRCDECOMP) ./fft_$(FFT).f90
   #CUFFT_PATH=/opt/nvidia/hpc_sdk/Linux_x86_64/22.1/math_libs                                
   INC=-I${NVHPC}/Linux_x86_64/${EBVERSIONNVHPC}/compilers/include
   #LIBFFT=-L$(CUFFT_PATH)/lib64 -Mcudalib=cufft 
 endif
 
+SRCDECOMP := $(SRCDECOMP) ./fft_$(FFT).f90
 OBJDECOMP = $(SRCDECOMP:%.f90=$(OBJDIR)/%.o)
 
 #######OPTIONS settings###########

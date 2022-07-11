@@ -8,7 +8,7 @@
 # generate a Git version string
 GIT_VERSION := $(shell git describe --tag --long --always)
 
-DEFS = -DDOUBLE_PREC -DVERSION=\"$(GIT_VERSION)\" -DOVERWRITE
+DEFS = -DDOUBLE_PREC -DVERSION=\"$(GIT_VERSION)\"
 
 LCL = local# local,lad,sdu,archer
 CMP = gcc# intel,gcc,nagfor,cray,nvhpc
@@ -44,6 +44,8 @@ else ifeq ($(CMP),gcc)
     FFLAGS += -ffpe-trap=invalid,zero -fcheck=all -fimplicit-none
   else
     FFLAGS += -O3 -march=native
+    FFLAGS += -fopenmp -ftree-parallelize-loops=12
+    LFLAGS += -fopenmp
   endif
 else ifeq ($(CMP),nagfor)
   FC = mpinagfor
@@ -74,31 +76,32 @@ SRCDECOMP = ./decomp_2d.f90 ./d2d_log.f90
 
 #######FFT settings##########
 ifeq ($(FFT),fftw3)
-  FFTW3_PATH=/home/cflage01/opt/fftw3/fftw-3.3.10_bld
+  SRCDECOMP := $(SRCDECOMP) ./fft_$(FFT).f90
+  FFTW3_PATH=/usr/local/Cellar/fftw/3.3.7_1
   INC=-I$(FFTW3_PATH)/include
-  LIBFFT=-L$(FFTW3_PATH)/lib -lfftw3 -lfftw3f
+  LIBFFT=-L$(FFTW3_PATH) -lfftw3 -lfftw3f
 else ifeq ($(FFT),fftw3_f03)
-  FFTW3_PATH=/home/cflage01/opt/fftw3/fftw-3.3.10_bld
-  #FFTW3_PATH=/usr                                #ubuntu # apt install libfftw3-dev
+  SRCDECOMP := $(SRCDECOMP) ./fft_$(FFT).f90
+  FFTW3_PATH=/usr                                #ubuntu # apt install libfftw3-dev
   #FFTW3_PATH=/usr/lib64                         #fedora # dnf install fftw fftw-devel
   #FFTW3_PATH=/usr/local/Cellar/fftw/3.3.7_1     #macOS  # brew install fftw
   INC=-I$(FFTW3_PATH)/include
   LIBFFT=-L$(FFTW3_PATH)/lib -lfftw3 -lfftw3f
 else ifeq ($(FFT),generic)
-  SRCDECOMP := $(SRCDECOMP) ./glassman.f90
+  SRCDECOMP := $(SRCDECOMP) ./glassman.f90 ./fft_$(FFT).f90
   INC=
   LIBFFT=
 else ifeq ($(FFT),mkl)
-  SRCDECOMP := $(DECOMPDIR)/mkl_dfti.f90 $(SRCDECOMP)
+  SRCDECOMP := $(DECOMPDIR)/mkl_dfti.f90 $(SRCDECOMP) ./fft_$(FFT).f90
   LIBFFT=-Wl,--start-group $(MKLROOT)/lib/intel64/libmkl_intel_lp64.a $(MKLROOT)/lib/intel64/libmkl_sequential.a $(MKLROOT)/lib/intel64/libmkl_core.a -Wl,--end-group -lpthread
   INC=-I$(MKLROOT)/include
 else ifeq ($(FFT),cufft)
+  SRCDECOMP := $(SRCDECOMP) ./fft_$(FFT).f90
   #CUFFT_PATH=/opt/nvidia/hpc_sdk/Linux_x86_64/22.1/math_libs                                
   INC=-I${NVHPC}/Linux_x86_64/${EBVERSIONNVHPC}/compilers/include
   #LIBFFT=-L$(CUFFT_PATH)/lib64 -Mcudalib=cufft 
 endif
 
-SRCDECOMP := $(SRCDECOMP) ./fft_$(FFT).f90
 OBJDECOMP = $(SRCDECOMP:%.f90=$(OBJDIR)/%.o)
 
 #######OPTIONS settings###########

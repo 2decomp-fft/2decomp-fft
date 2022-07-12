@@ -172,7 +172,7 @@ module decomp_2d
   integer, allocatable, dimension(:) :: local_to_global_col, local_to_global_row
   type(ncclUniqueId) :: nccl_uid_2decomp
   type(ncclComm) :: nccl_comm_2decomp
-  integer cuda_stat, ierr
+  integer cuda_stat
   integer(kind=cuda_stream_kind) :: cuda_stream_2decomp
 #endif
 #endif
@@ -191,6 +191,7 @@ module decomp_2d
        transpose_x_to_y, transpose_y_to_z, &
        transpose_z_to_y, transpose_y_to_x, &
        decomp_info_init, decomp_info_finalize, partition, &
+       decomp_info_print, &
        init_coarser_mesh_statS,fine_to_coarseS,&
        init_coarser_mesh_statV,fine_to_coarseV,&
        init_coarser_mesh_statP,fine_to_coarseP,&
@@ -281,24 +282,21 @@ module decomp_2d
      module procedure decomp_2d_warning_file_line
   end interface decomp_2d_warning
 
-contains
+  interface
 
-#ifdef SHM_DEBUG
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  ! For debugging, print the shared-memory structure
-  subroutine print_smp_info(s)
-    TYPE(SMP_INFO) :: s
-    write(10,*) 'size of current communicator:', s%NCPU
-    write(10,*) 'rank in current communicator:', s%NODE_ME
-    write(10,*) 'number of SMP-nodes in this communicator:', s%NSMP
-    write(10,*) 'SMP-node id (1 ~ NSMP):', s%SMP_ME
-    write(10,*) 'NCORE - number of cores on this SMP-node', s%NCORE
-    write(10,*) 'core id (1 ~ NCORE):', s%CORE_ME
-    write(10,*) 'maximum no. cores on any SMP-node:', s%MAXCORE
-    write(10,*) 'size of SMP shared memory SND buffer:', s%N_SND
-    write(10,*) 'size of SMP shared memory RCV buffer:', s%N_RCV
-  end subroutine print_smp_info
-#endif
+     module subroutine d2d_listing(given_io_unit)
+        integer, intent(in), optional :: given_io_unit
+     end subroutine d2d_listing
+
+     module subroutine decomp_info_print(d2d, io_unit, d2dname)
+        type(decomp_info), intent(in) :: d2d
+        integer, intent(in) :: io_unit
+        character(len=*), intent(in) :: d2dname
+     end subroutine decomp_info_print
+
+  end interface
+
+contains
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   ! Routine to be called by applications to initialise this library
@@ -311,16 +309,17 @@ contains
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   subroutine decomp_2d_init(nx,ny,nz,p_row,p_col,periodic_bc)
 
+    use iso_fortran_env, only : output_unit
+
     implicit none
 
     integer, intent(IN) :: nx,ny,nz
     integer, intent(INOUT) :: p_row,p_col
     logical, dimension(3), intent(IN), optional :: periodic_bc
 
-    integer :: errorcode, ierror, row, col
-
-#ifdef SHM_DEBUG
-    character(len=80) fname
+    integer :: errorcode, ierror, row, col, iounit
+#ifdef DEBUG
+    character(len=3) fname
 #endif
 
     nx_global = nx
@@ -408,61 +407,6 @@ contains
     ysize  = decomp_main%ysz
     zsize  = decomp_main%zsz
 
-#ifdef SHM_DEBUG
-    ! print out shared-memory information
-    write(fname,99) nrank
-99  format('log',I2.2)
-    open(10,file=fname)
-    write(10,*)'I am mpi rank ', nrank, 'Total ranks ', nproc
-    write(10,*)' '
-    write(10,*)'Global data size:'
-    write(10,*)'nx*ny*nz', nx,ny,nz
-    write(10,*)' '
-    write(10,*)'2D processor grid:'
-    write(10,*)'p_row*p_col:', dims(1), dims(2)
-    write(10,*)' '
-    write(10,*)'Portion of global data held locally:'
-    write(10,*)'xsize:',xsize
-    write(10,*)'ysize:',ysize
-    write(10,*)'zsize:',zsize
-    write(10,*)' '
-    write(10,*)'How pensils are to be divided and sent in alltoallv:'
-    write(10,*)'x1dist:',decomp_main%x1dist
-    write(10,*)'y1dist:',decomp_main%y1dist
-    write(10,*)'y2dist:',decomp_main%y2dist
-    write(10,*)'z2dist:',decomp_main%z2dist
-    write(10,*)' '
-    write(10,*)'######Shared buffer set up after this point######'
-    write(10,*)' '
-    write(10,*) 'col communicator detais:'
-    call print_smp_info(decomp_main%COL_INFO)
-    write(10,*)' '
-    write(10,*) 'row communicator detais:'
-    call print_smp_info(decomp_main%ROW_INFO)
-    write(10,*)' '
-    write(10,*)'Buffer count and displacement of per-core buffers'
-    write(10,*)'x1cnts:',decomp_main%x1cnts
-    write(10,*)'y1cnts:',decomp_main%y1cnts
-    write(10,*)'y2cnts:',decomp_main%y2cnts
-    write(10,*)'z2cnts:',decomp_main%z2cnts
-    write(10,*)'x1disp:',decomp_main%x1disp
-    write(10,*)'y1disp:',decomp_main%y1disp
-    write(10,*)'y2disp:',decomp_main%y2disp
-    write(10,*)'z2disp:',decomp_main%z2disp
-    write(10,*)' '
-    write(10,*)'Buffer count and displacement of shared buffers'
-    write(10,*)'x1cnts:',decomp_main%x1cnts_s
-    write(10,*)'y1cnts:',decomp_main%y1cnts_s
-    write(10,*)'y2cnts:',decomp_main%y2cnts_s
-    write(10,*)'z2cnts:',decomp_main%z2cnts_s
-    write(10,*)'x1disp:',decomp_main%x1disp_s
-    write(10,*)'y1disp:',decomp_main%y1disp_s
-    write(10,*)'y2disp:',decomp_main%y2disp_s
-    write(10,*)'z2disp:',decomp_main%z2disp_s
-    write(10,*)' '
-    close(10)
-#endif
-
     ! determine the number of bytes per float number
     ! do not use 'mytype' which is compiler dependent
     ! also possible to use inquire(iolength=...)
@@ -476,9 +420,13 @@ contains
 #if defined(_GPU)
 #if defined(_NCCL)
     call MPI_COMM_RANK(DECOMP_2D_COMM_COL,col_rank,ierror)
+    if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_COMM_RANK")
     call MPI_COMM_RANK(DECOMP_2D_COMM_ROW,row_rank,ierror)
+    if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_COMM_RANK")
     call MPI_COMM_SIZE(DECOMP_2D_COMM_COL,col_comm_size,ierror)
+    if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_COMM_SIZE")
     call MPI_COMM_SIZE(DECOMP_2D_COMM_ROW,row_comm_size,ierror)
+    if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_COMM_SIZE")
 
     allocate(local_to_global_col(col_comm_size), local_to_global_row(row_comm_size))
 
@@ -487,18 +435,48 @@ contains
     local_to_global_col(col_rank+1) = nrank
     local_to_global_row(row_rank+1) = nrank
 
-    call mpi_allreduce(MPI_IN_PLACE,local_to_global_col,col_comm_size,MPI_INTEGER,MPI_SUM,DECOMP_2D_COMM_COL,ierr)
-    call mpi_allreduce(MPI_IN_PLACE,local_to_global_row,row_comm_size,MPI_INTEGER,MPI_SUM,DECOMP_2D_COMM_ROW,ierr)
+    call mpi_allreduce(MPI_IN_PLACE,local_to_global_col,col_comm_size,MPI_INTEGER,MPI_SUM,DECOMP_2D_COMM_COL,ierror)
+    if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_ALLREDUCE")
+    call mpi_allreduce(MPI_IN_PLACE,local_to_global_row,row_comm_size,MPI_INTEGER,MPI_SUM,DECOMP_2D_COMM_ROW,ierror)
+    if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_ALLREDUCE")
 
     if (nrank .eq. 0) then
        nccl_stat = ncclGetUniqueId(nccl_uid_2decomp)
     end if
-    call MPI_Bcast(nccl_uid_2decomp, int(sizeof(ncclUniqueId)), MPI_BYTE, 0, MPI_COMM_WORLD, ierr)
+    call MPI_Bcast(nccl_uid_2decomp, int(sizeof(ncclUniqueId)), MPI_BYTE, 0, MPI_COMM_WORLD, ierror)
+    if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_BCAST")
 
     nccl_stat = ncclCommInitRank(nccl_comm_2decomp, nproc, nccl_uid_2decomp, nrank)
     cuda_stat = cudaStreamCreate(cuda_stream_2decomp)
 #endif
 #endif
+
+    !
+    ! Select the IO unit for decomp_2d setup
+    !
+#ifdef DEBUG
+    write(fname, "(I3.3)") nrank
+    open(newunit=iounit, file='decomp_2d_setup_'//trim(fname)//'.log', iostat=ierror)
+#else
+    if (nrank == 0) then
+       open(newunit=iounit, file="decomp_2d_setup.log", iostat=ierror)
+    else
+       iounit = output_unit
+       ierror = 0
+    endif
+#endif
+    if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "Could not open log file")
+    !
+    ! Print the decomp_2d setup
+    !
+    call d2d_listing(iounit)
+    !
+    ! Close the IO unit if it was not stdout
+    !
+    if (iounit /= output_unit) then
+       close(iounit, iostat=ierror)
+       if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "Could not close log file")
+    endif
 
     return
   end subroutine decomp_2d_init
@@ -1298,6 +1276,8 @@ contains
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   subroutine get_dist(nx,ny,nz,decomp)
 
+    implicit none
+
     integer, intent(IN) :: nx, ny, nz
     TYPE(DECOMP_INFO), intent(INOUT) :: decomp
     integer, allocatable, dimension(:) :: st,en
@@ -1503,14 +1483,19 @@ contains
     integer :: ierror
 
     call FIPC_init(comm, ierror)
+    if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "FIPC_init")
 
     ! intra_comm: communicator for processes on this shared memory node
     ! extra_comm: communicator for all rank 0 on each shared memory node
     call FIPC_ctxt_intra_comm(FIPC_ctxt_world, intra_comm, ierror)
+    if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "FIPC_ctxt_intra_comm")
     call FIPC_ctxt_extra_comm(FIPC_ctxt_world, extra_comm, ierror)
+    if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "FIPC_ctxt_extra_comm")
 
     call MPI_COMM_SIZE(intra_comm,  ncores, ierror)
+    if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_COMM_SIZE")
     call MPI_COMM_RANK(intra_comm, my_core, ierror)
+    if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_COMM_RANK")
 
     ! only rank 0 on each shared memory node member of extra_comm
     ! for others extra_comm = MPI_COMM_NULL
@@ -1533,6 +1518,7 @@ contains
     if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_ALLREDUCE")
 
     call FIPC_finalize(ierror)
+    if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "FIPC_finalize")
 
     return
 
@@ -1710,6 +1696,7 @@ contains
     integer :: handle, ierror
 
     call NBC_TEST(handle,ierror)
+    if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "NBC_TEST")
 
     return
   end subroutine transpose_test

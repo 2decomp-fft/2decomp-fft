@@ -1,15 +1,17 @@
-include ../../src/Makefile.inc
+#include ../../src/Makefile.inc
 
-INCLUDE = -I../../include
-LIBS = -L../../lib -l2decomp_fft
+#INCLUDE = -I../../include
+FFLAGS := $(patsubst -J%,-J../../%,$(FFLAGS))
+FFLAGS := $(patsubst -I%,-I../../%,$(FFLAGS))
+LIBS = -L../../ -l$(LIBDECOMP)
 
 OBJ = test2d.o
 
 test2d: $(OBJ)
-	$(F90) -o $@ $(OBJ) $(LIBS)
+	$(FC) -o $@ $(OBJ) $(LIBS)
 
 clean:
 	rm -f *.o test2d u*.dat
 
 %.o : %.f90
-	$(F90) $(INCLUDE) $(OPTIONS) $(F90FLAGS) -c $<
+	$(FC) $(INC) $(OPTIONS) $(FFLAGS) -c $<

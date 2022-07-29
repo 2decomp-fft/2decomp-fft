@@ -1,12 +1,12 @@
 program test2d
   
   use decomp_2d
-  use decomp_2d_io
+  ! use decomp_2d_io
 
   implicit none
 
   integer, parameter :: nx=17, ny=13, nz=11
-  integer, parameter :: p_row=4, p_col=3
+  integer :: p_row=4, p_col=3
 
   real(mytype), dimension(nx,ny,nz) :: data1
   
@@ -57,7 +57,7 @@ program test2d
      write(*,10) int(u1)
   end if
 
-  call decomp_2d_write_one(1,u1,'u1.dat')
+  ! call decomp_2d_write_one(1,u1,'u1.dat')
 
   !!!!!!!!!!!!!!!!!!!!!!!
   ! x-pensil ==> y-pensil
@@ -69,7 +69,7 @@ program test2d
      write(*,10) int(u2)
   end if
 
-  call decomp_2d_write_one(2,u2,'u2.dat')
+  ! call decomp_2d_write_one(2,u2,'u2.dat')
   ! 'u1.dat' and 'u2.dat' should be identical byte-by-byte 
 
   ! also check the transposition this way
@@ -91,7 +91,7 @@ program test2d
      write(*,10) int(u3)
   end if
 
-  call decomp_2d_write_one(3,u3,'u3.dat')
+  ! call decomp_2d_write_one(3,u3,'u3.dat')
   ! 'u1.dat','u2.dat' and 'u3.dat' should be identical
 
   do k=zstart(3),zend(3)
@@ -105,7 +105,7 @@ program test2d
   !!!!!!!!!!!!!!!!!!!!!!!
   ! z-pensil ==> y-pensil
   call transpose_z_to_y(u3,u2)
-  call decomp_2d_write_one(2,u2,'u2b.dat')
+  ! call decomp_2d_write_one(2,u2,'u2b.dat')
 
   do k=ystart(3),yend(3)
     do j=ystart(2),yend(2)
@@ -118,7 +118,7 @@ program test2d
   !!!!!!!!!!!!!!!!!!!!!!!
   ! y-pensil ==> x-pensil
   call transpose_y_to_x(u2,u1)
-  call decomp_2d_write_one(1,u1,'u1b.dat')
+  ! call decomp_2d_write_one(1,u1,'u1b.dat')
 
   do k=xstart(3),xend(3)
     do j=xstart(2),xend(2)

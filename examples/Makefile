@@ -5,7 +5,7 @@ examples: test2d fft_test_c2c fft_test_r2c timing halo_test io_test
 	@echo "Built the examples"
 
 test2d:
-	cd test2d; $(MAKE) $@
+	$(MAKE) -C $@ $@
 fft_test_c2c:
 	cd fft_test_c2c; $(MAKE) $@
 fft_test_r2c:

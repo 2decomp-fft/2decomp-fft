@@ -90,8 +90,7 @@ else ifeq ($(CMP),nvhpc)
 endif
 
 ### List of files for the main code
-SRCDECOMP = ./decomp_2d.f90 ./glassman.f90 ./fft_$(FFT).f90 
-OBJDECOMP = $(SRCDECOMP:%.f90=$(OBJDIR)/%.o)
+SRCDECOMP = ./decomp_2d.f90 ./d2d_log.f90
 
 #######FFT settings##########
 ifeq ($(FFT),fftw3)
@@ -105,6 +104,7 @@ else ifeq ($(FFT),fftw3_f03)
   INC=-I$(FFTW3_PATH)/include
   LIBFFT=-L$(FFTW3_PATH)/lib -lfftw3 -lfftw3f
 else ifeq ($(FFT),generic)
+  SRCDECOMP := $(SRCDECOMP) ./glassman.f90
   INC=
   LIBFFT=
 else ifeq ($(FFT),mkl)
@@ -116,6 +116,9 @@ else ifeq ($(FFT),cufft)
   INC=-I${NVHPC}/Linux_x86_64/${EBVERSIONNVHPC}/compilers/include
   #LIBFFT=-L$(CUFFT_PATH)/lib64 -Mcudalib=cufft 
 endif
+
+SRCDECOMP := $(SRCDECOMP) ./fft_$(FFT).f90
+OBJDECOMP = $(SRCDECOMP:%.f90=$(OBJDIR)/%.o)
 
 #######OPTIONS settings###########
 OPT =

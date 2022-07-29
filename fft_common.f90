@@ -85,6 +85,8 @@ end subroutine fft_init_arg
 ! Initialise the FFT library to perform arbitrary size transforms
 subroutine fft_init_general(pencil, nx, ny, nz)
 
+use mpi
+  
 implicit none
 
 integer, intent(IN) :: pencil

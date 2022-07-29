@@ -48,7 +48,7 @@ else ifeq ($(CMP),gcc)
     FFLAGS += -fallow-argument-mismatch
   endif
 
-  ifeq ($(BUILD),debug)
+  ifeq ($(DEBUG_BUILD),yes)
     DEFS += -DDEBUG
     FFLAGS += -g -Og
     FFLAGS += -ffpe-trap=invalid,zero -fcheck=all -fimplicit-none
@@ -62,6 +62,7 @@ else ifeq ($(CMP),gcc)
     # Add additional, stricter flags
     FFLAGS += -Wall -Wpedantic
     FFLAGS += -Wimplicit-procedure -Wimplicit-interface
+    FFLAGS += -Wno-unused-function
     FFLAGS += -Werror
   endif
 

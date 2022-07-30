@@ -7,12 +7,12 @@
 program halo_test
 
   use decomp_2d
-  use decomp_2d_io
+  ! use decomp_2d_io
 
   implicit none
 
   integer, parameter :: nx=171, ny=132, nz=113
-  integer, parameter :: p_row=4, p_col=3
+  integer :: p_row=4, p_col=3
 
   real(mytype), allocatable, dimension(:,:,:) :: u1, u2, u3
   real(mytype), allocatable, dimension(:,:,:) :: v1, v2, v3
@@ -130,11 +130,11 @@ program halo_test
      write(*,*) 'Calculated via global transposition'
      write(*,*) (div1(i,i,i), i=2,13)
   end if
-#ifdef HALO_GLOBAL
-  call decomp_2d_write_one(1,div1,'div1g.dat')
-#else
-  call decomp_2d_write_one(1,div1,'div1.dat')
-#endif
+! #ifdef HALO_GLOBAL
+!   call decomp_2d_write_one(1,div1,'div1g.dat')
+! #else
+!   call decomp_2d_write_one(1,div1,'div1.dat')
+! #endif
 
   deallocate(v2,w2,w3,wk2,wk3)
 
@@ -205,11 +205,11 @@ program halo_test
      write(*,*) 'Calculated via halo exchange (data in X-pencil)'
      write(*,*) (div2(i,i,i), i=2,13)
   end if
-#ifdef HALO_GLOBAL
-  call decomp_2d_write_one(1,div1,'div2g.dat')
-#else
-  call decomp_2d_write_one(1,div1,'div2.dat')
-#endif
+! #ifdef HALO_GLOBAL
+!   call decomp_2d_write_one(1,div1,'div2g.dat')
+! #else
+!   call decomp_2d_write_one(1,div1,'div2.dat')
+! #endif
            
   deallocate(vh,wh)
 
@@ -298,11 +298,11 @@ program halo_test
      write(*,*) 'Calculated via halo exchange (data in Y-pencil)'
      write(*,*) (div3(i,i,i), i=2,13)
   end if
-#ifdef HALO_GLOBAL
-  call decomp_2d_write_one(1,div1,'div3g.dat')
-#else
-  call decomp_2d_write_one(1,div1,'div3.dat')
-#endif
+! #ifdef HALO_GLOBAL
+!   call decomp_2d_write_one(1,div1,'div3g.dat')
+! #else
+!   call decomp_2d_write_one(1,div1,'div3.dat')
+! #endif
 
   deallocate(uh,wh,wk2)
 
@@ -394,11 +394,11 @@ program halo_test
      write(*,*) 'Calculated via halo exchange (data in Z-pencil)'
      write(*,*) (div4(i,i,i), i=2,13)
   end if
-#ifdef HALO_GLOBAL
-  call decomp_2d_write_one(1,div1,'div4g.dat')
-#else
-  call decomp_2d_write_one(1,div1,'div4.dat')
-#endif
+! #ifdef HALO_GLOBAL
+!   call decomp_2d_write_one(1,div1,'div4g.dat')
+! #else
+!   call decomp_2d_write_one(1,div1,'div4.dat')
+! #endif
 
   deallocate(uh,vh,wk2,wk3,u1,v1,w1,u2,v2,w2,u3,v3,w3)
 

@@ -8,7 +8,7 @@ program fft_test_r2c
   use decomp_2d
   use decomp_2d_fft
   use glassman
-  use decomp_2d_io
+  ! use decomp_2d_io
   
   use MPI
   
@@ -16,7 +16,7 @@ program fft_test_r2c
   !include "fftw3.f"
   
   integer, parameter :: nx=4, ny=2, nz=3
-  integer, parameter :: p_row=2, p_col=2
+  integer :: p_row=2, p_col=2
   
   real(mytype), allocatable, dimension(:,:,:) :: in, in2
   complex(mytype), allocatable, dimension(:,:,:) :: out
@@ -97,7 +97,7 @@ program fft_test_r2c
   end do
   
   ! write input to file
-  call decomp_2d_write_var(fh,disp,1,in)
+  ! call decomp_2d_write_var(fh,disp,1,in)
   
   if (nrank==0) then
      write(*,*) ' '
@@ -127,7 +127,7 @@ program fft_test_r2c
   in2 = in2 / real(nx) / real(ny) / real(nz)
   
   ! write the data recovered by inverse FFT to file
-  call decomp_2d_write_var(fh,disp,1,in2)
+  ! call decomp_2d_write_var(fh,disp,1,in2)
   
   if (nrank==0) then
      write(*,*) ' - after backward transform and normalisation'

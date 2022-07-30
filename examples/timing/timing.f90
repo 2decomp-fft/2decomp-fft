@@ -7,7 +7,7 @@ program fft_timing
   implicit none
   
   integer, parameter :: nx=17, ny=13, nz=11
-  integer, parameter :: p_row=0, p_col=0
+  integer :: p_row=0, p_col=0
   
   integer, parameter :: NTEST = 10  ! repeat test this times
   

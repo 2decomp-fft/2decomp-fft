@@ -1,15 +1,17 @@
-include ../../src/Makefile.inc
+#include ../../src/Makefile.inc
 
-INCLUDE = -I../../include
-LIBS = -L../../lib -l2decomp_fft $(LIBFFT)
+#INCLUDE = -I../../include
+FFLAGS := $(patsubst -J%,-J../../%,$(FFLAGS))
+FFLAGS := $(patsubst -I%,-I../../%,$(FFLAGS))
+LIBS = -L../../ -l$(LIBDECOMP) $(LIBFFT)
 
 OBJ = timing.o
 
 timing: $(OBJ)
-	$(F90) -o $@ $(OBJ) $(LIBS)
+	$(FC) -o $@ $(OBJ) $(LIBS)
 
 clean:
 	rm -f *.o timing
 
 %.o : %.f90
-	$(F90) $(INCLUDE) $(OPTIONS) $(F90FLAGS) -c $<
+	$(FC) $(INCLUDE) $(OPTIONS) $(FFLAGS) -c $<

@@ -1,13 +1,13 @@
 program io_bench
 
   use decomp_2d
-  use decomp_2d_io
+  ! use decomp_2d_io
   use MPI
 
   implicit none
   
   integer, parameter :: nx=100, ny=100, nz=100
-  integer, parameter :: p_row=4, p_col=4
+  integer :: p_row=4, p_col=4
 
   real(mytype), allocatable, dimension(:,:,:) :: u1
   
@@ -21,7 +21,7 @@ program io_bench
   call random_number(u1)
 
   t1 = MPI_WTIME()
-  call decomp_2d_write_one(1,u1,'io.dat')
+  ! call decomp_2d_write_one(1,u1,'io.dat')
   t2 = MPI_WTIME()
 
   if (nrank==0) write(*,*) 'I/O time: ', t2-t1

@@ -1,13 +1,13 @@
 program io_read
 
   use decomp_2d
-  use decomp_2d_io
+  ! use decomp_2d_io
 
   implicit none
 
   integer, parameter :: nx=17, ny=13, nz=11
   ! use different number of processes
-  integer, parameter :: p_row=3, p_col=2
+  integer :: p_row=3, p_col=2
 
 #ifdef COMPLEX_TEST
   complex(mytype), dimension(nx,ny,nz) :: data1
@@ -45,10 +45,10 @@ program io_read
   allocate(u2b(ystart(1):yend(1), ystart(2):yend(2), ystart(3):yend(3)))
   allocate(u3b(zstart(1):zend(1), zstart(2):zend(2), zstart(3):zend(3)))
 
-  ! read back to different arrays
-  call decomp_2d_read_one(1,u1b,'u1.dat')
-  call decomp_2d_read_one(2,u2b,'u2.dat')
-  call decomp_2d_read_one(3,u3b,'u3.dat')
+  ! ! read back to different arrays
+  ! call decomp_2d_read_one(1,u1b,'u1.dat')
+  ! call decomp_2d_read_one(2,u2b,'u2.dat')
+  ! call decomp_2d_read_one(3,u3b,'u3.dat')
 
   ! Check against the global data array
   do k=xstart(3),xend(3)

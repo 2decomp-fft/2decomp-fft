@@ -7,15 +7,15 @@ examples: test2d fft_test_c2c fft_test_r2c timing halo_test io_test
 test2d:
 	$(MAKE) -C $@ $@
 fft_test_c2c:
-	cd fft_test_c2c; $(MAKE) $@
+	$(MAKE) -C $@ $@
 fft_test_r2c:
-	cd fft_test_r2c; $(MAKE) $@
+	$(MAKE) -C $@ $@
 timing:
-	cd timing; $(MAKE) $@
+	$(MAKE) -C $@ $@
 halo_test:
-	cd halo_test; $(MAKE) $@
+	$(MAKE) -C $@ $@
 io_test:
-	cd io_test; $(MAKE) $@
+	$(MAKE) -C $@ all
 
 # test all the examples (individual Makefiles should take care of updating)
 basic_test:

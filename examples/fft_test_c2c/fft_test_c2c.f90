@@ -11,7 +11,7 @@ use decomp_2d_fft
 implicit none
 
 integer, parameter :: nx=2, ny=3, nz=4
-integer, parameter :: p_row=2, p_col=2
+integer :: p_row=2, p_col=2
 
 complex(mytype), allocatable, dimension(:,:,:) :: in, out
 

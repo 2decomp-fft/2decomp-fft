@@ -1,12 +1,12 @@
 program io_test
 
   use decomp_2d
-  use decomp_2d_io
+  ! use decomp_2d_io
 
   implicit none
 
   integer, parameter :: nx=17, ny=13, nz=11
-  integer, parameter :: p_row=4, p_col=3
+  integer :: p_row=4, p_col=3
 
 #ifdef COMPLEX_TEST
   complex(mytype), dimension(nx,ny,nz) :: data1
@@ -63,15 +63,15 @@ program io_test
   call transpose_x_to_y(u1,u2)
   call transpose_y_to_z(u2,u3)
 
-  ! write to disk
-  call decomp_2d_write_one(1,u1,'u1.dat')
-  call decomp_2d_write_one(2,u2,'u2.dat')
-  call decomp_2d_write_one(3,u3,'u3.dat')
+  ! ! write to disk
+  ! call decomp_2d_write_one(1,u1,'u1.dat')
+  ! call decomp_2d_write_one(2,u2,'u2.dat')
+  ! call decomp_2d_write_one(3,u3,'u3.dat')
 
-  ! read back to different arrays
-  call decomp_2d_read_one(1,u1b,'u1.dat')
-  call decomp_2d_read_one(2,u2b,'u2.dat')
-  call decomp_2d_read_one(3,u3b,'u3.dat')
+  ! ! read back to different arrays
+  ! call decomp_2d_read_one(1,u1b,'u1.dat')
+  ! call decomp_2d_read_one(2,u2b,'u2.dat')
+  ! call decomp_2d_read_one(3,u3b,'u3.dat')
 
   ! compare  
   do k=xstart(3),xend(3)

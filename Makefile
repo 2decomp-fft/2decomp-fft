@@ -86,7 +86,7 @@ else ifeq ($(FFT),fftw3_f03)
   INC=-I$(FFTW3_PATH)/include
   LIBFFT=-L$(FFTW3_PATH)/lib -lfftw3 -lfftw3f
 else ifeq ($(FFT),generic)
-  SRCDECOMP := $(SRCDECOMP) ./glassman.f90
+  SRCDECOMP += ./glassman.f90
   INC=
   LIBFFT=
 else ifeq ($(FFT),mkl)
@@ -99,7 +99,9 @@ else ifeq ($(FFT),cufft)
   #LIBFFT=-L$(CUFFT_PATH)/lib64 -Mcudalib=cufft 
 endif
 
-SRCDECOMP := $(SRCDECOMP) ./fft_$(FFT).f90
+SRCDECOMP += ./fft_$(FFT).f90
+SRCDECOMP += ./io.f90
+
 OBJDECOMP = $(SRCDECOMP:%.f90=$(OBJDIR)/%.o)
 
 #######OPTIONS settings###########

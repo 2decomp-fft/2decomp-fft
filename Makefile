@@ -20,6 +20,7 @@ FCFLAGS ?= # user can set default compiler flags
 LDFLAGS ?= # user can set default linker flags
 FFLAGS = $(FCFLAGS)
 LFLAGS = $(LDFLAGS)
+MODFLAG = -J
 
 LIBDECOMP = libdecomp2d.a
 
@@ -32,6 +33,7 @@ ifeq ($(CMP),intel)
   FFLAGS += -fpp -O3 -mavx2 -march=core-avx2 -mtune=core-avx2
   FFLAGS += -fopenmp
   LFLAGS += -fopenmp
+  MODFLAG = -module 
 else ifeq ($(CMP),gcc)
   FC = mpif90
   FFLAGS += -cpp
@@ -110,7 +112,7 @@ LINKOPT = $(FFLAGS)
 
 OBJDIR = obj
 DECOMPINC = mod
-FFLAGS += -J$(DECOMPINC) -I$(DECOMPINC)
+FFLAGS += $(MODFLAG)$(DECOMPINC) -I$(DECOMPINC)
 
 all: $(DECOMPINC) $(OBJDIR) $(LIBDECOMP)
 

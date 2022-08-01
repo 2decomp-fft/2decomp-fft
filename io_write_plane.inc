@@ -126,13 +126,18 @@ associate(fh=>fh_registry(idx), &
      disp=>fh_disp(idx))
   call MPI_TYPE_CREATE_SUBARRAY(3, sizes, subsizes, starts,  &
        MPI_ORDER_FORTRAN, data_type, newtype, ierror)
+  if (ierror.ne.0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_TYPE_CREATE_SUBARRAY")
   call MPI_TYPE_COMMIT(newtype,ierror)
+  if (ierror.ne.0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_TYPE_COMMIT")
   call MPI_FILE_SET_VIEW(fh,disp,data_type, &
        newtype,'native',MPI_INFO_NULL,ierror)
+  if (ierror.ne.0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_FILE_SET_VIEW")
   call MPI_FILE_WRITE_ALL(fh, wk2d, &
        subsizes(1)*subsizes(2)*subsizes(3), &
        data_type, MPI_STATUS_IGNORE, ierror)
+  if (ierror.ne.0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_FILE_WRITE_ALL")
   call MPI_TYPE_FREE(newtype,ierror)
+  if (ierror.ne.0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_TYPE_FREE")
 end associate
     
 if (opened_new) then
@@ -142,14 +147,15 @@ end if
 #else
 !! Write using ADIOS2
 call adios2_at_io(io_handle, adios, io_name, ierror)
+if (ierror.ne.0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "adios2_at_io "//trim(io_name))
 call adios2_inquire_variable(var_handle, io_handle, varname, ierror)
-if (.not.var_handle % valid) then
-   print *, "ERROR: trying to write variable before registering!", varname
-   stop
-endif
+if (ierror.ne.0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "adios2_inquire_variable "//trim(varname))
+if (.not.var_handle % valid) call decomp_2d_abort(__FILE__, __LINE__, -1, &
+   "trying to write variable before registering! "//trim(varname))
 
 !! Note - need to use sync mode as the array for the output plane gets reused.
 call adios2_put(engine_registry(idx), var_handle, wk2d, adios2_mode_sync, ierror)
+if (ierror.ne.0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "adios2_put")
 #endif
 
 deallocate(wk,wk2d)

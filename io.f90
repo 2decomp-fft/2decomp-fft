@@ -136,7 +136,7 @@ contains
 
   call adios2_init(adios, trim(config_file), MPI_COMM_WORLD, adios2_debug_mode, ierror)
   if (ierror.ne.0) call decomp_2d_abort(__FILE__, __LINE__, ierror, &
-     "Error initialising ADIOS2 - is adios2_config.xml present and valid?")
+     "Error initialising ADIOS2 - is "//trim(config_file)//" present and valid?")
 
   engine_live(:) = .false.
 #endif
@@ -392,12 +392,11 @@ contains
     integer(kind=8) :: curstep
     
     call adios2_at_io(io_handle, adios, io_name, ierror)
-    if (ierror.ne.0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "adios2_at_io")
+    if (ierror.ne.0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "adios2_at_io "//trim(io_name))
     call adios2_inquire_variable(var_handle, io_handle, varname, ierror)
-    if (ierror.ne.0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "adios2_inquire_variable")
-    if (.not.var_handle % valid) then
-       if (ierror.ne.0) call decomp_2d_abort(varname, "ERROR: trying to read variable without registering first!")
-    endif
+    if (ierror.ne.0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "adios2_inquire_variable "//trim(varname))
+    if (.not.var_handle % valid) call decomp_2d_abort(__FILE__, __LINE__, -1, &
+       "ERROR: trying to read variable without registering first! "//trim(varname))
 
     call adios2_variable_steps(nsteps, var_handle, ierror)
     if (ierror.ne.0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "adios2_variable_steps")
@@ -1224,20 +1223,18 @@ contains
     end if
 #else
     if (.not. engine_live(idx)) then
-       print *, "ERROR: Engine is not live!"
-       stop
+       call decomp_2d_abort(__FILE__, __LINE__, -1, "ERROR: Engine is not live!")
     end if
     
     call adios2_at_io(io_handle, adios, io_name, ierror)
-    if (ierror.ne.0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "adios2_at_io")
+    if (ierror.ne.0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "adios2_at_io "//trim(io_name))
     call adios2_inquire_variable(var_handle, io_handle, varname, ierror)
-    if (ierror.ne.0) call decomp_2d_abort(__FILE__, __LINE__, ierror, adios2_inquire_variable)
-    if (.not.var_handle % valid) then
-       call decomp_2d_abort(__FILE__, __LINE__, -1, "ERROR: trying to write variable before registering! "//varname)
-       stop
-    endif
+    if (ierror.ne.0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "adios2_inquire_variable "//trim(varname))
+    if (.not.var_handle % valid) call decomp_2d_abort(__FILE__, __LINE__, -1, &
+       "ERROR: trying to write variable before registering! "//trim(varname))
 
-    if (idx .lt. 1) call decomp_2d_abort(__FILE__, __LINE__, idx, "You haven't opened "//io_name//":"//dirname)
+    if (idx .lt. 1) call decomp_2d_abort(__FILE__, __LINE__, idx, &
+       "You haven't opened "//trim(io_name)//":"//trim(dirname))
 
     if (present(opt_deferred_writes)) then
        deferred_writes = opt_deferred_writes
@@ -1253,7 +1250,7 @@ contains
        call adios2_put(engine_registry(idx), var_handle, var, write_mode, ierror)
        if (ierror.ne.0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "adios2_put")
     else
-       call decomp_2d_abort(__FILE__, __LINE__, ierror, &
+       call decomp_2d_abort(__FILE__, __LINE__, -1, &
           "ERROR: decomp2d thinks engine is live, but adios2 engine object is not valid")
     end if
 #endif
@@ -1307,10 +1304,10 @@ contains
     
     ! Check if variable already exists, if not create it
     call adios2_at_io(io_handle, adios, io_name, ierror)
-    if (ierror.ne.0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "adios2_at_io "//io_name)
+    if (ierror.ne.0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "adios2_at_io "//trim(io_name))
     if (io_handle%valid) then
        call adios2_inquire_variable(var_handle, io_handle, varname, ierror)
-       if (ierror.ne.0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "adios2_inquire_variable "//varname)
+       if (ierror.ne.0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "adios2_inquire_variable "//trim(varname))
        if (.not.var_handle % valid) then
           !! New variable
           if (nrank .eq. 0) then
@@ -1331,7 +1328,8 @@ contains
           call adios2_define_variable(var_handle, io_handle, varname, data_type, &
                ndims, int(sizes, kind=8), int(starts, kind=8), int(subsizes, kind=8), &
                adios2_constant_dims, ierror)
-          if (ierror.ne.0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "adios2_define_variable, ERROR registering variable")
+          if (ierror.ne.0) call decomp_2d_abort(__FILE__, __LINE__, ierror, &
+             "adios2_define_variable, ERROR registering variable "//trim(varname))
        endif
     else
        call decomp_2d_abort(__FILE__, __LINE__, -1, "trying to register variable with invalid IO!")
@@ -1642,7 +1640,7 @@ contains
 #ifdef ADIOS2
     if (adios%valid) then
        call adios2_declare_io(io, adios, io_name, ierror)
-       if (ierror.ne.0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "adios2_declare_io")
+       if (ierror.ne.0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "adios2_declare_io "//trim(io_name))
     else
        call decomp_2d_abort(__FILE__, __LINE__, -1, "couldn't declare IO - adios object not valid")
     end if
@@ -1737,7 +1735,7 @@ contains
           end if
 #else
           call adios2_at_io(io, adios, io_name, ierror)
-          if (ierror.ne.0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "adios2_at_io "//io_name)
+          if (ierror.ne.0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "adios2_at_io "//trim(io_name))
           if (io%valid) then
              call adios2_open(engine_registry(idx), io, trim(gen_iodir_name(io_dir, io_name)), access_mode, ierror)
              if (ierror.ne.0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "ERROR opening engine!")

@@ -27,49 +27,8 @@ AR = ar
 LIBOPT = rcs
 
 #######CMP settings###########
-ifeq ($(CMP),intel)
-  FC = mpiifort
-  FFLAGS += -fpp -O3 -mavx2 -march=core-avx2 -mtune=core-avx2
-  FFLAGS += -fopenmp
-  LFLAGS += -fopenmp
-else ifeq ($(CMP),gcc)
-  FC = mpif90
-  FFLAGS += -cpp
-  ifeq "$(shell expr `gfortran -dumpversion | cut -f1 -d.` \>= 10)" "1"
-    FFLAGS += -fallow-argument-mismatch
-  endif
-  ifeq ($(BUILD),debug)
-    DEFS += -DDEBUG
-    FFLAGS += -g3 -Og
-    FFLAGS += -ffpe-trap=invalid,zero -fcheck=all -fimplicit-none
-  else
-    FFLAGS += -O3 -march=native
-    FFLAGS += -fopenmp -ftree-parallelize-loops=12
-    LFLAGS += -fopenmp
-  endif
-else ifeq ($(CMP),nagfor)
-  FC = mpinagfor
-  FFLAGS += -fpp
-else ifeq ($(CMP),cray)
-  FC = ftn
-  FFLAGS += -eF -g -O3 -N 1023
-  FFLAGS += -h omp -h thread_do_concurrent
-  LFLAGS += -h omp -h thread_do_concurrent
-else ifeq ($(CMP),nvhpc)
-  FC = mpif90
-  ifeq ($(PARAMOD),multicore)
-     FFLAGS += -cpp -O3 -Minfo=accel -stdpar -acc -target=multicore
-     LFLAGS += -acc -lnvhpcwrapnvtx
-  else ifeq ($(PARAMOD),gpu)
-     #FFLAGS = -cpp -D_GPU -D_NCCL -Mfree -Kieee -Minfo=accel,stdpar -stdpar=gpu -gpu=cc80,managed,lineinfo -acc -target=gpu -traceback -O3 -DUSE_CUDA -cuda -cudalib=cufft,nccl
-     FFLAGS += -cpp -Mfree -Kieee -Minfo=accel,stdpar -stdpar=gpu -gpu=cc80,managed,lineinfo -acc -target=gpu -traceback -O3 -DUSE_CUDA -cuda
-     LFLAGS += -acc -lnvhpcwrapnvtx
-  else
-    FFLAGS += -cpp -O3 -march=native
-  endif
-  #FFLAGS += -cpp -O3 -Minfo=accel -stdpar -acc -target=multicore
-  #FFLAGS = -cpp -Mfree -Kieee -Minfo=accel -g -acc -target=gpu -fast -O3 -Minstrument
-endif
+CMPINC = Makefile.compilers
+include $(CMPINC)
 
 ### List of files for the main code
 SRCDECOMP = ./decomp_2d.f90 ./d2d_log.f90

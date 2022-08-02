@@ -5,8 +5,6 @@
 ifeq ($(CMP),intel)
   FC = mpiifort
   FFLAGS += -fpp -O3 -mavx2 -march=core-avx2 -mtune=core-avx2
-  FFLAGS += -fopenmp
-  LFLAGS += -fopenmp
 else ifeq ($(CMP),gcc)
   FC = mpif90
   FFLAGS += -cpp
@@ -19,8 +17,6 @@ else ifeq ($(CMP),gcc)
     FFLAGS += -ffpe-trap=invalid,zero -fcheck=all -fimplicit-none
   else
     FFLAGS += -O3 -march=native
-    FFLAGS += -fopenmp -ftree-parallelize-loops=12
-    LFLAGS += -fopenmp
   endif
 else ifeq ($(CMP),nagfor)
   FC = mpinagfor
@@ -28,8 +24,6 @@ else ifeq ($(CMP),nagfor)
 else ifeq ($(CMP),cray)
   FC = ftn
   FFLAGS += -eF -g -O3 -N 1023
-  FFLAGS += -h omp -h thread_do_concurrent
-  LFLAGS += -h omp -h thread_do_concurrent
 else ifeq ($(CMP),nvhpc)
   FC = mpif90
   ifeq ($(PARAMOD),multicore)

@@ -21,7 +21,7 @@ LDFLAGS ?= # user can set default linker flags
 FFLAGS = $(FCFLAGS)
 LFLAGS = $(LDFLAGS)
 
-LIBDECOMP = libdecomp2d.a
+LIBDECOMP = decomp2d
 
 AR = ar
 LIBOPT = rcs
@@ -78,7 +78,9 @@ all: $(DECOMPINC) $(OBJDIR) $(LIBDECOMP)
 $(DECOMPINC):
 	mkdir $(DECOMPINC)
 
-$(LIBDECOMP) : $(OBJDECOMP)
+$(LIBDECOMP) : lib$(LIBDECOMP).a
+
+lib$(LIBDECOMP).a: $(OBJDECOMP)
 	$(AR) $(LIBOPT) $@ $^
 
 $(OBJDIR):
@@ -87,7 +89,12 @@ $(OBJDIR):
 $(OBJDECOMP) : $(OBJDIR)/%.o : $(SRCDIR)/%.f90
 	$(FC) $(FFLAGS) $(OPT) $(DEFS) $(INC) -c $< -o $@
 
+examples: $(LIBDECOMP)
+	$(MAKE) -C examples
+
 .PHONY: clean
 
 clean:
 	rm -f $(OBJDECOMP) $(DECOMPINC)/*.mod $(DECOMPINC)/*.smod $(LIBDECOMP)
+
+export

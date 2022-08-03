@@ -22,7 +22,7 @@ FFLAGS = $(FCFLAGS)
 LFLAGS = $(LDFLAGS)
 MODFLAG = -J
 
-LIBDECOMP = libdecomp2d.a
+LIBDECOMP = decomp2d
 
 AR = ar
 LIBOPT = rcs
@@ -32,7 +32,7 @@ CMPINC = Makefile.compilers
 include $(CMPINC)
 
 ### List of files for the main code
-SRCDECOMP = ./decomp_2d.f90 ./d2d_log.f90
+SRCDECOMP = decomp_2d.f90 d2d_log.f90
 
 #######FFT settings##########
 ifeq ($(FFT),fftw3)
@@ -50,7 +50,7 @@ else ifeq ($(FFT),generic)
   INC=
   LIBFFT=
 else ifeq ($(FFT),mkl)
-  SRCDECOMP := $(DECOMPDIR)/mkl_dfti.f90 $(SRCDECOMP)
+  SRCDECOMP := mkl_dfti.f90 $(SRCDECOMP)
   LIBFFT=-Wl,--start-group $(MKLROOT)/lib/intel64/libmkl_intel_lp64.a $(MKLROOT)/lib/intel64/libmkl_sequential.a $(MKLROOT)/lib/intel64/libmkl_core.a -Wl,--end-group -lpthread
   INC=-I$(MKLROOT)/include
 else ifeq ($(FFT),cufft)
@@ -59,8 +59,9 @@ else ifeq ($(FFT),cufft)
   #LIBFFT=-L$(CUFFT_PATH)/lib64 -Mcudalib=cufft 
 endif
 
-SRCDECOMP := $(SRCDECOMP) ./fft_$(FFT).f90
-OBJDECOMP = $(SRCDECOMP:%.f90=$(OBJDIR)/%.o)
+SRCDECOMP := $(SRCDECOMP) fft_$(FFT).f90
+SRCDECOMP_ = $(patsubst %.f90,$(SRCDIR)/%.f90,$(SRCDECOMP))
+OBJDECOMP = $(SRCDECOMP_:$(SRCDIR)/%.f90=$(OBJDIR)/%.o)
 
 #######OPTIONS settings###########
 OPT =
@@ -69,6 +70,7 @@ LINKOPT = $(FFLAGS)
 # Normally no need to change anything below
 
 OBJDIR = obj
+SRCDIR = src
 DECOMPINC = mod
 FFLAGS += $(MODFLAG)$(DECOMPINC) -I$(DECOMPINC)
 
@@ -77,17 +79,24 @@ all: $(DECOMPINC) $(OBJDIR) $(LIBDECOMP)
 $(DECOMPINC):
 	mkdir $(DECOMPINC)
 
-$(LIBDECOMP) : $(OBJDECOMP)
+$(LIBDECOMP) : lib$(LIBDECOMP).a
+
+lib$(LIBDECOMP).a: $(OBJDECOMP)
 	$(AR) $(LIBOPT) $@ $^
 
 $(OBJDIR):
 	mkdir $(OBJDIR)
 
-$(OBJDECOMP) : $(OBJDIR)/%.o : ./%.f90
+$(OBJDECOMP) : $(OBJDIR)/%.o : $(SRCDIR)/%.f90
 	$(FC) $(FFLAGS) $(OPT) $(DEFS) $(INC) -c $< -o $@
+
+examples: $(LIBDECOMP)
+	$(MAKE) -C examples
 
 .PHONY: clean
 
 clean:
 	rm -f $(OBJDIR)/*.o $(DECOMPINC)/*.mod $(DECOMPINC)/*.smod $(LIBDECOMP)
 	rm -f ./*.o ./*.mod ./*.smod # Ensure old files are removed
+
+export

@@ -95,8 +95,11 @@ examples: $(LIBDECOMP)
 
 .PHONY: clean
 
-clean:
+clean: clean-examples
 	rm -f $(OBJDIR)/*.o $(DECOMPINC)/*.mod $(DECOMPINC)/*.smod lib$(LIBDECOMP).a
 	rm -f ./*.o ./*.mod ./*.smod # Ensure old files are removed
+
+clean-examples:
+	$(MAKE) -C examples clean
 
 export

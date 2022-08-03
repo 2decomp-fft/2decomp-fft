@@ -96,7 +96,7 @@ examples: $(LIBDECOMP)
 .PHONY: clean
 
 clean:
-	rm -f $(OBJDIR)/*.o $(DECOMPINC)/*.mod $(DECOMPINC)/*.smod $(LIBDECOMP)
+	rm -f $(OBJDIR)/*.o $(DECOMPINC)/*.mod $(DECOMPINC)/*.smod lib$(LIBDECOMP).a
 	rm -f ./*.o ./*.mod ./*.smod # Ensure old files are removed
 
 export

@@ -21,77 +21,17 @@ LDFLAGS ?= # user can set default linker flags
 FFLAGS = $(FCFLAGS)
 LFLAGS = $(LDFLAGS)
 
-LIBDECOMP = libdecomp2d.a
+LIBDECOMP = decomp2d
 
 AR = ar
 LIBOPT = rcs
 
 #######CMP settings###########
-
-DEBUG_BUILD =
-ifeq ($(BUILD),debug)
-  DEBUG_BUILD = yes
-endif
-ifeq ($(BUILD),dev)
-  DEBUG_BUILD = yes
-endif
-
-ifeq ($(CMP),intel)
-  FC = mpiifort
-  FFLAGS += -fpp -O3 -mavx2 -march=core-avx2 -mtune=core-avx2
-  FFLAGS += -fopenmp
-  LFLAGS += -fopenmp
-else ifeq ($(CMP),gcc)
-  FC = mpif90
-  FFLAGS += -cpp
-  ifeq "$(shell expr `gfortran -dumpversion | cut -f1 -d.` \>= 10)" "1"
-    FFLAGS += -fallow-argument-mismatch
-  endif
-
-  ifeq ($(DEBUG_BUILD),yes)
-    DEFS += -DDEBUG
-    FFLAGS += -g -Og
-    FFLAGS += -ffpe-trap=invalid,zero -fcheck=all -fimplicit-none
-  else
-    FFLAGS += -O3 -march=native
-    FFLAGS += -fopenmp -ftree-parallelize-loops=12
-    LFLAGS += -fopenmp
-  endif
-
-  ifeq ($(BUILD),dev)
-    # Add additional, stricter flags
-    FFLAGS += -Wall -Wpedantic
-    FFLAGS += -Wimplicit-procedure -Wimplicit-interface
-    FFLAGS += -Wno-unused-function
-    FFLAGS += -Werror
-  endif
-
-else ifeq ($(CMP),nagfor)
-  FC = mpinagfor
-  FFLAGS += -fpp
-else ifeq ($(CMP),cray)
-  FC = ftn
-  FFLAGS += -eF -g -O3 -N 1023
-  FFLAGS += -h omp -h thread_do_concurrent
-  LFLAGS += -h omp -h thread_do_concurrent
-else ifeq ($(CMP),nvhpc)
-  FC = mpif90
-  ifeq ($(PARAMOD),multicore)
-     FFLAGS += -cpp -O3 -Minfo=accel -stdpar -acc -target=multicore
-     LFLAGS += -acc -lnvhpcwrapnvtx
-  else ifeq ($(PARAMOD),gpu)
-     #FFLAGS = -cpp -D_GPU -D_NCCL -Mfree -Kieee -Minfo=accel,stdpar -stdpar=gpu -gpu=cc80,managed,lineinfo -acc -target=gpu -traceback -O3 -DUSE_CUDA -cuda -cudalib=cufft,nccl
-     FFLAGS += -cpp -Mfree -Kieee -Minfo=accel,stdpar -stdpar=gpu -gpu=cc80,managed,lineinfo -acc -target=gpu -traceback -O3 -DUSE_CUDA -cuda
-     LFLAGS += -acc -lnvhpcwrapnvtx
-  else
-    FFLAGS += -cpp -O3 -march=native
-  endif
-  #FFLAGS += -cpp -O3 -Minfo=accel -stdpar -acc -target=multicore
-  #FFLAGS = -cpp -Mfree -Kieee -Minfo=accel -g -acc -target=gpu -fast -O3 -Minstrument
-endif
+CMPINC = Makefile.compilers
+include $(CMPINC)
 
 ### List of files for the main code
-SRCDECOMP = ./decomp_2d.f90 ./d2d_log.f90
+SRCDECOMP = decomp_2d.f90 d2d_log.f90
 
 #######FFT settings##########
 ifeq ($(FFT),fftw3)
@@ -109,7 +49,7 @@ else ifeq ($(FFT),generic)
   INC=
   LIBFFT=
 else ifeq ($(FFT),mkl)
-  SRCDECOMP := $(DECOMPDIR)/mkl_dfti.f90 $(SRCDECOMP)
+  SRCDECOMP := mkl_dfti.f90 $(SRCDECOMP)
   LIBFFT=-Wl,--start-group $(MKLROOT)/lib/intel64/libmkl_intel_lp64.a $(MKLROOT)/lib/intel64/libmkl_sequential.a $(MKLROOT)/lib/intel64/libmkl_core.a -Wl,--end-group -lpthread
   INC=-I$(MKLROOT)/include
 else ifeq ($(FFT),cufft)
@@ -118,8 +58,9 @@ else ifeq ($(FFT),cufft)
   #LIBFFT=-L$(CUFFT_PATH)/lib64 -Mcudalib=cufft 
 endif
 
-SRCDECOMP := $(SRCDECOMP) ./fft_$(FFT).f90
-OBJDECOMP = $(SRCDECOMP:%.f90=$(OBJDIR)/%.o)
+SRCDECOMP := $(SRCDECOMP) fft_$(FFT).f90
+SRCDECOMP_ = $(patsubst %.f90,$(SRCDIR)/%.f90,$(SRCDECOMP))
+OBJDECOMP = $(SRCDECOMP_:$(SRCDIR)/%.f90=$(OBJDIR)/%.o)
 
 #######OPTIONS settings###########
 OPT =
@@ -128,6 +69,7 @@ LINKOPT = $(FFLAGS)
 # Normally no need to change anything below
 
 OBJDIR = obj
+SRCDIR = src
 DECOMPINC = mod
 FFLAGS += -J$(DECOMPINC) -I$(DECOMPINC)
 
@@ -136,16 +78,23 @@ all: $(DECOMPINC) $(OBJDIR) $(LIBDECOMP)
 $(DECOMPINC):
 	mkdir $(DECOMPINC)
 
-$(LIBDECOMP) : $(OBJDECOMP)
+$(LIBDECOMP) : lib$(LIBDECOMP).a
+
+lib$(LIBDECOMP).a: $(OBJDECOMP)
 	$(AR) $(LIBOPT) $@ $^
 
 $(OBJDIR):
 	mkdir $(OBJDIR)
 
-$(OBJDECOMP) : $(OBJDIR)/%.o : ./%.f90
+$(OBJDECOMP) : $(OBJDIR)/%.o : $(SRCDIR)/%.f90
 	$(FC) $(FFLAGS) $(OPT) $(DEFS) $(INC) -c $< -o $@
+
+examples: $(LIBDECOMP)
+	$(MAKE) -C examples
 
 .PHONY: clean
 
 clean:
-	rm -f $(OBJDECOMP) $(DECOMPINC)/*.mod $(LIBDECOMP)
+	rm -f $(OBJDECOMP) $(DECOMPINC)/*.mod $(DECOMPINC)/*.smod $(LIBDECOMP)
+
+export

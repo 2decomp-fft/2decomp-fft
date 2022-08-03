@@ -89,4 +89,5 @@ $(OBJDECOMP) : $(OBJDIR)/%.o : ./%.f90
 .PHONY: clean
 
 clean:
-	rm -f $(OBJDECOMP) $(DECOMPINC)/*.mod $(DECOMPINC)/*.smod $(LIBDECOMP)
+	rm -f $(OBJDIR)/*.o $(DECOMPINC)/*.mod $(DECOMPINC)/*.smod $(LIBDECOMP)
+	rm -f ./*.o ./*.mod ./*.smod # Ensure old files are removed

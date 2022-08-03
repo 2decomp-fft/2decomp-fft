@@ -27,6 +27,7 @@ else ifeq ($(CMP),cray)
   FFLAGS += -eF -g -O3 -N 1023
 else ifeq ($(CMP),nvhpc)
   FC = mpif90
+  MODFLAG = -module 
   ifeq ($(PARAMOD),multicore)
      FFLAGS += -cpp -O3 -Minfo=accel -stdpar -acc -target=multicore
      LFLAGS += -acc -lnvhpcwrapnvtx

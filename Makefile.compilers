@@ -13,6 +13,7 @@ endif
 ifeq ($(CMP),intel)
   FC = mpiifort
   FFLAGS += -fpp -O3 -mavx2 -march=core-avx2 -mtune=core-avx2
+  MODFLAG = -module 
 else ifeq ($(CMP),gcc)
   FC = mpif90
   FFLAGS += -cpp
@@ -43,6 +44,7 @@ else ifeq ($(CMP),cray)
   FFLAGS += -eF -g -O3 -N 1023
 else ifeq ($(CMP),nvhpc)
   FC = mpif90
+  MODFLAG = -module 
   ifeq ($(PARAMOD),multicore)
      FFLAGS += -cpp -O3 -Minfo=accel -stdpar -acc -target=multicore
      LFLAGS += -acc -lnvhpcwrapnvtx

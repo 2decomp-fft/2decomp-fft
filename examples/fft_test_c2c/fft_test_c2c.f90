@@ -5,6 +5,8 @@
 
 program fft_test_c2c
 
+use mpi
+
 use decomp_2d
 use decomp_2d_fft
 
@@ -84,7 +86,8 @@ if (nrank==0) then
    write(*,*) ''
    write(*,*) 'Original data values'
    write(*,*) ''
-   call print_global(in1,nx,ny,nz)
+   write(*,*) 'print_global missing'
+   !call print_global(in1,nx,ny,nz)
 end if
 
 ! ===== 3D forward FFT =====
@@ -105,7 +108,8 @@ call assemble_global(3,out,out1,nx,ny,nz)
 if (nrank==0) then
    write(*,*) 'Components of discrete Fourier transform'
    write(*,*) ''
-   call print_global(out1,nx,ny,nz)
+   write(*,*) 'print_global missing'
+   !call print_global(out1,nx,ny,nz)
 end if
 
 ! ===== 3D inverse FFT =====
@@ -126,7 +130,8 @@ call assemble_global(1,in,in1,nx,ny,nz)
 if (nrank==0) then
    write(*,*) 'Original sequence as restored by inverse transform'
    write(*,*) ''
-   call print_global(in1,nx,ny,nz)
+   write(*,*) 'print_global missing'
+   !call print_global(in1,nx,ny,nz)
 end if
 
 call decomp_2d_fft_finalize

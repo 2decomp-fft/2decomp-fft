@@ -1,5 +1,7 @@
 program io_plane_test
 
+  use mpi
+
   use decomp_2d
   ! use decomp_2d_io
 

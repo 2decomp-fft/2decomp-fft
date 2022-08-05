@@ -12,7 +12,20 @@ endif
 
 ifeq ($(CMP),intel)
   FC = mpiifort
-  FFLAGS += -fpp -O3 -mavx2 -march=core-avx2 -mtune=core-avx2
+
+  FFLAGS += -fpp
+  ifeq ($(DEBUG_BUILD),yes)
+    DEFS += -DDEBUG
+    FFLAGS += -g -O0
+  else
+    FFLAGS += -O3 -mavx2 -march=core-avx2 -mtune=core-avx2
+  endif
+
+  ifeq ($(BUILD),dev)
+    # Add additional, stricter flags
+    FFLAGS += -warn all,noexternal
+  endif
+
   MODFLAG = -module 
 else ifeq ($(CMP),gcc)
   FC = mpif90

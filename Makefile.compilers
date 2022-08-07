@@ -41,10 +41,19 @@ else ifeq ($(CMP),gcc)
     FFLAGS += -O3 -march=native
   endif
 
+  ifeq ($(findstring openmpi,$(shell $(FC) -show | grep openmpi)),openmpi)
+    MPI_FAMILY = openmpi
+  else
+    MPI_FAMILY = mpich # Probably
+  endif
+
   ifeq ($(BUILD),dev)
     # Add additional, stricter flags
     FFLAGS += -Wall -Wpedantic
-    FFLAGS += -Wimplicit-procedure -Wimplicit-interface
+    ifeq ($(MPI_FAMILY),openmpi)
+      # MPICH doesn't export interfaces...
+      FFLAGS += -Wimplicit-procedure -Wimplicit-interface
+    endif
     FFLAGS += -Wno-unused-function
     FFLAGS += -Werror
   endif

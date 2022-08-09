@@ -92,8 +92,10 @@
 #if defined(_NCCL)
     nccl_stat = ncclGroupStart()
     do col_rank_id = 0, (col_comm_size - 1)
-        nccl_stat = ncclSend(work1_r_d( decomp%x1disp(col_rank_id)+1 ), decomp%x1cnts(col_rank_id), ncclDouble, local_to_global_col(col_rank_id+1), nccl_comm_2decomp, cuda_stream_2decomp)
-        nccl_stat = ncclRecv(work2_r_d( decomp%y1disp(col_rank_id)+1 ), decomp%y1cnts(col_rank_id), ncclDouble, local_to_global_col(col_rank_id+1), nccl_comm_2decomp, cuda_stream_2decomp)
+        nccl_stat = ncclSend(work1_r_d( decomp%x1disp(col_rank_id)+1 ), decomp%x1cnts(col_rank_id), &
+          ncclDouble, local_to_global_col(col_rank_id+1), nccl_comm_2decomp, cuda_stream_2decomp)
+        nccl_stat = ncclRecv(work2_r_d( decomp%y1disp(col_rank_id)+1 ), decomp%y1cnts(col_rank_id), &
+          ncclDouble, local_to_global_col(col_rank_id+1), nccl_comm_2decomp, cuda_stream_2decomp)
     end do
     nccl_stat = ncclGroupEnd()
     cuda_stat = cudaStreamSynchronize(cuda_stream_2decomp)

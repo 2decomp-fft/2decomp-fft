@@ -128,6 +128,21 @@ submodule (decomp_2d) d2d_log
 #endif
     write (io_unit, *) '==========================================================='
     write (io_unit, *) '==========================================================='
+#ifdef DEBUG
+    !
+    ! In DEBUG mode, rank 0 will also print environment variables
+    !
+    ! The system call is not blocking if supported
+    ! FIXME: The name of the file is hardcoded
+    !
+    if (nrank == 0) then
+       write (io_unit, *) '============== Environment variables ======================'
+       write (io_unit, *) '==========================================================='
+       write (io_unit, *) '==========================================================='
+       call execute_command_line("env >> decomp_2d_setup_000.log", &
+                                 wait = .false.)
+    endif
+#endif
 
   end subroutine d2d_listing
 

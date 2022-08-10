@@ -9,6 +9,12 @@ ifneq ($(strip $(SINGLE_PRECISION_POISSON)),1)
 override DEFS += -DDOUBLE_PREC -cpp
 endif
 endif
+ifeq ($(strip $(FFLAGS_DEBUG)),1)
+BUILD=DEBUG
+endif
+ifeq ($(strip $(FFLAGS_DEBUG_MAX)),1)
+BUILD=DEBUG
+endif
 CMP=$(strip $(FCOMP))
 #=======================================================================
 # Makefile for 2DECOMP&FFT compilers

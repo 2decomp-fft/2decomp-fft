@@ -32,7 +32,7 @@ CMPINC = Makefile.compilers
 include $(CMPINC)
 
 ### List of files for the main code
-SRCDECOMP = decomp_2d.f90 d2d_log.f90
+SRCDECOMP = decomp_2d.f90 d2d_log.f90 io.f90
 
 #######FFT settings##########
 ifeq ($(FFT),fftw3)
@@ -59,7 +59,7 @@ else ifeq ($(FFT),cufft)
   #LIBFFT=-L$(CUFFT_PATH)/lib64 -Mcudalib=cufft 
 endif
 
-SRCDECOMP := $(SRCDECOMP) fft_$(FFT).f90 io.f90
+SRCDECOMP := $(SRCDECOMP) fft_$(FFT).f90
 SRCDECOMP_ = $(patsubst %.f90,$(SRCDIR)/%.f90,$(SRCDECOMP))
 OBJDECOMP = $(SRCDECOMP_:$(SRCDIR)/%.f90=$(OBJDIR)/%.o)
 

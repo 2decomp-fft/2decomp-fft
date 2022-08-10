@@ -31,6 +31,8 @@ submodule (decomp_2d) d2d_log
     ! Local variable
     integer :: io_unit
 
+    integer :: version, subversion, ierr
+
     !
     ! Default : only rank 0 will print a listing
     !
@@ -83,7 +85,11 @@ submodule (decomp_2d) d2d_log
 #endif
     write (io_unit, *) 'Compiled with ', compiler_version()
     write (io_unit, *) 'Compiler options : ', compiler_options()
-    write (io_unit, '(" Version of the MPI library : ",I0,".",I0)') MPI_VERSION, MPI_SUBVERSION
+    call MPI_Get_version(version, subversion, ierr)
+    if (ierr /= 0) then
+       call decomp_2d_abort(__FILE__, __LINE__, ierr, "MPI_Get_version")
+    end if
+    write (io_unit, '(" Version of the MPI library : ",I0,".",I0)') version, subversion
 #ifdef DEBUG
     write (io_unit, *) 'Compile flag DEBUG detected'
 #endif

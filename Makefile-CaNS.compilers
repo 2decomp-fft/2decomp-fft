@@ -1,0 +1,47 @@
+#
+# mods to accomodate CaNS
+#
+CANS_DIR=../..
+include $(CANS_DIR)/build.conf
+DEFS = -DVERSION=\"$(GIT_VERSION)\"
+ifneq ($(strip $(SINGLE_PRECISION)),1)
+ifneq ($(strip $(SINGLE_PRECISION_POISSON)),1)
+override DEFS += -DDOUBLE_PREC -cpp
+endif
+endif
+CMP=$(strip $(FCOMP))
+#=======================================================================
+# Makefile for 2DECOMP&FFT compilers
+#=======================================================================
+FC = mpifort
+ifeq ($(CMP),INTEL)
+  FC = mpiifort
+  FFLAGS += -fpp -O3 -mavx2 -march=core-avx2 -mtune=core-avx2
+  MODFLAG = -module
+else ifeq ($(CMP),GNU)
+  FC = mpifort
+  FFLAGS += -cpp
+  ifeq "$(shell expr `gfortran -dumpversion | cut -f1 -d.` \>= 10)" "1"
+    FFLAGS += -fallow-argument-mismatch
+  endif
+  ifeq ($(BUILD),DEBUG)
+    DEFS += -DDEBUG
+    FFLAGS += -g3 -Og
+    FFLAGS += -ffpe-trap=invalid,zero -fcheck=all -fimplicit-none
+  else
+    FFLAGS += -O3 -march=native
+  endif
+else ifeq ($(CMP),NAG)
+  FC = mpinagfor
+  FFLAGS += -fpp
+else ifeq ($(CMP),CRAY)
+  FC = ftn
+  FFLAGS += -eF -g -O3 -N 1023
+else ifeq ($(CMP),NVIDIA)
+  FC = mpifort
+  MODFLAG = -module 
+  FFLAGS += -cpp -O3 -fast
+endif
+ifeq ($(strip $(FTN_MPI_WRAPPER)),1)
+  FC = ftn
+endif

@@ -56,6 +56,11 @@ module decomp_2d
   integer, save, public :: nrank  ! local MPI rank 
   integer, save, public :: nproc  ! total number of processors
 
+#define _SAVE_AUTOTUNE
+#if defined(_SAVE_AUTOTUNE)
+  integer, public :: dims_auto(2)
+#endif
+
   ! parameters for 2D Cartesian topology 
   integer, save, dimension(2) :: dims, coord
   logical, save, dimension(2) :: periodic
@@ -318,11 +323,13 @@ contains
        periodic_z = .false.
     end if
 
+    dims_auto(:) = 0
     if (p_row==0 .and. p_col==0) then
        ! determine the best 2D processor grid
        call best_2d_grid(nproc, row, col)
        p_row = row
        p_col = col
+       dims_auto = [p_row,p_col]
     else
        if (nproc /= p_row*p_col) then
           errorcode = 1
@@ -436,6 +443,7 @@ contains
     !
     ! Select the IO unit for decomp_2d setup
     !
+#if 0
 #ifdef DEBUG
     write(fname, "(I3.3)") nrank
     open(newunit=iounit, file='decomp_2d_setup_'//trim(fname)//'.log', iostat=ierror)
@@ -459,6 +467,7 @@ contains
        close(iounit, iostat=ierror)
        if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "Could not close log file")
     endif
+#endif
 
     return
   end subroutine decomp_2d_init
@@ -1226,22 +1235,39 @@ contains
     size1=data1/proc
     nu = data1 - size1 * proc
     nl = proc - nu
+#define NEW_DISTRIBUTION
+#if !defined(NEW_DISTRIBUTION)
     st(0) = 1
     sz(0) = size1
     en(0) = size1
     do i=1,nl-1
-       st(i) = st(i-1) + size1
-       sz(i) = size1
-       en(i) = en(i-1) + size1
+      st(i) = st(i-1) + size1
+      sz(i) = size1
+      en(i) = en(i-1) + size1
     end do
     size1 = size1 + 1
     do i=nl,proc-1
-       st(i) = en(i-1) + 1
-       sz(i) = size1
-       en(i) = en(i-1) + size1
+      st(i) = en(i-1) + 1
+      sz(i) = size1
+      en(i) = en(i-1) + size1
     end do
     en(proc-1)= data1 
     sz(proc-1)= data1-st(proc-1)+1
+#else
+    sz(:) = data1/proc
+    do i=1,mod(data1,proc)
+      sz(i-1) = sz(i-1) + 1
+    enddo
+    do i=1,proc
+      st(i-1) = 1 + (i-1)*sz(i-1)
+      en(i-1) = 0 + (i  )*sz(i-1)
+    enddo
+    do i=mod(data1,proc)+1,proc
+      st(i-1) = st(i-1) + mod(data1,proc)
+      en(i-1) = en(i-1) + mod(data1,proc)
+    enddo
+#endif
+#undef NEW_DISTRIBUTION
 
     return
   end subroutine distribute

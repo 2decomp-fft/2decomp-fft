@@ -8,7 +8,7 @@
 # generate a Git version string
 GIT_VERSION := $(shell git describe --tag --long --always)
 
-DEFS = -DDOUBLE_PREC -DVERSION=\"$(GIT_VERSION)\"
+#DEFS = -DDOUBLE_PREC -DVERSION=\"$(GIT_VERSION)\" # add under Makefile.compilers
 
 LCL = local# local,lad,sdu,archer
 CMP = gcc# intel,gcc,nagfor,cray,nvhpc
@@ -28,7 +28,7 @@ AR = ar
 LIBOPT = rcs
 
 #######CMP settings###########
-CMPINC = Makefile.compilers
+CMPINC = Makefile-CaNS.compilers
 include $(CMPINC)
 
 ### List of files for the main code
@@ -72,7 +72,7 @@ LINKOPT = $(FFLAGS)
 OBJDIR = obj
 SRCDIR = src
 DECOMPINC = mod
-FFLAGS += $(MODFLAG)$(DECOMPINC) -I$(DECOMPINC)
+FFLAGS += $(MODFLAG) $(DECOMPINC) -I$(DECOMPINC)
 
 all: $(DECOMPINC) $(OBJDIR) $(LIBDECOMP)
 

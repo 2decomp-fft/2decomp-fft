@@ -32,7 +32,7 @@ CMPINC = Makefile-CaNS.compilers
 include $(CMPINC)
 
 ### List of files for the main code
-SRCDECOMP = decomp_2d.f90 d2d_log.f90
+SRCDECOMP = decomp_2d.f90 io.f90 d2d_log.f90
 
 #######FFT settings##########
 ifeq ($(FFT),fftw3)

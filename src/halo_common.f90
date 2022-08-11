@@ -79,6 +79,12 @@
        end if
     else
        ! invalid input
+
+       ! Set defaults to silence "uninitialised errors"
+       xs = 1; xe = 1
+       ys = 1; ye = 1
+       zs = 1; ze = 1
+       
        call decomp_2d_abort(10, &
             'Invalid data passed to update_halo')
     end if

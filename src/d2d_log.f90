@@ -65,7 +65,7 @@ submodule (decomp_2d) d2d_log
 
     ! Basic info
 #ifdef DEBUG
-    write (io_unit, *) 'I am mpi rank ', nrank
+    if (decomp_debug > 1) write (io_unit, *) 'I am mpi rank ', nrank
 #endif
     write (io_unit, *) 'Total ranks ', nproc
     write (io_unit, *) 'Global data size : ', nx_global, ny_global, nz_global
@@ -92,6 +92,7 @@ submodule (decomp_2d) d2d_log
     write (io_unit, '(" Version of the MPI library : ",I0,".",I0)') version, subversion
 #ifdef DEBUG
     write (io_unit, *) 'Compile flag DEBUG detected'
+    write (io_unit, *) '   debug level : ', decomp_debug
 #endif
 #ifdef SHM
     write (io_unit, *) 'Compile flag SHM detected'
@@ -135,9 +136,11 @@ submodule (decomp_2d) d2d_log
     !
     ! In DEBUG mode, rank 0 will also print environment variables
     !
+    ! At high debug level, all ranks will print env. variables
+    !
     ! The system call, if writing to a file, is not blocking if supported
     !
-    if (nrank == 0) then
+    if (nrank == 0 .or. decomp_debug > 1) then
        write (io_unit, *) '============== Environment variables ======================'
        write (io_unit, *) '==========================================================='
        write (io_unit, *) '==========================================================='

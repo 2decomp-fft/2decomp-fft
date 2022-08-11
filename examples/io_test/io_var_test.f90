@@ -64,7 +64,7 @@ program io_var_test
      do j=1,ny
         do i=1,nx
            data1(i,j,k) = real(m,mytype)
-           cdata1(i,j,k) = cmplx(real(m,mytype),real(m,mytype))
+           cdata1(i,j,k) = cmplx(real(m,mytype),real(m,mytype), kind=mytype)
            m = m+1
         end do
      end do

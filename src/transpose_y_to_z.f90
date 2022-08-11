@@ -25,6 +25,7 @@
 #if defined(_NCCL)
     integer :: row_rank_id
 #endif
+    integer :: istat
 #endif
 
 #ifdef SHM
@@ -33,7 +34,7 @@
 #endif
     
     integer :: s1,s2,s3,d1,d2,d3
-    integer :: ierror, istat
+    integer :: ierror
 
     if (present(opt_decomp)) then
        decomp = opt_decomp
@@ -98,8 +99,10 @@
 #if defined(_NCCL)
     nccl_stat = ncclGroupStart()
     do row_rank_id = 0, (row_comm_size - 1)
-        nccl_stat = ncclSend(work1_r_d( decomp%y2disp(row_rank_id)+1 ), decomp%y2cnts(row_rank_id), ncclDouble, local_to_global_row(row_rank_id+1), nccl_comm_2decomp, cuda_stream_2decomp)
-        nccl_stat = ncclRecv(work2_r_d( decomp%z2disp(row_rank_id)+1 ), decomp%z2cnts(row_rank_id), ncclDouble, local_to_global_row(row_rank_id+1), nccl_comm_2decomp, cuda_stream_2decomp)
+        nccl_stat = ncclSend(work1_r_d( decomp%y2disp(row_rank_id)+1 ), decomp%y2cnts(row_rank_id), &
+          ncclDouble, local_to_global_row(row_rank_id+1), nccl_comm_2decomp, cuda_stream_2decomp)
+        nccl_stat = ncclRecv(work2_r_d( decomp%z2disp(row_rank_id)+1 ), decomp%z2cnts(row_rank_id), &
+          ncclDouble, local_to_global_row(row_rank_id+1), nccl_comm_2decomp, cuda_stream_2decomp)
     end do
     nccl_stat = ncclGroupEnd()
     cuda_stat = cudaStreamSynchronize(cuda_stream_2decomp)
@@ -160,6 +163,7 @@
 #if defined(_NCCL)
     integer :: row_rank_id
 #endif
+    integer :: istat
 #endif
 
 #ifdef SHM
@@ -168,7 +172,7 @@
 #endif
     
     integer :: s1,s2,s3,d1,d2,d3
-    integer :: ierror, istat
+    integer :: ierror
 
     if (present(opt_decomp)) then
        decomp = opt_decomp

@@ -301,7 +301,7 @@ contains
 
     integer :: errorcode, ierror, row, col, iounit
 #ifdef DEBUG
-    character(len=3) fname
+    character(len=7) fname ! Sufficient for up to O(1M) ranks
 #endif
 
     nx_global = nx
@@ -437,7 +437,7 @@ contains
     ! Select the IO unit for decomp_2d setup
     !
 #ifdef DEBUG
-    write(fname, "(I3.3)") nrank
+    write(fname, "(I0)") nrank ! Adapt to magnitude of nrank
     open(newunit=iounit, file='decomp_2d_setup_'//trim(fname)//'.log', iostat=ierror)
 #else
     if (nrank == 0) then

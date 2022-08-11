@@ -301,7 +301,7 @@ contains
 
     integer :: errorcode, ierror, row, col, iounit
 #ifdef DEBUG
-    character(len=3) fname
+    character(len=7) fname ! Sufficient for up to O(1M) ranks
 #endif
 
     nx_global = nx
@@ -437,7 +437,7 @@ contains
     ! Select the IO unit for decomp_2d setup
     !
 #ifdef DEBUG
-    write(fname, "(I3.3)") nrank
+    write(fname, "(I0)") nrank ! Adapt to magnitude of nrank
     open(newunit=iounit, file='decomp_2d_setup_'//trim(fname)//'.log', iostat=ierror)
 #else
     if (nrank == 0) then
@@ -1290,7 +1290,6 @@ contains
     !         et le calcul plantait dans MPI_ALLTOALLV
     !       * pas de plantage en O2
     
-    character(len=100) :: tmp_char
     if (nrank==0) then
        open(newunit=i, file='temp.dat', form='unformatted')
        write(i) decomp%x1dist,decomp%y1dist,decomp%y2dist,decomp%z2dist, &

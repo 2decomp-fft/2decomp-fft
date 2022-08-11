@@ -5,6 +5,8 @@
 
 program fft_test_c2c
 
+use mpi
+
 use decomp_2d
 use decomp_2d_fft
 
@@ -17,16 +19,6 @@ complex(mytype), allocatable, dimension(:,:,:) :: in, out
 
 complex(mytype), dimension(nx,ny,nz) :: in1, out1
 integer :: ierror, i,j,k
-
-interface
-   subroutine assemble_global(ndir,local,global,nx,ny,nz)
-     use decomp_2d
-     integer, intent(IN) :: ndir
-     integer, intent(IN) :: nx,ny,nz
-     complex(mytype), dimension(:,:,:), intent(IN) :: local
-     complex(mytype), dimension(nx,ny,nz), intent(OUT) :: global
-   end subroutine assemble_global
-end interface
 
 call MPI_INIT(ierror)
 call decomp_2d_init(nx,ny,nz,p_row,p_col)
@@ -133,8 +125,7 @@ call decomp_2d_fft_finalize
 call decomp_2d_finalize
 call MPI_FINALIZE(ierror)
 
-end program fft_test_c2c
-
+contains
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 ! Collect data from each processor and assemble into a global array
@@ -267,4 +258,6 @@ end do
 
 return
 end subroutine print_global
+
+end program fft_test_c2c
 

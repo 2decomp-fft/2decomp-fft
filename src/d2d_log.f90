@@ -30,8 +30,10 @@ submodule (decomp_2d) d2d_log
 
     ! Local variable
     integer :: io_unit
-
-    integer :: version, subversion, ierr
+    integer :: version, subversion, ierror
+#ifdef DEBUG
+    character(len=64) :: fname
+#endif
 
     !
     ! Default : only rank 0 will print a listing
@@ -44,9 +46,9 @@ submodule (decomp_2d) d2d_log
 
     ! If no IO unit provided, use stdout
     if (present(given_io_unit)) then
-            io_unit = given_io_unit
+       io_unit = given_io_unit
     else
-            io_unit = output_unit
+       io_unit = output_unit
     endif
 
     ! Header
@@ -85,10 +87,8 @@ submodule (decomp_2d) d2d_log
 #endif
     write (io_unit, *) 'Compiled with ', compiler_version()
     write (io_unit, *) 'Compiler options : ', compiler_options()
-    call MPI_Get_version(version, subversion, ierr)
-    if (ierr /= 0) then
-       call decomp_2d_abort(__FILE__, __LINE__, ierr, "MPI_Get_version")
-    end if
+    call MPI_Get_version(version, subversion, ierror)
+    if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_Get_version")
     write (io_unit, '(" Version of the MPI library : ",I0,".",I0)') version, subversion
 #ifdef DEBUG
     write (io_unit, *) 'Compile flag DEBUG detected'
@@ -131,6 +131,28 @@ submodule (decomp_2d) d2d_log
 #endif
     write (io_unit, *) '==========================================================='
     write (io_unit, *) '==========================================================='
+#ifdef DEBUG
+    !
+    ! In DEBUG mode, rank 0 will also print environment variables
+    !
+    ! The system call, if writing to a file, is not blocking if supported
+    !
+    if (nrank == 0) then
+       write (io_unit, *) '============== Environment variables ======================'
+       write (io_unit, *) '==========================================================='
+       write (io_unit, *) '==========================================================='
+       if (io_unit == output_unit ) then
+          call execute_command_line("env", wait = .true.)
+       else
+          inquire(unit = io_unit, name = fname, iostat = ierror)
+          if (ierror /= 0) call decomp_2d_abort(__FILE__, &
+                                                __LINE__, &
+                                                ierror, &
+                                                "No name for the log file")
+          call execute_command_line("env >> "//trim(fname), wait = .false.)
+       endif
+    endif
+#endif
 
   end subroutine d2d_listing
 

@@ -65,7 +65,8 @@ submodule (decomp_2d) d2d_log
 
     ! Basic info
 #ifdef DEBUG
-    if (decomp_debug > 1) write (io_unit, *) 'I am mpi rank ', nrank
+    if (decomp_debug >= D2D_DEBUG_LEVEL_INFO) &
+       write (io_unit, *) 'I am mpi rank ', nrank
 #endif
     write (io_unit, *) 'Total ranks ', nproc
     write (io_unit, *) 'Global data size : ', nx_global, ny_global, nz_global
@@ -140,7 +141,7 @@ submodule (decomp_2d) d2d_log
     !
     ! The system call, if writing to a file, is not blocking if supported
     !
-    if (nrank == 0 .or. decomp_debug > 1) then
+    if (nrank == 0 .or. decomp_debug >= D2D_DEBUG_LEVEL_INFO) then
        write (io_unit, *) '============== Environment variables ======================'
        write (io_unit, *) '==========================================================='
        write (io_unit, *) '==========================================================='

@@ -78,10 +78,19 @@ module decomp_2d
   !
   ! Debug checks are performed only when the preprocessor variable DEBUG is defined
   !
+  enum, bind(c)
+     enumerator :: D2D_DEBUG_LEVEL_OFF = 0
+     enumerator :: D2D_DEBUG_LEVEL_CRITICAL = 1
+     enumerator :: D2D_DEBUG_LEVEL_ERROR = 2
+     enumerator :: D2D_DEBUG_LEVEL_WARN = 3
+     enumerator :: D2D_DEBUG_LEVEL_INFO = 4
+     enumerator :: D2D_DEBUG_LEVEL_DEBUG = 5
+     enumerator :: D2D_DEBUG_LEVEL_TRACE = 6
+  end enum
 #ifdef DEBUG
-  integer, public, save :: decomp_debug = 1
+  integer(kind(D2D_DEBUG_LEVEL_OFF)), public, save :: decomp_debug = D2D_DEBUG_LEVEL_CRITICAL
 #else
-  integer, public, save :: decomp_debug = 0
+  integer(kind(D2D_DEBUG_LEVEL_OFF)), public, save :: decomp_debug = D2D_DEBUG_LEVEL_OFF
 #endif
 
 #if defined(_GPU)

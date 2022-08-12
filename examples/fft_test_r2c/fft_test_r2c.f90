@@ -33,6 +33,8 @@ program fft_test_r2c
   integer :: fh, ierror, i,j,k, n,iol
   
   call MPI_INIT(ierror)
+  call MPI_COMM_SIZE(MPI_COMM_WORLD, nproc, ierror)
+  call MPI_COMM_RANK(MPI_COMM_WORLD, nrank, ierror)
   call decomp_2d_init(nx,ny,nz,p_row,p_col)
   call decomp_2d_fft_init
   

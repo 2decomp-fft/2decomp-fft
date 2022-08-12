@@ -40,6 +40,8 @@ program io_var_test
   integer (kind=MPI_OFFSET_KIND) :: filesize, disp
 
   call MPI_INIT(ierror)
+  call MPI_COMM_SIZE(MPI_COMM_WORLD, nproc, ierror)
+  call MPI_COMM_RANK(MPI_COMM_WORLD, nrank, ierror)
 
   i = command_argument_count()
   if (i/=2) then

@@ -20,7 +20,7 @@ FCFLAGS ?= # user can set default compiler flags
 LDFLAGS ?= # user can set default linker flags
 FFLAGS = $(FCFLAGS)
 LFLAGS = $(LDFLAGS)
-MODFLAG = -J
+MODFLAG = -J 
 
 LIBDECOMP = decomp2d
 
@@ -72,7 +72,7 @@ LINKOPT = $(FFLAGS)
 OBJDIR = obj
 SRCDIR = src
 DECOMPINC = mod
-FFLAGS += $(MODFLAG) $(DECOMPINC) -I$(DECOMPINC)
+FFLAGS += $(MODFLAG)$(DECOMPINC) -I$(DECOMPINC)
 
 all: $(DECOMPINC) $(OBJDIR) $(LIBDECOMP)
 

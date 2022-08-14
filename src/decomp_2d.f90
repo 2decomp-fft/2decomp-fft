@@ -53,8 +53,8 @@ module decomp_2d
   ! some key global variables
   integer, save, public :: nx_global, ny_global, nz_global  ! global size
 
-  integer, save, public :: nrank  ! local MPI rank 
-  integer, save, public :: nproc  ! total number of processors
+  integer, save, public :: nrank = -1 ! local MPI rank
+  integer, save, public :: nproc = -1 ! total number of processors
 
   ! parameters for 2D Cartesian topology 
   integer, save, dimension(2) :: dims, coord
@@ -303,6 +303,22 @@ contains
 #ifdef DEBUG
     character(len=7) fname ! Sufficient for up to O(1M) ranks
 #endif
+
+    ! If the external code has not set nrank and nproc
+    if (nrank == -1) then
+       call MPI_COMM_RANK(MPI_COMM_WORLD, nrank, ierror)
+       if (ierror /= 0) call decomp_2d_abort(__FILE__, &
+                                             __LINE__, &
+                                             ierror, &
+                                             "MPI_COMM_RANK")
+    endif
+    if (nproc == -1) then
+       call MPI_COMM_SIZE(MPI_COMM_WORLD, nproc, ierror)
+       if (ierror /= 0) call decomp_2d_abort(__FILE__, &
+                                             __LINE__, &
+                                             ierror, &
+                                             "MPI_COMM_SIZE")
+    endif
 
     nx_global = nx
     ny_global = ny

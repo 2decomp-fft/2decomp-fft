@@ -13,6 +13,9 @@ timing: $(OBJ)
 check:
 	mpirun -n 4 ./timing
 
+mem_leak:
+	valgrind --leak-check=full --show-leak-kinds=all mpirun -n 1 ./timing 1 1
+
 clean:
 	rm -f *.o timing
 

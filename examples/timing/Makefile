@@ -10,6 +10,9 @@ OBJ = timing.o
 timing: $(OBJ)
 	$(FC) -o $@ $(OBJ) $(LIBS)
 
+check:
+	mpirun -n 4 ./timing
+
 clean:
 	rm -f *.o timing
 

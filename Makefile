@@ -93,6 +93,11 @@ $(OBJDECOMP) : $(OBJDIR)/%.o : $(SRCDIR)/%.f90
 examples: $(LIBDECOMP)
 	$(MAKE) -C examples
 
+.PHONY: check
+
+check: examples
+	$(MAKE) -C examples $@
+
 .PHONY: clean
 
 clean: clean-examples

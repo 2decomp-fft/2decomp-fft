@@ -10,6 +10,9 @@ OBJ = fft_test_r2c.o
 fft_test_r2c: $(OBJ)
 	$(FC) -o $@ $(OBJ) $(LIBS)
 
+check:
+	mpirun -n 4 ./fft_test_r2c
+
 clean:
 	rm -f *.o fft_test_r2c
 

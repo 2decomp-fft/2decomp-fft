@@ -10,6 +10,9 @@ OBJ = test2d.o
 test2d: $(OBJ)
 	$(FC) -o $@ $(OBJ) $(LIBS)
 
+check:
+	mpirun -n 12 ./test2d
+
 clean:
 	rm -f *.o test2d u*.dat
 

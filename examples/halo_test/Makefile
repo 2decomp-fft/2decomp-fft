@@ -10,6 +10,9 @@ OBJ = halo_test.o
 halo_test: $(OBJ)
 	$(FC) -o $@ $(OBJ) $(LIBS)
 
+check:
+	mpirun -n 12 ./halo_test
+
 clean:
 	rm -f *.o halo_test
 

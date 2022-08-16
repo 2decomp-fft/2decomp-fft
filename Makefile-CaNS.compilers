@@ -106,7 +106,7 @@ else ifeq ($(CMP),NVIDIA)
       FFLAGS += -Mbounds -Mchkptr
       FFLAGS += -Ktrap=fp # Trap floating-point errors
     else
-      FFLAGS += -O3 -fast -march=native
+      FFLAGS += -O3 -fast -tp=native
     endif
   endif
   #FFLAGS += -cpp -O3 -Minfo=accel -stdpar -acc -target=multicore

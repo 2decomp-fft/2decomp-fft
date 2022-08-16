@@ -12,7 +12,7 @@ on:
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
-  # This workflow contains jobs called "bld_gnu_ompi", "bld_gnu_mpich" and "bld_intel"
+  # This workflow contains jobs called "bld_gnu_ompi", "bld_gnu_mpich" "bld_nvidia" and "bld_intel"
   bld_gnu_ompi:
     # The type of runner that the job will run on
     runs-on: ubuntu-latest
@@ -56,6 +56,32 @@ jobs:
 
     - name: Examples
       run: make examples BUILD=debug
+
+  bld_nvidia:
+    # The type of runner that the job will run on
+    runs-on: ubuntu-latest
+
+    # Steps represent a sequence of tasks that will be executed as part of the job
+    steps:
+    # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+    - uses: actions/checkout@v2
+
+    # Add Intel OneApi
+    - name: setup repo
+      run: |
+        echo 'deb [trusted=yes] https://developer.download.nvidia.com/hpc-sdk/ubuntu/amd64 /' | sudo tee /etc/apt/sources.list.d/nvhpc.list
+    # Install dependencies
+    - name: install
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y nvhpc-22-7
+
+    # Runs a set of commands using the runners shell
+    - name: Compile
+      run: source /opt/intel/oneapi/setvars.sh && make CMP=nvhpc BUILD=debug
+
+    - name: Examples
+      run: source /opt/intel/oneapi/setvars.sh && make examples CMP=nvhpc BUILD=debug
 
   bld_intel:
     # The type of runner that the job will run on

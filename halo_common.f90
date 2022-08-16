@@ -127,9 +127,9 @@
     end if
 
     if (s1==decomp%xsz(1)) then
-      call exchange_halo_x(out,opt_level=level)
+      call exchange_halo_x(out,opt_xlevel=(/0,level,level/))
     else if (s2==decomp%ysz(2)) then
-      call exchange_halo_y(out,opt_level=level)
+      call exchange_halo_y(out,opt_ylevel=(/level,0,level/))
     else if (s3==decomp%zsz(3)) then
-      call exchange_halo_z(out,opt_level=level)
+      call exchange_halo_z(out,opt_zlevel=(/level,level,0/))
     end if

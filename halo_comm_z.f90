@@ -18,10 +18,10 @@
       decomp = decomp_main
     end if
 
-    if (present(opt_level)) then ! assume same level for all directions
-      level_x = opt_level
-      level_y = opt_level
-      level_z = 0
+    if (present(opt_zlevel)) then ! assume same level for all directions
+      level_x = opt_zlevel(1)
+      level_y = opt_zlevel(2)
+      level_z = opt_zlevel(3)
     else
       level_x = decomp%zlevel(1)
       level_y = decomp%zlevel(2)

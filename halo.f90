@@ -78,13 +78,13 @@
   end subroutine update_halo_complex
 
 
-  subroutine exchange_halo_x_real(inout, opt_decomp, opt_level)
+  subroutine exchange_halo_x_real(inout, opt_decomp, opt_xlevel)
 
     implicit none
 
     real(mytype), dimension(:,:,:), intent(INOUT) :: inout
     TYPE(DECOMP_INFO), optional :: opt_decomp
-    integer, optional :: opt_level
+    integer, dimension(3), optional :: opt_xlevel
 
     TYPE(DECOMP_INFO) :: decomp
     integer :: level_x, level_y, level_z
@@ -105,13 +105,13 @@
   end subroutine exchange_halo_x_real
 
 
-  subroutine exchange_halo_x_complex(inout, opt_decomp, opt_level)
+  subroutine exchange_halo_x_complex(inout, opt_decomp, opt_xlevel)
 
     implicit none
 
     complex(mytype), dimension(:,:,:), intent(INOUT) :: inout
     TYPE(DECOMP_INFO), optional :: opt_decomp
-    integer, optional :: opt_level
+    integer, dimension(3), optional :: opt_xlevel
 
     TYPE(DECOMP_INFO) :: decomp
     integer :: level_x, level_y, level_z
@@ -132,13 +132,13 @@
   end subroutine exchange_halo_x_complex
 
 
-  subroutine exchange_halo_y_real(inout, opt_decomp, opt_level)
+  subroutine exchange_halo_y_real(inout, opt_decomp, opt_ylevel)
 
     implicit none
 
     real(mytype), dimension(:,:,:), intent(INOUT) :: inout
     TYPE(DECOMP_INFO), optional :: opt_decomp
-    integer, optional :: opt_level
+    integer, dimension(3), optional :: opt_ylevel
 
     TYPE(DECOMP_INFO) :: decomp
     integer :: level_x, level_y, level_z
@@ -159,13 +159,13 @@
   end subroutine exchange_halo_y_real
 
 
-  subroutine exchange_halo_y_complex(inout, opt_decomp, opt_level)
+  subroutine exchange_halo_y_complex(inout, opt_decomp, opt_ylevel)
 
     implicit none
 
     complex(mytype), dimension(:,:,:), intent(INOUT) :: inout
     TYPE(DECOMP_INFO), optional :: opt_decomp
-    integer, optional :: opt_level
+    integer, dimension(3), optional :: opt_ylevel
 
     TYPE(DECOMP_INFO) :: decomp
     integer :: level_x, level_y, level_z
@@ -186,11 +186,11 @@
   end subroutine exchange_halo_y_complex
 
 
-  subroutine exchange_halo_z_real(inout, opt_decomp, opt_level)
+  subroutine exchange_halo_z_real(inout, opt_decomp, opt_zlevel)
     implicit none
     real(mytype), dimension(:,:,:), intent(INOUT) :: inout
     TYPE(DECOMP_INFO), optional :: opt_decomp
-    integer, optional :: opt_level
+    integer, dimension(3), optional :: opt_zlevel
 
     TYPE(DECOMP_INFO) :: decomp
     integer :: level_x, level_y, level_z
@@ -210,13 +210,13 @@
     return
   end subroutine exchange_halo_z_real
 
-  subroutine exchange_halo_z_complex(inout, opt_decomp, opt_level)
+  subroutine exchange_halo_z_complex(inout, opt_decomp, opt_zlevel)
 
     implicit none
 
     complex(mytype), dimension(:,:,:), intent(INOUT) :: inout
     TYPE(DECOMP_INFO), optional :: opt_decomp
-    integer, optional :: opt_level
+    integer, dimension(3), optional :: opt_zlevel
 
     TYPE(DECOMP_INFO) :: decomp
     integer :: level_x, level_y, level_z

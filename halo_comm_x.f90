@@ -18,10 +18,10 @@
       decomp = decomp_main
     end if
 
-    if (present(opt_level)) then
-      level_x = 0
-      level_y = opt_level
-      level_z = opt_level
+    if (present(opt_xlevel)) then
+      level_x = opt_xlevel(1)
+      level_y = opt_xlevel(2)
+      level_z = opt_xlevel(3)
     else
       level_x = decomp%xlevel(1)
       level_y = decomp%xlevel(2)

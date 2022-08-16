@@ -84,4 +84,4 @@ jobs:
       run: source /opt/intel/oneapi/setvars.sh && make CMP=intel BUILD=debug
 
     - name: Examples
-      run: make examples CMP=intel BUILD=debug
+      run: source /opt/intel/oneapi/setvars.sh && make examples CMP=intel BUILD=debug

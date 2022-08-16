@@ -26,7 +26,7 @@ ifeq ($(CMP),intel)
     FFLAGS += -warn all,noexternal
   endif
 
-  MODFLAG = -module 
+  MODFLAG = -module # Explicit space
 else ifeq ($(CMP),gcc)
   FC = mpif90
   FFLAGS += -cpp
@@ -74,7 +74,7 @@ else ifeq ($(CMP),cray)
   FFLAGS += -N1023 -M 296
 else ifeq ($(CMP),nvhpc)
   FC = mpif90
-  MODFLAG = -module 
+  MODFLAG = -module # Explicit space
   FFLAGS += -cpp
   ifeq ($(PARAMOD),multicore)
      FFLAGS += -O3 -Minfo=accel -stdpar -acc -target=multicore

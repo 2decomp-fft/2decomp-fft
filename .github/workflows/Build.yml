@@ -78,10 +78,10 @@ jobs:
 
     # Runs a set of commands using the runners shell
     - name: Compile
-      run: source /opt/intel/oneapi/setvars.sh && make CMP=nvhpc BUILD=debug
+      run: make CMP=nvhpc BUILD=debug
 
     - name: Examples
-      run: source /opt/intel/oneapi/setvars.sh && make examples CMP=nvhpc BUILD=debug
+      run: make examples CMP=nvhpc BUILD=debug
 
   bld_intel:
     # The type of runner that the job will run on

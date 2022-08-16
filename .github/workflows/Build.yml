@@ -83,7 +83,8 @@ jobs:
         ls /opt/nvidia/hpc_sdk/*/*/*
         ls /opt/nvidia/hpc_sdk/*/*/*/*
         ls /opt/nvidia/hpc_sdk/*/*/*/*/*
-        echo "export PATH=/opt/nvidia/hpc_sdk/Linux_x86_64/2022/comm_libs/mpi/bin:$PATH" >> $GITHUB_PATH
+        echo "export PATH=/opt/nvidia/hpc_sdk/Linux_x86_64/22.7/comm_libs/mpi/bin:$PATH" >> $GITHUB_PATH
+        PATH=/opt/nvidia/hpc_sdk/Linux_x86_64/22.7/comm_libs/mpi/bin:$PATH mpif90 -v
 
     # Runs a set of commands using the runners shell
     - name: Compile

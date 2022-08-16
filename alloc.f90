@@ -49,7 +49,7 @@
     if (global) then
        allocate(var(decomp%xst(1)-xlevel(1):decomp%xen(1)+xlevel(1), &
             decomp%xst(2)-xlevel(2):decomp%xen(2)+xlevel(2), &
-            decomp%xst(3)-xlevel(2):decomp%xen(3)+xlevel(3)), &
+            decomp%xst(3)-xlevel(3):decomp%xen(3)+xlevel(3)), &
             stat=alloc_stat)
     else
        allocate(var(1-xlevel(1):decomp%xsz(1)+xlevel(1), &
@@ -103,7 +103,7 @@
     if (global) then
        allocate(var(decomp%xst(1)-xlevel(1):decomp%xen(1)+xlevel(1), &
             decomp%xst(2)-xlevel(2):decomp%xen(2)+xlevel(2), &
-            decomp%xst(3)-xlevel(2):decomp%xen(3)+xlevel(3)), &
+            decomp%xst(3)-xlevel(3):decomp%xen(3)+xlevel(3)), &
             stat=alloc_stat)
     else
        allocate(var(1-xlevel(1):decomp%xsz(1)+xlevel(1), &

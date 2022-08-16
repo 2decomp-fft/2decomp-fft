@@ -60,6 +60,8 @@ jobs:
   bld_nvidia:
     # The type of runner that the job will run on
     runs-on: ubuntu-latest
+    env:
+      TMP: /opt/nvidia/hpc_sdk/Linux_x86_64/22.7/comm_libs/mpi/bin:/opt/nvidia/hpc_sdk/Linux_x86_64/22.7/compilers/bin
 
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
@@ -75,15 +77,13 @@ jobs:
       run: |
         sudo apt-get update
         sudo apt-get install -y nvhpc-22-7
-        echo "export PATH=/opt/nvidia/hpc_sdk/Linux_x86_64/22.7/comm_libs/mpi/bin:/opt/nvidia/hpc_sdk/Linux_x86_64/22.7/compilers/bin:$PATH" >> $GITHUB_ENV
-        PATH=/opt/nvidia/hpc_sdk/Linux_x86_64/22.7/comm_libs/mpi/bin:/opt/nvidia/hpc_sdk/Linux_x86_64/22.7/compilers/bin:$PATH mpif90 -v
 
     # Runs a set of commands using the runners shell
     - name: Compile
-      run: make CMP=nvhpc BUILD=debug
+      run: PATH=$TMP:$PATH make CMP=nvhpc BUILD=debug
 
     - name: Examples
-      run: make examples CMP=nvhpc BUILD=debug
+      run: PATH=$TMP:$PATH make examples CMP=nvhpc BUILD=debug
 
   bld_intel:
     # The type of runner that the job will run on

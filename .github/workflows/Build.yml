@@ -75,11 +75,10 @@ jobs:
       run: |
         sudo apt-get update
         sudo apt-get install -y nvhpc-22-7
-        export PATH=/usr/local/cuda-*.*/bin:$PATH
-        export LD_LIBRARY_PATH=/usr/local/cuda-*.*/lib:/usr/local/cuda-*.*/lib64:$LD_LIBRARY_PATH
-        echo $PATH
-        nvfortran -v
-        mpif90 -v
+        ls /usr/local/cuda*
+        ls /usr/local/cuda*/*
+        export PATH=/usr/local/cuda-22.7/bin:$PATH
+        export LD_LIBRARY_PATH=/usr/local/cuda-22.7/lib:/usr/local/cuda-22.7/lib64:$LD_LIBRARY_PATH
         echo "export PATH=/usr/local/cuda-*.*/bin:$PATH" >> $GITHUB_PATH
         echo "export LD_LIBRARY_PATH=/usr/local/cuda-*.*/lib:/usr/local/cuda-*.*/lib64:$LD_LIBRARY_PATH" >> $GITHUB_ENV
 

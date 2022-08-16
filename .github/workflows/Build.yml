@@ -49,13 +49,6 @@ jobs:
       run: |
         sudo apt-get update
         sudo apt-get install -y gfortran mpich libmpich-dev
-        export PATH=/usr/local/cuda-*.*/bin:$PATH
-        export LD_LIBRARY_PATH=/usr/local/cuda-*.*/lib:/usr/local/cuda-*.*/lib64:$LD_LIBRARY_PATH
-        echo $PATH
-        nvfortran -v
-        mpif90 -v
-        echo "export PATH=/usr/local/cuda-*.*/bin:$PATH" >> $GITHUB_PATH
-        echo "export LD_LIBRARY_PATH=/usr/local/cuda-*.*/lib:/usr/local/cuda-*.*/lib64:$LD_LIBRARY_PATH" >> $GITHUB_ENV
 
     # Runs a set of commands using the runners shell
     - name: Compile
@@ -82,6 +75,13 @@ jobs:
       run: |
         sudo apt-get update
         sudo apt-get install -y nvhpc-22-7
+        export PATH=/usr/local/cuda-*.*/bin:$PATH
+        export LD_LIBRARY_PATH=/usr/local/cuda-*.*/lib:/usr/local/cuda-*.*/lib64:$LD_LIBRARY_PATH
+        echo $PATH
+        nvfortran -v
+        mpif90 -v
+        echo "export PATH=/usr/local/cuda-*.*/bin:$PATH" >> $GITHUB_PATH
+        echo "export LD_LIBRARY_PATH=/usr/local/cuda-*.*/lib:/usr/local/cuda-*.*/lib64:$LD_LIBRARY_PATH" >> $GITHUB_ENV
 
     # Runs a set of commands using the runners shell
     - name: Compile

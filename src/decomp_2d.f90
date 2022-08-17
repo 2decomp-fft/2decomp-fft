@@ -88,7 +88,7 @@ module decomp_2d
      enumerator :: D2D_DEBUG_LEVEL_TRACE = 6
   end enum
 #ifdef DEBUG
-  integer(kind(D2D_DEBUG_LEVEL_OFF)), public, save :: decomp_debug = D2D_DEBUG_LEVEL_CRITICAL
+  integer(kind(D2D_DEBUG_LEVEL_OFF)), public, save :: decomp_debug = D2D_DEBUG_LEVEL_INFO
 #else
   integer(kind(D2D_DEBUG_LEVEL_OFF)), public, save :: decomp_debug = D2D_DEBUG_LEVEL_OFF
 #endif

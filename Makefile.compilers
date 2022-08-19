@@ -1,0 +1,99 @@
+#=======================================================================
+# Makefile for 2DECOMP&FFT compilers
+#=======================================================================
+
+DEBUG_BUILD =
+ifeq ($(BUILD),debug)
+  DEBUG_BUILD = yes
+endif
+ifeq ($(BUILD),dev)
+  DEBUG_BUILD = yes
+endif
+
+ifeq ($(CMP),intel)
+  FC = mpiifort
+
+  FFLAGS += -fpp
+  ifeq ($(DEBUG_BUILD),yes)
+    DEFS += -DDEBUG
+    FFLAGS += -g -O0
+  else
+    FFLAGS += -O3 -mavx2 -march=core-avx2 -mtune=core-avx2
+  endif
+
+  ifeq ($(BUILD),dev)
+    # Add additional, stricter flags
+    FFLAGS += -warn all,noexternal
+  endif
+
+  MODFLAG = -module # Explicit space
+else ifeq ($(CMP),gcc)
+  FC = mpif90
+  FFLAGS += -cpp
+  ifeq "$(shell expr `gfortran -dumpversion | cut -f1 -d.` \>= 10)" "1"
+    FFLAGS += -fallow-argument-mismatch
+  endif
+  ifeq ($(DEBUG_BUILD),yes)
+    DEFS += -DDEBUG
+    FFLAGS += -g3 -Og
+    FFLAGS += -ffpe-trap=invalid,zero -fcheck=all -fimplicit-none
+  else
+    FFLAGS += -O3 -march=native
+  endif
+
+  ifeq ($(findstring openmpi,$(shell $(FC) -show | grep openmpi)),openmpi)
+    MPI_FAMILY = openmpi
+  else
+    MPI_FAMILY = mpich # Probably
+  endif
+
+  ifeq ($(BUILD),dev)
+    # Add additional, stricter flags
+    FFLAGS += -Wall -Wpedantic
+    ifeq ($(MPI_FAMILY),openmpi)
+      # MPICH doesn't export interfaces...
+      FFLAGS += -Wimplicit-procedure -Wimplicit-interface
+    endif
+    FFLAGS += -Wno-unused-function
+    FFLAGS += -Werror
+  endif
+
+else ifeq ($(CMP),nagfor)
+  FC = mpinagfor
+  FFLAGS += -fpp
+else ifeq ($(CMP),cray)
+  FC = ftn
+  FFLAGS += -eF
+  ifeq ($(DEBUG_BUILD),yes)
+    DEFS += -DDEBUG
+    FFLAGS += -G2
+    FFLAGS += -en
+  else
+    FFLAGS += -g -O3
+  endif
+  FFLAGS += -N1023 -M 296
+else ifeq ($(CMP),nvhpc)
+  FC = mpif90
+  MODFLAG = -module # Explicit space
+  FFLAGS += -cpp
+  ifeq ($(PARAMOD),multicore)
+     FFLAGS += -O3 -Minfo=accel -stdpar -acc -target=multicore
+     LFLAGS += -acc -lnvhpcwrapnvtx
+  else ifeq ($(PARAMOD),gpu)
+     #FFLAGS = -D_GPU -D_NCCL -Mfree -Kieee -Minfo=accel,stdpar -stdpar=gpu -gpu=cc80,managed,lineinfo -acc -target=gpu -traceback -O3 -DUSE_CUDA -cuda -cudalib=cufft,nccl
+     FFLAGS += -Mfree -D_GPU -Kieee -Minfo=accel,stdpar -stdpar=gpu -gpu=cc80,managed,lineinfo -acc -target=gpu -traceback -O3 -DUSE_CUDA -cuda
+     LFLAGS += -acc -lnvhpcwrapnvtx
+  else
+    ifeq ($(DEBUG_BUILD),yes)
+      DEFS += -DDEBUG
+      FFLAGS += -g -O0
+      FFLAGS += -traceback
+      FFLAGS += -Mbounds -Mchkptr
+      FFLAGS += -Ktrap=fp # Trap floating-point errors
+    else
+      FFLAGS += -O3 -march=native
+    endif
+  endif
+  #FFLAGS += -cpp -O3 -Minfo=accel -stdpar -acc -target=multicore
+  #FFLAGS = -cpp -Mfree -Kieee -Minfo=accel -g -acc -target=gpu -fast -O3 -Minstrument
+endif

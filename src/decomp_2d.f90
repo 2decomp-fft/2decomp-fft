@@ -59,9 +59,11 @@ module decomp_2d
   ! parameters for 2D Cartesian topology 
   integer, save, dimension(2) :: dims, coord
   logical, save, dimension(2) :: periodic
-  integer, save, public :: DECOMP_2D_COMM_CART_X, &
-       DECOMP_2D_COMM_CART_Y, DECOMP_2D_COMM_CART_Z 
-  integer, save :: DECOMP_2D_COMM_ROW, DECOMP_2D_COMM_COL
+  integer, save, public :: DECOMP_2D_COMM_CART_X = MPI_COMM_NULL
+  integer, save, public :: DECOMP_2D_COMM_CART_Y = MPI_COMM_NULL
+  integer, save, public :: DECOMP_2D_COMM_CART_Z = MPI_COMM_NULL
+  integer, save :: DECOMP_2D_COMM_ROW = MPI_COMM_NULL
+  integer, save :: DECOMP_2D_COMM_COL = MPI_COMM_NULL
 
   ! define neighboring blocks (to be used in halo-cell support)
   !  first dimension 1=X-pencil, 2=Y-pencil, 3=Z-pencil
@@ -301,7 +303,7 @@ contains
 
     integer :: errorcode, ierror, row, col, iounit
 #ifdef DEBUG
-    character(len=3) fname
+    character(len=7) fname ! Sufficient for up to O(1M) ranks
 #endif
 
     nx_global = nx
@@ -437,7 +439,7 @@ contains
     ! Select the IO unit for decomp_2d setup
     !
 #ifdef DEBUG
-    write(fname, "(I3.3)") nrank
+    write(fname, "(I0)") nrank ! Adapt to magnitude of nrank
     open(newunit=iounit, file='decomp_2d_setup_'//trim(fname)//'.log', iostat=ierror)
 #else
     if (nrank == 0) then
@@ -483,6 +485,13 @@ contains
     if (ierror /= 0) call decomp_2d_warning(__FILE__, __LINE__, ierror, "MPI_COMM_FREE")
     call MPI_COMM_FREE(DECOMP_2D_COMM_CART_Z, ierror)
     if (ierror /= 0) call decomp_2d_warning(__FILE__, __LINE__, ierror, "MPI_COMM_FREE")
+
+    DECOMP_2D_COMM_ROW = MPI_COMM_NULL
+    DECOMP_2D_COMM_COL = MPI_COMM_NULL
+    DECOMP_2D_COMM_CART_X = MPI_COMM_NULL
+    DECOMP_2D_COMM_CART_Y = MPI_COMM_NULL
+    DECOMP_2D_COMM_CART_Z = MPI_COMM_NULL
+
     call decomp_info_finalize(decomp_main)
 
     decomp_buf_size = 0
@@ -1290,7 +1299,6 @@ contains
     !         et le calcul plantait dans MPI_ALLTOALLV
     !       * pas de plantage en O2
     
-    character(len=100) :: tmp_char
     if (nrank==0) then
        open(newunit=i, file='temp.dat', form='unformatted')
        write(i) decomp%x1dist,decomp%y1dist,decomp%y2dist,decomp%z2dist, &

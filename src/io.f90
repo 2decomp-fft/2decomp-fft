@@ -223,14 +223,18 @@ contains
 
     logical :: read_reduce_prec
     
+    integer :: idx
+#ifndef ADIOS2
     TYPE(DECOMP_INFO) :: decomp
     integer, dimension(3) :: sizes, subsizes, starts
-    integer :: ierror, newtype, data_type
     real(mytype_single), allocatable, dimension(:,:,:) :: varsingle
-    integer :: idx
+    integer :: data_type
+    logical :: dir_exists
     integer :: disp_bytes
+    integer :: ierror, newtype
     character(len=:), allocatable :: full_io_name
-    logical :: opened_new, dir_exists
+    logical :: opened_new
+#endif
     
     read_reduce_prec = .true.
     
@@ -344,7 +348,10 @@ contains
        deallocate(full_io_name)
     end if
 #else
-    call adios2_read_one_real(ipencil, var, dirname, varname, io_name)
+    call adios2_read_one_real(var, dirname, varname, io_name)
+
+    associate(pncl => ipencil, opdcmp => opt_decomp, rdprec => reduce_prec) ! Silence unused arguments
+    end associate
 #endif
     return
   end subroutine read_one_real
@@ -373,18 +380,16 @@ contains
   end subroutine read_one_complex
 
 #ifdef ADIOS2
-  subroutine adios2_read_one_real(ipencil,var,engine_name,varname,io_name)
+  subroutine adios2_read_one_real(var,engine_name,varname,io_name)
 
     implicit none
 
-    integer, intent(IN) :: ipencil !(x-pencil=1; y-pencil=2; z-pencil=3)
     character(len=*), intent(in) :: engine_name
     character(len=*), intent(in) :: io_name
     character*(*), intent(in) :: varname
     real(mytype), dimension(:,:,:), intent(out) :: var
     
-    integer (kind=MPI_OFFSET_KIND) :: filesize, disp
-    integer :: i,j,k, ierror, newtype, fh
+    integer :: ierror
     type(adios2_io) :: io_handle
     type(adios2_variable) :: var_handle
     integer :: idx
@@ -481,11 +486,13 @@ contains
 
     TYPE(DECOMP_INFO) :: decomp
     integer, dimension(3) :: sizes, subsizes, starts
-    integer :: ierror, newtype, data_type
+    integer :: ierror, data_type
     integer :: idx
 #ifdef ADIOS2
     type(adios2_io) :: io_handle
     type(adios2_variable) :: var_handle
+#else
+    integer :: newtype
 #endif
 
     data_type = real_type
@@ -556,11 +563,13 @@ contains
 
     TYPE(DECOMP_INFO) :: decomp
     integer, dimension(3) :: sizes, subsizes, starts
-    integer :: ierror, newtype, data_type
+    integer :: ierror, data_type
     integer :: idx
 #ifdef ADIOS2
     type(adios2_io) :: io_handle
     type(adios2_variable) :: var_handle
+#else
+    integer :: newtype
 #endif
     
     data_type = real_type
@@ -874,15 +883,18 @@ contains
     real(mytype), allocatable, dimension(:,:,:) :: wk, wk2
     real(mytype), allocatable, dimension(:,:,:) :: wk2d
     TYPE(DECOMP_INFO) :: decomp
-    integer, dimension(3) :: sizes, subsizes, starts
-    integer :: i,j,k, ierror, newtype, data_type
+    integer :: i,j,k, ierror, data_type
 
-    logical :: opened_new, dir_exists
-    character(len=:), allocatable :: full_io_name
+    logical :: opened_new
     integer :: idx
 #ifdef ADIOS2
     type(adios2_io) :: io_handle
     type(adios2_variable) :: var_handle
+#else
+    integer, dimension(3) :: sizes, subsizes, starts
+    logical :: dir_exists
+    character(len=:), allocatable :: full_io_name
+    integer :: newtype
 #endif
     
     data_type = real_type
@@ -908,14 +920,17 @@ contains
     complex(mytype), allocatable, dimension(:,:,:) :: wk, wk2
     complex(mytype), allocatable, dimension(:,:,:) :: wk2d
     TYPE(DECOMP_INFO) :: decomp
-    integer, dimension(3) :: sizes, subsizes, starts
-    integer :: i,j,k, ierror, newtype, data_type
-    logical :: opened_new, dir_exists
-    character(len=:), allocatable :: full_io_name
+    integer :: i,j,k, ierror, data_type
+    logical :: opened_new
     integer :: idx
 #ifdef ADIOS2
     type(adios2_io) :: io_handle
     type(adios2_variable) :: var_handle
+#else
+    integer, dimension(3) :: sizes, subsizes, starts
+    logical :: dir_exists
+    character(len=:), allocatable :: full_io_name
+    integer :: newtype
 #endif
 
     data_type = complex_type
@@ -1117,21 +1132,23 @@ contains
     logical, intent(in), optional :: reduce_prec
     logical, intent(in), optional :: opt_deferred_writes
 
-    real(mytype_single), allocatable, dimension(:,:,:) :: varsingle
     logical :: write_reduce_prec
     logical :: deferred_writes
     
-    integer, dimension(3) :: sizes, subsizes, starts
-    integer :: ierror, newtype
+    integer :: ierror
     integer :: idx
     logical :: opened_new
-    integer :: disp_bytes
-    logical :: dir_exists
-    character(len=:), allocatable :: full_io_name
 #ifdef ADIOS2
     type(adios2_io) :: io_handle
     type(adios2_variable) :: var_handle
     integer :: write_mode
+#else
+    real(mytype_single), allocatable, dimension(:,:,:) :: varsingle
+    integer, dimension(3) :: sizes, subsizes, starts
+    integer :: newtype
+    logical :: dir_exists
+    integer :: disp_bytes
+    character(len=:), allocatable :: full_io_name
 #endif
 
     !! Set defaults
@@ -1252,6 +1269,9 @@ contains
        call decomp_2d_abort(__FILE__, __LINE__, -1, &
           "ERROR: decomp2d thinks engine is live, but adios2 engine object is not valid")
     end if
+
+    associate(crs => icoarse, pncl => ipencil, opdcmp => opt_decomp, rdprec => reduce_prec) ! Silence unused arguments
+    end associate
 #endif
 
     return

@@ -59,6 +59,20 @@ else ifeq ($(FFT),cufft)
   #LIBFFT=-L$(CUFFT_PATH)/lib64 -Mcudalib=cufft 
 endif
 
+### IO Options ###
+LIBIO :=
+OPTIO :=
+INCIO :=
+ADIOS2DIR :=
+ifeq ($(IO),adios2)
+  ifeq ($(ADIOS2DIR),)
+    $(error Set ADIOS2DIR=/path/to/adios2/install/)
+  endif
+  OPTIO := -DADIOS2 $(OPT)
+  INCIO := $(INC) $(shell $(ADIOS2DIR)/bin/adios2-config --fortran-flags) #$(patsubst $(shell $(ADIOS2DIR)/bin/adios2-config --fortran-libs),,$(shell $(ADIOS2DIR)/bin/adios2-config -f))
+  LIBIO := $(shell $(ADIOS2DIR)/bin/adios2-config --fortran-libs)
+endif
+
 SRCDECOMP := $(SRCDECOMP) fft_$(FFT).f90
 SRCDECOMP_ = $(patsubst %.f90,$(SRCDIR)/%.f90,$(SRCDECOMP))
 OBJDECOMP = $(SRCDECOMP_:$(SRCDIR)/%.f90=$(OBJDIR)/%.o)
@@ -73,6 +87,9 @@ OBJDIR = obj
 SRCDIR = src
 DECOMPINC = mod
 FFLAGS += $(MODFLAG)$(DECOMPINC) -I$(DECOMPINC)
+
+OPT += $(OPTIO)
+INC += $(INCIO)
 
 all: $(DECOMPINC) $(OBJDIR) $(LIBDECOMP)
 

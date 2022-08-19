@@ -239,7 +239,6 @@ contains
     opened_new = .false.
     if (idx .lt. 1) then
        ! Check file exists
-       allocate(character(len(trim(dirname)) + 1 + len(trim(varname))) :: full_io_name)
        full_io_name = dirname//"/"//varname
        if (nrank==0) then
           inquire(file=full_io_name, exist=dir_exists)
@@ -252,6 +251,8 @@ contains
        call decomp_2d_open_io(io_name, full_io_name, decomp_2d_read_mode)
        idx = get_io_idx(io_name, full_io_name)
        opened_new = .true.
+    else
+       full_io_name = "" ! Ensure string is not unset
     end if
     
     if (present(reduce_prec)) then
@@ -1011,7 +1012,6 @@ contains
     type(decomp_info), intent(in), optional :: opt_decomp
 
     integer, dimension(3) :: sizes, subsizes, starts
-    integer :: ierror
     type(decomp_info) :: decomp
 
     if ((icoarse.lt.0).or.(icoarse.gt.2)) then
@@ -1118,13 +1118,11 @@ contains
     logical, intent(in), optional :: opt_deferred_writes
 
     real(mytype_single), allocatable, dimension(:,:,:) :: varsingle
-    real(mytype), allocatable, dimension(:,:,:) :: varfull
     logical :: write_reduce_prec
     logical :: deferred_writes
     
-    integer (kind=MPI_OFFSET_KIND) :: filesize
     integer, dimension(3) :: sizes, subsizes, starts
-    integer :: i,j,k, ierror, newtype
+    integer :: ierror, newtype
     integer :: idx
     logical :: opened_new
     integer :: disp_bytes
@@ -1138,7 +1136,11 @@ contains
 
     !! Set defaults
     write_reduce_prec = .true.
-    deferred_writes = .true.
+    if (present(opt_deferred_writes)) then
+       deferred_writes = opt_deferred_writes
+    else
+       deferred_writes = .true.
+    end if
     
     opened_new = .false.
     idx = get_io_idx(io_name, dirname)
@@ -1185,11 +1187,12 @@ contains
              call system("mkdir "//dirname//" 2> /dev/null")
           end if
        end if
-       allocate(character(len(trim(dirname)) + 1 + len(trim(varname))) :: full_io_name)
        full_io_name = dirname//"/"//varname
        call decomp_2d_open_io(io_name, full_io_name, decomp_2d_write_mode)
        idx = get_io_idx(io_name, full_io_name)
        opened_new = .true.
+    else
+       full_io_name = "" ! Ensure string is set
     end if
 
     if (write_reduce_prec) then
@@ -1235,10 +1238,6 @@ contains
 
     if (idx .lt. 1) call decomp_2d_abort(__FILE__, __LINE__, idx, &
        "You haven't opened "//trim(io_name)//":"//trim(dirname))
-
-    if (present(opt_deferred_writes)) then
-       deferred_writes = opt_deferred_writes
-    end if
 
     if (deferred_writes) then
        write_mode = adios2_mode_deferred
@@ -1334,6 +1333,12 @@ contains
     else
        call decomp_2d_abort(__FILE__, __LINE__, -1, "trying to register variable with invalid IO!")
     end if
+#else
+    nplanes = 1 ! Silence unused variable
+    associate(crs => icoarse, nm =>io_name, pncl => ipencil, pln => iplane, &
+         opdcmp => opt_decomp, opnpl => opt_nplanes, tp => type, &
+         vnm => varname) ! Silence unused dummy argument
+    end associate
 #endif
     
   end subroutine decomp_2d_register_variable
@@ -1353,7 +1358,7 @@ contains
 
     integer (kind=MPI_OFFSET_KIND) :: filesize, disp
     integer, dimension(4) :: sizes, subsizes, starts
-    integer :: i,j,k, ierror, newtype, fh
+    integer :: ierror, newtype, fh
 
     sizes(1) = xszP(1)
     sizes(2) = yszP(2)
@@ -1628,8 +1633,8 @@ contains
     implicit none
 
     character(len=*), intent(in) :: io_name
-    integer :: ierror
 #ifdef ADIOS2
+    integer :: ierror
     type(adios2_io) :: io
 #endif
     
@@ -1644,7 +1649,6 @@ contains
     else
        call decomp_2d_abort(__FILE__, __LINE__, -1, "couldn't declare IO - adios object not valid")
     end if
-    
 #endif
     
   end subroutine decomp_2d_init_io
@@ -1653,7 +1657,6 @@ contains
 
     implicit none
 
-    logical :: dir_exists
     character(len=*), intent(in) :: io_name, io_dir
     integer, intent(in) :: mode
 
@@ -1793,6 +1796,9 @@ contains
          call decomp_2d_abort(__FILE__, __LINE__, -1, "trying to begin step with invalid engine")
       end if
     end associate
+#else
+    associate(nm => io_name, dr => io_dir) ! Silence unused dummy argument
+    end associate
 #endif
     
   end subroutine decomp_2d_start_io
@@ -1813,6 +1819,9 @@ contains
       else
          call decomp_2d_abort(__FILE__, __LINE__, -1, "trying to end step with invalid engine")
       end if
+    end associate
+#else
+    associate(nm => io_name, dr => io_dir) ! Silence unused dummy argument
     end associate
 #endif
 
@@ -1866,6 +1875,8 @@ contains
 #endif
 
 #ifndef ADIOS2
+    associate(nm => io_name) ! Silence unused dummy argument
+    end associate
     write(gen_iodir_name, "(A)") io_dir
 #else
     call adios2_at_io(io, adios, io_name, ierror)

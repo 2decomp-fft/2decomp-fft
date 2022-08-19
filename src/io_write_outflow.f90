@@ -62,6 +62,10 @@ associate(fh=>fh_registry(idx), &
      disp = disp + sizes(1)*sizes(2)*sizes(3)*mytype_bytes
   end if
 end associate
+
+associate(vnm => varname) ! Silence unused dummy argument
+end associate
+
 #else
 !! Use ADIOS2
 call adios2_at_io(io_handle, adios, io_name, ierror)

@@ -33,3 +33,5 @@
 
 # Cmake
 build
+
+Makefile.settings

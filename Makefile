@@ -74,12 +74,14 @@ SRCDIR = src
 DECOMPINC = mod
 FFLAGS += $(MODFLAG)$(DECOMPINC) -I$(DECOMPINC)
 
+include Makefile.settings
+
 all: $(DECOMPINC) $(OBJDIR) $(LIBDECOMP)
 
 $(DECOMPINC):
 	mkdir $(DECOMPINC)
 
-$(LIBDECOMP) : lib$(LIBDECOMP).a
+$(LIBDECOMP) : Makefile.settings lib$(LIBDECOMP).a
 
 lib$(LIBDECOMP).a: $(OBJDECOMP)
 	$(AR) $(LIBOPT) $@ $^
@@ -103,8 +105,18 @@ check: examples
 clean: clean-examples
 	rm -f $(OBJDIR)/*.o $(DECOMPINC)/*.mod $(DECOMPINC)/*.smod lib$(LIBDECOMP).a
 	rm -f ./*.o ./*.mod ./*.smod # Ensure old files are removed
+	rm -f Makefile.settings
 
 clean-examples:
 	$(MAKE) -C examples clean
+
+.PHONY: Makefile.settings
+
+Makefile.settings:
+	echo "FFLAGS = $(FFLAGS)" > $@
+	echo "OPT = $(OPT)" >> $@
+	echo "DEFS = $(DEFS)" >> $@
+	echo "INC = $(INC)" >> $@
+	echo "LIBOPT = $(LIBOPT)" >>$@
 
 export

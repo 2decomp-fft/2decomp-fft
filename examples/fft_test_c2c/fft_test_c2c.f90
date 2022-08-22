@@ -19,10 +19,12 @@ complex(mytype), allocatable, dimension(:,:,:) :: in, out
 
 complex(mytype), dimension(nx,ny,nz) :: in1, out1
 integer :: ierror, i,j,k
+logical :: error_flag
 
+! Init
+error_flag = .false.
 call MPI_INIT(ierror)
-call MPI_COMM_SIZE(MPI_COMM_WORLD, nproc, ierror)
-call MPI_COMM_RANK(MPI_COMM_WORLD, nrank, ierror)
+if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_INIT")
 call decomp_2d_init(nx,ny,nz,p_row,p_col)
 call decomp_2d_fft_init
 
@@ -73,6 +75,7 @@ do k=xstart(3),xend(3)
 end do
 
 ! write out input, to match the format of NAG example result file
+#ifdef DEBUG
 if (nrank==0) then
    write(*,*) 'C06FXF Example Program Results'
    write(*,*) ''
@@ -80,6 +83,7 @@ if (nrank==0) then
    write(*,*) ''
    call print_global(in1,nx,ny,nz)
 end if
+#endif
 
 ! ===== 3D forward FFT =====
 call decomp_2d_fft_3d(in, out, DECOMP_2D_FFT_FORWARD)
@@ -96,11 +100,13 @@ end do
 call assemble_global(3,out,out1,nx,ny,nz)
 
 ! write out forward FFT result
+#ifdef DEBUG
 if (nrank==0) then
    write(*,*) 'Components of discrete Fourier transform'
    write(*,*) ''
    call print_global(out1,nx,ny,nz)
 end if
+#endif
 
 ! ===== 3D inverse FFT =====
 call decomp_2d_fft_3d(out, in, DECOMP_2D_FFT_BACKWARD)
@@ -117,11 +123,13 @@ end do
 call assemble_global(1,in,in1,nx,ny,nz)
 
 ! write out inverse FFT result
+#ifdef DEBUG
 if (nrank==0) then
    write(*,*) 'Original sequence as restored by inverse transform'
    write(*,*) ''
    call print_global(in1,nx,ny,nz)
 end if
+#endif
 
 call decomp_2d_fft_finalize
 call decomp_2d_finalize

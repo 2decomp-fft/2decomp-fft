@@ -117,6 +117,7 @@ Makefile.settings:
 	echo "OPT = $(OPT)" >> $@
 	echo "DEFS = $(DEFS)" >> $@
 	echo "INC = $(INC)" >> $@
-	echo "LIBOPT = $(LIBOPT)" >>$@
+	echo "LIBOPT = $(LIBOPT)" >> $@
+	echo "LIBFFT = ${LIBFFT}" >> $@
 
 export

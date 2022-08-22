@@ -8,7 +8,7 @@ LIBS = -L../../ -l$(LIBDECOMP)
 OBJ = test2d.o
 
 test2d: $(OBJ)
-	$(FC) -o $@ $(OBJ) $(LIBS)
+	$(FC) $(FFLAGS) $(OPT) $(DEFS) $(INC) -o $@ $(OBJ) $(LIBS)
 
 check:
 	mpirun -n 12 ./test2d
@@ -17,4 +17,4 @@ clean:
 	rm -f *.o test2d u*.dat
 
 %.o : %.f90
-	$(FC) $(INC) $(OPTIONS) $(FFLAGS) -c $<
+	$(FC) $(FFLAGS) $(OPT) $(DEFS) $(INC) -c $< -o $@

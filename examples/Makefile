@@ -41,3 +41,5 @@ clean:
 	cd timing; $(MAKE) $@
 	cd halo_test; $(MAKE) $@
 	cd io_test; $(MAKE) $@
+
+export

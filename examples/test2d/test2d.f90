@@ -15,10 +15,12 @@ program test2d
   real(mytype), allocatable, dimension(:,:,:) :: u1, u2, u3
   
   integer :: i,j,k, m, ierror
-  
+  logical :: error_flag
+
+  ! Init
+  error_flag = .false.
   call MPI_INIT(ierror)
-  call MPI_COMM_SIZE(MPI_COMM_WORLD, nproc, ierror)
-  call MPI_COMM_RANK(MPI_COMM_WORLD, nrank, ierror)
+  if (ierror /= 0) call decomp_2d_abort(ierror, "MPI_INIT")
   call decomp_2d_init(nx,ny,nz,p_row,p_col)
 
   ! ***** global data *****
@@ -54,12 +56,14 @@ program test2d
 
 10 format(15I5)
 
+#ifdef DEBUG
   if (nrank==0) then 
      write(*,*) 'Numbers held on Rank 0'
      write(*,*) ' '
      write(*,*) 'X-pencil'
      write(*,10) int(u1)
   end if
+#endif
 
   ! call decomp_2d_write_one(1,u1,'u1.dat')
 
@@ -67,11 +71,13 @@ program test2d
   ! x-pensil ==> y-pensil
   call transpose_x_to_y(u1,u2)
 
+#ifdef DEBUG
   if (nrank==0) then
      write(*,*) ' '
      write(*,*) 'Y-pencil'
      write(*,10) int(u2)
   end if
+#endif
 
   ! call decomp_2d_write_one(2,u2,'u2.dat')
   ! 'u1.dat' and 'u2.dat' should be identical byte-by-byte 
@@ -80,20 +86,25 @@ program test2d
   do k=ystart(3),yend(3)
     do j=ystart(2),yend(2)
       do i=ystart(1),yend(1)
-        if (abs(u2(i,j,k)-data1(i,j,k)).gt.0) stop "error swaping x->y"
+        if (abs(u2(i,j,k)-data1(i,j,k)).gt.0) error_flag = .true.
       end do
     end do
   end do
+  call MPI_ALLREDUCE(MPI_IN_PLACE, error_flag, 1, MPI_LOGICAL, MPI_LOR, MPI_COMM_WORLD, ierror)
+  if (ierror /= 0) call decomp_2d_abort(ierror, "MPI_ALLREDUCE")
+  if (error_flag) call decomp_2d_abort(1, "error swaping x->y")
 
   !!!!!!!!!!!!!!!!!!!!!!!
   ! y-pensil ==> z-pensil
   call transpose_y_to_z(u2,u3)
 
+#ifdef DEBUG
   if (nrank==0) then
      write(*,*) ' '
      write(*,*) 'Z-pencil'
      write(*,10) int(u3)
   end if
+#endif
 
   ! call decomp_2d_write_one(3,u3,'u3.dat')
   ! 'u1.dat','u2.dat' and 'u3.dat' should be identical
@@ -101,10 +112,13 @@ program test2d
   do k=zstart(3),zend(3)
     do j=zstart(2),zend(2)
       do i=zstart(1),zend(1)
-        if (abs(u3(i,j,k)-data1(i,j,k)).gt.0) stop "error swaping y->z"
+        if (abs(u3(i,j,k)-data1(i,j,k)).gt.0) error_flag = .true.
       end do
     end do
   end do
+  call MPI_ALLREDUCE(MPI_IN_PLACE, error_flag, 1, MPI_LOGICAL, MPI_LOR, MPI_COMM_WORLD, ierror)
+  if (ierror /= 0) call decomp_2d_abort(ierror, "MPI_ALLREDUCE")
+  if (error_flag) call decomp_2d_abort(2, "error swaping y->z")
 
   !!!!!!!!!!!!!!!!!!!!!!!
   ! z-pensil ==> y-pensil
@@ -114,10 +128,13 @@ program test2d
   do k=ystart(3),yend(3)
     do j=ystart(2),yend(2)
       do i=ystart(1),yend(1)
-        if (abs(u2(i,j,k)-data1(i,j,k)).gt.0) stop "error swaping z->y"
+        if (abs(u2(i,j,k)-data1(i,j,k)).gt.0) error_flag = .true.
       end do
     end do
   end do
+  call MPI_ALLREDUCE(MPI_IN_PLACE, error_flag, 1, MPI_LOGICAL, MPI_LOR, MPI_COMM_WORLD, ierror)
+  if (ierror /= 0) call decomp_2d_abort(ierror, "MPI_ALLREDUCE")
+  if (error_flag) call decomp_2d_abort(3, "error swaping z->y")
 
   !!!!!!!!!!!!!!!!!!!!!!!
   ! y-pensil ==> x-pensil
@@ -127,10 +144,19 @@ program test2d
   do k=xstart(3),xend(3)
     do j=xstart(2),xend(2)
       do i=xstart(1),xend(1)
-        if (abs(u1(i,j,k)-data1(i,j,k)).gt.0) stop "error swaping y->x"
+        if (abs(u1(i,j,k)-data1(i,j,k)).gt.0) error_flag = .true.
       end do
     end do
   end do
+  call MPI_ALLREDUCE(MPI_IN_PLACE, error_flag, 1, MPI_LOGICAL, MPI_LOR, MPI_COMM_WORLD, ierror)
+  if (ierror /= 0) call decomp_2d_abort(ierror, "MPI_ALLREDUCE")
+  if (error_flag) call decomp_2d_abort(4, "error swaping y->x")
+
+  if (nrank == 0) then
+    write(*,*) " "
+    write(*,*) "test2d completed"
+    write(*,*) " "
+  endif
 
   call decomp_2d_finalize 
   call MPI_FINALIZE(ierror)

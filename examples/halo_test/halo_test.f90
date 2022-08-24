@@ -149,7 +149,9 @@ program halo_test
 
   if (nrank==0) then
      write(*,*) 'Calculated via global transposition'
+#ifdef DEBUG
      write(*,*) (div1(i,i,i), i=2,13)
+#endif
   end if
 
   deallocate(v2,w2,w3,wk2,wk3)
@@ -234,7 +236,9 @@ program halo_test
   if (nrank==0) then
      write(*,*) '-----------------------------------------------'
      write(*,*) 'Calculated via halo exchange (data in X-pencil)'
+#ifdef DEBUG
      write(*,*) (div2(i,i,i), i=2,13)
+#endif
      write(*,*) 'Error: ', err
      write(*,*) 'Pass: ', passing
   end if
@@ -337,7 +341,9 @@ program halo_test
   if (nrank==0) then
      write(*,*) '-----------------------------------------------'
      write(*,*) 'Calculated via halo exchange (data in Y-pencil)'
+#ifdef DEBUG
      write(*,*) (div3(i,i,i), i=2,13)
+#endif
      write(*,*) "Error: ", err
      write(*,*) "Pass: ", passing
   end if
@@ -443,7 +449,9 @@ program halo_test
   if (nrank==0) then
      write(*,*) '-----------------------------------------------'
      write(*,*) 'Calculated via halo exchange (data in Z-pencil)'
+#ifdef DEBUG
      write(*,*) (div4(i,i,i), i=2,13)
+#endif
      write(*,*) "Error: ", err
      write(*,*) "Pass: ", passing
   end if

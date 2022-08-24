@@ -459,6 +459,11 @@ program halo_test
   deallocate(div1,div2,div3,div4)
 
   call decomp_2d_finalize 
+
+  if (.not. all_pass) then
+     call MPI_Abort(MPI_COMM_WORLD, 1, ierror) ! Abort with non-zero exit code
+  end if
+
   call MPI_FINALIZE(ierror)
 
 end program halo_test

@@ -460,9 +460,7 @@ program halo_test
 
   call decomp_2d_finalize 
 
-  if (.not. all_pass) then
-     call MPI_Abort(MPI_COMM_WORLD, 1, ierror) ! Abort with non-zero exit code
-  end if
+  if (.not. all_pass) call decomp_2d_abort(1, "Error in halo_test")
 
   call MPI_FINALIZE(ierror)
 

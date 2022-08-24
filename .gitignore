@@ -34,4 +34,7 @@
 # Cmake
 build
 
+# Log files
+*.log
+
 Makefile.settings

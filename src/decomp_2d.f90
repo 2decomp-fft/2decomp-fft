@@ -55,6 +55,7 @@ module decomp_2d
 
   integer, save, public :: nrank  ! local MPI rank 
   integer, save, public :: nproc  ! total number of processors
+  integer, save, public :: decomp_2d_comm ! MPI communicator
 
   ! parameters for 2D Cartesian topology 
   integer, save, dimension(2) :: dims, coord
@@ -313,7 +314,7 @@ contains
   !     all internal data structures initialised properly
   !     library ready to use
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  subroutine decomp_2d_init(nx,ny,nz,p_row,p_col,periodic_bc)
+  subroutine decomp_2d_init(nx,ny,nz,p_row,p_col,periodic_bc,comm)
 
     use iso_fortran_env, only : output_unit
 
@@ -322,6 +323,7 @@ contains
     integer, intent(IN) :: nx,ny,nz
     integer, intent(INOUT) :: p_row,p_col
     logical, dimension(3), intent(IN), optional :: periodic_bc
+    integer, intent(in), optional :: comm
 
     integer :: errorcode, ierror, row, col, iounit
 #ifdef DEBUG
@@ -346,6 +348,13 @@ contains
        periodic_y = .false.
        periodic_z = .false.
     end if
+
+    ! Use the provided MPI communicator if present
+    if (present(comm)) then
+       decomp_2d_comm = comm
+    else
+       decomp_2d_comm = MPI_COMM_WORLD
+    endif
 
     if (p_row==0 .and. p_col==0) then
        ! determine the best 2D processor grid
@@ -373,18 +382,18 @@ contains
     dims(2) = col
     periodic(1) = periodic_y
     periodic(2) = periodic_z
-    call MPI_CART_CREATE(MPI_COMM_WORLD,2,dims,periodic, &
+    call MPI_CART_CREATE(decomp_2d_comm,2,dims,periodic, &
          .false., &  ! do not reorder rank
          DECOMP_2D_COMM_CART_X, ierror)
     if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_CART_CREATE")
     periodic(1) = periodic_x
     periodic(2) = periodic_z
-    call MPI_CART_CREATE(MPI_COMM_WORLD,2,dims,periodic, &
+    call MPI_CART_CREATE(decomp_2d_comm,2,dims,periodic, &
          .false., DECOMP_2D_COMM_CART_Y, ierror)
     if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_CART_CREATE")
     periodic(1) = periodic_x
     periodic(2) = periodic_y
-    call MPI_CART_CREATE(MPI_COMM_WORLD,2,dims,periodic, &
+    call MPI_CART_CREATE(decomp_2d_comm,2,dims,periodic, &
          .false., DECOMP_2D_COMM_CART_Z, ierror)
     if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_CART_CREATE")
 
@@ -454,7 +463,7 @@ contains
     if (nrank .eq. 0) then
        nccl_stat = ncclGetUniqueId(nccl_uid_2decomp)
     end if
-    call MPI_Bcast(nccl_uid_2decomp, int(sizeof(ncclUniqueId)), MPI_BYTE, 0, MPI_COMM_WORLD, ierror)
+    call MPI_Bcast(nccl_uid_2decomp, int(sizeof(ncclUniqueId)), MPI_BYTE, 0, decomp_2d_comm, ierror)
     if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_BCAST")
 
     nccl_stat = ncclCommInitRank(nccl_comm_2decomp, nproc, nccl_uid_2decomp, nrank)
@@ -1526,7 +1535,7 @@ contains
 
     ! maxcor
     call MPI_ALLREDUCE(ncores, maxcor, 1, MPI_INTEGER, MPI_MAX, &
-         MPI_COMM_WORLD, ierror)
+         decomp_2d_comm, ierror)
     if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_ALLREDUCE")
 
     call FIPC_finalize(ierror)
@@ -1787,7 +1796,7 @@ contains
        write(error_unit,*) '2DECOMP&FFT ERROR - errorcode: ', errorcode
        write(error_unit,*) 'ERROR MESSAGE: ' // msg
     end if
-    call MPI_ABORT(MPI_COMM_WORLD,errorcode,ierror)
+    call MPI_ABORT(decomp_2d_comm,errorcode,ierror)
 
   end subroutine decomp_2d_abort_basic
 
@@ -1814,7 +1823,7 @@ contains
        write(error_unit,*) '           line  ', line
        write(error_unit,*) '  error message: ' // msg
     end if
-    call MPI_ABORT(MPI_COMM_WORLD,errorcode,ierror)
+    call MPI_ABORT(decomp_2d_comm,errorcode,ierror)
 
   end subroutine decomp_2d_abort_file_line
 

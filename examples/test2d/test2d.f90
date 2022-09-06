@@ -8,7 +8,7 @@ program test2d
   implicit none
 
   integer, parameter :: nx=17, ny=13, nz=11
-  integer :: p_row=4, p_col=3
+  integer :: p_row=0, p_col=0
 
   real(mytype), dimension(nx,ny,nz) :: data1
   

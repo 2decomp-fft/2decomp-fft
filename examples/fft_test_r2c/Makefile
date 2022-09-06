@@ -7,11 +7,14 @@ LIBS = -L../../ -l$(LIBDECOMP) $(LIBFFT)
 
 OBJ = fft_test_r2c.o
 
+NP ?= 1
+MPIRUN ?= mpirun
+
 fft_test_r2c: $(OBJ)
 	$(FC) -o $@ $(OBJ) $(LIBS)
 
 check:
-	mpirun -n 4 ./fft_test_r2c
+	$(MPIRUN) -n $(NP) ./fft_test_r2c
 
 clean:
 	rm -f *.o fft_test_r2c

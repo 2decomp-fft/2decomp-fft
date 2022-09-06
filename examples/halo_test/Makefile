@@ -7,11 +7,14 @@ LIBS = -L../../ -l$(LIBDECOMP)
 
 OBJ = halo_test.o
 
+NP ?= 1
+MPIRUN ?= mpirun
+
 halo_test: $(OBJ)
 	$(FC) $(FFLAGS) $(OPT) $(DEFS) $(INC) -o $@ $(OBJ) $(LIBS)
 
 check:
-	mpirun -n 12 ./halo_test
+	$(MPIRUN) -n $(NP) ./halo_test
 
 clean:
 	rm -f *.o halo_test

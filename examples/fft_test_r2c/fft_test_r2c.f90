@@ -16,7 +16,7 @@ program fft_test_r2c
   !include "fftw3.f"
   
   integer, parameter :: nx=4, ny=2, nz=3
-  integer :: p_row=2, p_col=2
+  integer :: p_row=0, p_col=0
   
   real(mytype), allocatable, dimension(:,:,:) :: in, in2
   complex(mytype), allocatable, dimension(:,:,:) :: out

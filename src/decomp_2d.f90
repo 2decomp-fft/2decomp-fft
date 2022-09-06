@@ -53,15 +53,18 @@ module decomp_2d
   ! some key global variables
   integer, save, public :: nx_global, ny_global, nz_global  ! global size
 
-  integer, save, public :: nrank = -1 ! local MPI rank
+  integer, save, public :: nrank = -1 ! local MPI rank 
   integer, save, public :: nproc = -1 ! total number of processors
+  integer, save, public :: decomp_2d_comm ! MPI communicator
 
   ! parameters for 2D Cartesian topology 
   integer, save, dimension(2) :: dims, coord
   logical, save, dimension(2) :: periodic
-  integer, save, public :: DECOMP_2D_COMM_CART_X, &
-       DECOMP_2D_COMM_CART_Y, DECOMP_2D_COMM_CART_Z 
-  integer, save :: DECOMP_2D_COMM_ROW, DECOMP_2D_COMM_COL
+  integer, save, public :: DECOMP_2D_COMM_CART_X = MPI_COMM_NULL
+  integer, save, public :: DECOMP_2D_COMM_CART_Y = MPI_COMM_NULL
+  integer, save, public :: DECOMP_2D_COMM_CART_Z = MPI_COMM_NULL
+  integer, save :: DECOMP_2D_COMM_ROW = MPI_COMM_NULL
+  integer, save :: DECOMP_2D_COMM_COL = MPI_COMM_NULL
 
   ! define neighboring blocks (to be used in halo-cell support)
   !  first dimension 1=X-pencil, 2=Y-pencil, 3=Z-pencil
@@ -70,6 +73,28 @@ module decomp_2d
 
   ! flags for periodic condition in three dimensions
   logical, save :: periodic_x, periodic_y, periodic_z
+
+  !
+  ! Debug level can be changed by the external code before calling decomp_2d_init
+  !
+  ! The environment variable "DECOMP_2D_DEBUG" can be used to change the debug level
+  !
+  ! Debug checks are performed only when the preprocessor variable DEBUG is defined
+  !
+  enum, bind(c)
+     enumerator :: D2D_DEBUG_LEVEL_OFF = 0
+     enumerator :: D2D_DEBUG_LEVEL_CRITICAL = 1
+     enumerator :: D2D_DEBUG_LEVEL_ERROR = 2
+     enumerator :: D2D_DEBUG_LEVEL_WARN = 3
+     enumerator :: D2D_DEBUG_LEVEL_INFO = 4
+     enumerator :: D2D_DEBUG_LEVEL_DEBUG = 5
+     enumerator :: D2D_DEBUG_LEVEL_TRACE = 6
+  end enum
+#ifdef DEBUG
+  integer(kind(D2D_DEBUG_LEVEL_OFF)), public, save :: decomp_debug = D2D_DEBUG_LEVEL_INFO
+#else
+  integer(kind(D2D_DEBUG_LEVEL_OFF)), public, save :: decomp_debug = D2D_DEBUG_LEVEL_OFF
+#endif
 
 #if defined(_GPU)
 #if defined(_NCCL)
@@ -289,7 +314,7 @@ contains
   !     all internal data structures initialised properly
   !     library ready to use
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  subroutine decomp_2d_init(nx,ny,nz,p_row,p_col,periodic_bc)
+  subroutine decomp_2d_init(nx,ny,nz,p_row,p_col,periodic_bc,comm)
 
     use iso_fortran_env, only : output_unit
 
@@ -298,6 +323,7 @@ contains
     integer, intent(IN) :: nx,ny,nz
     integer, intent(INOUT) :: p_row,p_col
     logical, dimension(3), intent(IN), optional :: periodic_bc
+    integer, intent(in), optional :: comm
 
     integer :: errorcode, ierror, row, col, iounit
 #ifdef DEBUG
@@ -319,6 +345,10 @@ contains
                                              ierror, &
                                              "MPI_COMM_SIZE")
     endif
+#ifdef DEBUG
+    ! Check if a modification of the debug level is needed
+    call decomp_2d_debug()
+#endif
 
     nx_global = nx
     ny_global = ny
@@ -333,6 +363,13 @@ contains
        periodic_y = .false.
        periodic_z = .false.
     end if
+
+    ! Use the provided MPI communicator if present
+    if (present(comm)) then
+       decomp_2d_comm = comm
+    else
+       decomp_2d_comm = MPI_COMM_WORLD
+    endif
 
     if (p_row==0 .and. p_col==0) then
        ! determine the best 2D processor grid
@@ -360,18 +397,18 @@ contains
     dims(2) = col
     periodic(1) = periodic_y
     periodic(2) = periodic_z
-    call MPI_CART_CREATE(MPI_COMM_WORLD,2,dims,periodic, &
+    call MPI_CART_CREATE(decomp_2d_comm,2,dims,periodic, &
          .false., &  ! do not reorder rank
          DECOMP_2D_COMM_CART_X, ierror)
     if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_CART_CREATE")
     periodic(1) = periodic_x
     periodic(2) = periodic_z
-    call MPI_CART_CREATE(MPI_COMM_WORLD,2,dims,periodic, &
+    call MPI_CART_CREATE(decomp_2d_comm,2,dims,periodic, &
          .false., DECOMP_2D_COMM_CART_Y, ierror)
     if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_CART_CREATE")
     periodic(1) = periodic_x
     periodic(2) = periodic_y
-    call MPI_CART_CREATE(MPI_COMM_WORLD,2,dims,periodic, &
+    call MPI_CART_CREATE(decomp_2d_comm,2,dims,periodic, &
          .false., DECOMP_2D_COMM_CART_Z, ierror)
     if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_CART_CREATE")
 
@@ -441,7 +478,7 @@ contains
     if (nrank .eq. 0) then
        nccl_stat = ncclGetUniqueId(nccl_uid_2decomp)
     end if
-    call MPI_Bcast(nccl_uid_2decomp, int(sizeof(ncclUniqueId)), MPI_BYTE, 0, MPI_COMM_WORLD, ierror)
+    call MPI_Bcast(nccl_uid_2decomp, int(sizeof(ncclUniqueId)), MPI_BYTE, 0, decomp_2d_comm, ierror)
     if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_BCAST")
 
     nccl_stat = ncclCommInitRank(nccl_comm_2decomp, nproc, nccl_uid_2decomp, nrank)
@@ -499,6 +536,13 @@ contains
     if (ierror /= 0) call decomp_2d_warning(__FILE__, __LINE__, ierror, "MPI_COMM_FREE")
     call MPI_COMM_FREE(DECOMP_2D_COMM_CART_Z, ierror)
     if (ierror /= 0) call decomp_2d_warning(__FILE__, __LINE__, ierror, "MPI_COMM_FREE")
+
+    DECOMP_2D_COMM_ROW = MPI_COMM_NULL
+    DECOMP_2D_COMM_COL = MPI_COMM_NULL
+    DECOMP_2D_COMM_CART_X = MPI_COMM_NULL
+    DECOMP_2D_COMM_CART_Y = MPI_COMM_NULL
+    DECOMP_2D_COMM_CART_Z = MPI_COMM_NULL
+
     call decomp_info_finalize(decomp_main)
 
     decomp_buf_size = 0
@@ -1506,7 +1550,7 @@ contains
 
     ! maxcor
     call MPI_ALLREDUCE(ncores, maxcor, 1, MPI_INTEGER, MPI_MAX, &
-         MPI_COMM_WORLD, ierror)
+         decomp_2d_comm, ierror)
     if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_ALLREDUCE")
 
     call FIPC_finalize(ierror)
@@ -1767,7 +1811,7 @@ contains
        write(error_unit,*) '2DECOMP&FFT ERROR - errorcode: ', errorcode
        write(error_unit,*) 'ERROR MESSAGE: ' // msg
     end if
-    call MPI_ABORT(MPI_COMM_WORLD,errorcode,ierror)
+    call MPI_ABORT(decomp_2d_comm,errorcode,ierror)
 
   end subroutine decomp_2d_abort_basic
 
@@ -1794,7 +1838,7 @@ contains
        write(error_unit,*) '           line  ', line
        write(error_unit,*) '  error message: ' // msg
     end if
-    call MPI_ABORT(MPI_COMM_WORLD,errorcode,ierror)
+    call MPI_ABORT(decomp_2d_comm,errorcode,ierror)
 
   end subroutine decomp_2d_abort_file_line
 
@@ -1845,6 +1889,44 @@ contains
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 #include "alloc.f90"
     
+#ifdef DEBUG
+  !
+  ! Try to read the environment variable DECOMP_2D_DEBUG to change the debug level
+  !
+  ! The expected value is an integer below 9999
+  !
+  subroutine decomp_2d_debug
+
+    implicit none
+
+    integer :: ierror
+    character(len=4) :: val
+    character(len=*), parameter :: varname = "DECOMP_2D_DEBUG"
+
+    ! Read the variable
+    call get_environment_variable(varname, value=val, status=ierror)
+
+    ! Return if no variable, or no support for env. variable
+    if (ierror >= 1) return
+
+    ! Minor error, print warning and return
+    if (ierror /= 0) then
+       call decomp_2d_warning(__FILE__, &
+                              __LINE__, &
+                              ierror, &
+                              "Error when reading DECOMP_2D_DEBUG : "//val)
+       return
+    endif
+
+    ! Conversion to integer if possible
+    read(val, '(i4)', iostat=ierror) decomp_debug
+    if (ierror /= 0) call decomp_2d_warning(__FILE__, &
+                                            __LINE__, &
+                                            ierror, &
+                                            "Error when reading DECOMP_2D_DEBUG : "//val)
+
+  end subroutine decomp_2d_debug
+#endif
   
 end module decomp_2d
 

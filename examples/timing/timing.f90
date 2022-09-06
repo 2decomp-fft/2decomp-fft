@@ -21,6 +21,8 @@ program fft_timing
   double precision :: t1, t2, t3 ,t4
   
   call MPI_INIT(ierror)
+  call MPI_COMM_SIZE(MPI_COMM_WORLD, nproc, ierror)
+  call MPI_COMM_RANK(MPI_COMM_WORLD, nrank, ierror)
   call decomp_2d_init(nx,ny,nz,p_row,p_col)
 
 

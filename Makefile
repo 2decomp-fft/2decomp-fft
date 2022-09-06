@@ -20,7 +20,7 @@ FCFLAGS ?= # user can set default compiler flags
 LDFLAGS ?= # user can set default linker flags
 FFLAGS = $(FCFLAGS)
 LFLAGS = $(LDFLAGS)
-MODFLAG = -J
+MODFLAG = -J 
 
 LIBDECOMP = decomp2d
 
@@ -91,12 +91,14 @@ FFLAGS += $(MODFLAG)$(DECOMPINC) -I$(DECOMPINC)
 OPT += $(OPTIO)
 INC += $(INCIO)
 
+include Makefile.settings
+
 all: $(DECOMPINC) $(OBJDIR) $(LIBDECOMP)
 
 $(DECOMPINC):
 	mkdir $(DECOMPINC)
 
-$(LIBDECOMP) : lib$(LIBDECOMP).a
+$(LIBDECOMP) : Makefile.settings lib$(LIBDECOMP).a
 
 lib$(LIBDECOMP).a: $(OBJDECOMP)
 	$(AR) $(LIBOPT) $@ $^
@@ -110,13 +112,29 @@ $(OBJDECOMP) : $(OBJDIR)/%.o : $(SRCDIR)/%.f90
 examples: $(LIBDECOMP)
 	$(MAKE) -C examples
 
+.PHONY: check
+
+check: examples
+	$(MAKE) -C examples $@
+
 .PHONY: clean
 
 clean: clean-examples
 	rm -f $(OBJDIR)/*.o $(DECOMPINC)/*.mod $(DECOMPINC)/*.smod lib$(LIBDECOMP).a
 	rm -f ./*.o ./*.mod ./*.smod # Ensure old files are removed
+	rm -f Makefile.settings
 
 clean-examples:
 	$(MAKE) -C examples clean
+
+.PHONY: Makefile.settings
+
+Makefile.settings:
+	echo "FFLAGS = $(FFLAGS)" > $@
+	echo "OPT = $(OPT)" >> $@
+	echo "DEFS = $(DEFS)" >> $@
+	echo "INC = $(INC)" >> $@
+	echo "LIBOPT = $(LIBOPT)" >> $@
+	echo "LIBFFT = ${LIBFFT}" >> $@
 
 export

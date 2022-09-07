@@ -33,15 +33,39 @@ program fft_test_r2c
   integer :: fh, ierror, i,j,k, n,iol
   
   call MPI_INIT(ierror)
-  call MPI_COMM_SIZE(MPI_COMM_WORLD, nproc, ierror)
-  call MPI_COMM_RANK(MPI_COMM_WORLD, nrank, ierror)
+  if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_INIT")
   call decomp_2d_init(nx,ny,nz,p_row,p_col)
-  call decomp_2d_fft_init
+  call decomp_2d_fft_init(PHYSICAL_IN_X)
   
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   ! Compute a small problem all on rank 0 as reference
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  call random_number(in_global)
+  !call random_number(in_global)
+  ! No Random input, but something global for everyone
+  in_global(1,1,1) = (1.000)
+  in_global(1,1,2) = (0.999)
+  in_global(1,1,3) = (0.987)
+  in_global(1,2,1) = (0.936)
+  in_global(1,2,2) = (0.994)
+  in_global(1,2,3) = (0.989)
+  in_global(2,1,1) = (0.963)
+  in_global(2,1,2) = (0.891)
+  in_global(2,1,3) = (0.903)
+  in_global(2,2,1) = (0.885)
+  in_global(2,2,2) = (0.823)
+  in_global(2,2,3) = (0.694)
+  in_global(3,1,1) = (0.500)
+  in_global(3,1,2) = (0.499)
+  in_global(3,1,3) = (0.487)
+  in_global(3,2,1) = (0.436)
+  in_global(3,2,2) = (0.494)
+  in_global(3,2,3) = (0.489)
+  in_global(4,1,1) = (0.463)
+  in_global(4,1,2) = (0.391)
+  in_global(4,1,3) = (0.403)
+  in_global(4,2,1) = (0.385)
+  in_global(4,2,2) = (0.323)
+  in_global(4,2,3) = (0.194)
   
   if (nrank==0) then
      write(*,*) '*** Reference serial computation on rank 0 only'
@@ -69,14 +93,6 @@ program fft_test_r2c
 10 format(1x,6(:,'(',F5.2,',',F5.2,')'))
 20 format(1x,6F5.2)
   
-  ! File for testing IO
-  call MPI_FILE_OPEN(MPI_COMM_WORLD, 'fftdata', &
-       MPI_MODE_CREATE+MPI_MODE_WRONLY, MPI_INFO_NULL, &
-       fh, ierror)
-  filesize = 0_MPI_OFFSET_KIND
-  call MPI_FILE_SET_SIZE(fh,filesize,ierror)  ! guarantee overwriting
-  disp = 0_MPI_OFFSET_KIND
-  
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   ! Test the real-to-complex interface (r2c) 
   
@@ -98,22 +114,20 @@ program fft_test_r2c
      end do
   end do
   
-  ! write input to file
-  ! call decomp_2d_write_var(fh,disp,1,in)
-  
   if (nrank==0) then
      write(*,*) ' '
      write(*,*) '*** Distributed computation (X-pencil input)'
-     write(*,*) ' real input held by rank 0:'
+     write(*,*) ' real input held by rank 0: ', nrank
      write(*,20) in
   end if
   
   ! compute r2c transform 
   call decomp_2d_fft_3d(in,out)
   
+  
   if (nrank==0) then
      write(*,*) ' - after forward transform'
-     write(*,*) ' complex output held by rank 0:'
+     write(*,*) ' complex output held by rank 0: ', nrank
      write(*,10) out
   end if
 
@@ -128,62 +142,44 @@ program fft_test_r2c
   ! normalisation
   in2 = in2 / real(nx) / real(ny) / real(nz)
   
-  ! write the data recovered by inverse FFT to file
-  ! call decomp_2d_write_var(fh,disp,1,in2)
-  
   if (nrank==0) then
      write(*,*) ' - after backward transform and normalisation'
-     write(*,*) ' real output held by rank 0:'
+     write(*,*) ' real output held by rank 0: ', nrank
      write(*,20) in2
   end if
+  ! Create the global array to verify the output
+  call assemble_global(1,in2,in_g2,nx,ny,nz)
   
   deallocate(in,in2,out)
   call decomp_2d_fft_finalize
   
-  call MPI_FILE_CLOSE(fh,ierror)
-  
   ! check on rank 0 if input data is properly recovered
-  ! this also tests the IO routines
   if (nrank==0) then
-     in_g2(1,1,1) = real(0., mytype)
-     inquire(iolength=iol) in_g2(1,1,1)
-     OPEN(10, FILE='fftdata', FORM='unformatted', &
-          ACCESS='DIRECT', RECL=iol)
-     n=1
-     do k=1,nz
-        do j=1,ny
-           do i=1,nx
-              read(10,rec=n) in_g2(i,j,k)
-              n=n+1
-           end do
-        end do
-     end do
-     do k=1,nz
-        do j=1,ny
-           do i=1,nx
-              read(10,rec=n) in_g3(i,j,k)
-              n=n+1
-           end do
-        end do
-     end do
      err = 0._mytype
+     write(*,*)' Output on master node of the full result'
      do k=1,nz
         do j=1,ny
            do i=1,nx
-              err = err + (in_g2(i,j,k)-in_g3(i,j,k))**2
+              err = err + (in_g2(i,j,k)-in_global(i,j,k))**2
            end do
         end do
      end do
      err = err / real(nx,mytype) / real(ny,mytype) / real(nz,mytype)
      write(*,*) ' error / mesh point: ', sqrt(err)
+     write(*,*) '*** Output computation on rank 0 only'
+     write(*,*) ' global real result'
+     do i=1,nx
+        write(*,20) ((in_g2(i,j,k),j=1,ny),k=1,nz)
+     end do
   end if
-
 
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   ! Repeat the above but using Z-pencil input
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   
   call decomp_2d_fft_init(PHYSICAL_IN_Z)
+  ! reset the global output
+  in_g2 = 0._mytype
   
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   ! Test the real-to-complex interface (r2c) 
@@ -228,17 +224,150 @@ program fft_test_r2c
   
   ! normalisation
   in2 = in2 / real(nx) / real(ny) / real(nz)
+
   
   if (nrank==0) then
      write(*,*) ' - after backward transform and normalisation'
      write(*,*) ' real output held by rank 0:'
      write(*,20) in2
   end if
-  
+
+  ! Create the global array to verify the output
+  call assemble_global(3,in2,in_g2,nx,ny,nz)
+  ! check on rank 0 if input data is properly recovered
+  ! this also tests the IO routines
+  if (nrank==0) then
+     err = 0._mytype
+     write(*,*)' Output on master node of the full result'
+     do k=1,nz
+        do j=1,ny
+           do i=1,nx
+              err = err + (in_g2(i,j,k)-in_global(i,j,k))**2
+           end do
+        end do
+     end do
+     err = err / real(nx,mytype) / real(ny,mytype) / real(nz,mytype)
+     write(*,*) ' error / mesh point: ', sqrt(err)
+     write(*,*) '*** Output computation on rank 0 only'
+     write(*,*) ' global real result'
+     do i=1,nx
+        write(*,20) ((in_g2(i,j,k),j=1,ny),k=1,nz)
+     end do
+  end if
+
   deallocate(in,in2,out)
   
   call decomp_2d_fft_finalize
   call decomp_2d_finalize
   call MPI_FINALIZE(ierror)
+
+contains
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+! Collect data from each processor and assemble into a global array
+! at the master rank
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+subroutine assemble_global(ndir,local,global,nx,ny,nz)
   
+  use decomp_2d
+  use MPI
+  
+  implicit none
+  
+  integer, intent(IN) :: ndir  ! 1 = X-pencil; 3 = Z-pencil
+  integer, intent(IN) :: nx,ny,nz
+  real(mytype), dimension(:,:,:), intent(IN) :: local
+  real(mytype), dimension(nx,ny,nz), intent(OUT) :: global
+  
+  real(mytype), allocatable, dimension(:,:,:) :: rbuf
+  integer, dimension(9) :: sbuf1, rbuf1
+  
+  integer :: ierror, i,j,k,m, i1,i2,j1,j2,k1,k2, count
+  integer, dimension(MPI_STATUS_SIZE) :: status
+
+  do k=1,nz
+     do j=1,ny
+        do i=1,nx
+         global(i,j,k) = 0._mytype
+        end do
+     end do
+  end do
+  if (nrank==0) then
+     ! master writes its own data to a global array
+     if (ndir==3) then  ! Z-pencil
+        i1 = zstart(1)
+        i2 = zend(1)
+        j1 = zstart(2)
+        j2 = zend(2)
+        k1 = zstart(3)
+        k2 = zend(3)
+     else if (ndir==1) then  ! X-pencil
+        i1 = xstart(1)
+        i2 = xend(1)
+        j1 = xstart(2)
+        j2 = xend(2)
+        k1 = xstart(3)
+        k2 = xend(3)
+     end if
+     do k=k1,k2
+        do j=j1,j2
+           do i=i1,i2
+              ! 'local' is assumbed shape array
+              ! but it is OK as starting index for rank 0 always 1
+              global(i,j,k)=local(i,j,k)
+           end do
+        end do
+     end do
+     ! then loop through all other ranks to collect data
+     do m=1,nproc-1
+        CALL MPI_RECV(rbuf1,9,MPI_INTEGER,m,m,MPI_COMM_WORLD, &
+             status,ierror)
+        allocate(rbuf(rbuf1(1):rbuf1(2),rbuf1(4):rbuf1(5), &
+             rbuf1(7):rbuf1(8)))
+        CALL MPI_RECV(rbuf,rbuf1(3)*rbuf1(6)*rbuf1(9),real_type,m, &
+             m+nproc,MPI_COMM_WORLD,status,ierror)
+        do k=rbuf1(7),rbuf1(8)
+           do j=rbuf1(4),rbuf1(5)
+              do i=rbuf1(1),rbuf1(2)
+                 global(i,j,k)=rbuf(i,j,k)
+              end do
+           end do
+        end do
+        deallocate(rbuf)
+     end do
+  else
+     ! slaves send data to mater
+     if (ndir==3) then  ! Z-pencil
+        sbuf1(1) = zstart(1)
+        sbuf1(2) = zend(1)
+        sbuf1(3) = zsize(1)
+        sbuf1(4) = zstart(2)
+        sbuf1(5) = zend(2)
+        sbuf1(6) = zsize(2)
+        sbuf1(7) = zstart(3)
+        sbuf1(8) = zend(3)
+        sbuf1(9) = zsize(3)
+        count = zsize(1)*zsize(2)*zsize(3)
+     else if (ndir==1) then  ! X-pencil
+        sbuf1(1) = xstart(1)
+        sbuf1(2) = xend(1)
+        sbuf1(3) = xsize(1)
+        sbuf1(4) = xstart(2)
+        sbuf1(5) = xend(2)
+        sbuf1(6) = xsize(2)
+        sbuf1(7) = xstart(3)
+        sbuf1(8) = xend(3)
+        sbuf1(9) = xsize(3)
+        count = xsize(1)*xsize(2)*xsize(3)
+     end if
+     ! send partition information
+     CALL MPI_SEND(sbuf1,9,MPI_INTEGER,0,nrank,MPI_COMM_WORLD,ierror)
+     ! send data array
+     CALL MPI_SEND(local,count,real_type,0, &
+          nrank+nproc,MPI_COMM_WORLD,ierror)
+  end if
+  
+  return
+end subroutine assemble_global
+
 end program fft_test_r2c

@@ -17,7 +17,7 @@ mem_leak:
 	valgrind --leak-check=full --show-leak-kinds=all mpirun -n 1 ./timing 1 1
 
 clean:
-	rm -f *.o timing
+	rm -f *.o timing *.log
 
 %.o : %.f90
 	$(FC) $(INCLUDE) $(OPTIONS) $(FFLAGS) -c $<

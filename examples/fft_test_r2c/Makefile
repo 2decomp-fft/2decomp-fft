@@ -17,7 +17,7 @@ check:
 	$(MPIRUN) -n $(NP) ./fft_test_r2c
 
 clean:
-	rm -f *.o fft_test_r2c
+	rm -f *.o fft_test_r2c *.log
 
 %.o : %.f90
 	$(FC) $(INCLUDE) $(OPTIONS) $(FFLAGS) -c $<

@@ -53,8 +53,8 @@ module decomp_2d
   ! some key global variables
   integer, save, public :: nx_global, ny_global, nz_global  ! global size
 
-  integer, save, public :: nrank  ! local MPI rank 
-  integer, save, public :: nproc  ! total number of processors
+  integer, save, public :: nrank = -1 ! local MPI rank 
+  integer, save, public :: nproc = -1 ! total number of processors
   integer, save, public :: decomp_2d_comm ! MPI communicator
 
   ! parameters for 2D Cartesian topology 
@@ -330,6 +330,28 @@ contains
     character(len=7) fname ! Sufficient for up to O(1M) ranks
 #endif
 
+    ! Use the provided MPI communicator if present
+    if (present(comm)) then
+       decomp_2d_comm = comm
+    else
+       decomp_2d_comm = MPI_COMM_WORLD
+    endif
+
+    ! If the external code has not set nrank and nproc
+    if (nrank == -1) then
+       call MPI_COMM_RANK(decomp_2d_comm, nrank, ierror)
+       if (ierror /= 0) call decomp_2d_abort(__FILE__, &
+                                             __LINE__, &
+                                             ierror, &
+                                             "MPI_COMM_RANK")
+    endif
+    if (nproc == -1) then
+       call MPI_COMM_SIZE(decomp_2d_comm, nproc, ierror)
+       if (ierror /= 0) call decomp_2d_abort(__FILE__, &
+                                             __LINE__, &
+                                             ierror, &
+                                             "MPI_COMM_SIZE")
+    endif
 #ifdef DEBUG
     ! Check if a modification of the debug level is needed
     call decomp_2d_debug()
@@ -348,13 +370,6 @@ contains
        periodic_y = .false.
        periodic_z = .false.
     end if
-
-    ! Use the provided MPI communicator if present
-    if (present(comm)) then
-       decomp_2d_comm = comm
-    else
-       decomp_2d_comm = MPI_COMM_WORLD
-    endif
 
     if (p_row==0 .and. p_col==0) then
        ! determine the best 2D processor grid

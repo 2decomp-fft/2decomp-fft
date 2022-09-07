@@ -83,7 +83,7 @@ end do
 
 ! if 'skip' value is large it is possible that some ranks do not 
 ! contain any points to be written. Subarray constructor requires 
-! nonzero size so it is not possible to use MPI_COMM_WORLD for IO.
+! nonzero size so it is not possible to use decomp_2d_comm for IO.
 ! Create a sub communicator for this...
 color = 1
 key = 0  ! rank order doesn't matter
@@ -100,7 +100,7 @@ else if (ipencil==3) then
       color = 2
    end if
 end if
-call MPI_COMM_SPLIT(MPI_COMM_WORLD,color,key,newcomm,ierror)
+call MPI_COMM_SPLIT(decomp_2d_comm,color,key,newcomm,ierror)
 if (ierror.ne.0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_COMM_SPLIT")
 
 if (color==1) then ! only ranks in this group do IO collectively
@@ -230,5 +230,5 @@ if (color==1) then ! only ranks in this group do IO collectively
 
 end if ! color==1
 
-call MPI_BARRIER(MPI_COMM_WORLD, ierror)
+call MPI_BARRIER(decomp_2d_comm, ierror)
 if (ierror.ne.0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_BARRIER")

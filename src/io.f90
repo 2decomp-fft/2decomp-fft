@@ -134,7 +134,7 @@ contains
   !! TODO: make this a runtime-option
   adios2_debug_mode = .true.
 
-  call adios2_init(adios, trim(config_file), MPI_COMM_WORLD, adios2_debug_mode, ierror)
+  call adios2_init(adios, trim(config_file), decomp_2d_comm, adios2_debug_mode, ierror)
   if (ierror.ne.0) call decomp_2d_abort(__FILE__, __LINE__, ierror, &
      "Error initialising ADIOS2 - is "//trim(config_file)//" present and valid?")
 
@@ -1414,7 +1414,7 @@ contains
     if (ierror.ne.0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_TYPE_CREATE_SUBARRAY")
     call MPI_TYPE_COMMIT(newtype,ierror)
     if (ierror.ne.0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_TYPE_COMMIT")
-    call MPI_FILE_OPEN(MPI_COMM_WORLD, filename, &
+    call MPI_FILE_OPEN(decomp_2d_comm, filename, &
          MPI_MODE_CREATE+MPI_MODE_WRONLY, MPI_INFO_NULL, &
          fh, ierror)
     if (ierror.ne.0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_FILE_OPEN")
@@ -1485,7 +1485,7 @@ contains
           color = 2
        end if
     end if
-    call MPI_COMM_SPLIT(MPI_COMM_WORLD,color,key,newcomm,ierror)
+    call MPI_COMM_SPLIT(decomp_2d_comm,color,key,newcomm,ierror)
     if (ierror.ne.0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_COMM_SPLIT")
 
     if (color==1) then ! only ranks in this group do IO collectively
@@ -1747,7 +1747,7 @@ contains
 
           !! Open IO
 #ifndef ADIOS2
-          call MPI_FILE_OPEN(MPI_COMM_WORLD, io_dir, &
+          call MPI_FILE_OPEN(decomp_2d_comm, io_dir, &
                access_mode, MPI_INFO_NULL, &
                fh_registry(idx), ierror)
           if (ierror.ne.0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_FILE_OPEN")

@@ -55,7 +55,7 @@ call MPI_INFO_CREATE(info, ierror)
 if (ierror.ne.0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_INFO_CREATE")
 gs = ceiling(real(sizes(1),mytype)*real(sizes(2),mytype)* &
      real(sizes(3),mytype)/1024./1024.)
-call t3pio_set_info(MPI_COMM_WORLD, info, "./", ierror, &
+call t3pio_set_info(decomp_2d_comm, info, "./", ierror, &
      GLOBAL_SIZE=gs, factor=1)
 #else
 gs = 1 ! Silence unused variable
@@ -68,10 +68,10 @@ if (ierror.ne.0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_TYPE_CREA
 call MPI_TYPE_COMMIT(newtype,ierror)
 if (ierror.ne.0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_TYPE_COMMIT")
 #ifdef T3PIO
-call MPI_FILE_OPEN(MPI_COMM_WORLD, filename, &
+call MPI_FILE_OPEN(decomp_2d_comm, filename, &
      MPI_MODE_CREATE+MPI_MODE_WRONLY, info, fh, ierror)
 #else
-call MPI_FILE_OPEN(MPI_COMM_WORLD, filename, &
+call MPI_FILE_OPEN(decomp_2d_comm, filename, &
      MPI_MODE_CREATE+MPI_MODE_WRONLY, MPI_INFO_NULL, &
      fh, ierror)
 #endif

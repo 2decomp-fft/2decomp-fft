@@ -54,7 +54,7 @@ call MPI_TYPE_CREATE_SUBARRAY(3, sizes, subsizes, starts,  &
 if (ierror.ne.0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_TYPE_CREATE_SUBARRAY")
 call MPI_TYPE_COMMIT(newtype,ierror)
 if (ierror.ne.0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_TYPE_COMMIT")
-call MPI_FILE_OPEN(MPI_COMM_WORLD, filename, &
+call MPI_FILE_OPEN(decomp_2d_comm, filename, &
      MPI_MODE_RDONLY, MPI_INFO_NULL, &
      fh, ierror)
 if (ierror.ne.0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_FILE_OPEN")

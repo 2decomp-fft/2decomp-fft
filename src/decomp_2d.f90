@@ -55,7 +55,7 @@ module decomp_2d
 
   integer, save, public :: nrank  ! local MPI rank 
   integer, save, public :: nproc  ! total number of processors
-  integer, save, public :: decomp_2d_comm ! MPI communicator
+  integer, save, public :: decomp_2d_comm = MPI_COMM_NULL ! MPI communicator
 
   ! parameters for 2D Cartesian topology 
   integer, save, dimension(2) :: dims, coord

@@ -6,13 +6,13 @@ LIBS = -L../../lib -l2decomp_fft $(LIBFFT)
 all: blocking non_blocking
 
 blocking: blocking.o
-	$(F90) -o $@ $@.o $(LIBS)
+	$(FC) $(FFLAGS) $(OPT) $(DEFS) $(INC) -o $@ $(OBJ) $(LIBS)
 
 non_blocking: non_blocking.o
-	$(F90) -o $@ $@.o $(LIBS)
+	$(FC) $(FFLAGS) $(OPT) $(DEFS) $(INC) -o $@ $(OBJ) $(LIBS)
 
 clean:
 	rm -f *.o blocking non_blocking
 
 %.o : %.f90
-	$(F90) $(INCLUDE) $(OPTIONS) $(F90FLAGS) -c $<
+	$(FC) $(FFLAGS) $(OPT) $(DEFS) $(INC) -c $< -o $@

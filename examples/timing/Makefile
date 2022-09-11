@@ -8,7 +8,7 @@ LIBS = -L../../ -l$(LIBDECOMP) $(LIBFFT)
 OBJ = timing.o
 
 timing: $(OBJ)
-	$(FC) -o $@ $(OBJ) $(LIBS)
+	$(FC) $(FFLAGS) $(OPT) $(DEFS) $(INC) -o $@ $(OBJ) $(LIBS)
 
 check:
 	mpirun -n 4 ./timing
@@ -20,4 +20,4 @@ clean:
 	rm -f *.o timing *.log
 
 %.o : %.f90
-	$(FC) $(INCLUDE) $(OPTIONS) $(FFLAGS) -c $<
+	$(FC) $(FFLAGS) $(OPT) $(DEFS) $(INC) -c $< -o $@

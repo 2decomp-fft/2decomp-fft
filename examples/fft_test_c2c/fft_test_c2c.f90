@@ -115,7 +115,7 @@ call decomp_2d_fft_3d(out, in, DECOMP_2D_FFT_BACKWARD)
 do k=xstart(3),xend(3)
    do j=xstart(2),xend(2)
       do i=xstart(1),xend(1)
-         in(i,j,k) = in(i,j,k) / sqrt(real(nx*ny*nz))
+         in(i,j,k) = in(i,j,k) / sqrt(real(nx*ny*nz,kind=mytype))
       end do
    end do
 end do
@@ -135,7 +135,7 @@ end if
 do k=xstart(3),xend(3)
    do j=xstart(2),xend(2)
       do i=xstart(1),xend(1)
-         if (abs(in(i,j,k)-in1(i,j,k))>10*epsilon(real(in(1,1,1)))) error_flag = .true.
+         if (abs(in(i,j,k)-in1(i,j,k))>100*epsilon(real(in(1,1,1)))) error_flag = .true.
       end do
    end do
 end do
@@ -153,6 +153,12 @@ endif
 call MPI_ALLREDUCE(MPI_IN_PLACE, error_flag, 1, MPI_LOGICAL, MPI_LOR, MPI_COMM_WORLD, ierror)
 if (ierror /= 0) call decomp_2d_abort(ierror, "MPI_ALLREDUCE")
 if (error_flag) call decomp_2d_abort(1, "error in fft_c2c")
+
+if (nrank == 0) then
+   write(*,*) " "
+   write(*,*) " fft_test_c2c completed"
+   write(*,*) " "
+endif
 
 call decomp_2d_fft_finalize
 call decomp_2d_finalize

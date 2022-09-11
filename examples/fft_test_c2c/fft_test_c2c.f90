@@ -218,12 +218,12 @@ subroutine assemble_global(ndir,local,global,nx,ny,nz)
      do m=1,nproc-1
         CALL MPI_RECV(rbuf1,9,MPI_INTEGER,m,m,MPI_COMM_WORLD, &
              status,ierror)
-        if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_INIT")
+        if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_RECV")
         allocate(rbuf(rbuf1(1):rbuf1(2),rbuf1(4):rbuf1(5), &
              rbuf1(7):rbuf1(8)))
         CALL MPI_RECV(rbuf,rbuf1(3)*rbuf1(6)*rbuf1(9),complex_type,m, &
              m+nproc,MPI_COMM_WORLD,status,ierror)
-        if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_INIT")
+        if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_RECV")
         do k=rbuf1(7),rbuf1(8)
            do j=rbuf1(4),rbuf1(5)
               do i=rbuf1(1),rbuf1(2)
@@ -260,11 +260,11 @@ subroutine assemble_global(ndir,local,global,nx,ny,nz)
      end if
      ! send partition information
      CALL MPI_SEND(sbuf1,9,MPI_INTEGER,0,nrank,MPI_COMM_WORLD,ierror)
-     if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_INIT")
+     if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_SEND")
      ! send data array
      CALL MPI_SEND(local,count,complex_type,0, &
           nrank+nproc,MPI_COMM_WORLD,ierror)
-     if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_INIT")
+     if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_SEND")
   end if
   
   return

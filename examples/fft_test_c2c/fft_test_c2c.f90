@@ -92,7 +92,7 @@ call decomp_2d_fft_3d(in, out, DECOMP_2D_FFT_FORWARD)
 do k=zstart(3),zend(3)
    do j=zstart(2),zend(2)
       do i=zstart(1),zend(1)
-         out(i,j,k) = out(i,j,k) / sqrt(real(nx*ny*nz))
+         out(i,j,k) = out(i,j,k) / sqrt(real(nx*ny*nz,kind=mytype))
       end do
    end do
 end do

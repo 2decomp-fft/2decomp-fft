@@ -131,6 +131,29 @@ if (nrank==0) then
 end if
 #endif
 
+! Error check
+do k=xstart(3),xend(3)
+   do j=xstart(2),xend(2)
+      do i=xstart(1),xend(1)
+         if (abs(in(i,j,k)-in1(i,j,k))>10*epsilon(real(in(1,1,1)))) error_flag = .true.
+      end do
+   end do
+end do
+
+! Print the error if needed
+#ifdef DEBUG
+if (error_flag .or. decomp_debug >= 5) then
+   write(*,*) "Error on rank ", nrank &
+                              , abs(real (in-in1(xstart(1):xend(1),xstart(2):xend(2),xstart(3):xend(3)))) &
+                              , abs(aimag(in-in1(xstart(1):xend(1),xstart(2):xend(2),xstart(3):xend(3))))
+endif
+#endif
+
+! Abort in case of error
+call MPI_ALLREDUCE(MPI_IN_PLACE, error_flag, 1, MPI_LOGICAL, MPI_LOR, MPI_COMM_WORLD, ierror)
+if (ierror /= 0) call decomp_2d_abort(ierror, "MPI_ALLREDUCE")
+if (error_flag) call decomp_2d_abort(1, "error in fft_c2c")
+
 call decomp_2d_fft_finalize
 call decomp_2d_finalize
 call MPI_FINALIZE(ierror)

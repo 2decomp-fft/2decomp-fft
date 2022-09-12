@@ -9,6 +9,7 @@ additionally sets compile time flags to catch coding errors can be built
 with `make BUILD=dev` (GNU compilers only currently). The behavior of debug
 and development versions of the library can be changed before the initialization
 using the variable ``decomp_debug`` or the environment variable ``DECOMP_2D_DEBUG``.
+The value provided with the environment variable must be a positive integer below 9999.
 
 ## Testing and examples
 

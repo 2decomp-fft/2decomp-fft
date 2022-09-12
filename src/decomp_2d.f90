@@ -53,8 +53,8 @@ module decomp_2d
   ! some key global variables
   integer, save, public :: nx_global, ny_global, nz_global  ! global size
 
-  integer, save, public :: nrank  ! local MPI rank 
-  integer, save, public :: nproc  ! total number of processors
+  integer, save, public :: nrank = -1 ! local MPI rank 
+  integer, save, public :: nproc = -1 ! total number of processors
   integer, save, public :: decomp_2d_comm = MPI_COMM_NULL ! MPI communicator
 
 #define _SAVE_AUTOTUNE
@@ -335,6 +335,28 @@ contains
     character(len=7) fname ! Sufficient for up to O(1M) ranks
 #endif
 
+    ! Use the provided MPI communicator if present
+    if (present(comm)) then
+       decomp_2d_comm = comm
+    else
+       decomp_2d_comm = MPI_COMM_WORLD
+    endif
+
+    ! If the external code has not set nrank and nproc
+    if (nrank == -1) then
+       call MPI_COMM_RANK(decomp_2d_comm, nrank, ierror)
+       if (ierror /= 0) call decomp_2d_abort(__FILE__, &
+                                             __LINE__, &
+                                             ierror, &
+                                             "MPI_COMM_RANK")
+    endif
+    if (nproc == -1) then
+       call MPI_COMM_SIZE(decomp_2d_comm, nproc, ierror)
+       if (ierror /= 0) call decomp_2d_abort(__FILE__, &
+                                             __LINE__, &
+                                             ierror, &
+                                             "MPI_COMM_SIZE")
+    endif
 #ifdef DEBUG
     ! Check if a modification of the debug level is needed
     call decomp_2d_debug()
@@ -518,24 +540,11 @@ contains
     
     implicit none
  
-    integer :: ierror
-
-    call MPI_COMM_FREE(DECOMP_2D_COMM_ROW, ierror)
-    if (ierror /= 0) call decomp_2d_warning(__FILE__, __LINE__, ierror, "MPI_COMM_FREE")
-    call MPI_COMM_FREE(DECOMP_2D_COMM_COL, ierror)
-    if (ierror /= 0) call decomp_2d_warning(__FILE__, __LINE__, ierror, "MPI_COMM_FREE")
-    call MPI_COMM_FREE(DECOMP_2D_COMM_CART_X, ierror)
-    if (ierror /= 0) call decomp_2d_warning(__FILE__, __LINE__, ierror, "MPI_COMM_FREE")
-    call MPI_COMM_FREE(DECOMP_2D_COMM_CART_Y, ierror)
-    if (ierror /= 0) call decomp_2d_warning(__FILE__, __LINE__, ierror, "MPI_COMM_FREE")
-    call MPI_COMM_FREE(DECOMP_2D_COMM_CART_Z, ierror)
-    if (ierror /= 0) call decomp_2d_warning(__FILE__, __LINE__, ierror, "MPI_COMM_FREE")
-
-    DECOMP_2D_COMM_ROW = MPI_COMM_NULL
-    DECOMP_2D_COMM_COL = MPI_COMM_NULL
-    DECOMP_2D_COMM_CART_X = MPI_COMM_NULL
-    DECOMP_2D_COMM_CART_Y = MPI_COMM_NULL
-    DECOMP_2D_COMM_CART_Z = MPI_COMM_NULL
+    call decomp_mpi_comm_free(DECOMP_2D_COMM_ROW)
+    call decomp_mpi_comm_free(DECOMP_2D_COMM_COL)
+    call decomp_mpi_comm_free(DECOMP_2D_COMM_CART_X)
+    call decomp_mpi_comm_free(DECOMP_2D_COMM_CART_Y)
+    call decomp_mpi_comm_free(DECOMP_2D_COMM_CART_Z)
 
     call decomp_info_finalize(decomp_main)
 
@@ -549,9 +558,31 @@ contains
 #endif
 #endif
 
+    nrank = -1
+    nproc = -1
+
     return
   end subroutine decomp_2d_finalize
 
+  !
+  ! Small wrapper to free a MPI communicator
+  !
+  subroutine decomp_mpi_comm_free(mpi_comm)
+
+    implicit none
+
+    integer, intent(inout) :: mpi_comm
+    integer :: ierror
+
+    ! Return if no MPI comm to free
+    if (mpi_comm == MPI_COMM_NULL) return
+
+    ! Free the provided MPI communicator
+    call MPI_COMM_FREE(mpi_comm, ierror)
+    if (ierror /= 0) call decomp_2d_warning(__FILE__, __LINE__, ierror, "MPI_COMM_FREE")
+    mpi_comm = MPI_COMM_NULL
+
+  end subroutine decomp_mpi_comm_free
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   ! Return the default decomposition object

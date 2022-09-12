@@ -15,6 +15,8 @@ program io_bench
   integer :: ierror
 
   call MPI_INIT(ierror)
+  call MPI_COMM_SIZE(MPI_COMM_WORLD, nproc, ierror)
+  call MPI_COMM_RANK(MPI_COMM_WORLD, nrank, ierror)
   call decomp_2d_init(nx,ny,nz,p_row,p_col)
 
   allocate(u1(xstart(1):xend(1), xstart(2):xend(2), xstart(3):xend(3)))

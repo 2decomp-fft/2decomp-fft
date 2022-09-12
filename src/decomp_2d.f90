@@ -542,6 +542,9 @@ contains
 #endif
 #endif
 
+    nrank = -1
+    nproc = -1
+
     return
   end subroutine decomp_2d_finalize
 

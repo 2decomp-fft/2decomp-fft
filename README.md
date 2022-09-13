@@ -26,7 +26,7 @@ output files, including `Makefile.settings`.
 Various example code to exercise 2decomp functionality can be found under ``examples/``
 and can be built from the top-level directory by executing
 ```
-make examples
+make check
 ```
 which will (re)build 2decomp&fft as necessary.
 

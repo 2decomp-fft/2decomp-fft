@@ -13,14 +13,18 @@ use decomp_2d_fft
 implicit none
 
 integer, parameter :: nx=2, ny=3, nz=4
-integer :: p_row=2, p_col=2
+integer :: p_row=0, p_col=0
 
 complex(mytype), allocatable, dimension(:,:,:) :: in, out
 
 complex(mytype), dimension(nx,ny,nz) :: in1, out1
 integer :: ierror, i,j,k
+logical :: error_flag
 
+! Init
+error_flag = .false.
 call MPI_INIT(ierror)
+if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_INIT")
 call decomp_2d_init(nx,ny,nz,p_row,p_col)
 call decomp_2d_fft_init
 
@@ -71,6 +75,7 @@ do k=xstart(3),xend(3)
 end do
 
 ! write out input, to match the format of NAG example result file
+#ifdef DEBUG
 if (nrank==0) then
    write(*,*) 'C06FXF Example Program Results'
    write(*,*) ''
@@ -78,6 +83,7 @@ if (nrank==0) then
    write(*,*) ''
    call print_global(in1,nx,ny,nz)
 end if
+#endif
 
 ! ===== 3D forward FFT =====
 call decomp_2d_fft_3d(in, out, DECOMP_2D_FFT_FORWARD)
@@ -86,7 +92,7 @@ call decomp_2d_fft_3d(in, out, DECOMP_2D_FFT_FORWARD)
 do k=zstart(3),zend(3)
    do j=zstart(2),zend(2)
       do i=zstart(1),zend(1)
-         out(i,j,k) = out(i,j,k) / sqrt(real(nx*ny*nz))
+         out(i,j,k) = out(i,j,k) / sqrt(real(nx*ny*nz,kind=mytype))
       end do
    end do
 end do
@@ -94,11 +100,13 @@ end do
 call assemble_global(3,out,out1,nx,ny,nz)
 
 ! write out forward FFT result
+#ifdef DEBUG
 if (nrank==0) then
    write(*,*) 'Components of discrete Fourier transform'
    write(*,*) ''
    call print_global(out1,nx,ny,nz)
 end if
+#endif
 
 ! ===== 3D inverse FFT =====
 call decomp_2d_fft_3d(out, in, DECOMP_2D_FFT_BACKWARD)
@@ -107,7 +115,7 @@ call decomp_2d_fft_3d(out, in, DECOMP_2D_FFT_BACKWARD)
 do k=xstart(3),xend(3)
    do j=xstart(2),xend(2)
       do i=xstart(1),xend(1)
-         in(i,j,k) = in(i,j,k) / sqrt(real(nx*ny*nz))
+         in(i,j,k) = in(i,j,k) / sqrt(real(nx*ny*nz,kind=mytype))
       end do
    end do
 end do
@@ -115,11 +123,42 @@ end do
 call assemble_global(1,in,in1,nx,ny,nz)
 
 ! write out inverse FFT result
+#ifdef DEBUG
 if (nrank==0) then
    write(*,*) 'Original sequence as restored by inverse transform'
    write(*,*) ''
    call print_global(in1,nx,ny,nz)
 end if
+#endif
+
+! Error check
+do k=xstart(3),xend(3)
+   do j=xstart(2),xend(2)
+      do i=xstart(1),xend(1)
+         if (abs(in(i,j,k)-in1(i,j,k))>100*epsilon(real(in(1,1,1)))) error_flag = .true.
+      end do
+   end do
+end do
+
+! Print the error if needed
+#ifdef DEBUG
+if (error_flag .or. decomp_debug >= 5) then
+   write(*,*) "Error on rank ", nrank &
+                              , abs(real (in-in1(xstart(1):xend(1),xstart(2):xend(2),xstart(3):xend(3)))) &
+                              , abs(aimag(in-in1(xstart(1):xend(1),xstart(2):xend(2),xstart(3):xend(3))))
+endif
+#endif
+
+! Abort in case of error
+call MPI_ALLREDUCE(MPI_IN_PLACE, error_flag, 1, MPI_LOGICAL, MPI_LOR, MPI_COMM_WORLD, ierror)
+if (ierror /= 0) call decomp_2d_abort(ierror, "MPI_ALLREDUCE")
+if (error_flag) call decomp_2d_abort(1, "error in fft_c2c")
+
+if (nrank == 0) then
+   write(*,*) " "
+   write(*,*) " fft_test_c2c completed"
+   write(*,*) " "
+endif
 
 call decomp_2d_fft_finalize
 call decomp_2d_finalize
@@ -179,10 +218,12 @@ subroutine assemble_global(ndir,local,global,nx,ny,nz)
      do m=1,nproc-1
         CALL MPI_RECV(rbuf1,9,MPI_INTEGER,m,m,MPI_COMM_WORLD, &
              status,ierror)
+        if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_RECV")
         allocate(rbuf(rbuf1(1):rbuf1(2),rbuf1(4):rbuf1(5), &
              rbuf1(7):rbuf1(8)))
         CALL MPI_RECV(rbuf,rbuf1(3)*rbuf1(6)*rbuf1(9),complex_type,m, &
              m+nproc,MPI_COMM_WORLD,status,ierror)
+        if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_RECV")
         do k=rbuf1(7),rbuf1(8)
            do j=rbuf1(4),rbuf1(5)
               do i=rbuf1(1),rbuf1(2)
@@ -219,9 +260,11 @@ subroutine assemble_global(ndir,local,global,nx,ny,nz)
      end if
      ! send partition information
      CALL MPI_SEND(sbuf1,9,MPI_INTEGER,0,nrank,MPI_COMM_WORLD,ierror)
+     if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_SEND")
      ! send data array
      CALL MPI_SEND(local,count,complex_type,0, &
           nrank+nproc,MPI_COMM_WORLD,ierror)
+     if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_SEND")
   end if
   
   return

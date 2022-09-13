@@ -1,5 +1,5 @@
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-! This example calculates the divergency of a random field using
+! This example calculates the divergence of a random field using
 !   (1) global transposition
 !   (2) halo-cell exchange
 ! The two method should give identical results
@@ -9,12 +9,11 @@ program halo_test
   use mpi
 
   use decomp_2d
-  ! use decomp_2d_io
 
   implicit none
 
   integer, parameter :: nx=171, ny=132, nz=113
-  integer :: p_row=4, p_col=3
+  integer :: p_row=0, p_col=0
 
   real(mytype), allocatable, dimension(:,:,:) :: u1, u2, u3
   real(mytype), allocatable, dimension(:,:,:) :: v1, v2, v3
@@ -27,8 +26,27 @@ program halo_test
 
   integer, allocatable, dimension(:) :: seed
 
+  real(mytype) :: err, err_local
+  integer :: xlast, ylast, zlast
+
+  logical :: passing, all_pass
+
   call MPI_INIT(ierror)
+  call MPI_COMM_SIZE(MPI_COMM_WORLD, nproc, ierror)
+  call MPI_COMM_RANK(MPI_COMM_WORLD, nrank, ierror)
   call decomp_2d_init(nx,ny,nz,p_row,p_col)
+
+  xlast = xsize(1) - 1
+  if (xend(2) == ny) then
+     ylast = xsize(2) - 1
+  else
+     ylast = xsize(2)
+  end if
+  if (xend(3) == nz) then
+     zlast = xsize(3) - 1
+  else
+     zlast = xsize(3)
+  end if
 
   ! initialise u,v,w with random numbers in X-pencil
 #ifdef HALO_GLOBAL
@@ -49,9 +67,10 @@ program halo_test
   call random_number(v1)
   call random_number(w1)
 
+  all_pass = .true.
 
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  ! Calculate divergency using global transposition
+  ! Calculate divergence using global transposition
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   ! du/dx calculated on X-pencil
 #ifdef HALO_GLOBAL
@@ -60,7 +79,7 @@ program halo_test
   allocate(div1(xsize(1), xsize(2), xsize(3)))
 #endif
 
-  div1 = 0.
+  div1 = 0.0_mytype
 
 #ifdef HALO_GLOBAL
   do k=xstart(3),xend(3)
@@ -130,19 +149,15 @@ program halo_test
 
   if (nrank==0) then
      write(*,*) 'Calculated via global transposition'
+#ifdef DEBUG
      write(*,*) (div1(i,i,i), i=2,13)
+#endif
   end if
-! #ifdef HALO_GLOBAL
-!   call decomp_2d_write_one(1,div1,'div1g.dat')
-! #else
-!   call decomp_2d_write_one(1,div1,'div1.dat')
-! #endif
 
   deallocate(v2,w2,w3,wk2,wk3)
 
-
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  ! Calculate divergency using halo-cell exchange (data in X-pencil)
+  ! Calculate divergence using halo-cell exchange (data in X-pencil)
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 #ifdef HALO_GLOBAL
@@ -150,6 +165,8 @@ program halo_test
 #else
   allocate(div2(xsize(1), xsize(2), xsize(3)))
 #endif
+  div2 = 0.0_mytype
+  
   ! du/dx
 #ifdef HALO_GLOBAL
   do k=xstart(3),xend(3)
@@ -202,22 +219,34 @@ program halo_test
      end do
   end do
 
+  ! Compute error
+  err_local = sum((div2(2:xlast,2:ylast,2:zlast) - div1(2:xlast,2:ylast,2:zlast))**2)
+  call MPI_Allreduce(err_local, err, 1, real_type, MPI_SUM, MPI_COMM_WORLD, ierror)
+  if (ierror /= 0) then
+     call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_Allreduce")
+  endif
+  err = sqrt(err / (nx - 2) / (ny - 2) / (nz - 2))
+  if (err < epsilon(0.0_mytype)) then
+     passing = .true.
+  else
+     passing = .false.
+  end if
+  all_pass = all_pass .and. passing
+
   if (nrank==0) then
      write(*,*) '-----------------------------------------------'
      write(*,*) 'Calculated via halo exchange (data in X-pencil)'
+#ifdef DEBUG
      write(*,*) (div2(i,i,i), i=2,13)
+#endif
+     write(*,*) 'Error: ', err
+     write(*,*) 'Pass: ', passing
   end if
-! #ifdef HALO_GLOBAL
-!   call decomp_2d_write_one(1,div1,'div2g.dat')
-! #else
-!   call decomp_2d_write_one(1,div1,'div2.dat')
-! #endif
            
   deallocate(vh,wh)
-
   
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  ! Calculate divergency using halo-cell exchange (data in Y-pencil)
+  ! Calculate divergence using halo-cell exchange (data in Y-pencil)
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   
 #ifdef HALO_GLOBAL
@@ -295,22 +324,34 @@ program halo_test
 
   call transpose_y_to_x(wk2,div3)
 
+  ! Compute error
+  err_local = sum((div3(2:xlast,2:ylast,2:zlast)- div1(2:xlast,2:ylast,2:zlast))**2)
+  call MPI_Allreduce(err_local, err, 1, real_type, MPI_SUM, MPI_COMM_WORLD, ierror)
+  if (ierror /= 0) then
+     call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_Allreduce")
+  endif
+  err = sqrt(err / (nx - 2) / (ny - 2) / (nz - 2))
+  if (err < epsilon(0.0_mytype)) then
+     passing = .true.
+  else
+     passing = .false.
+  end if
+  all_pass = all_pass .and. passing
+
   if (nrank==0) then
      write(*,*) '-----------------------------------------------'
      write(*,*) 'Calculated via halo exchange (data in Y-pencil)'
+#ifdef DEBUG
      write(*,*) (div3(i,i,i), i=2,13)
+#endif
+     write(*,*) "Error: ", err
+     write(*,*) "Pass: ", passing
   end if
-! #ifdef HALO_GLOBAL
-!   call decomp_2d_write_one(1,div1,'div3g.dat')
-! #else
-!   call decomp_2d_write_one(1,div1,'div3.dat')
-! #endif
 
   deallocate(uh,wh,wk2)
 
-
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  ! Calculate divergency using halo-cell exchange (data in Z-pencil)
+  ! Calculate divergence using halo-cell exchange (data in Z-pencil)
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 #ifdef HALO_GLOBAL
@@ -391,23 +432,44 @@ program halo_test
   call transpose_z_to_y(wk3,wk2)
   call transpose_y_to_x(wk2,div4)
 
+  ! Compute error
+  err_local = sum((div4(2:xlast,2:ylast,2:zlast) - div1(2:xlast,2:ylast,2:zlast))**2)
+  call MPI_Allreduce(err_local, err, 1, real_type, MPI_SUM, MPI_COMM_WORLD, ierror)
+  if (ierror /= 0) then
+     call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_Allreduce")
+  endif
+  err = sqrt(err / (nx - 2) / (ny - 2) / (nz - 2))
+  if (err < epsilon(0.0_mytype)) then
+     passing = .true.
+  else
+     passing = .false.
+  end if
+  all_pass = all_pass .and. passing
+
   if (nrank==0) then
      write(*,*) '-----------------------------------------------'
      write(*,*) 'Calculated via halo exchange (data in Z-pencil)'
+#ifdef DEBUG
      write(*,*) (div4(i,i,i), i=2,13)
+#endif
+     write(*,*) "Error: ", err
+     write(*,*) "Pass: ", passing
   end if
-! #ifdef HALO_GLOBAL
-!   call decomp_2d_write_one(1,div1,'div4g.dat')
-! #else
-!   call decomp_2d_write_one(1,div1,'div4.dat')
-! #endif
+
+  if (nrank == 0) then
+     write(*,*) '-----------------------------------------------'
+     write(*,*) "All pass: ", all_pass
+     write(*,*) '==============================================='
+  end if
 
   deallocate(uh,vh,wk2,wk3,u1,v1,w1,u2,v2,w2,u3,v3,w3)
 
   deallocate(div1,div2,div3,div4)
 
-
   call decomp_2d_finalize 
+
+  if (.not. all_pass) call decomp_2d_abort(1, "Error in halo_test")
+
   call MPI_FINALIZE(ierror)
 
 end program halo_test

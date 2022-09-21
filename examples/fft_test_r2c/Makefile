@@ -10,8 +10,11 @@ OBJ = fft_test_r2c.o
 NP ?= 1
 MPIRUN ?= mpirun
 
-fft_test_r2c: $(OBJ)
+fft_test_r2c: $(DECOMPINC) $(OBJ)
 	$(FC) $(FFLAGS) $(OPT) $(DEFS) $(INC) -o $@ $(OBJ) $(LIBS)
+
+$(DECOMPINC):
+	mkdir $@
 
 check:
 	$(MPIRUN) -n $(NP) ./fft_test_r2c

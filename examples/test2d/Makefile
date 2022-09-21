@@ -10,8 +10,11 @@ OBJ = test2d.o
 NP ?= 1
 MPIRUN ?= mpirun
 
-test2d: $(OBJ)
+test2d: $(DECOMPINC) $(OBJ)
 	$(FC) $(FFLAGS) $(OPT) $(DEFS) $(INC) -o $@ $(OBJ) $(LIBS)
+
+$(DECOMPINC):
+	mkdir $@
 
 check:
 	$(MPIRUN) -n $(NP) ./test2d

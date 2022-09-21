@@ -37,16 +37,16 @@ program fft_physical_x
   ! Test the c2c interface
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-  call decomp_2d_fft_init(PHYSICAL_IN_X) ! non-default Z-pencil input
+  call decomp_2d_fft_init(PHYSICAL_IN_X) ! force the default x pencil
 
-  !  input is Z-pencil data
-  ! output is X-pencil data
-  allocate (in(zstart(1):zend(1),zstart(2):zend(2),zstart(3):zend(3)))
-  allocate (out(xstart(1):xend(1),xstart(2):xend(2),xstart(3):xend(3)))
+  !  input is X-pencil data
+  ! output is Z-pencil data
+  allocate (in(xstart(1):xend(1),xstart(2):xend(2),xstart(3):xend(3)))
+  allocate (out(zstart(1):zend(1),zstart(2):zend(2),zstart(3):zend(3)))
   ! initilise input
-  do k=zstart(3),zend(3)
-     do j=zstart(2),zend(2)
-        do i=zstart(1),zend(1)
+  do k=xstart(3),xend(3)
+     do j=xstart(2),xend(2)
+        do i=xstart(1),xend(1)
            dr = real(i,mytype)/real(nx,mytype)*real(j,mytype) &
                 /real(ny,mytype)*real(k,mytype)/real(nz,mytype)
            di = dr
@@ -83,9 +83,9 @@ program fft_physical_x
   
   ! checking accuracy
   error = 0._mytype
-  do k=zstart(3),zend(3)
-     do j=zstart(2),zend(2)
-        do i=zstart(1),zend(1)
+  do k=xstart(3),xend(3)
+     do j=xstart(2),xend(2)
+        do i=xstart(1),xend(1)
            dr = real(i,mytype)/real(nx,mytype)*real(j,mytype) &
                 /real(ny,mytype)*real(k,mytype)/real(nz,mytype)
            di = dr
@@ -119,13 +119,13 @@ program fft_physical_x
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   ! Test the r2c/c2r interface
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  call decomp_2d_fft_init
+  call decomp_2d_fft_init(PHYSICAL_IN_X)
   
   allocate (in_r(xstart(1):xend(1),xstart(2):xend(2),xstart(3):xend(3)))
   call decomp_2d_fft_get_size(fft_start,fft_end,fft_size)
   allocate (out(fft_start(1):fft_end(1), &
-       fft_start(2):fft_end(2), &
-       fft_start(3):fft_end(3)))
+                fft_start(2):fft_end(2), &
+                fft_start(3):fft_end(3)))
   
   ! initilise input
   do k=xstart(3),xend(3)

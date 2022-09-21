@@ -271,11 +271,6 @@ contains
     end if
     call MPI_TYPE_SIZE(data_type,disp_bytes,ierror)
     if (ierror.ne.0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_TYPE_SIZE")
-
-    !! Use MPIIO
-    if (read_reduce_prec) then
-       allocate (varsingle(xstV(1):xenV(1),xstV(2):xenV(2),xstV(3):xenV(3)))
-    end if
     
     if (present(opt_decomp)) then
        decomp = opt_decomp
@@ -322,9 +317,7 @@ contains
            newtype,'native',MPI_INFO_NULL,ierror)
       if (ierror.ne.0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_FILE_SET_VIEW")
       if (read_reduce_prec) then
-         if (read_reduce_prec) then
-            allocate (varsingle(xstV(1):xenV(1),xstV(2):xenV(2),xstV(3):xenV(3)))
-         end if
+         allocate (varsingle(xstV(1):xenV(1),xstV(2):xenV(2),xstV(3):xenV(3)))
          call MPI_FILE_READ_ALL(fh, varsingle, &
               subsizes(1)*subsizes(2)*subsizes(3), &
               data_type, MPI_STATUS_IGNORE, ierror)

@@ -43,6 +43,11 @@ program io_var_test
   call MPI_COMM_SIZE(MPI_COMM_WORLD, nproc, ierror)
   call MPI_COMM_RANK(MPI_COMM_WORLD, nrank, ierror)
 
+  ! Defaults
+  p_row = 0
+  p_col = 0
+
+  ! Read commandline input
   i = command_argument_count()
   if (i/=2) then
      call MPI_ABORT(MPI_COMM_WORLD, 1, ierror)

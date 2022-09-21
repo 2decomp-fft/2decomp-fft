@@ -119,18 +119,18 @@ program fft_physical_z
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   ! Test the r2c/c2r interface
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  call decomp_2d_fft_init
+  call decomp_2d_fft_init(PHYSICAL_IN_Z) ! non-default Z-pencil input
   
-  allocate (in_r(xstart(1):xend(1),xstart(2):xend(2),xstart(3):xend(3)))
+  allocate (in_r(zstart(1):zend(1),zstart(2):zend(2),zstart(3):zend(3)))
   call decomp_2d_fft_get_size(fft_start,fft_end,fft_size)
   allocate (out(fft_start(1):fft_end(1), &
-       fft_start(2):fft_end(2), &
-       fft_start(3):fft_end(3)))
+                fft_start(2):fft_end(2), &
+                fft_start(3):fft_end(3)))
   
   ! initilise input
-  do k=xstart(3),xend(3)
-     do j=xstart(2),xend(2)
-        do i=xstart(1),xend(1)
+  do k=zstart(3),zend(3)
+     do j=zstart(2),zend(2)
+        do i=zstart(1),zend(1)
            in_r(i,j,k) = real(i,mytype)/real(nx,mytype)*real(j,mytype) &
                 /real(ny,mytype)*real(k,mytype)/real(nz,mytype)
         end do
@@ -152,9 +152,9 @@ program fft_physical_z
      t4 = t4 + MPI_WTIME() - t3
   
      ! normalisation - note 2DECOMP&FFT doesn't normalise
-     do k=xstart(3),xend(3)
-        do j=xstart(2),xend(2)
-           do i=xstart(1),xend(1)
+     do k=zstart(3),zend(3)
+        do j=zstart(2),zend(2)
+           do i=zstart(1),zend(1)
               in_r(i,j,k) = in_r(i,j,k) &
                    / (real(nx,mytype)*real(ny,mytype)*real(nz,mytype))
            end do
@@ -172,9 +172,9 @@ program fft_physical_z
   
   ! checking accuracy
   error = 0._mytype
-  do k=xstart(3),xend(3)
-     do j=xstart(2),xend(2)
-        do i=xstart(1),xend(1)
+  do k=zstart(3),zend(3)
+     do j=zstart(2),zend(2)
+        do i=zstart(1),zend(1)
            dr = real(i,mytype)/real(nx,mytype)*real(j,mytype) &
                 /real(ny,mytype)*real(k,mytype)/real(nz,mytype)
            error = error + abs(in_r(i,j,k)-dr)

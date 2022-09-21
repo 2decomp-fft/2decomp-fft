@@ -33,7 +33,7 @@ check:
 	$(MPIRUN) -n $(NP) ./io_test
 	$(MPIRUN) -n $(NP) ./io_read
 #	$(MPIRUN) -n $(NP) ./io_var_test $(NROW) $(NCOL)
-#	$(MPIRUN) -n $(NP) ./io_plane_test
+	$(MPIRUN) -n $(NP) ./io_plane_test
 	$(MPIRUN) -n $(NP) ./io_bench
 
 clean:

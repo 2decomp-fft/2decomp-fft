@@ -8,7 +8,13 @@ LIBS = -L../../ -l$(LIBDECOMP) $(LIBFFT)
 OBJ = timing.o
 
 timing: $(OBJ)
-	$(FC) -o $@ $(OBJ) $(LIBS)
+	$(FC) $(FFLAGS) $(OPT) $(DEFS) $(INC) -o $@ $(OBJ) $(LIBS)
+
+check:
+	mpirun -n 4 ./timing
+
+mem_leak:
+	valgrind --leak-check=full --show-leak-kinds=all mpirun -n 1 ./timing 1 1
 
 check:
 	mpirun -n 4 ./timing
@@ -17,7 +23,7 @@ mem_leak:
 	valgrind --leak-check=full --show-leak-kinds=all mpirun -n 1 ./timing 1 1
 
 clean:
-	rm -f *.o timing
+	rm -f *.o timing *.log
 
 %.o : %.f90
-	$(FC) $(INCLUDE) $(OPTIONS) $(FFLAGS) -c $<
+	$(FC) $(FFLAGS) $(OPT) $(DEFS) $(INC) -c $< -o $@

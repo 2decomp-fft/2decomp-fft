@@ -17,7 +17,7 @@ check:
 	$(MPIRUN) -n $(NP) ./test2d
 
 clean:
-	rm -f *.o test2d u*.dat
+	rm -f *.o test2d u*.dat *.log
 
 %.o : %.f90
 	$(FC) $(FFLAGS) $(OPT) $(DEFS) $(INC) -c $< -o $@

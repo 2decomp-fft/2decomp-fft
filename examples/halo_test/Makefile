@@ -17,7 +17,7 @@ check:
 	$(MPIRUN) -n $(NP) ./halo_test
 
 clean:
-	rm -f *.o halo_test
+	rm -f *.o halo_test *.log
 
 %.o : %.f90
 	$(FC) $(FFLAGS) $(OPT) $(DEFS) $(INC) -c $< -o $@

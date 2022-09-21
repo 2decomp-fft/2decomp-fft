@@ -95,9 +95,9 @@ contains
     OMEGA = CMPLX( 1.0, 0.0, kind=mytype )
 
     IF( ISIGN .EQ. 1 ) THEN
-       DELTA = CMPLX( DCOS(ANGLE), DSIN(ANGLE), kind=mytype )
+       DELTA = CMPLX( COS(ANGLE), SIN(ANGLE), kind=mytype )
     ELSE
-       DELTA = CMPLX( DCOS(ANGLE), -DSIN(ANGLE), kind=mytype )
+       DELTA = CMPLX( COS(ANGLE), -SIN(ANGLE), kind=mytype )
     END IF
 
     DO IC = 1, C

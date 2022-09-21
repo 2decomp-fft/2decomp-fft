@@ -1,24 +1,24 @@
-.PHONY: test2d timing halo_test 
+.PHONY: test2d fft_physical_z halo_test 
 
 # Just build the examples
-examples: test2d timing halo_test 
+examples: test2d fft_physical_z halo_test 
 	@echo "Built the examples"
 
 test2d:
 	$(MAKE) -C $@ $@
-timing:
+fft_physical_z:
 	$(MAKE) -C $@ $@
 halo_test:
 	$(MAKE) -C $@ $@
 
 check:
 	cd test2d; $(MAKE) $@
-	cd timing; $(MAKE) $@
+	cd fft_physical_z; $(MAKE) $@
 	cd halo_test; $(MAKE) $@
 
 clean:
 	cd test2d; $(MAKE) $@
-	cd timing; $(MAKE) $@
+	cd fft_physical_z; $(MAKE) $@
 	cd halo_test; $(MAKE) $@
 
 export

@@ -1,4 +1,4 @@
-program fft_timing
+program fft_physical_z
 
   use decomp_2d
   use decomp_2d_fft
@@ -6,25 +6,32 @@ program fft_timing
   
   implicit none
   
-  integer, parameter :: nx=17, ny=13, nz=11
+  integer, parameter :: nx_base=17, ny_base=13, nz_base=11
+  integer :: nx, ny, nz
   integer :: p_row=0, p_col=0
+  integer :: resize_domain
+  integer :: nranks_tot
   
-  integer, parameter :: NTEST = 10  ! repeat test this times
+  integer, parameter :: ntest = 10  ! repeat test this times
   
   complex(mytype), allocatable, dimension(:,:,:) :: in, out
   real(mytype), allocatable, dimension(:,:,:) :: in_r
   
   integer, dimension(3) :: fft_start, fft_end, fft_size
   
-  real(mytype) :: dr,di, err, err_all, n1,flops
+  real(mytype) :: dr,di, error, err_all, n1,flops
   integer :: ierror, i,j,k,m
-  double precision :: t1, t2, t3 ,t4
+  real(mytype) :: t1, t2, t3 ,t4
   
   call MPI_INIT(ierror)
-  call MPI_COMM_SIZE(MPI_COMM_WORLD, nproc, ierror)
-  call MPI_COMM_RANK(MPI_COMM_WORLD, nrank, ierror)
+  ! To resize the domain we need to know global number of ranks
+  ! This operation is also done as part of decomp_2d_init
+  call MPI_COMM_SIZE(MPI_COMM_WORLD, nranks_tot, ierror)
+  resize_domain = int(nranks_tot/8)+1
+  nx = nx_base*resize_domain
+  ny = ny_base*resize_domain
+  nz = nz_base*resize_domain
   call decomp_2d_init(nx,ny,nz,p_row,p_col)
-
 
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   ! Test the c2c interface
@@ -48,9 +55,9 @@ program fft_timing
      end do
   end do
   
-  t2 = 0.0D0
-  t4 = 0.0D0
-  do m=1,NTEST
+  t2 = 0._mytype
+  t4 = 0._mytype
+  do m=1,ntest
      
      ! forward FFT
      t1 = MPI_WTIME()
@@ -67,15 +74,15 @@ program fft_timing
 
   end do
   
-  call MPI_ALLREDUCE(t2,t1,1,MPI_DOUBLE_PRECISION,MPI_SUM, &
+  call MPI_ALLREDUCE(t2,t1,1,real_type,MPI_SUM, &
        MPI_COMM_WORLD,ierror)
   t1 = t1 / real(nproc,mytype)
-  call MPI_ALLREDUCE(t4,t3,1,MPI_DOUBLE_PRECISION,MPI_SUM, &
+  call MPI_ALLREDUCE(t4,t3,1,real_type,MPI_SUM, &
        MPI_COMM_WORLD,ierror)
   t3 = t3 / real(nproc,mytype)
   
   ! checking accuracy
-  err = 0.
+  error = 0._mytype
   do k=zstart(3),zend(3)
      do j=zstart(2),zend(2)
         do i=zstart(1),zend(1)
@@ -84,11 +91,11 @@ program fft_timing
            di = dr
            dr = dr - real(in(i,j,k),mytype)
            di = di - aimag(in(i,j,k))
-           err = err + sqrt(dr*dr + di*di)
+           error = error + sqrt(dr*dr + di*di)
         end do
      end do
   end do
-  call MPI_ALLREDUCE(err,err_all,1,real_type,MPI_SUM,MPI_COMM_WORLD,ierror)
+  call MPI_ALLREDUCE(error,err_all,1,real_type,MPI_SUM,MPI_COMM_WORLD,ierror)
   err_all = err_all / real(nx,mytype) / real(ny,mytype) / real(nz,mytype)
 
   if (nrank==0) then
@@ -130,9 +137,9 @@ program fft_timing
      end do
   end do
   
-  t2 = 0.0D0
-  t4 = 0.0D0
-  do m=1,NTEST
+  t2 = 0._mytype
+  t4 = 0._mytype
+  do m=1,ntest
   
      ! 3D r2c FFT
      t1 = MPI_WTIME()
@@ -156,25 +163,25 @@ program fft_timing
 
   end do
   
-  call MPI_ALLREDUCE(t2,t1,1,MPI_DOUBLE_PRECISION,MPI_SUM, &
+  call MPI_ALLREDUCE(t2,t1,1,real_type,MPI_SUM, &
        MPI_COMM_WORLD,ierror)
   t1 = t1 / real(nproc,mytype)
-  call MPI_ALLREDUCE(t4,t3,1,MPI_DOUBLE_PRECISION,MPI_SUM, &
+  call MPI_ALLREDUCE(t4,t3,1,real_type,MPI_SUM, &
        MPI_COMM_WORLD,ierror)
   t3 = t3 / real(nproc,mytype)
   
   ! checking accuracy
-  err = 0.
+  error = 0._mytype
   do k=xstart(3),xend(3)
      do j=xstart(2),xend(2)
         do i=xstart(1),xend(1)
            dr = real(i,mytype)/real(nx,mytype)*real(j,mytype) &
                 /real(ny,mytype)*real(k,mytype)/real(nz,mytype)
-           err = err + abs(in_r(i,j,k)-dr)
+           error = error + abs(in_r(i,j,k)-dr)
         end do
      end do
   end do
-  call MPI_ALLREDUCE(err,err_all,1,real_type,MPI_SUM,MPI_COMM_WORLD,ierror)
+  call MPI_ALLREDUCE(error,err_all,1,real_type,MPI_SUM,MPI_COMM_WORLD,ierror)
   err_all = err_all / real(nx,mytype) / real(ny,mytype) / real(nz,mytype)
   
   if (nrank==0) then
@@ -188,5 +195,5 @@ program fft_timing
   call decomp_2d_finalize
   call MPI_FINALIZE(ierror)
 
-end program fft_timing
+end program fft_physical_z
 

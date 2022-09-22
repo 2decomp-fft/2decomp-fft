@@ -29,6 +29,8 @@ program halo_test
   real(mytype) :: err, err_local
   integer :: xlast, ylast, zlast
 
+  integer :: nx_expected, ny_expected, nz_expected
+  
   logical :: passing, all_pass
 
   call MPI_INIT(ierror)
@@ -160,6 +162,11 @@ program halo_test
   ! Calculate divergence using halo-cell exchange (data in X-pencil)
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
+  ! Expected sizes
+  nx_expected = nx
+  ny_expected = xsize(2) + 2
+  nz_expected = xsize(3) + 2
+  
 #ifdef HALO_GLOBAL
   allocate(div2(xstart(1):xend(1), xstart(2):xend(2), xstart(3):xend(3)))
 #else
@@ -187,6 +194,9 @@ program halo_test
 #else
   call update_halo(v1,vh,1)
 #endif
+
+  call test_halo_size(vh, nx_expected, ny_expected, nz_expected, "X:v")
+  
 #ifdef HALO_GLOBAL
   do k=xstart(3),xend(3)
      do j=xstart(2),xend(2)
@@ -206,6 +216,9 @@ program halo_test
 #else
   call update_halo(w1,wh,1)
 #endif
+
+  call test_halo_size(wh, nx_expected, ny_expected, nz_expected, "X:w")
+
 #ifdef HALO_GLOBAL
   do k=xstart(3),xend(3)
      do j=xstart(2),xend(2)
@@ -248,6 +261,11 @@ program halo_test
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   ! Calculate divergence using halo-cell exchange (data in Y-pencil)
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+  ! Expected sizes
+  nx_expected = ysize(1) + 2
+  ny_expected = ny
+  nz_expected = ysize(3) + 2
   
 #ifdef HALO_GLOBAL
   allocate(u2(ystart(1):yend(1), ystart(2):yend(2), ystart(3):yend(3)))
@@ -276,6 +294,9 @@ program halo_test
 #else
   call update_halo(u2,uh,1)
 #endif
+
+  call test_halo_size(uh, nx_expected, ny_expected, nz_expected, "Y:u")
+  
 #ifdef HALO_GLOBAL
   do k=ystart(3),yend(3)
      do i=ystart(1),yend(1)
@@ -309,6 +330,9 @@ program halo_test
 #else
   call update_halo(w2,wh,1)
 #endif
+
+  call test_halo_size(wh, nx_expected, ny_expected, nz_expected, "Y:w")
+
 #ifdef HALO_GLOBAL
   do k=ystart(3),yend(3)
      do i=ystart(1),yend(1)
@@ -354,6 +378,11 @@ program halo_test
   ! Calculate divergence using halo-cell exchange (data in Z-pencil)
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
+  ! Expected sizes
+  nx_expected = zsize(1) + 2
+  ny_expected = zsize(2) + 2
+  nz_expected = nz
+
 #ifdef HALO_GLOBAL
   allocate(u3(zstart(1):zend(1), zstart(2):zend(2), zstart(3):zend(3)))
   allocate(v3(zstart(1):zend(1), zstart(2):zend(2), zstart(3):zend(3)))
@@ -383,6 +412,9 @@ program halo_test
 #else
   call update_halo(u3,uh,1)
 #endif
+
+  call test_halo_size(uh, nx_expected, ny_expected, nz_expected, "Z:u")
+  
 #ifdef HALO_GLOBAL
   do j=zstart(2),zend(2)
      do i=zstart(1),zend(1)
@@ -402,6 +434,9 @@ program halo_test
 #else
   call update_halo(v3,vh,1)
 #endif
+
+  call test_halo_size(vh, nx_expected, ny_expected, nz_expected, "Z:v")
+  
 #ifdef HALO_GLOBAL
   do j=zstart(2),zend(2)
      do i=zstart(1),zend(1)
@@ -472,4 +507,30 @@ program halo_test
 
   call MPI_FINALIZE(ierror)
 
+contains
+
+  subroutine test_halo_size(arrh, nx_expected, ny_expected, nz_expected, tag)
+
+    real(mytype), dimension(:,:,:), intent(in) :: arrh
+    integer, intent(in) :: nx_expected, ny_expected, nz_expected
+    character(len=*), intent(in) :: tag
+
+    integer :: nx, ny, nz
+
+    nx = size(arrh, 1)
+    ny = size(arrh, 2)
+    nz = size(arrh, 3)
+
+    if ((nx /= nx_expected) .or. &
+         (ny /= ny_expected) .or. &
+         (nz /= nz_expected)) then
+       write(*,*) tag, ":ERROR: halo size"
+       write(*,*) "+ Expected: ", nx_expected, " ", ny_expected, " ", nz_expected, " "
+       write(*,*) "+ Got:      ", nx, " ", ny, " ", nz, " "
+    else
+       write(*,*) tag, ":PASS"
+    end if
+    
+  end subroutine test_halo_size
+  
 end program halo_test

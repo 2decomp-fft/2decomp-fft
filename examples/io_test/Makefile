@@ -1,10 +1,7 @@
 #include ../../src/Makefile.inc
 
 #INCLUDE = -I../../include
-blank :=
-space := $(blank) $(blank)
-MODFLAG_NSP := $(subst $(space),,$(MODFLAG))
-FFLAGS := $(subst ?,$(space),$(subst $(MODFLAG_NSP)?,$(MODFLAG_NSP)?../../,$(subst $(space),?,$(FFLAGS))))
+FFLAGS := $(subst $(MODFLAG),$(MODFLAG)../../,$(FFLAGS))
 FFLAGS := $(patsubst -I%,-I../../%,$(FFLAGS))
 LIBS = -L../../ -l$(LIBDECOMP)
 

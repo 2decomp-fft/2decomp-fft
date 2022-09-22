@@ -517,18 +517,22 @@ contains
 
     integer :: nx, ny, nz
 
+    character(len=128) :: rank_lbl
+
     nx = size(arrh, 1)
     ny = size(arrh, 2)
     nz = size(arrh, 3)
 
+    write(rank_lbl, "(A,I0,A)") "Rank", nrank, ":"
+
     if ((nx /= nx_expected) .or. &
          (ny /= ny_expected) .or. &
          (nz /= nz_expected)) then
-       write(*,*) tag, ":ERROR: halo size"
-       write(*,*) "+ Expected: ", nx_expected, " ", ny_expected, " ", nz_expected, " "
-       write(*,*) "+ Got:      ", nx, " ", ny, " ", nz, " "
+       write(*,*) trim(rank_lbl), " ", tag, ":ERROR: halo size"
+       write(*,*) trim(rank_lbl), " ", "+ Expected: ", nx_expected, " ", ny_expected, " ", nz_expected, " "
+       write(*,*) trim(rank_lbl), " ", "+ Got:      ", nx, " ", ny, " ", nz, " "
     else
-       write(*,*) tag, ":PASS"
+       write(*,*) trim(rank_lbl), " ", tag, ":PASS"
     end if
     
   end subroutine test_halo_size

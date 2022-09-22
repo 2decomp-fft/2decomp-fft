@@ -1,7 +1,9 @@
 #include ../../src/Makefile.inc
 
 #INCLUDE = -I../../include
-FFLAGS := $(patsubst -J\ %,-J\ ../../%,$(FFLAGS))
+blank :=
+space := $(blank) $(blank)
+FFLAGS := $(subst ?,$(space),$(subst -J?,-J?../../,$(subst $(space),?,$(FFLAGS))))
 FFLAGS := $(patsubst -I%,-I../../%,$(FFLAGS))
 LIBS = -L../../ -l$(LIBDECOMP)
 

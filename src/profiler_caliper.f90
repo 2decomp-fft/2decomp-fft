@@ -20,9 +20,6 @@ submodule (decomp_2d) d2d_profiler_caliper
 
       implicit none
 
-      logical :: ret
-      character(len=:), allocatable :: errmsg
-
       ! Create the config manager with basic reporting
       mgr = ConfigManager_new()
       call manager_error(mgr)
@@ -127,9 +124,9 @@ submodule (decomp_2d) d2d_profiler_caliper
       logical :: ret
       character(len=:), allocatable :: errmsg
 
-      ret = mgr%error()
+      ret = mmm%error()
       if (ret) then
-         errmsg = mgr%error_msg()
+         errmsg = mmm%error_msg()
          call decomp_2d_warning(1609, "Caliper manager error: "//trim(errmsg))
          deallocate(errmsg)
       endif

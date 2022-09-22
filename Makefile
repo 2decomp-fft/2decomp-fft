@@ -62,7 +62,7 @@ endif
 
 ### Add the profiler if needed
 ifeq ($(PROFILER),caliper)
-  CALIPER_PATH=/home/cflage01/opt/caliper/caliper_2.8.0
+  CALIPER_PATH=xxxxxxxxx/caliper/caliper_2.8.0
   SRCDECOMP := $(SRCDECOMP) profiler_caliper.f90
   INC := $(INC) -I$(CALIPER_PATH)/include/caliper/fortran
   LFLAGS := $(LFLAGS) -L$(CALIPER_PATH)/lib -lcaliper

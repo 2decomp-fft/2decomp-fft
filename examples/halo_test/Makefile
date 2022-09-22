@@ -3,7 +3,8 @@
 #INCLUDE = -I../../include
 blank :=
 space := $(blank) $(blank)
-FFLAGS := $(subst ?,$(space),$(subst -J?,-J?../../,$(subst $(space),?,$(FFLAGS))))
+MODFLAG_NSP := $(subst $(space),,$(MODFLAG))
+FFLAGS := $(subst ?,$(space),$(subst $(MODFLAG_NSP)?,$(MODFLAG_NSP)?../../,$(subst $(space),?,$(FFLAGS))))
 FFLAGS := $(patsubst -I%,-I../../%,$(FFLAGS))
 LIBS = -L../../ -l$(LIBDECOMP)
 

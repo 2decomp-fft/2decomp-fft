@@ -9,11 +9,8 @@ LIBS = -L../../ -l$(LIBDECOMP) $(LIBFFT)
 
 OBJ = timing.o
 
-timing: $(DECOMPINC) $(OBJ)
+timing: $(OBJ)
 	$(FC) $(FFLAGS) $(OPT) $(DEFS) $(INC) -o $@ $(OBJ) $(LIBS)
-
-$(DECOMPINC):
-	mkdir $@
 
 check:
 	mpirun -n 4 ./timing

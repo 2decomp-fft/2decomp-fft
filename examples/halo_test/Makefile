@@ -12,11 +12,8 @@ OBJ = halo_test.o
 NP ?= 1
 MPIRUN ?= mpirun
 
-halo_test: $(DECOMPINC) $(OBJ)
+halo_test: $(OBJ)
 	$(FC) $(FFLAGS) $(OPT) $(DEFS) $(INC) -o $@ $(OBJ) $(LIBS)
-
-$(DECOMPINC):
-	mkdir $@
 
 check:
 	$(MPIRUN) -n $(NP) ./halo_test

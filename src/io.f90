@@ -1638,6 +1638,8 @@ contains
 
     end if
 
+    call decomp_mpi_comm_free(newcomm)
+
     return
   end subroutine write_subdomain
 

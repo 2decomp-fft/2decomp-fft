@@ -230,5 +230,7 @@ if (color==1) then ! only ranks in this group do IO collectively
 
 end if ! color==1
 
+call decomp_mpi_comm_free(newcomm)
+
 call MPI_BARRIER(decomp_2d_comm, ierror)
 if (ierror.ne.0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_BARRIER")

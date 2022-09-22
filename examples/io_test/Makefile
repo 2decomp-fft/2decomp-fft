@@ -3,7 +3,7 @@
 #INCLUDE = -I../../include
 FFLAGS := $(patsubst -J\ %,-J\ ../../%,$(FFLAGS))
 FFLAGS := $(patsubst -I%,-I../../%,$(FFLAGS))
-LIBS = -L../../ -l$(LIBDECOMP)
+LIBS = -L../../ -l$(LIBDECOMP) $(LFLAGS)
 
 all: io_test io_read io_var_test io_plane_test io_bench
 

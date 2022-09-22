@@ -3,7 +3,7 @@
 #INCLUDE = -I../../include
 FFLAGS := $(patsubst -J\ %,-J\ ../../%,$(FFLAGS))
 FFLAGS := $(patsubst -I%,-I../../%,$(FFLAGS))
-LIBS = -L../../ -l$(LIBDECOMP)
+LIBS = -L../../ -l$(LIBDECOMP) $(LFLAGS)
 
 OBJ = halo_test.o
 

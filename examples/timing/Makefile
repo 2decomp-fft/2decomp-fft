@@ -3,7 +3,7 @@
 #INCLUDE = -I../../include
 FFLAGS := $(patsubst -J\ %,-J\ ../../%,$(FFLAGS))
 FFLAGS := $(patsubst -I%,-I../../%,$(FFLAGS))
-LIBS = -L../../ -l$(LIBDECOMP) $(LIBFFT)
+LIBS = -L../../ -l$(LIBDECOMP) $(LIBFFT) $(LFLAGS)
 
 OBJ = timing.o
 

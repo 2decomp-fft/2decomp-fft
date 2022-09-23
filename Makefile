@@ -14,7 +14,7 @@ LCL = local# local,lad,sdu,archer
 CMP = gcc# intel,gcc,nagfor,cray,nvhpc
 FFT = generic# fftw3,fftw3_f03,generic,mkl
 PARAMOD = mpi # multicore,gpu
-PROFILER = none# none, caliper (add -DPROFILER to DEFS if not none)
+PROFILER = none# none, caliper
 
 BUILD ?= # debug can be used with gcc
 FCFLAGS ?= # user can set default compiler flags
@@ -61,6 +61,9 @@ else ifeq ($(FFT),cufft)
 endif
 
 ### Add the profiler if needed
+ifneq ($(PROFILER),none)
+  DEFS += -DPROFILER
+endif
 ifeq ($(PROFILER),caliper)
   CALIPER_PATH=xxxxxxxxx/caliper/caliper_2.8.0
   SRCDECOMP := $(SRCDECOMP) profiler_caliper.f90

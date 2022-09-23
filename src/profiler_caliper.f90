@@ -54,11 +54,6 @@ submodule (decomp_2d) d2d_profiler_caliper
 
       write(io_unit, *) "Caliper profiling active"
       write(io_unit, *) "   Profiling mode : runtime-report."
-      write(io_unit, *) "   Profiling transpose : ", decomp_profiler_transpose
-      write(io_unit, *) "   Profiling IO : ", decomp_profiler_io
-      write(io_unit, *) "   Profiling FFT : ", decomp_profiler_fft
-      write(io_unit, *) "   Profiling decomp_2d : ", decomp_profiler_d2d
-      write(io_unit, *) ""
 
    end subroutine decomp_profiler_log_int
 

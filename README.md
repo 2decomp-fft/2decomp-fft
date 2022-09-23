@@ -45,7 +45,17 @@ Profiling can be activated in the Makefile. Set the variable `PROFILER` to one o
 
 ### FFTW
 
-TODO
+The library [fftw](http://www.fftw.org/index.html) can be used as a backend for the FFT engine. The version 3.3.10 was tested, is supported and can be downloaded [here](http://www.fftw.org/download.html). Please note that one should build fftw and decomp2d against the same compilers. For build instructions, please check [here](http://www.fftw.org/fftw3_doc/Installation-on-Unix.html). Below is a suggestion for the compilation of the library in double precision (add `--enable-single` for a single precision build):
+
+```
+wget http://www.fftw.org/fftw-3.3.10.tar.gz
+tar xzf fftw-3.3.10.tar.gz
+mkdir fftw-3.3.10_tmp && cd fftw-3.3.10_tmp
+../fftw-3.3.10/configure --prefix=xxxxxxx/fftw3/fftw-3.3.10_bld --enable-shared
+make -j
+make -j check
+make install
+```
 
 ### Caliper
 

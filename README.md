@@ -40,3 +40,24 @@ Profiling can be activated in the Makefile. Set the variable `PROFILER` to one o
 2. Profile IO operations (default : true))
 3. Profile FFT operations (default : true)
 4. Profile decomp_2d init / fin subroutines (default : true)
+
+## Optional dependencies
+
+### FFTW
+
+TODO
+
+### Caliper
+
+The library [caliper](https://github.com/LLNL/Caliper) can be used to profile the execution of the code. The version 2.8.0 was tested and is supported. Please note that one must build caliper and decomp2d against the same C/C++/Fortran compilers and MPI libray. For build instructions, please check [here](https://github.com/LLNL/Caliper#building-and-installing) and [here](https://software.llnl.gov/Caliper/CaliperBasics.html#build-and-install). Below is a suggestion for the compilation of the library using the GNU compilers:
+
+```
+git clone https://github.com/LLNL/Caliper.git caliper_github
+cd caliper_github
+git checkout v2.8.0
+mkdir build && cd build
+cmake -DCMAKE_C_COMPILER=gcc -DCMAKE_CXX_COMPILER=g++ -DCMAKE_Fortran_COMPILER=gfortran -DCMAKE_INSTALL_PREFIX=../../caliper_build_2.8.0 -DWITH_FORTRAN=yes -DWITH_MPI=yes -DBUILD_TESTING=yes ../
+make -j
+make test
+make install
+```

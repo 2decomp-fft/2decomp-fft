@@ -65,6 +65,10 @@ submodule (decomp_2d) d2d_profiler_caliper
    !
    ! The setup of the profiler can be modified before init
    !
+   ! TODO Current setup is limited to "runtime-report"
+   !      Advance setup is possible using
+   !         - extra optional argument of type char at prepare stage
+   !         - env. variable CALI_CONFIG
    module subroutine decomp_profiler_prep_bool(profiler_setup)
 
       implicit none

@@ -61,8 +61,7 @@ else ifeq ($(FFT),cufft)
 endif
 
 ### Add the profiler if needed
-ifeq ($(PROFILER),none)
-else
+ifneq ($(PROFILER),none)
   DEFS += -DPROFILER
 endif
 ifeq ($(PROFILER),caliper)

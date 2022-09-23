@@ -113,20 +113,20 @@ submodule (decomp_2d) d2d_profiler_caliper
    !
    ! Not frequent, but the manager can produce an error
    !
-   subroutine manager_error(mmm)
+   subroutine manager_error(manager)
 
       implicit none
 
       ! Argument
-      type(ConfigManager), intent(in) :: mmm
+      type(ConfigManager), intent(in) :: manager
 
       ! Local variables
       logical :: ret
       character(len=:), allocatable :: errmsg
 
-      ret = mmm%error()
+      ret = manager%error()
       if (ret) then
-         errmsg = mmm%error_msg()
+         errmsg = manager%error_msg()
          call decomp_2d_warning(1609, "Caliper manager error: "//trim(errmsg))
          deallocate(errmsg)
       endif

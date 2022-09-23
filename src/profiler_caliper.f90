@@ -14,16 +14,16 @@
 ! Submodule for the caliper profiler
 !
 #ifdef PROFILER
-submodule (decomp_2d) d2d_profiler_caliper
+submodule(decomp_2d) d2d_profiler_caliper
 
-   use caliper_mod, only : ConfigManager, ConfigManager_new, &
-                           cali_begin_region, cali_end_region
+   use caliper_mod, only: ConfigManager, ConfigManager_new, &
+                          cali_begin_region, cali_end_region
 
    implicit none
 
    type(ConfigManager), save :: mgr
 
-   contains
+contains
 
    !
    ! Initialize
@@ -64,8 +64,8 @@ submodule (decomp_2d) d2d_profiler_caliper
 
       integer, intent(in) :: io_unit
 
-      write(io_unit, *) "Caliper profiling active"
-      write(io_unit, *) "   Profiling mode : runtime-report."
+      write (io_unit, *) "Caliper profiling active"
+      write (io_unit, *) "   Profiling mode : runtime-report."
 
    end subroutine decomp_profiler_log_int
 
@@ -91,7 +91,7 @@ submodule (decomp_2d) d2d_profiler_caliper
          decomp_profiler_io = profiler_setup(2)
          decomp_profiler_fft = profiler_setup(3)
          decomp_profiler_d2d = profiler_setup(4)
-      endif
+      end if
 
    end subroutine decomp_profiler_prep_bool
 
@@ -139,8 +139,8 @@ submodule (decomp_2d) d2d_profiler_caliper
       if (ret) then
          errmsg = manager%error_msg()
          call decomp_2d_warning(1609, "Caliper manager error: "//trim(errmsg))
-         deallocate(errmsg)
-      endif
+         deallocate (errmsg)
+      end if
 
    end subroutine manager_error
 

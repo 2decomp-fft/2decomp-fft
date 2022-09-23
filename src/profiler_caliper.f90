@@ -1,17 +1,29 @@
+!=======================================================================
+! This is part of the 2DECOMP&FFT library
+!
+! 2DECOMP&FFT is a software framework for general-purpose 2D (pencil)
+! decomposition. It also implements a highly scalable distributed
+! three-dimensional Fast Fourier Transform (FFT).
+!
+! Copyright (C) 2009-2012 Ning Li, the Numerical Algorithms Group (NAG)
+! Copyright (C) 2021               the University of Edinburgh (UoE)
+!
+!=======================================================================
+
 !
 ! Submodule for the caliper profiler
 !
 #ifdef PROFILER
-submodule (decomp_2d) d2d_profiler_caliper
+submodule(decomp_2d) d2d_profiler_caliper
 
-   use caliper_mod, only : ConfigManager, ConfigManager_new, &
-                           cali_begin_region, cali_end_region
+   use caliper_mod, only: ConfigManager, ConfigManager_new, &
+                          cali_begin_region, cali_end_region
 
    implicit none
 
    type(ConfigManager), save :: mgr
 
-   contains
+contains
 
    !
    ! Initialize
@@ -19,9 +31,6 @@ submodule (decomp_2d) d2d_profiler_caliper
    module subroutine decomp_profiler_init_noarg
 
       implicit none
-
-      logical :: ret
-      character(len=:), allocatable :: errmsg
 
       ! Create the config manager with basic reporting
       mgr = ConfigManager_new()
@@ -55,19 +64,18 @@ submodule (decomp_2d) d2d_profiler_caliper
 
       integer, intent(in) :: io_unit
 
-      write(io_unit, *) "Caliper profiling active"
-      write(io_unit, *) "   Profiling mode : runtime-report."
-      write(io_unit, *) "   Profiling transpose : ", decomp_profiler_transpose
-      write(io_unit, *) "   Profiling IO : ", decomp_profiler_io
-      write(io_unit, *) "   Profiling FFT : ", decomp_profiler_fft
-      write(io_unit, *) "   Profiling decomp_2d : ", decomp_profiler_d2d
-      write(io_unit, *) ""
+      write (io_unit, *) "Caliper profiling active"
+      write (io_unit, *) "   Profiling mode : runtime-report."
 
    end subroutine decomp_profiler_log_int
 
    !
    ! The setup of the profiler can be modified before init
    !
+   ! TODO Current setup is limited to "runtime-report"
+   !      Advance setup is possible using
+   !         - extra optional argument of type char at prepare stage
+   !         - env. variable CALI_CONFIG
    module subroutine decomp_profiler_prep_bool(profiler_setup)
 
       implicit none
@@ -83,7 +91,7 @@ submodule (decomp_2d) d2d_profiler_caliper
          decomp_profiler_io = profiler_setup(2)
          decomp_profiler_fft = profiler_setup(3)
          decomp_profiler_d2d = profiler_setup(4)
-      endif
+      end if
 
    end subroutine decomp_profiler_prep_bool
 
@@ -116,23 +124,23 @@ submodule (decomp_2d) d2d_profiler_caliper
    !
    ! Not frequent, but the manager can produce an error
    !
-   subroutine manager_error(mmm)
+   subroutine manager_error(manager)
 
       implicit none
 
       ! Argument
-      type(ConfigManager), intent(in) :: mmm
+      type(ConfigManager), intent(in) :: manager
 
       ! Local variables
       logical :: ret
       character(len=:), allocatable :: errmsg
 
-      ret = mgr%error()
+      ret = manager%error()
       if (ret) then
-         errmsg = mgr%error_msg()
+         errmsg = manager%error_msg()
          call decomp_2d_warning(1609, "Caliper manager error: "//trim(errmsg))
-         deallocate(errmsg)
-      endif
+         deallocate (errmsg)
+      end if
 
    end subroutine manager_error
 

@@ -531,6 +531,8 @@ contains
        write(*,*) trim(rank_lbl), " ", tag, ":ERROR: halo size"
        write(*,*) trim(rank_lbl), " ", "+ Expected: ", nx_expected, " ", ny_expected, " ", nz_expected, " "
        write(*,*) trim(rank_lbl), " ", "+ Got:      ", nx, " ", ny, " ", nz, " "
+
+       all_pass = .false.
     else
        write(*,*) trim(rank_lbl), " ", tag, ":PASS"
     end if

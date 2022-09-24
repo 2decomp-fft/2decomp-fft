@@ -145,11 +145,11 @@ contains
     !         (nx/2+1)*ny*nz, if PHYSICAL_IN_X
     !      or nx*ny*(nz/2+1), if PHYSICAL_IN_Z
 
-    call decomp_info_init(nx, ny, nz, ph)
+    call ph%init(nx, ny, nz)
     if (format==PHYSICAL_IN_X) then
-       call decomp_info_init(nx/2+1, ny, nz, sp)
+       call sp%init(nx/2+1, ny, nz)
     else if (format==PHYSICAL_IN_Z) then
-       call decomp_info_init(nx, ny, nz/2+1, sp)
+       call sp%init(nx, ny, nz/2+1)
     end if
 
     sz = ph%ysz(1)*ph%ysz(2)*ph%ysz(3)
@@ -194,8 +194,8 @@ contains
     if (decomp_profiler_fft) call decomp_profiler_start("fft_fin")
 #endif
 
-    call decomp_info_finalize(ph)
-    call decomp_info_finalize(sp)
+    call ph%fin()
+    call sp%fin()
 
     call fftw_free(wk2_c2c_p)
     call fftw_free(wk2_r2c_p)

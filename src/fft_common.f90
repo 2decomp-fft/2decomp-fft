@@ -122,11 +122,11 @@ if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_CART_GET"
 !         (nx/2+1)*ny*nz, if PHYSICAL_IN_X
 !      or nx*ny*(nz/2+1), if PHYSICAL_IN_Z
 
-call decomp_info_init(nx, ny, nz, ph)
+call ph%init(nx, ny, nz)
 if (format==PHYSICAL_IN_X) then
-call decomp_info_init(nx/2+1, ny, nz, sp)
+call sp%init(nx/2+1, ny, nz)
 else if (format==PHYSICAL_IN_Z) then
-call decomp_info_init(nx, ny, nz/2+1, sp)
+call sp%init(nx, ny, nz/2+1)
 end if
 
 allocate(wk2_c2c(ph%ysz(1),ph%ysz(2),ph%ysz(3)), STAT=status)
@@ -165,8 +165,8 @@ implicit none
 if (decomp_profiler_fft) call decomp_profiler_start("fft_fin")
 #endif
 
-call decomp_info_finalize(ph)
-call decomp_info_finalize(sp)
+call ph%fin()
+call sp%fin()
 
 if (allocated(wk2_c2c)) deallocate(wk2_c2c)
 if (allocated(wk2_r2c)) deallocate(wk2_r2c)

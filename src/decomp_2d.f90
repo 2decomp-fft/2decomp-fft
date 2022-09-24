@@ -167,6 +167,13 @@ module decomp_2d
      integer, allocatable, dimension(:) :: x1disp_o, y1disp_o, &
           y2disp_o, z2disp_o
 #endif
+
+  contains
+
+     procedure :: init => decomp_info_init_class
+     procedure :: print => decomp_info_print
+     procedure :: fin => decomp_info_fin_class
+
   END TYPE DECOMP_INFO
 
   ! main (default) decomposition information for global size nx*ny*nz
@@ -231,7 +238,7 @@ module decomp_2d
        transpose_x_to_y, transpose_y_to_z, &
        transpose_z_to_y, transpose_y_to_x, &
        decomp_info_init, decomp_info_finalize, partition, &
-       decomp_info_print, decomp_profiler_prep, &
+       decomp_profiler_prep, &
        decomp_profiler_start, decomp_profiler_end, &
        init_coarser_mesh_statS,fine_to_coarseS,&
        init_coarser_mesh_statV,fine_to_coarseV,&
@@ -315,7 +322,7 @@ module decomp_2d
      end subroutine d2d_listing
 
      module subroutine decomp_info_print(d2d, io_unit, d2dname)
-        type(decomp_info), intent(in) :: d2d
+        class(decomp_info) :: d2d
         integer, intent(in) :: io_unit
         character(len=*), intent(in) :: d2dname
      end subroutine decomp_info_print
@@ -495,7 +502,7 @@ contains
     call init_neighbour
 
     ! actually generate all 2D decomposition information
-    call decomp_info_init(nx,ny,nz,decomp_main)
+    call decomp_main%init(nx,ny,nz)
 
     ! make a copy of the decomposition information associated with the
     ! default global size in these global variables so applications can
@@ -607,7 +614,7 @@ contains
     call decomp_mpi_comm_free(DECOMP_2D_COMM_CART_Y)
     call decomp_mpi_comm_free(DECOMP_2D_COMM_CART_Z)
 
-    call decomp_info_finalize(decomp_main)
+    call decomp_main%fin()
 
     decomp_buf_size = 0
     deallocate(work1_r, work2_r, work1_c, work2_c)
@@ -681,6 +688,17 @@ contains
 
     integer, intent(IN) :: nx,ny,nz
     TYPE(DECOMP_INFO), intent(INOUT) :: decomp
+
+    call decomp%init(nx, ny, nz)
+
+  end subroutine decomp_info_init
+
+  subroutine decomp_info_init_class(decomp, nx, ny, nz)
+
+    implicit none
+
+    class(decomp_info) :: decomp
+    integer, intent(in) :: nx, ny, nz
 
     integer :: buf_size, status, errorcode
 
@@ -801,8 +819,7 @@ contains
        end if
     end if
 
-    return
-  end subroutine decomp_info_init
+  end subroutine decomp_info_init_class
 
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -813,6 +830,16 @@ contains
     implicit none
 
     TYPE(DECOMP_INFO), intent(INOUT) :: decomp
+
+    call decomp%fin()
+
+  end subroutine decomp_info_finalize
+
+  subroutine decomp_info_fin_class(decomp)
+
+    implicit none
+
+    class(decomp_info) :: decomp
 
     if (allocated(decomp%x1dist)) deallocate(decomp%x1dist)
     if (allocated(decomp%y1dist)) deallocate(decomp%y1dist)
@@ -843,7 +870,7 @@ contains
 #endif
 
     return
-  end subroutine decomp_info_finalize
+  end subroutine decomp_info_fin_class
 
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!

@@ -133,12 +133,12 @@ submodule (decomp_2d) d2d_log
 #endif
     write (io_unit, *) '==========================================================='
     ! Info about each decomp_info object
-    call decomp_info_print(decomp_main, io_unit, "decomp_main")
-    call decomp_info_print(phG, io_unit, "phG")
-    call decomp_info_print(ph1, io_unit, "ph1")
-    call decomp_info_print(ph2, io_unit, "ph2")
-    call decomp_info_print(ph3, io_unit, "ph3")
-    call decomp_info_print(ph4, io_unit, "ph4")
+    call decomp_main%print(io_unit, "decomp_main")
+    call phG%print(io_unit, "phG")
+    call ph1%print(io_unit, "ph1")
+    call ph2%print(io_unit, "ph2")
+    call ph3%print(io_unit, "ph3")
+    call ph4%print(io_unit, "ph4")
 #ifdef SHM_DEBUG
     write (io_unit, *) '==========================================================='
     call print_smp(io_unit)
@@ -180,7 +180,7 @@ submodule (decomp_2d) d2d_log
     implicit none
 
     ! Arguments
-    type(decomp_info), intent(in) :: d2d
+    class(decomp_info) :: d2d
     integer, intent(in) :: io_unit
     character(len=*), intent(in) :: d2dname
 

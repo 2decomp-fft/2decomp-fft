@@ -23,14 +23,12 @@ program fft_test_r2c
   
   integer, dimension(3) :: fft_start, fft_end, fft_size
   
-  real(mytype), dimension(nx,ny,nz) :: in_global, in_g2, in_g3
+  real(mytype), dimension(nx,ny,nz) :: in_global, in_g2
   complex(mytype), dimension(nx/2+1,ny,nz) :: out_global
-  
-  integer (kind=MPI_OFFSET_KIND) :: filesize, disp
   
   real(mytype) :: err
   !integer*8 :: plan
-  integer :: fh, ierror, i,j,k, n,iol
+  integer :: ierror, i,j,k
   
   ! Init
   call MPI_INIT(ierror)

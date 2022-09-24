@@ -1,8 +1,9 @@
 #include ../../src/Makefile.inc
 
 #INCLUDE = -I../../include
+FFLAGS := $(subst $(MODFLAG),$(MODFLAG)../../,$(FFLAGS))
 FFLAGS := $(patsubst -I%,-I../../%,$(FFLAGS))
-LIBS = -L../../ -l$(LIBDECOMP)
+LIBS = -L../../ -l$(LIBDECOMP) $(LFLAGS)
 
 NP ?= 1
 MPIRUN ?= mpirun

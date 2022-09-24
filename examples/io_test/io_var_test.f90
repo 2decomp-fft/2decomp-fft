@@ -16,7 +16,7 @@ program io_var_test
 
   ! for global data
   real(mytype), dimension(nx,ny,nz) :: data1
-  real(mytype), dimension(nx*2,ny*2,nz*2) :: data1_large
+  real(mytype), allocatable, dimension(:,:,:) :: data1_large
   complex(mytype), dimension(nx,ny,nz) :: cdata1
 
   ! for distributed data
@@ -38,6 +38,8 @@ program io_var_test
   integer :: i,j,k, m, ierror, fh
   character(len=15) :: filename, arg
   integer (kind=MPI_OFFSET_KIND) :: filesize, disp
+
+  allocate(data1_large(nx*2,ny*2,nz*2))
 
   call MPI_INIT(ierror)
   call MPI_COMM_SIZE(MPI_COMM_WORLD, nproc, ierror)
@@ -278,5 +280,6 @@ program io_var_test
   deallocate(u1_b,u2_b,u3_b)
   deallocate(u1l_b,u2l_b,u3l_b)
   deallocate(cu1_b,cu2_b,cu3_b)
+  deallocate(data1_large)
   
 end program io_var_test

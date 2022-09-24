@@ -14,6 +14,7 @@ LCL = local# local,lad,sdu,archer
 CMP = gcc# intel,gcc,nagfor,cray,nvhpc
 FFT = generic# fftw3,fftw3_f03,generic,mkl
 PARAMOD = mpi # multicore,gpu
+PROFILER = none# none, caliper
 
 BUILD ?= # debug can be used with gcc
 FCFLAGS ?= # user can set default compiler flags
@@ -71,6 +72,17 @@ ifeq ($(IO),adios2)
   OPTIO := -DADIOS2 $(OPT)
   INCIO := $(INC) $(shell $(ADIOS2DIR)/bin/adios2-config --fortran-flags) #$(patsubst $(shell $(ADIOS2DIR)/bin/adios2-config --fortran-libs),,$(shell $(ADIOS2DIR)/bin/adios2-config -f))
   LIBIO := $(shell $(ADIOS2DIR)/bin/adios2-config --fortran-libs)
+endif
+
+### Add the profiler if needed
+ifneq ($(PROFILER),none)
+  DEFS += -DPROFILER
+endif
+ifeq ($(PROFILER),caliper)
+  CALIPER_PATH=xxxxxxxxx/caliper/caliper_2.8.0
+  SRCDECOMP := $(SRCDECOMP) profiler_caliper.f90
+  INC := $(INC) -I$(CALIPER_PATH)/include/caliper/fortran
+  LFLAGS := $(LFLAGS) -L$(CALIPER_PATH)/lib -lcaliper
 endif
 
 SRCDECOMP := $(SRCDECOMP) fft_$(FFT).f90

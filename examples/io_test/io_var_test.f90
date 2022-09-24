@@ -60,7 +60,7 @@ program io_var_test
   call decomp_2d_init(nx,ny,nz,p_row,p_col)
 
   ! also create a data set over a large domain
-  call decomp_info_init(nx*2, ny*2, nz*2, large)
+  call large%init(nx*2, ny*2, nz*2)
 
   ! initialise global data
   m = 1
@@ -266,7 +266,7 @@ program io_var_test
   if (nrank==0) write(*,*) 'passed self test'
 
   ! clean up
-  call decomp_info_finalize(large)
+  call large%fin()
   call decomp_2d_finalize
   call MPI_FINALIZE(ierror)
   deallocate(u1,u2,u3)

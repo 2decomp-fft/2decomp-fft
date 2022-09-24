@@ -33,7 +33,7 @@ program io_var_test
   complex(mytype), allocatable, dimension(:) :: ctmp
   integer, allocatable, dimension(:) :: itmp
 
-  TYPE(DECOMP_INFO) :: large
+  TYPE(DECOMP_INFO), target :: large
 
   integer :: i,j,k, m, ierror, fh
   character(len=15) :: filename, arg

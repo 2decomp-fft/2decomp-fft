@@ -13,9 +13,9 @@
 ! 'update_halo_...' in halo.f90
 
     if (present(opt_decomp)) then
-       decomp = opt_decomp
+       decomp => opt_decomp
     else
-       decomp = decomp_main
+       decomp => decomp_main
     end if
 
     if (present(opt_global)) then
@@ -468,3 +468,5 @@
        ! all data in local memory already, no halo exchange
 
     end if  ! pencil
+
+    nullify(decomp)

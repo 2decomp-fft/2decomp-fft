@@ -170,8 +170,8 @@ module decomp_2d
   END TYPE DECOMP_INFO
 
   ! main (default) decomposition information for global size nx*ny*nz
-  TYPE(DECOMP_INFO), save, public :: decomp_main
-  TYPE(DECOMP_INFO), save, public :: phG,ph1,ph2,ph3,ph4
+  TYPE(DECOMP_INFO), save, target, public :: decomp_main
+  TYPE(DECOMP_INFO), save, target, public :: phG,ph1,ph2,ph3,ph4
 
   ! staring/ending index and size of data held by current processor
   ! duplicate 'decomp_main', needed by apps to define data structure 

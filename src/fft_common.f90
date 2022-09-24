@@ -30,8 +30,8 @@ integer, save :: nx_fft, ny_fft, nz_fft
 integer, save, dimension(2) :: dims
 
 ! Decomposition objects
-TYPE(DECOMP_INFO), save :: ph  ! physical space
-TYPE(DECOMP_INFO), save :: sp  ! spectral space
+TYPE(DECOMP_INFO), target, save :: ph  ! physical space
+TYPE(DECOMP_INFO), target, save :: sp  ! spectral space
 
 ! Workspace to store the intermediate Y-pencil data
 ! *** TODO: investigate how to use only one workspace array

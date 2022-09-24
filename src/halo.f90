@@ -19,10 +19,10 @@
     integer, intent(IN) :: level      ! levels of halo cells required
     real(mytype), dimension(:,:,:), intent(IN) :: in    
     real(mytype), allocatable, dimension(:,:,:), intent(OUT) :: out
-    TYPE(DECOMP_INFO), optional :: opt_decomp
+    TYPE(DECOMP_INFO), target, optional :: opt_decomp
     logical, optional :: opt_global
 
-    TYPE(DECOMP_INFO) :: decomp
+    TYPE(DECOMP_INFO), pointer :: decomp
     logical :: global
 
     ! starting/ending index of array with halo cells
@@ -52,10 +52,10 @@
     integer, intent(IN) :: level      ! levels of halo cells required
     complex(mytype), dimension(:,:,:), intent(IN) :: in    
     complex(mytype), allocatable, dimension(:,:,:), intent(OUT) :: out
-    TYPE(DECOMP_INFO), optional :: opt_decomp
+    TYPE(DECOMP_INFO), target, optional :: opt_decomp
     logical, optional :: opt_global
 
-    TYPE(DECOMP_INFO) :: decomp
+    TYPE(DECOMP_INFO), pointer :: decomp
     logical :: global
 
     ! starting/ending index of array with halo cells

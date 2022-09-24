@@ -17,9 +17,9 @@
     
     real(mytype), dimension(:,:,:), intent(IN) :: src
     real(mytype), dimension(:,:,:), intent(OUT) :: dst
-    TYPE(DECOMP_INFO), intent(IN), optional :: opt_decomp
+    TYPE(DECOMP_INFO), target, intent(IN), optional :: opt_decomp
 
-    TYPE(DECOMP_INFO) :: decomp
+    TYPE(DECOMP_INFO), pointer :: decomp
 
 #if defined(_GPU)
 #if defined(_NCCL)
@@ -40,9 +40,9 @@
 #endif
 
     if (present(opt_decomp)) then
-       decomp = opt_decomp
+       decomp => opt_decomp
     else
-       decomp = decomp_main
+       decomp => decomp_main
     end if
 
     s1 = SIZE(src,1)
@@ -137,6 +137,8 @@
 
 #endif
 
+    nullify(decomp)
+
 #ifdef PROFILER
     if (decomp_profiler_transpose) call decomp_profiler_end("transp_y_x_r")
 #endif
@@ -151,9 +153,9 @@
     
     complex(mytype), dimension(:,:,:), intent(IN) :: src
     complex(mytype), dimension(:,:,:), intent(OUT) :: dst
-    TYPE(DECOMP_INFO), intent(IN), optional :: opt_decomp
+    TYPE(DECOMP_INFO), target, intent(IN), optional :: opt_decomp
 
-    TYPE(DECOMP_INFO) :: decomp
+    TYPE(DECOMP_INFO), pointer :: decomp
 
 #if defined(_GPU)
 #if defined(_NCCL)
@@ -174,9 +176,9 @@
 #endif
 
     if (present(opt_decomp)) then
-       decomp = opt_decomp
+       decomp => opt_decomp
     else
-       decomp = decomp_main
+       decomp => decomp_main
     end if
 
     s1 = SIZE(src,1)
@@ -258,6 +260,8 @@
 #endif
 
 #endif
+
+    nullify(decomp)
 
 #ifdef PROFILER
     if (decomp_profiler_transpose) call decomp_profiler_end("transp_y_x_c")

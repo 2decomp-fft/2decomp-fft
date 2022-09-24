@@ -134,11 +134,6 @@ submodule (decomp_2d) d2d_log
     write (io_unit, *) '==========================================================='
     ! Info about each decomp_info object
     call decomp_main%print(io_unit, "decomp_main")
-    call phG%print(io_unit, "phG")
-    call ph1%print(io_unit, "ph1")
-    call ph2%print(io_unit, "ph2")
-    call ph3%print(io_unit, "ph3")
-    call ph4%print(io_unit, "ph4")
 #ifdef SHM_DEBUG
     write (io_unit, *) '==========================================================='
     call print_smp(io_unit)

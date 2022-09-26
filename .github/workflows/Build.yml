@@ -1,0 +1,112 @@
+# This is a basic workflow to help you get started with Actions
+
+name: Build
+
+# Controls when the action will run. Triggers the workflow on push or pull request
+# events but only for the master branch
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+  # This workflow contains jobs called "bld_gnu_ompi", "bld_gnu_mpich" "bld_nvidia" and "bld_intel"
+  bld_gnu_ompi:
+    # The type of runner that the job will run on
+    runs-on: ubuntu-latest
+
+    # Steps represent a sequence of tasks that will be executed as part of the job
+    steps:
+    # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+    - uses: actions/checkout@v2
+
+    # Runs a single command using the runners shell
+    - name: Install requirements
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y gfortran openmpi-bin libopenmpi-dev
+
+    # Runs a set of commands using the runners shell
+    - name: Compile
+      run: make BUILD=debug
+
+    - name: Examples
+      run: make examples BUILD=debug
+
+  bld_gnu_mpich:
+    # The type of runner that the job will run on
+    runs-on: ubuntu-latest
+
+    # Steps represent a sequence of tasks that will be executed as part of the job
+    steps:
+    # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+    - uses: actions/checkout@v2
+
+    # Runs a single command using the runners shell
+    - name: Install requirements
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y gfortran mpich libmpich-dev
+
+    # Runs a set of commands using the runners shell
+    - name: Compile
+      run: make BUILD=debug
+
+    - name: Examples
+      run: make examples BUILD=debug
+
+  bld_nvidia:
+    # The type of runner that the job will run on
+    runs-on: ubuntu-latest
+    env:
+      TMP: /opt/nvidia/hpc_sdk/Linux_x86_64/22.7/comm_libs/mpi/bin:/opt/nvidia/hpc_sdk/Linux_x86_64/22.7/compilers/bin
+
+    # Steps represent a sequence of tasks that will be executed as part of the job
+    steps:
+    # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+    - uses: actions/checkout@v2
+
+    # Add Nvidia HPC SDK
+    - name: setup repo
+      run: |
+        echo 'deb [trusted=yes] https://developer.download.nvidia.com/hpc-sdk/ubuntu/amd64 /' | sudo tee /etc/apt/sources.list.d/nvhpc.list
+    # Install dependencies
+    - name: install
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y nvhpc-22-7
+
+    # Runs a set of commands using the runners shell
+    - name: Compile
+      run: PATH=$TMP:$PATH make CMP=nvhpc BUILD=debug
+
+    - name: Examples
+      run: PATH=$TMP:$PATH make examples CMP=nvhpc BUILD=debug
+
+  bld_intel:
+    # The type of runner that the job will run on
+    runs-on: ubuntu-latest
+
+    # Steps represent a sequence of tasks that will be executed as part of the job
+    steps:
+    # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+    - uses: actions/checkout@v2
+
+    # Add Intel OneApi
+    - name: setup repo
+      run: |
+        sudo echo "deb [trusted=yes] https://apt.repos.intel.com/oneapi all main" | sudo tee /etc/apt/sources.list.d/oneAPI.list
+    # Install dependencies
+    - name: install
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y intel-oneapi-common-vars intel-oneapi-compiler-fortran intel-oneapi-mkl intel-oneapi-mpi intel-oneapi-mpi-devel
+
+    # Runs a set of commands using the runners shell
+    - name: Compile
+      run: source /opt/intel/oneapi/setvars.sh && make CMP=intel BUILD=debug
+
+    - name: Examples
+      run: source /opt/intel/oneapi/setvars.sh && make examples CMP=intel BUILD=debug

@@ -52,6 +52,7 @@ module decomp_2d_fft
   integer, save :: nx_fft, ny_fft, nz_fft
 
   ! 2D processor grid
+  ! FIXME this is already available in the module decomp_2d
   integer, save, dimension(2) :: dims
 
   ! Decomposition objects
@@ -136,6 +137,7 @@ contains
     nz_fft = nz
 
     ! determine the processor grid in use
+    ! FIXME this is already defined in the module decomp_2d
     call MPI_CART_GET(DECOMP_2D_COMM_CART_X, 2, &
          dims, dummy_periods, dummy_coords, ierror)
 

@@ -171,6 +171,8 @@ module decomp_2d
 
   ! main (default) decomposition information for global size nx*ny*nz
   TYPE(DECOMP_INFO), target, save, public :: decomp_main
+  ! FIXME The extra decomp_info objects should be defined in the external code, not here
+  !       Currently keeping them to avoid breaking external codes
   TYPE(DECOMP_INFO), save, public :: phG,ph1,ph2,ph3,ph4
 
   ! staring/ending index and size of data held by current processor
@@ -670,12 +672,17 @@ contains
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   ! Return the default decomposition object
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+  ! FIXME avoid a copy and return a pointer to decomp_main
+  ! TODO list the external codes using this subroutine
   subroutine get_decomp_info(decomp)
 
     implicit none
 
+    ! FIXME TYPE(DECOMP_INFO), pointer :: decomp
     TYPE(DECOMP_INFO), intent(OUT) :: decomp
 
+    ! FIXME decomp => decomp_main
     decomp = decomp_main
 
     return

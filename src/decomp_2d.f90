@@ -280,7 +280,9 @@ module decomp_2d
 
   interface update_halo
      module procedure update_halo_real
+     module procedure update_halo_real_short
      module procedure update_halo_complex
+     module procedure update_halo_complex_short
   end interface update_halo
 
   interface alloc_x

@@ -11,15 +11,24 @@
 
 ! This file contains the routines that transpose data from Z to Y pencil
 
-  subroutine transpose_z_to_y_real(src, dst, opt_decomp)
+  subroutine transpose_z_to_y_real_short(src, dst)
+
+    implicit none
+
+    real(mytype), dimension(:,:,:), intent(IN) :: src
+    real(mytype), dimension(:,:,:), intent(OUT) :: dst
+
+    call transpose_z_to_y(src, dst, decomp_main)
+
+  end subroutine transpose_z_to_y_real_short
+
+  subroutine transpose_z_to_y_real(src, dst, decomp)
 
     implicit none
     
     real(mytype), dimension(:,:,:), intent(IN) :: src
     real(mytype), dimension(:,:,:), intent(OUT) :: dst
-    TYPE(DECOMP_INFO), intent(IN), optional :: opt_decomp
-
-    TYPE(DECOMP_INFO) :: decomp
+    TYPE(DECOMP_INFO), intent(IN) :: decomp
 
 #if defined(_GPU)
 #if defined(_NCCL)
@@ -38,12 +47,6 @@
 #ifdef PROFILER
     if (decomp_profiler_transpose) call decomp_profiler_start("transp_z_y_r")
 #endif
-
-    if (present(opt_decomp)) then
-       decomp = opt_decomp
-    else
-       decomp = decomp_main
-    end if
 
     s1 = SIZE(src,1)
     s2 = SIZE(src,2)
@@ -153,15 +156,24 @@
   end subroutine transpose_z_to_y_real
 
 
-  subroutine transpose_z_to_y_complex(src, dst, opt_decomp)
+  subroutine transpose_z_to_y_complex_short(src, dst)
+
+    implicit none
+
+    complex(mytype), dimension(:,:,:), intent(IN) :: src
+    complex(mytype), dimension(:,:,:), intent(OUT) :: dst
+
+    call transpose_z_to_y(src, dst, decomp_main)
+
+  end subroutine transpose_z_to_y_complex_short
+
+  subroutine transpose_z_to_y_complex(src, dst, decomp)
 
     implicit none
     
     complex(mytype), dimension(:,:,:), intent(IN) :: src
     complex(mytype), dimension(:,:,:), intent(OUT) :: dst
-    TYPE(DECOMP_INFO), intent(IN), optional :: opt_decomp
-
-    TYPE(DECOMP_INFO) :: decomp
+    TYPE(DECOMP_INFO), intent(IN) :: decomp
 
 #if defined(_GPU)
 #if defined(_NCCL)
@@ -180,12 +192,6 @@
 #ifdef PROFILER
     if (decomp_profiler_transpose) call decomp_profiler_start("transp_z_y_c")
 #endif
-
-    if (present(opt_decomp)) then
-       decomp = opt_decomp
-    else
-       decomp = decomp_main
-    end if
 
     s1 = SIZE(src,1)
     s2 = SIZE(src,2)

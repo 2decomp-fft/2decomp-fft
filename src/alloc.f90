@@ -14,23 +14,27 @@
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
   ! X-pencil real arrays
-  subroutine alloc_x_real(var, opt_decomp, opt_global)
+  subroutine alloc_x_real_short(var, opt_global)
 
     implicit none
 
     real(mytype), allocatable, dimension(:,:,:) :: var
-    TYPE(DECOMP_INFO), intent(IN), optional :: opt_decomp
     logical, intent(IN), optional :: opt_global
 
-    TYPE(DECOMP_INFO) :: decomp
+    call alloc_x(var, decomp_main, opt_global)
+
+  end subroutine alloc_x_real_short
+
+  subroutine alloc_x_real(var, decomp, opt_global)
+
+    implicit none
+
+    real(mytype), allocatable, dimension(:,:,:) :: var
+    TYPE(DECOMP_INFO), intent(IN) :: decomp
+    logical, intent(IN), optional :: opt_global
+
     logical :: global
     integer :: alloc_stat, errorcode
-
-    if (present(opt_decomp)) then
-       decomp = opt_decomp
-    else
-       decomp = decomp_main
-    end if
 
     if (present(opt_global)) then
        global = opt_global
@@ -57,23 +61,27 @@
   end subroutine alloc_x_real
 
   ! X-pencil complex arrays
-  subroutine alloc_x_complex(var, opt_decomp, opt_global)
+  subroutine alloc_x_complex_short(var, opt_global)
 
     implicit none
 
     complex(mytype), allocatable, dimension(:,:,:) :: var
-    TYPE(DECOMP_INFO), intent(IN), optional :: opt_decomp
     logical, intent(IN), optional :: opt_global
 
-    TYPE(DECOMP_INFO) :: decomp
+    call alloc_x(var, decomp_main, opt_global)
+
+  end subroutine alloc_x_complex_short
+
+  subroutine alloc_x_complex(var, decomp, opt_global)
+
+    implicit none
+
+    complex(mytype), allocatable, dimension(:,:,:) :: var
+    TYPE(DECOMP_INFO), intent(IN) :: decomp
+    logical, intent(IN), optional :: opt_global
+
     logical :: global
     integer :: alloc_stat, errorcode
-
-    if (present(opt_decomp)) then
-       decomp = opt_decomp
-    else
-       decomp = decomp_main
-    end if
 
     if (present(opt_global)) then
        global = opt_global
@@ -100,23 +108,27 @@
   end subroutine alloc_x_complex
 
   ! Y-pencil real arrays
-  subroutine alloc_y_real(var, opt_decomp, opt_global)
+  subroutine alloc_y_real_short(var, opt_global)
 
     implicit none
 
     real(mytype), allocatable, dimension(:,:,:) :: var
-    TYPE(DECOMP_INFO), intent(IN), optional :: opt_decomp
     logical, intent(IN), optional :: opt_global
 
-    TYPE(DECOMP_INFO) :: decomp
+    call alloc_y(var, decomp_main, opt_global)
+
+  end subroutine alloc_y_real_short
+
+  subroutine alloc_y_real(var, decomp, opt_global)
+
+    implicit none
+
+    real(mytype), allocatable, dimension(:,:,:) :: var
+    TYPE(DECOMP_INFO), intent(IN) :: decomp
+    logical, intent(IN), optional :: opt_global
+
     logical :: global
     integer :: alloc_stat, errorcode
-
-    if (present(opt_decomp)) then
-       decomp = opt_decomp
-    else
-       decomp = decomp_main
-    end if
 
     if (present(opt_global)) then
        global = opt_global
@@ -143,23 +155,27 @@
   end subroutine alloc_y_real
 
   ! Y-pencil complex arrays
-  subroutine alloc_y_complex(var, opt_decomp, opt_global)
+  subroutine alloc_y_complex_short(var, opt_global)
 
     implicit none
 
     complex(mytype), allocatable, dimension(:,:,:) :: var
-    TYPE(DECOMP_INFO), intent(IN), optional :: opt_decomp
     logical, intent(IN), optional :: opt_global
 
-    TYPE(DECOMP_INFO) :: decomp
+    call alloc_y(var, decomp_main, opt_global)
+
+  end subroutine alloc_y_complex_short
+
+  subroutine alloc_y_complex(var, decomp, opt_global)
+
+    implicit none
+
+    complex(mytype), allocatable, dimension(:,:,:) :: var
+    TYPE(DECOMP_INFO), intent(IN) :: decomp
+    logical, intent(IN), optional :: opt_global
+
     logical :: global
     integer :: alloc_stat, errorcode
-
-    if (present(opt_decomp)) then
-       decomp = opt_decomp
-    else
-       decomp = decomp_main
-    end if
 
     if (present(opt_global)) then
        global = opt_global
@@ -186,23 +202,27 @@
   end subroutine alloc_y_complex
 
   ! Z-pencil real arrays
-  subroutine alloc_z_real(var, opt_decomp, opt_global)
+  subroutine alloc_z_real_short(var, opt_global)
 
     implicit none
 
     real(mytype), allocatable, dimension(:,:,:) :: var
-    TYPE(DECOMP_INFO), intent(IN), optional :: opt_decomp
     logical, intent(IN), optional :: opt_global
 
-    TYPE(DECOMP_INFO) :: decomp
+    call alloc_z(var, decomp_main, opt_global)
+
+  end subroutine alloc_z_real_short
+
+  subroutine alloc_z_real(var, decomp, opt_global)
+
+    implicit none
+
+    real(mytype), allocatable, dimension(:,:,:) :: var
+    TYPE(DECOMP_INFO), intent(IN) :: decomp
+    logical, intent(IN), optional :: opt_global
+
     logical :: global
     integer :: alloc_stat, errorcode
-
-    if (present(opt_decomp)) then
-       decomp = opt_decomp
-    else
-       decomp = decomp_main
-    end if
 
     if (present(opt_global)) then
        global = opt_global
@@ -229,23 +249,27 @@
   end subroutine alloc_z_real
 
   ! Z-pencil complex arrays
-  subroutine alloc_z_complex(var, opt_decomp, opt_global)
+  subroutine alloc_z_complex_short(var, opt_global)
 
     implicit none
 
     complex(mytype), allocatable, dimension(:,:,:) :: var
-    TYPE(DECOMP_INFO), intent(IN), optional :: opt_decomp
     logical, intent(IN), optional :: opt_global
 
-    TYPE(DECOMP_INFO) :: decomp
+    call alloc_z(var, decomp_main, opt_global)
+
+  end subroutine alloc_z_complex_short
+
+  subroutine alloc_z_complex(var, decomp, opt_global)
+
+    implicit none
+
+    complex(mytype), allocatable, dimension(:,:,:) :: var
+    TYPE(DECOMP_INFO), intent(IN) :: decomp
+    logical, intent(IN), optional :: opt_global
+
     logical :: global
     integer :: alloc_stat, errorcode
-
-    if (present(opt_decomp)) then
-       decomp = opt_decomp
-    else
-       decomp = decomp_main
-    end if
 
     if (present(opt_global)) then
        global = opt_global

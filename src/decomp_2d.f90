@@ -285,17 +285,23 @@ module decomp_2d
 
   interface alloc_x
      module procedure alloc_x_real
+     module procedure alloc_x_real_short
      module procedure alloc_x_complex
+     module procedure alloc_x_complex_short
   end interface alloc_x
 
   interface alloc_y
      module procedure alloc_y_real
+     module procedure alloc_y_real_short
      module procedure alloc_y_complex
+     module procedure alloc_y_complex_short
   end interface alloc_y
 
   interface alloc_z
      module procedure alloc_z_real
+     module procedure alloc_z_real_short
      module procedure alloc_z_complex
+     module procedure alloc_z_complex_short
   end interface alloc_z
 
   interface decomp_2d_abort

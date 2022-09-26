@@ -3,7 +3,12 @@ program fft_physical_x
   use decomp_2d
   use decomp_2d_fft
   use MPI
-  
+#if defined(_GPU) 
+  use cudafor
+  use cufft
+  use openacc 
+#endif
+
   implicit none
   
   integer, parameter :: nx_base=17, ny_base=13, nz_base=11
@@ -27,7 +32,7 @@ program fft_physical_x
   ! To resize the domain we need to know global number of ranks
   ! This operation is also done as part of decomp_2d_init
   call MPI_COMM_SIZE(MPI_COMM_WORLD, nranks_tot, ierror)
-  resize_domain = int(nranks_tot/8)+1
+  resize_domain = int(nranks_tot/4)+1
   nx = nx_base*resize_domain
   ny = ny_base*resize_domain
   nz = nz_base*resize_domain
@@ -70,9 +75,14 @@ program fft_physical_x
      t4 = t4 + MPI_WTIME() - t3
   
      ! normalisation - note 2DECOMP&FFT doesn't normalise
+     !$acc kernels
      in = in / real(nx,mytype) / real(ny,mytype) /real(nz,mytype)
+     !$acc end kernels
 
   end do
+#if defined(_GPU)
+  ierror = cudaDeviceSynchronize()
+#endif
   
   call MPI_ALLREDUCE(t2,t1,1,real_type,MPI_SUM, &
        MPI_COMM_WORLD,ierror)
@@ -152,17 +162,15 @@ program fft_physical_x
      t4 = t4 + MPI_WTIME() - t3
   
      ! normalisation - note 2DECOMP&FFT doesn't normalise
-     do k=xstart(3),xend(3)
-        do j=xstart(2),xend(2)
-           do i=xstart(1),xend(1)
-              in_r(i,j,k) = in_r(i,j,k) &
-                   / (real(nx,mytype)*real(ny,mytype)*real(nz,mytype))
-           end do
-        end do
-     end do
+     !$acc kernels
+     in_r = in_r / (real(nx,mytype)*real(ny,mytype)*real(nz,mytype))
+     !$acc end kernels
 
   end do
-  
+#if defined(_GPU)
+  ierror = cudaDeviceSynchronize()
+#endif 
+
   call MPI_ALLREDUCE(t2,t1,1,real_type,MPI_SUM, &
        MPI_COMM_WORLD,ierror)
   t1 = t1 / real(nproc,mytype)

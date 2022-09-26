@@ -7,11 +7,19 @@ LIBS = -L../../ -l$(LIBDECOMP) $(LIBFFT)
 
 OBJ = fft_physical_z.o
 
+NP ?= 4
+MPIRUN ?= mpirun
+
 fft_physical_z: $(OBJ)
 	$(FC) $(FFLAGS) $(OPT) $(DEFS) $(INC) -o $@ $(OBJ) $(LIBS)
 
+ifeq ($(PARAMOD),gpu)
 check:
-	mpirun -n 4 ./fft_physical_z
+	$(MPIRUN) -n $(NP) ./bind.sh ./fft_physical_z
+else
+check:
+	$(MPIRUN) -n $(NP) ./fft_physical_z
+endif
 
 mem_leak:
 	valgrind --leak-check=full --show-leak-kinds=all mpirun -n 1 ./fft_physical_z 1 1

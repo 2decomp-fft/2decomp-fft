@@ -12,7 +12,7 @@ on:
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
-  # This workflow contains jobs called "bld_gnu_ompi", "bld_gnu_mpich" "bld_nvidia" and "bld_intel"
+  # This workflow contains jobs called "bld_gnu_ompi", "bld_gnu_mpich" "bld_nvidia", "bld_intel", and "bld_fftw3"
   bld_gnu_ompi:
     # The type of runner that the job will run on
     runs-on: ubuntu-latest
@@ -33,7 +33,7 @@ jobs:
       run: make BUILD=debug
 
     - name: Examples
-      run: make examples BUILD=debug
+      run: make examples
 
   bld_gnu_mpich:
     # The type of runner that the job will run on
@@ -55,7 +55,7 @@ jobs:
       run: make BUILD=debug
 
     - name: Examples
-      run: make examples BUILD=debug
+      run: make examples
 
   bld_nvidia:
     # The type of runner that the job will run on
@@ -83,7 +83,7 @@ jobs:
       run: PATH=$TMP:$PATH make CMP=nvhpc BUILD=debug
 
     - name: Examples
-      run: PATH=$TMP:$PATH make examples CMP=nvhpc BUILD=debug
+      run: PATH=$TMP:$PATH make examples
 
   bld_intel:
     # The type of runner that the job will run on
@@ -109,4 +109,26 @@ jobs:
       run: source /opt/intel/oneapi/setvars.sh && make CMP=intel BUILD=debug
 
     - name: Examples
-      run: source /opt/intel/oneapi/setvars.sh && make examples CMP=intel BUILD=debug
+      run: source /opt/intel/oneapi/setvars.sh && make examples
+
+  bld_fftw3:
+    # The type of runner that the job will run on
+    runs-on: ubuntu-latest
+
+    # Steps represent a sequence of tasks that will be executed as part of the job
+    steps:
+    # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+    - uses: actions/checkout@v2
+
+    # Runs a single command using the runners shell
+    - name: Install requirements
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y gfortran openmpi-bin libopenmpi-dev libfftw3-dev
+
+    # Runs a set of commands using the runners shell
+    - name: Compile regular FFTW3
+      run: make clean && make BUILD=debug FFT=fftw3 FFTW3_PATH_INCLUDE=/usr/include FFTW3_PATH_LIB=/usr/lib/x86_64-linux-gnu
+
+    - name: Compile new FFTW3
+      run: make clean && make BUILD=debug FFT=fftw3_f03 FFTW3_PATH_INCLUDE=/usr/include FFTW3_PATH_LIB=/usr/lib/x86_64-linux-gnu

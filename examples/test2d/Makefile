@@ -1,9 +1,10 @@
 #include ../../src/Makefile.inc
 
+
 #INCLUDE = -I../../include
-FFLAGS := $(patsubst -J\ %,-J\ ../../%,$(FFLAGS))
+FFLAGS := $(subst $(MODFLAG),$(MODFLAG)../../,$(FFLAGS))
 FFLAGS := $(patsubst -I%,-I../../%,$(FFLAGS))
-LIBS = -L../../ -l$(LIBDECOMP)
+LIBS = -L../../ -l$(LIBDECOMP) $(LFLAGS)
 
 OBJ = test2d.o
 

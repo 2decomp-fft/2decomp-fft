@@ -1,21 +1,24 @@
 #include ../../src/Makefile.inc
 
 #INCLUDE = -I../../include
-FFLAGS := $(patsubst -J\ %,-J\ ../../%,$(FFLAGS))
+FFLAGS := $(subst $(MODFLAG),$(MODFLAG)../../,$(FFLAGS))
 FFLAGS := $(patsubst -I%,-I../../%,$(FFLAGS))
-LIBS = -L../../ -l$(LIBDECOMP) $(LIBFFT)
+LIBS = -L../../ -l$(LIBDECOMP) $(LIBFFT) $(LFLAGS)
 
 OBJ = fft_physical_x.o
+
+NP ?= 4
+MPIRUN ?= mpirun
 
 fft_physical_x: $(OBJ)
 	$(FC) $(FFLAGS) $(OPT) $(DEFS) $(INC) -o $@ $(OBJ) $(LIBS)
 
 ifeq ($(PARAMOD),gpu)
 check:
-	mpirun -n 4 ./bind.sh ./fft_physical_x
+	$(MPIRUN) -n $(NP) ./bind.sh ./fft_physical_x
 else
 check:
-	mpirun -n 4 ./fft_physical_x
+	$(MPIRUN) -n $(NP) ./fft_physical_x
 endif
 
 mem_leak:

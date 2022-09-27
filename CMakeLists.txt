@@ -55,5 +55,5 @@ endif(FFTW_FOUND)
 #        ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR} 
 #)
 
-add_subdirectory(examples)
-include_directories(examples)
+#add_subdirectory(examples)
+#include_directories(examples)

@@ -35,6 +35,10 @@
     integer :: s1,s2,s3,d1,d2,d3
     integer :: ierror
 
+#ifdef PROFILER
+    if (decomp_profiler_transpose) call decomp_profiler_start("transp_y_x_r")
+#endif
+
     if (present(opt_decomp)) then
        decomp = opt_decomp
     else
@@ -92,8 +96,10 @@
 #if defined(_NCCL)
     nccl_stat = ncclGroupStart()
     do col_rank_id = 0, (col_comm_size - 1)
-     nccl_stat = ncclSend(work1_r_d( decomp%y1disp(col_rank_id)+1 ), decomp%y1cnts(col_rank_id), ncclDouble, local_to_global_col(col_rank_id+1), nccl_comm_2decomp, cuda_stream_2decomp)
-     nccl_stat = ncclRecv(work2_r_d( decomp%x1disp(col_rank_id)+1 ), decomp%x1cnts(col_rank_id), ncclDouble, local_to_global_col(col_rank_id+1), nccl_comm_2decomp, cuda_stream_2decomp)
+     nccl_stat = ncclSend(work1_r_d( decomp%y1disp(col_rank_id)+1 ), decomp%y1cnts(col_rank_id), &
+       ncclDouble, local_to_global_col(col_rank_id+1), nccl_comm_2decomp, cuda_stream_2decomp)
+     nccl_stat = ncclRecv(work2_r_d( decomp%x1disp(col_rank_id)+1 ), decomp%x1cnts(col_rank_id), &
+       ncclDouble, local_to_global_col(col_rank_id+1), nccl_comm_2decomp, cuda_stream_2decomp)
     end do
     nccl_stat = ncclGroupEnd()
     cuda_stat = cudaStreamSynchronize(cuda_stream_2decomp)
@@ -130,7 +136,11 @@
 #endif
 
 #endif
-    
+
+#ifdef PROFILER
+    if (decomp_profiler_transpose) call decomp_profiler_end("transp_y_x_r")
+#endif
+
     return
   end subroutine transpose_y_to_x_real
 
@@ -158,6 +168,10 @@
     
     integer :: s1,s2,s3,d1,d2,d3
     integer :: ierror
+
+#ifdef PROFILER
+    if (decomp_profiler_transpose) call decomp_profiler_start("transp_y_x_c")
+#endif
 
     if (present(opt_decomp)) then
        decomp = opt_decomp
@@ -243,6 +257,10 @@
          decomp%x1dist, decomp)
 #endif
 
+#endif
+
+#ifdef PROFILER
+    if (decomp_profiler_transpose) call decomp_profiler_end("transp_y_x_c")
 #endif
 
     return

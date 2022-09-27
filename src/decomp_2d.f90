@@ -53,15 +53,18 @@ module decomp_2d
   ! some key global variables
   integer, save, public :: nx_global, ny_global, nz_global  ! global size
 
-  integer, save, public :: nrank  ! local MPI rank
-  integer, save, public :: nproc  ! total number of processors
+  integer, save, public :: nrank = -1 ! local MPI rank
+  integer, save, public :: nproc = -1 ! total number of processors
+  integer, save, public :: decomp_2d_comm = MPI_COMM_NULL ! MPI communicator
 
   ! parameters for 2D Cartesian topology
   integer, save, dimension(2) :: dims, coord
   logical, save, dimension(2) :: periodic
-  integer, save, public :: DECOMP_2D_COMM_CART_X, &
-       DECOMP_2D_COMM_CART_Y, DECOMP_2D_COMM_CART_Z
-  integer, save :: DECOMP_2D_COMM_ROW, DECOMP_2D_COMM_COL
+  integer, save, public :: DECOMP_2D_COMM_CART_X = MPI_COMM_NULL
+  integer, save, public :: DECOMP_2D_COMM_CART_Y = MPI_COMM_NULL
+  integer, save, public :: DECOMP_2D_COMM_CART_Z = MPI_COMM_NULL
+  integer, save :: DECOMP_2D_COMM_ROW = MPI_COMM_NULL
+  integer, save :: DECOMP_2D_COMM_COL = MPI_COMM_NULL
 
   ! define neighboring blocks (to be used in halo-cell support)
   !  first dimension 1=X-pencil, 2=Y-pencil, 3=Z-pencil
@@ -70,6 +73,28 @@ module decomp_2d
 
   ! flags for periodic condition in three dimensions
   logical, save :: periodic_x, periodic_y, periodic_z
+
+  !
+  ! Debug level can be changed by the external code before calling decomp_2d_init
+  !
+  ! The environment variable "DECOMP_2D_DEBUG" can be used to change the debug level
+  !
+  ! Debug checks are performed only when the preprocessor variable DEBUG is defined
+  !
+  enum, bind(c)
+     enumerator :: D2D_DEBUG_LEVEL_OFF = 0
+     enumerator :: D2D_DEBUG_LEVEL_CRITICAL = 1
+     enumerator :: D2D_DEBUG_LEVEL_ERROR = 2
+     enumerator :: D2D_DEBUG_LEVEL_WARN = 3
+     enumerator :: D2D_DEBUG_LEVEL_INFO = 4
+     enumerator :: D2D_DEBUG_LEVEL_DEBUG = 5
+     enumerator :: D2D_DEBUG_LEVEL_TRACE = 6
+  end enum
+#ifdef DEBUG
+  integer(kind(D2D_DEBUG_LEVEL_OFF)), public, save :: decomp_debug = D2D_DEBUG_LEVEL_INFO
+#else
+  integer(kind(D2D_DEBUG_LEVEL_OFF)), public, save :: decomp_debug = D2D_DEBUG_LEVEL_OFF
+#endif
 
 #if defined(_GPU)
 #if defined(_NCCL)
@@ -186,12 +211,31 @@ module decomp_2d
   integer, save :: iskipV, jskipV, kskipV
   integer, save :: iskipP, jskipP, kskipP
 
+  !
+  ! Profiler section
+  !
+  ! Integer to select the profiling tool
+  !    0 => no profiling, default
+  !    1 => Caliper (https://github.com/LLNL/Caliper)
+  !
+  enum, bind(c)
+    enumerator :: decomp_profiler_none = 0
+    enumerator :: decomp_profiler_caliper = 1
+  end enum
+  integer(kind(decomp_profiler_none)), save, public :: decomp_profiler = decomp_profiler_none
+  ! Default : profile everything
+  logical, save, public :: decomp_profiler_transpose = .true.
+  logical, save, public :: decomp_profiler_io = .true.
+  logical, save, public :: decomp_profiler_fft = .true.
+  logical, save, public :: decomp_profiler_d2d = .true.
+
   ! public user routines
   public :: decomp_2d_init, decomp_2d_finalize, &
        transpose_x_to_y, transpose_y_to_z, &
        transpose_z_to_y, transpose_y_to_x, &
        decomp_info_init, decomp_info_finalize, partition, &
-       decomp_info_print, &
+       decomp_info_print, decomp_profiler_prep, &
+       decomp_profiler_start, decomp_profiler_end, &
        init_coarser_mesh_statS,fine_to_coarseS,&
        init_coarser_mesh_statV,fine_to_coarseV,&
        init_coarser_mesh_statP,fine_to_coarseP,&
@@ -296,6 +340,46 @@ module decomp_2d
 
   end interface
 
+   ! Generic interface to initialize the profiler
+   interface decomp_profiler_init
+      module subroutine decomp_profiler_init_noarg
+      end subroutine decomp_profiler_init_noarg
+   end interface decomp_profiler_init
+
+   ! Generic interface to finalize the profiler
+   interface decomp_profiler_fin
+      module subroutine decomp_profiler_fin_noarg
+      end subroutine decomp_profiler_fin_noarg
+   end interface decomp_profiler_fin
+
+   ! Generic interface for the profiler to log setup
+   interface decomp_profiler_log
+      module subroutine decomp_profiler_log_int(io_unit)
+         integer, intent(in) :: io_unit
+      end subroutine decomp_profiler_log_int
+   end interface decomp_profiler_log
+
+   ! Generic interface to prepare the profiler before init.
+   interface decomp_profiler_prep
+      module subroutine decomp_profiler_prep_bool(profiler_setup)
+         logical, dimension(4), intent(in), optional :: profiler_setup
+      end subroutine decomp_profiler_prep_bool
+   end interface decomp_profiler_prep
+
+   ! Generic interface for the profiler to start a given timer
+   interface decomp_profiler_start
+      module subroutine decomp_profiler_start_char(timer_name)
+         character(len=*), intent(in) :: timer_name
+      end subroutine decomp_profiler_start_char
+   end interface decomp_profiler_start
+
+   ! Generic interface for the profiler to end a given timer
+   interface decomp_profiler_end
+      module subroutine decomp_profiler_end_char(timer_name)
+         character(len=*), intent(in) :: timer_name
+      end subroutine decomp_profiler_end_char
+   end interface decomp_profiler_end
+
 contains
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -307,7 +391,7 @@ contains
   !     all internal data structures initialised properly
   !     library ready to use
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  subroutine decomp_2d_init(nx,ny,nz,p_row,p_col,periodic_bc)
+  subroutine decomp_2d_init(nx,ny,nz,p_row,p_col,periodic_bc,comm)
 
     use iso_fortran_env, only : output_unit
 
@@ -316,10 +400,47 @@ contains
     integer, intent(IN) :: nx,ny,nz
     integer, intent(INOUT) :: p_row,p_col
     logical, dimension(3), intent(IN), optional :: periodic_bc
+    integer, intent(in), optional :: comm
 
     integer :: errorcode, ierror, row, col, iounit
 #ifdef DEBUG
-    character(len=3) fname
+    character(len=7) fname ! Sufficient for up to O(1M) ranks
+#endif
+
+#ifdef PROFILER
+    ! Prepare the profiler if it was not already prepared
+    if (decomp_profiler.eq.decomp_profiler_none) call decomp_profiler_prep()
+    ! Start the profiler
+    call decomp_profiler_init()
+    ! Start the timer for decomp_2d_init
+    if (decomp_profiler_d2d) call decomp_profiler_start("decomp_2d_init")
+#endif
+
+    ! Use the provided MPI communicator if present
+    if (present(comm)) then
+       decomp_2d_comm = comm
+    else
+       decomp_2d_comm = MPI_COMM_WORLD
+    endif
+
+    ! If the external code has not set nrank and nproc
+    if (nrank == -1) then
+       call MPI_COMM_RANK(decomp_2d_comm, nrank, ierror)
+       if (ierror /= 0) call decomp_2d_abort(__FILE__, &
+                                             __LINE__, &
+                                             ierror, &
+                                             "MPI_COMM_RANK")
+    endif
+    if (nproc == -1) then
+       call MPI_COMM_SIZE(decomp_2d_comm, nproc, ierror)
+       if (ierror /= 0) call decomp_2d_abort(__FILE__, &
+                                             __LINE__, &
+                                             ierror, &
+                                             "MPI_COMM_SIZE")
+    endif
+#ifdef DEBUG
+    ! Check if a modification of the debug level is needed
+    call decomp_2d_debug()
 #endif
 
     nx_global = nx
@@ -362,18 +483,18 @@ contains
     dims(2) = col
     periodic(1) = periodic_y
     periodic(2) = periodic_z
-    call MPI_CART_CREATE(MPI_COMM_WORLD,2,dims,periodic, &
+    call MPI_CART_CREATE(decomp_2d_comm,2,dims,periodic, &
          .false., &  ! do not reorder rank
          DECOMP_2D_COMM_CART_X, ierror)
     if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_CART_CREATE")
     periodic(1) = periodic_x
     periodic(2) = periodic_z
-    call MPI_CART_CREATE(MPI_COMM_WORLD,2,dims,periodic, &
+    call MPI_CART_CREATE(decomp_2d_comm,2,dims,periodic, &
          .false., DECOMP_2D_COMM_CART_Y, ierror)
     if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_CART_CREATE")
     periodic(1) = periodic_x
     periodic(2) = periodic_y
-    call MPI_CART_CREATE(MPI_COMM_WORLD,2,dims,periodic, &
+    call MPI_CART_CREATE(decomp_2d_comm,2,dims,periodic, &
          .false., DECOMP_2D_COMM_CART_Z, ierror)
     if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_CART_CREATE")
 
@@ -443,7 +564,7 @@ contains
     if (nrank .eq. 0) then
        nccl_stat = ncclGetUniqueId(nccl_uid_2decomp)
     end if
-    call MPI_Bcast(nccl_uid_2decomp, int(sizeof(ncclUniqueId)), MPI_BYTE, 0, MPI_COMM_WORLD, ierror)
+    call MPI_Bcast(nccl_uid_2decomp, int(sizeof(ncclUniqueId)), MPI_BYTE, 0, decomp_2d_comm, ierror)
     if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_BCAST")
 
     nccl_stat = ncclCommInitRank(nccl_comm_2decomp, nproc, nccl_uid_2decomp, nrank)
@@ -455,7 +576,7 @@ contains
     ! Select the IO unit for decomp_2d setup
     !
 #ifdef DEBUG
-    write(fname, "(I3.3)") nrank
+    write(fname, "(I0)") nrank ! Adapt to magnitude of nrank
     open(newunit=iounit, file='decomp_2d_setup_'//trim(fname)//'.log', iostat=ierror)
 #else
     if (nrank == 0) then
@@ -478,6 +599,11 @@ contains
        if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "Could not close log file")
     endif
 
+#ifdef PROFILER
+    ! Stop the timer for decomp_2d_init
+    if (decomp_profiler_d2d) call decomp_profiler_end("decomp_2d_init")
+#endif
+
     return
   end subroutine decomp_2d_init
 
@@ -489,18 +615,16 @@ contains
 
     implicit none
 
-    integer :: ierror
+#ifdef PROFILER
+    if (decomp_profiler_d2d) call decomp_profiler_start("decomp_2d_fin")
+#endif
 
-    call MPI_COMM_FREE(DECOMP_2D_COMM_ROW, ierror)
-    if (ierror /= 0) call decomp_2d_warning(__FILE__, __LINE__, ierror, "MPI_COMM_FREE")
-    call MPI_COMM_FREE(DECOMP_2D_COMM_COL, ierror)
-    if (ierror /= 0) call decomp_2d_warning(__FILE__, __LINE__, ierror, "MPI_COMM_FREE")
-    call MPI_COMM_FREE(DECOMP_2D_COMM_CART_X, ierror)
-    if (ierror /= 0) call decomp_2d_warning(__FILE__, __LINE__, ierror, "MPI_COMM_FREE")
-    call MPI_COMM_FREE(DECOMP_2D_COMM_CART_Y, ierror)
-    if (ierror /= 0) call decomp_2d_warning(__FILE__, __LINE__, ierror, "MPI_COMM_FREE")
-    call MPI_COMM_FREE(DECOMP_2D_COMM_CART_Z, ierror)
-    if (ierror /= 0) call decomp_2d_warning(__FILE__, __LINE__, ierror, "MPI_COMM_FREE")
+    call decomp_mpi_comm_free(DECOMP_2D_COMM_ROW)
+    call decomp_mpi_comm_free(DECOMP_2D_COMM_COL)
+    call decomp_mpi_comm_free(DECOMP_2D_COMM_CART_X)
+    call decomp_mpi_comm_free(DECOMP_2D_COMM_CART_Y)
+    call decomp_mpi_comm_free(DECOMP_2D_COMM_CART_Z)
+
     call decomp_info_finalize(decomp_main)
 
     decomp_buf_size = 0
@@ -513,9 +637,37 @@ contains
 #endif
 #endif
 
+    nrank = -1
+    nproc = -1
+
+#ifdef PROFILER
+    if (decomp_profiler_d2d) call decomp_profiler_end("decomp_2d_fin")
+    ! Finalize the profiler
+    call decomp_profiler_fin()
+#endif
+
     return
   end subroutine decomp_2d_finalize
 
+  !
+  ! Small wrapper to free a MPI communicator
+  !
+  subroutine decomp_mpi_comm_free(mpi_comm)
+
+    implicit none
+
+    integer, intent(inout) :: mpi_comm
+    integer :: ierror
+
+    ! Return if no MPI comm to free
+    if (mpi_comm == MPI_COMM_NULL) return
+
+    ! Free the provided MPI communicator
+    call MPI_COMM_FREE(mpi_comm, ierror)
+    if (ierror /= 0) call decomp_2d_warning(__FILE__, __LINE__, ierror, "MPI_COMM_FREE")
+    mpi_comm = MPI_COMM_NULL
+
+  end subroutine decomp_mpi_comm_free
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   ! Return the default decomposition object
@@ -1313,7 +1465,6 @@ contains
     !         et le calcul plantait dans MPI_ALLTOALLV
     !       * pas de plantage en O2
 
-    character(len=100) :: tmp_char
     if (nrank==0) then
        open(newunit=i, file='temp.dat', form='unformatted')
        write(i) decomp%x1dist,decomp%y1dist,decomp%y2dist,decomp%z2dist, &
@@ -1514,7 +1665,7 @@ contains
 
     ! maxcor
     call MPI_ALLREDUCE(ncores, maxcor, 1, MPI_INTEGER, MPI_MAX, &
-         MPI_COMM_WORLD, ierror)
+         decomp_2d_comm, ierror)
     if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_ALLREDUCE")
 
     call FIPC_finalize(ierror)
@@ -1775,7 +1926,7 @@ contains
        write(error_unit,*) '2DECOMP&FFT ERROR - errorcode: ', errorcode
        write(error_unit,*) 'ERROR MESSAGE: ' // msg
     end if
-    call MPI_ABORT(MPI_COMM_WORLD,errorcode,ierror)
+    call MPI_ABORT(decomp_2d_comm,errorcode,ierror)
 
   end subroutine decomp_2d_abort_basic
 
@@ -1802,7 +1953,7 @@ contains
        write(error_unit,*) '           line  ', line
        write(error_unit,*) '  error message: ' // msg
     end if
-    call MPI_ABORT(MPI_COMM_WORLD,errorcode,ierror)
+    call MPI_ABORT(decomp_2d_comm,errorcode,ierror)
 
   end subroutine decomp_2d_abort_file_line
 
@@ -1853,5 +2004,43 @@ contains
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 #include "alloc.f90"
 
+#ifdef DEBUG
+  !
+  ! Try to read the environment variable DECOMP_2D_DEBUG to change the debug level
+  !
+  ! The expected value is an integer below 9999
+  !
+  subroutine decomp_2d_debug
+
+    implicit none
+
+    integer :: ierror
+    character(len=4) :: val
+    character(len=*), parameter :: varname = "DECOMP_2D_DEBUG"
+
+    ! Read the variable
+    call get_environment_variable(varname, value=val, status=ierror)
+
+    ! Return if no variable, or no support for env. variable
+    if (ierror >= 1) return
+
+    ! Minor error, print warning and return
+    if (ierror /= 0) then
+       call decomp_2d_warning(__FILE__, &
+                              __LINE__, &
+                              ierror, &
+                              "Error when reading DECOMP_2D_DEBUG : "//val)
+       return
+    endif
+
+    ! Conversion to integer if possible
+    read(val, '(i4)', iostat=ierror) decomp_debug
+    if (ierror /= 0) call decomp_2d_warning(__FILE__, &
+                                            __LINE__, &
+                                            ierror, &
+                                            "Error when reading DECOMP_2D_DEBUG : "//val)
+
+  end subroutine decomp_2d_debug
+#endif
 
 end module decomp_2d

@@ -85,6 +85,8 @@ end subroutine fft_init_arg
 ! Initialise the FFT library to perform arbitrary size transforms
 subroutine fft_init_general(pencil, nx, ny, nz)
 
+use mpi
+  
 implicit none
 
 integer, intent(IN) :: pencil
@@ -93,6 +95,10 @@ integer, intent(IN) :: nx, ny, nz
 logical, dimension(2) :: dummy_periods
 integer, dimension(2) :: dummy_coords
 integer :: status, errorcode, ierror
+
+#ifdef PROFILER
+if (decomp_profiler_fft) call decomp_profiler_start("fft_init")
+#endif
 
 if (initialised) then
 errorcode = 4
@@ -140,6 +146,10 @@ call init_fft_engine
 
 initialised = .true.
 
+#ifdef PROFILER
+if (decomp_profiler_fft) call decomp_profiler_end("fft_init")
+#endif
+
 return
 end subroutine fft_init_general
 
@@ -151,6 +161,10 @@ subroutine decomp_2d_fft_finalize
 
 implicit none
 
+#ifdef PROFILER
+if (decomp_profiler_fft) call decomp_profiler_start("fft_fin")
+#endif
+
 call decomp_info_finalize(ph)
 call decomp_info_finalize(sp)
 
@@ -161,6 +175,10 @@ if (allocated(wk13)) deallocate(wk13)
 call finalize_fft_engine
 
 initialised = .false.
+
+#ifdef PROFILER
+if (decomp_profiler_fft) call decomp_profiler_end("fft_fin")
+#endif
 
 return
 end subroutine decomp_2d_fft_finalize

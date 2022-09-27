@@ -25,6 +25,7 @@
 #if defined(_NCCL)
     integer :: row_rank_id
 #endif
+    integer :: istat
 #endif
 
 #ifdef SHM
@@ -33,7 +34,11 @@
 #endif
     
     integer :: s1,s2,s3,d1,d2,d3
-    integer :: ierror, istat
+    integer :: ierror
+
+#ifdef PROFILER
+    if (decomp_profiler_transpose) call decomp_profiler_start("transp_y_z_r")
+#endif
 
     if (present(opt_decomp)) then
        decomp = opt_decomp
@@ -98,8 +103,10 @@
 #if defined(_NCCL)
     nccl_stat = ncclGroupStart()
     do row_rank_id = 0, (row_comm_size - 1)
-        nccl_stat = ncclSend(work1_r_d( decomp%y2disp(row_rank_id)+1 ), decomp%y2cnts(row_rank_id), ncclDouble, local_to_global_row(row_rank_id+1), nccl_comm_2decomp, cuda_stream_2decomp)
-        nccl_stat = ncclRecv(work2_r_d( decomp%z2disp(row_rank_id)+1 ), decomp%z2cnts(row_rank_id), ncclDouble, local_to_global_row(row_rank_id+1), nccl_comm_2decomp, cuda_stream_2decomp)
+        nccl_stat = ncclSend(work1_r_d( decomp%y2disp(row_rank_id)+1 ), decomp%y2cnts(row_rank_id), &
+          ncclDouble, local_to_global_row(row_rank_id+1), nccl_comm_2decomp, cuda_stream_2decomp)
+        nccl_stat = ncclRecv(work2_r_d( decomp%z2disp(row_rank_id)+1 ), decomp%z2cnts(row_rank_id), &
+          ncclDouble, local_to_global_row(row_rank_id+1), nccl_comm_2decomp, cuda_stream_2decomp)
     end do
     nccl_stat = ncclGroupEnd()
     cuda_stat = cudaStreamSynchronize(cuda_stream_2decomp)
@@ -141,7 +148,11 @@
 
 #endif
 #endif
-    
+
+#ifdef PROFILER
+    if (decomp_profiler_transpose) call decomp_profiler_end("transp_y_z_r")
+#endif
+
     return
   end subroutine transpose_y_to_z_real
 
@@ -160,6 +171,7 @@
 #if defined(_NCCL)
     integer :: row_rank_id
 #endif
+    integer :: istat
 #endif
 
 #ifdef SHM
@@ -168,7 +180,11 @@
 #endif
     
     integer :: s1,s2,s3,d1,d2,d3
-    integer :: ierror, istat
+    integer :: ierror
+
+#ifdef PROFILER
+    if (decomp_profiler_transpose) call decomp_profiler_start("transp_y_z_c")
+#endif
 
     if (present(opt_decomp)) then
        decomp = opt_decomp
@@ -264,6 +280,10 @@
 #endif
 
 #endif
+#endif
+
+#ifdef PROFILER
+    if (decomp_profiler_transpose) call decomp_profiler_end("transp_y_z_c")
 #endif
 
     return

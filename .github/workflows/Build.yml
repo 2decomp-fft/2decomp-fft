@@ -85,6 +85,9 @@ jobs:
     - name: Examples
       run: PATH=$TMP:$PATH make examples
 
+    - name: GPU version
+      run: make clean && PATH=$TMP:$PATH make CMP=nvhpc FFT=cufft PARAMOD=gpu CUFFT_PATH=/opt/nvidia/hpc_sdk/Linux_x86_64/22.7/compilers
+
   bld_intel:
     # The type of runner that the job will run on
     runs-on: ubuntu-latest

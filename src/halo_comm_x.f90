@@ -73,25 +73,33 @@
     ijump = s1 * (s2 + 2*level_y)
     call MPI_TYPE_VECTOR(icount, ilength, ijump, &
       data_type, halo12, ierror)
+    if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_TYPE_VECTOR")
     call MPI_TYPE_COMMIT(halo12, ierror)
+    if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_TYPE_COMMIT")
     ! receive from south
     call MPI_IRECV(inout(xs,ys,zs), 1, halo12, &
       neighbour(1,4), tag_s, DECOMP_2D_COMM_CART_X, &
       requests(1), ierror)
+    if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_IRECV")
     ! receive from north
     call MPI_IRECV(inout(xs,ye-level_y+1,zs), 1, halo12, &
       neighbour(1,3), tag_n, DECOMP_2D_COMM_CART_X, &
       requests(2), ierror)
+    if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_IRECV")
     ! send to south
     call MPI_ISSEND(inout(xs,ys+level_y,zs), 1, halo12, &
       neighbour(1,4), tag_s, DECOMP_2D_COMM_CART_X, &
       requests(3), ierror)
+    if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_ISSEND")
     ! send to north
     call MPI_ISSEND(inout(xs,ye-level_y-level_y+1,zs), 1, halo12, &
       neighbour(1,3), tag_n, DECOMP_2D_COMM_CART_X, &
       requests(4), ierror)
+    if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_ISSEND")
     call MPI_WAITALL(4, requests, status, ierror)
+    if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_WAITALL")
     call MPI_TYPE_FREE(halo12, ierror)
+    if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_TYPE_FREE")
 #ifdef HALO_DEBUG
     if (nrank==4) then
       write(*,*) 'After exchange in Y'
@@ -116,19 +124,24 @@
     call MPI_IRECV(inout(xs,ys,zs), icount, data_type, &
       neighbour(1,6), tag_b, DECOMP_2D_COMM_CART_X, &
       requests(1), ierror)
+    if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_IRECV")
     ! receive from top
     call MPI_IRECV(inout(xs,ys,ze-level_z+1), icount, data_type, &
       neighbour(1,5), tag_t, DECOMP_2D_COMM_CART_X, &
       requests(2), ierror)
+    if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_IRECV")
     ! send to bottom
     call MPI_ISSEND(inout(xs,ys,zs+level_z), icount, data_type, &
       neighbour(1,6), tag_b, DECOMP_2D_COMM_CART_X, &
       requests(3), ierror)
+    if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_ISSEND")
     ! send to top
     call MPI_ISSEND(inout(xs,ys,ze-level_z-level_z+1), icount, data_type, &
       neighbour(1,5), tag_t, DECOMP_2D_COMM_CART_X, &
       requests(4), ierror)
+    if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_ISSEND")
     call MPI_WAITALL(4, requests, status, ierror)
+    if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_WAITALL")
 
 #ifdef HALO_DEBUG
     if (nrank==4) then

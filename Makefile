@@ -127,6 +127,7 @@ clean-examples:
 .PHONY: Makefile.settings
 
 Makefile.settings:
+	echo "FC = $(FC)" > $@
 	echo "FFLAGS = $(FFLAGS)" > $@
 	echo "OPT = $(OPT)" >> $@
 	echo "DEFS = $(DEFS)" >> $@

@@ -57,8 +57,8 @@ else ifeq ($(FFT),mkl)
   LIBFFT=-Wl,--start-group $(MKLROOT)/lib/intel64/libmkl_intel_lp64.a $(MKLROOT)/lib/intel64/libmkl_sequential.a $(MKLROOT)/lib/intel64/libmkl_core.a -Wl,--end-group -lpthread
   INC=-I$(MKLROOT)/include
 else ifeq ($(FFT),cufft)
-  #CUFFT_PATH=/opt/nvidia/hpc_sdk/Linux_x86_64/22.1/math_libs                                
-  INC=-I${NVHPC}/Linux_x86_64/${EBVERSIONNVHPC}/compilers/include
+  CUFFT_PATH ?= $(NVHPC)/Linux_x86_64/$(EBVERSIONNVHPC)/compilers
+  INC=-I$(CUFFT_PATH)/include
   #LIBFFT=-L$(CUFFT_PATH)/lib64 -Mcudalib=cufft 
 endif
 

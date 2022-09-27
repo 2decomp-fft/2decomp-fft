@@ -95,6 +95,9 @@ submodule (decomp_2d) d2d_log
     write (io_unit, *) 'Compile flag DEBUG detected'
     write (io_unit, *) '   debug level : ', decomp_debug
 #endif
+#ifdef PROFILER
+    write (io_unit, *) 'Compile flag PROFILER detected'
+#endif
 #ifdef SHM
     write (io_unit, *) 'Compile flag SHM detected'
 #endif
@@ -118,6 +121,15 @@ submodule (decomp_2d) d2d_log
 #endif
 #ifdef _NCCL
     write (io_unit, *) 'Compile flag _NCCL detected'
+#endif
+    write (io_unit, *) '==========================================================='
+    write (io_unit, *) 'Profiler id : ', decomp_profiler
+#ifdef PROFILER
+    call decomp_profiler_log(io_unit)
+    write(io_unit, *) "   Profiling transpose : ", decomp_profiler_transpose
+    write(io_unit, *) "   Profiling IO : ", decomp_profiler_io
+    write(io_unit, *) "   Profiling FFT : ", decomp_profiler_fft
+    write(io_unit, *) "   Profiling decomp_2d : ", decomp_profiler_d2d
 #endif
     write (io_unit, *) '==========================================================='
     ! Info about each decomp_info object

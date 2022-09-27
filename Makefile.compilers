@@ -55,7 +55,7 @@ else ifeq ($(CMP),gcc)
       FFLAGS += -Wimplicit-procedure -Wimplicit-interface
     endif
     FFLAGS += -Wno-unused-function
-    FFLAGS += -Werror
+    FFLAGS += -Werror -Wno-integer-division
   endif
 
 else ifeq ($(CMP),nagfor)

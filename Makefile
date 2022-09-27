@@ -128,7 +128,7 @@ clean-examples:
 
 Makefile.settings:
 	echo "FC = $(FC)" > $@
-	echo "FFLAGS = $(FFLAGS)" > $@
+	echo "FFLAGS = $(FFLAGS)" >> $@
 	echo "OPT = $(OPT)" >> $@
 	echo "DEFS = $(DEFS)" >> $@
 	echo "INC = $(INC)" >> $@

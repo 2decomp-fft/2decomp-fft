@@ -35,6 +35,10 @@
     integer :: s1,s2,s3,d1,d2,d3
     integer :: ierror
 
+#ifdef PROFILER
+    if (decomp_profiler_transpose) call decomp_profiler_start("transp_z_y_r")
+#endif
+
     if (present(opt_decomp)) then
        decomp = opt_decomp
     else
@@ -140,7 +144,11 @@
 #endif
 
 #endif
-    
+
+#ifdef PROFILER
+    if (decomp_profiler_transpose) call decomp_profiler_end("transp_z_y_r")
+#endif
+
     return
   end subroutine transpose_z_to_y_real
 
@@ -168,6 +176,10 @@
     
     integer :: s1,s2,s3,d1,d2,d3
     integer :: ierror
+
+#ifdef PROFILER
+    if (decomp_profiler_transpose) call decomp_profiler_start("transp_z_y_c")
+#endif
 
     if (present(opt_decomp)) then
        decomp = opt_decomp
@@ -264,6 +276,10 @@
          decomp%y2dist, decomp)
 #endif
 
+#endif
+
+#ifdef PROFILER
+    if (decomp_profiler_transpose) call decomp_profiler_end("transp_z_y_c")
 #endif
 
     return

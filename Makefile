@@ -12,7 +12,7 @@ DEFS = -DDOUBLE_PREC -DVERSION=\"$(GIT_VERSION)\"
 
 LCL = local# local,lad,sdu,archer
 CMP = gcc# intel,gcc,nagfor,cray,nvhpc
-FFT ?= generic# fftw3,fftw3_f03,generic,mkl
+FFT ?= generic# fftw3,fftw3_f03,generic,mkl,cufft
 PARAMOD = mpi # multicore,gpu
 PROFILER ?= none# none, caliper
 

@@ -18,11 +18,13 @@ check:
 	cd fft_physical_z; $(MAKE) $@
 	cd fft_physical_x; $(MAKE) $@
 	cd halo_test; $(MAKE) $@
+	cd io_test; $(MAKE) $@
 
 clean:
 	cd test2d; $(MAKE) $@
 	cd fft_physical_z; $(MAKE) $@
 	cd fft_physical_x; $(MAKE) $@
 	cd halo_test; $(MAKE) $@
+	cd io_test; $(MAKE) $@
 
 export

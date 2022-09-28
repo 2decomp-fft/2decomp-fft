@@ -33,7 +33,7 @@ CMPINC = Makefile.compilers
 include $(CMPINC)
 
 ### List of files for the main code
-SRCDECOMP = decomp_2d.f90 d2d_log.f90
+SRCDECOMP = decomp_2d.f90 d2d_log.f90 io.f90
 
 #######FFT settings##########
 ifeq ($(FFT),fftw3)
@@ -49,7 +49,7 @@ else ifeq ($(FFT),fftw3_f03)
   INC=-I$(FFTW3_PATH_INCLUDE)
   LIBFFT=-L$(FFTW3_PATH_LIB) -lfftw3 -lfftw3f
 else ifeq ($(FFT),generic)
-  SRCDECOMP := $(SRCDECOMP) ./glassman.f90
+  SRCDECOMP += ./glassman.f90
   INC=
   LIBFFT=
 else ifeq ($(FFT),mkl)
@@ -57,14 +57,23 @@ else ifeq ($(FFT),mkl)
   LIBFFT=-Wl,--start-group $(MKLROOT)/lib/intel64/libmkl_intel_lp64.a $(MKLROOT)/lib/intel64/libmkl_sequential.a $(MKLROOT)/lib/intel64/libmkl_core.a -Wl,--end-group -lpthread
   INC=-I$(MKLROOT)/include
 else ifeq ($(FFT),cufft)
-<<<<<<< HEAD
-  CUFFT_PATH=${NVHPC}/Linux_x86_64/${EBVERSIONNVHPC}/compilers
-  INC=-I${CUFFT_PATH}/include
-=======
   CUFFT_PATH ?= $(NVHPC)/Linux_x86_64/$(EBVERSIONNVHPC)/compilers
   INC=-I$(CUFFT_PATH)/include
->>>>>>> 86037588b48c16fd9423ccd2264350b9db37e6f9
   #LIBFFT=-L$(CUFFT_PATH)/lib64 -Mcudalib=cufft 
+endif
+
+### IO Options ###
+LIBIO :=
+OPTIO :=
+INCIO :=
+ADIOS2DIR :=
+ifeq ($(IO),adios2)
+  ifeq ($(ADIOS2DIR),)
+    $(error Set ADIOS2DIR=/path/to/adios2/install/)
+  endif
+  OPTIO := -DADIOS2 $(OPT)
+  INCIO := $(INC) $(shell $(ADIOS2DIR)/bin/adios2-config --fortran-flags) #$(patsubst $(shell $(ADIOS2DIR)/bin/adios2-config --fortran-libs),,$(shell $(ADIOS2DIR)/bin/adios2-config -f))
+  LIBIO := $(shell $(ADIOS2DIR)/bin/adios2-config --fortran-libs)
 endif
 
 ### Add the profiler if needed
@@ -92,6 +101,9 @@ OBJDIR = obj
 SRCDIR = src
 DECOMPINC = mod
 FFLAGS += $(MODFLAG)$(DECOMPINC) -I$(DECOMPINC)
+
+OPT += $(OPTIO)
+INC += $(INCIO)
 
 include Makefile.settings
 
@@ -139,5 +151,6 @@ Makefile.settings:
 	echo "INC = $(INC)" >> $@
 	echo "LIBOPT = $(LIBOPT)" >> $@
 	echo "LIBFFT = ${LIBFFT}" >> $@
+	echo "LFLAGS = $(LFLAGS)" >> $@
 
 export

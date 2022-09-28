@@ -21,6 +21,14 @@ specifying options between builds.
 To perform a clean build run `make clean` first, this will delete all
 output files, including `Makefile.settings`.
 
+On each build of the library (`make`, `make all`) a temporary file `Makefile.settings` with
+all current options (`FFLAGS`, `DEFS`, etc.) will be created, and included
+on subsequent invocations, the user therefore does not need to keep
+specifying options between builds.
+
+To perform a clean build run `make clean` first, this will delete all
+output files, including `Makefile.settings`.
+
 ## Testing and examples
 
 Various example code to exercise 2decomp functionality can be found under ``examples/``

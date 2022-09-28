@@ -24,6 +24,9 @@ endif
 mem_leak:
 	valgrind --leak-check=full --show-leak-kinds=all $(MPIRUN) -n 1 ./fft_physical_z 1 1
 
+mem_leak:
+	valgrind --leak-check=full --show-leak-kinds=all mpirun -n 1 ./timing 1 1
+
 clean:
 	rm -f *.o fft_physical_z *.log
 

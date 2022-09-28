@@ -23,10 +23,6 @@ program fft_physical_z
   complex(mytype), allocatable, dimension(:,:,:) :: in, out
   real(mytype), allocatable, dimension(:,:,:) :: in_r
 
-  complex(mytype), allocatable, dimension(:,:,:) :: out_c_calc_print
-  real(mytype), allocatable, dimension(:,:,:) :: in_r_ref_print, in_r_calc_print
-  integer, allocatable, dimension(:,:,:) :: rank_loc, rank_glob
-  
   integer, dimension(3) :: fft_start, fft_end, fft_size
   
   real(mytype) :: dr,di, error, err_all, n1,flops

@@ -22,7 +22,7 @@ check:
 endif
 
 mem_leak:
-	valgrind --leak-check=full --show-leak-kinds=all mpirun -n 1 ./fft_physical_x 1 1
+	valgrind --leak-check=full --show-leak-kinds=all $(MPIRUN) -n 1 ./fft_physical_x 1 1
 
 clean:
 	rm -f *.o fft_physical_x *.log

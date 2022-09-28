@@ -16,6 +16,9 @@ fft_test_r2c: $(OBJ)
 check:
 	$(MPIRUN) -n $(NP) ./fft_test_r2c
 
+check:
+	$(MPIRUN) -n $(NP) ./fft_test_r2c
+
 clean:
 	rm -f *.o fft_test_r2c *.log
 

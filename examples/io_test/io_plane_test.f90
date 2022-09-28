@@ -3,12 +3,12 @@ program io_plane_test
   use mpi
 
   use decomp_2d
-  ! use decomp_2d_io
+  use decomp_2d_io
 
   implicit none
 
   integer, parameter :: nx=17, ny=13, nz=11
-  integer :: p_row=4, p_col=3
+  integer :: p_row=0, p_col=0
 
   real(mytype), dimension(nx,ny,nz) :: data1
   real(mytype), allocatable, dimension(:,:,:) :: u1, u2, u3
@@ -45,21 +45,21 @@ program io_plane_test
       end do
     end do
   end do
-  ! call decomp_2d_write_plane(1,u1,1,nx/2,'x_pencil-x_plane.dat')
-  ! call decomp_2d_write_plane(1,u1,2,ny/2,'x_pencil-y_plane.dat')
-  ! call decomp_2d_write_plane(1,u1,3,nz/2,'x_pencil-z_plane.dat')
+  call decomp_2d_write_plane(1,u1,1,nx/2,'.','x_pencil-x_plane.dat','test')
+  call decomp_2d_write_plane(1,u1,2,ny/2,'.','x_pencil-y_plane.dat','test')
+  call decomp_2d_write_plane(1,u1,3,nz/2,'.','x_pencil-z_plane.dat','test')
 
-  ! ! Y-pencil data
-  ! call transpose_x_to_y(u1,u2)
-  ! call decomp_2d_write_plane(2,u2,1,nx/2,'y_pencil-x_plane.dat')
-  ! call decomp_2d_write_plane(2,u2,2,ny/2,'y_pencil-y_plane.dat')
-  ! call decomp_2d_write_plane(2,u2,3,nz/2,'y_pencil-z_plane.dat')
+  ! Y-pencil data
+  call transpose_x_to_y(u1,u2)
+  call decomp_2d_write_plane(2,u2,1,nx/2,'.','y_pencil-x_plane.dat','test')
+  call decomp_2d_write_plane(2,u2,2,ny/2,'.','y_pencil-y_plane.dat','test')
+  call decomp_2d_write_plane(2,u2,3,nz/2,'.','y_pencil-z_plane.dat','test')
 
-  ! ! Z-pencil data
-  ! call transpose_y_to_z(u2,u3)
-  ! call decomp_2d_write_plane(3,u3,1,nx/2,'z_pencil-x_plane.dat')
-  ! call decomp_2d_write_plane(3,u3,2,ny/2,'z_pencil-y_plane.dat')
-  ! call decomp_2d_write_plane(3,u3,3,nz/2,'z_pencil-z_plane.dat')
+  ! Z-pencil data
+  call transpose_y_to_z(u2,u3)
+  call decomp_2d_write_plane(3,u3,1,nx/2,'.','z_pencil-x_plane.dat','test')
+  call decomp_2d_write_plane(3,u3,2,ny/2,'.','z_pencil-y_plane.dat','test')
+  call decomp_2d_write_plane(3,u3,3,nz/2,'.','z_pencil-z_plane.dat','test')
 
   ! Attemp to read the files
   if (nrank==0) then

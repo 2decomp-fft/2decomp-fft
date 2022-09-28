@@ -1,9 +1,9 @@
 #include ../../src/Makefile.inc
 
 #INCLUDE = -I../../include
-FFLAGS := $(patsubst -J\ %,-J\ ../../%,$(FFLAGS))
+FFLAGS := $(subst $(MODFLAG),$(MODFLAG)../../,$(FFLAGS))
 FFLAGS := $(patsubst -I%,-I../../%,$(FFLAGS))
-LIBS = -L../../ -l$(LIBDECOMP) $(LIBFFT)
+LIBS = -L../../ -l$(LIBDECOMP) $(LIBFFT) $(LFLAGS)
 
 OBJ = fft_test_r2c.o
 
@@ -12,6 +12,9 @@ MPIRUN ?= mpirun
 
 fft_test_r2c: $(OBJ)
 	$(FC) $(FFLAGS) $(OPT) $(DEFS) $(INC) -o $@ $(OBJ) $(LIBS)
+
+check:
+	$(MPIRUN) -n $(NP) ./fft_test_r2c
 
 check:
 	$(MPIRUN) -n $(NP) ./fft_test_r2c

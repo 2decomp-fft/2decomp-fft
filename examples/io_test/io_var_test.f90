@@ -4,7 +4,7 @@
 program io_var_test
 
   use decomp_2d
-  ! use decomp_2d_io
+  use decomp_2d_io
   use MPI
 
   implicit none
@@ -16,7 +16,7 @@ program io_var_test
 
   ! for global data
   real(mytype), dimension(nx,ny,nz) :: data1
-  real(mytype), dimension(nx*2,ny*2,nz*2) :: data1_large
+  real(mytype), allocatable, dimension(:,:,:) :: data1_large
   complex(mytype), dimension(nx,ny,nz) :: cdata1
 
   ! for distributed data
@@ -39,10 +39,17 @@ program io_var_test
   character(len=15) :: filename, arg
   integer (kind=MPI_OFFSET_KIND) :: filesize, disp
 
+  allocate(data1_large(nx*2,ny*2,nz*2))
+
   call MPI_INIT(ierror)
   call MPI_COMM_SIZE(MPI_COMM_WORLD, nproc, ierror)
   call MPI_COMM_RANK(MPI_COMM_WORLD, nrank, ierror)
 
+  ! Defaults
+  p_row = 0
+  p_col = 0
+
+  ! Read commandline input
   i = command_argument_count()
   if (i/=2) then
      call MPI_ABORT(MPI_COMM_WORLD, 1, ierror)
@@ -153,20 +160,20 @@ program io_var_test
   ctmp(2) = cmplx(2.0,2.0,mytype)
   ctmp(3) = cmplx(3.0,3.0,mytype)
   allocate(itmp(3))
-  ! call decomp_2d_write_scalar(fh,disp,2,tmp)
-  ! call decomp_2d_write_scalar(fh,disp,3,ctmp)
-  ! call decomp_2d_write_scalar(fh,disp,3,(/nx,ny,nz/))
+  call decomp_2d_write_scalar(fh,disp,2,tmp)
+  call decomp_2d_write_scalar(fh,disp,3,ctmp)
+  call decomp_2d_write_scalar(fh,disp,3,(/nx,ny,nz/))
   
-  ! ! test the IO routines by writing all data to disk
-  ! call decomp_2d_write_var(fh,disp,1,u1)
-  ! call decomp_2d_write_var(fh,disp,2,u2)
-  ! call decomp_2d_write_var(fh,disp,3,u3)
-  ! call decomp_2d_write_var(fh,disp,1,u1l,large)
-  ! call decomp_2d_write_var(fh,disp,2,u2l,large)
-  ! call decomp_2d_write_var(fh,disp,3,u3l,large)
-  ! call decomp_2d_write_var(fh,disp,1,cu1)
-  ! call decomp_2d_write_var(fh,disp,2,cu2)
-  ! call decomp_2d_write_var(fh,disp,3,cu3)
+  ! test the IO routines by writing all data to disk
+  call decomp_2d_write_var(fh,disp,1,u1)
+  call decomp_2d_write_var(fh,disp,2,u2)
+  call decomp_2d_write_var(fh,disp,3,u3)
+  call decomp_2d_write_var(fh,disp,1,u1l,large)
+  call decomp_2d_write_var(fh,disp,2,u2l,large)
+  call decomp_2d_write_var(fh,disp,3,u3l,large)
+  call decomp_2d_write_var(fh,disp,1,cu1)
+  call decomp_2d_write_var(fh,disp,2,cu2)
+  call decomp_2d_write_var(fh,disp,3,cu3)
 
   call MPI_FILE_CLOSE(fh,ierror)
 
@@ -185,20 +192,20 @@ program io_var_test
   disp = 44_MPI_OFFSET_KIND
 #endif
   
-  ! call decomp_2d_read_var(fh,disp,1,u1_b)
-  ! call decomp_2d_read_var(fh,disp,2,u2_b)
-  ! call decomp_2d_read_var(fh,disp,3,u3_b)
-  ! call decomp_2d_read_var(fh,disp,1,u1l_b,large)
-  ! call decomp_2d_read_var(fh,disp,2,u2l_b,large)
-  ! call decomp_2d_read_var(fh,disp,3,u3l_b,large)
-  ! call decomp_2d_read_var(fh,disp,1,cu1_b)
-  ! call decomp_2d_read_var(fh,disp,2,cu2_b)
-  ! call decomp_2d_read_var(fh,disp,3,cu3_b)
+  call decomp_2d_read_var(fh,disp,1,u1_b)
+  call decomp_2d_read_var(fh,disp,2,u2_b)
+  call decomp_2d_read_var(fh,disp,3,u3_b)
+  call decomp_2d_read_var(fh,disp,1,u1l_b,large)
+  call decomp_2d_read_var(fh,disp,2,u2l_b,large)
+  call decomp_2d_read_var(fh,disp,3,u3l_b,large)
+  call decomp_2d_read_var(fh,disp,1,cu1_b)
+  call decomp_2d_read_var(fh,disp,2,cu2_b)
+  call decomp_2d_read_var(fh,disp,3,cu3_b)
 
-  ! disp = 0_MPI_OFFSET_KIND
-  ! call decomp_2d_read_scalar(fh,disp,2,tmp)
-  ! call decomp_2d_read_scalar(fh,disp,3,ctmp)
-  ! call decomp_2d_read_scalar(fh,disp,3,itmp)
+  disp = 0_MPI_OFFSET_KIND
+  call decomp_2d_read_scalar(fh,disp,2,tmp)
+  call decomp_2d_read_scalar(fh,disp,3,ctmp)
+  call decomp_2d_read_scalar(fh,disp,3,itmp)
   if (nrank==0) then
      write(*,'(2F8.3)') tmp
      write(*,20) ctmp
@@ -273,5 +280,6 @@ program io_var_test
   deallocate(u1_b,u2_b,u3_b)
   deallocate(u1l_b,u2l_b,u3l_b)
   deallocate(cu1_b,cu2_b,cu3_b)
+  deallocate(data1_large)
   
 end program io_var_test

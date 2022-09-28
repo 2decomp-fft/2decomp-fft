@@ -120,6 +120,10 @@ contains
     integer :: status, errorcode
     integer(C_SIZE_T) :: sz, ierror
 
+#ifdef PROFILER
+    if (decomp_profiler_fft) call decomp_profiler_start("fft_init")
+#endif
+
     if (initialised) then
        errorcode = 4
        call decomp_2d_abort(errorcode, &
@@ -170,7 +174,11 @@ contains
     call init_fft_engine
     
     initialised = .true.
-    
+
+#ifdef PROFILER
+    if (decomp_profiler_fft) call decomp_profiler_end("fft_init")
+#endif
+
     return
   end subroutine fft_init_general
 
@@ -182,6 +190,10 @@ contains
     
     implicit none
 
+#ifdef PROFILER
+    if (decomp_profiler_fft) call decomp_profiler_start("fft_fin")
+#endif
+
     call decomp_info_finalize(ph)
     call decomp_info_finalize(sp)
 
@@ -192,6 +204,10 @@ contains
     call finalize_fft_engine
 
     initialised = .false.
+
+#ifdef PROFILER
+    if (decomp_profiler_fft) call decomp_profiler_end("fft_fin")
+#endif
 
     return
   end subroutine decomp_2d_fft_finalize
@@ -721,6 +737,10 @@ contains
     type(C_PTR) :: wk1_p
 #endif
 
+#ifdef PROFILER
+    if (decomp_profiler_fft) call decomp_profiler_start("fft_c2c")
+#endif
+
     if (format==PHYSICAL_IN_X .AND. isign==DECOMP_2D_FFT_FORWARD .OR.  &
          format==PHYSICAL_IN_Z .AND. isign==DECOMP_2D_FFT_BACKWARD) then
        
@@ -808,6 +828,10 @@ contains
     call fftw_free(wk1_p)
 #endif
 
+#ifdef PROFILER
+    if (decomp_profiler_fft) call decomp_profiler_end("fft_c2c")
+#endif
+
     return
   end subroutine fft_3d_c2c
 
@@ -821,6 +845,10 @@ contains
     
     real(mytype), dimension(:,:,:), intent(INOUT) :: in_r
     complex(mytype), dimension(:,:,:), intent(OUT) :: out_c
+
+#ifdef PROFILER
+    if (decomp_profiler_fft) call decomp_profiler_start("fft_r2c")
+#endif
 
     if (format==PHYSICAL_IN_X) then
 
@@ -864,7 +892,11 @@ contains
        call c2c_1m_x(out_c,-1,plan(0,1))
 
     end if
-    
+
+#ifdef PROFILER
+    if (decomp_profiler_fft) call decomp_profiler_end("fft_r2c")
+#endif
+
     return
   end subroutine fft_3d_r2c
   
@@ -883,6 +915,10 @@ contains
     complex(mytype), pointer :: wk1(:,:,:)
     integer(C_SIZE_T) :: sz
     type(C_PTR) :: wk1_p
+#endif
+
+#ifdef PROFILER
+    if (decomp_profiler_fft) call decomp_profiler_start("fft_c2r")
 #endif
 
     if (format==PHYSICAL_IN_X) then
@@ -959,6 +995,10 @@ contains
 
 #ifndef OVERWRITE
     call fftw_free(wk1_p)
+#endif
+
+#ifdef PROFILER
+    if (decomp_profiler_fft) call decomp_profiler_end("fft_c2r")
 #endif
 
     return

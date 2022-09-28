@@ -624,6 +624,10 @@ module decomp_2d_fft
     complex(mytype), allocatable, dimension(:,:,:) :: wk1
 #endif
 
+#ifdef PROFILER
+    if (decomp_profiler_fft) call decomp_profiler_start("fft_c2c")
+#endif
+
     if (format==PHYSICAL_IN_X .AND. isign==DECOMP_2D_FFT_FORWARD .OR.  &
          format==PHYSICAL_IN_Z .AND. isign==DECOMP_2D_FFT_BACKWARD) then
 
@@ -707,7 +711,10 @@ module decomp_2d_fft
     deallocate (wk1)
 #endif
 
-    return
+#ifdef PROFILER
+    if (decomp_profiler_fft) call decomp_profiler_end("fft_c2c")
+#endif
+
   end subroutine fft_3d_c2c
 
 
@@ -722,6 +729,10 @@ module decomp_2d_fft
     complex(mytype), dimension(:,:,:), intent(OUT) :: out_c
     integer :: i, j ,k
     integer, dimension(3) :: dim3d
+
+#ifdef PROFILER
+    if (decomp_profiler_fft) call decomp_profiler_start("fft_r2c")
+#endif
 
     if (format==PHYSICAL_IN_X) then
 
@@ -830,7 +841,10 @@ module decomp_2d_fft
 #endif
     end if
 
-    return
+#ifdef PROFILER
+    if (decomp_profiler_fft) call decomp_profiler_end("fft_r2c")
+#endif
+
   end subroutine fft_3d_r2c
 
 
@@ -847,6 +861,10 @@ module decomp_2d_fft
     integer, dimension(3) :: dim3d
 #ifndef OVERWRITE
     complex(mytype), allocatable, dimension(:,:,:) :: wk1
+#endif
+
+#ifdef PROFILER
+    if (decomp_profiler_fft) call decomp_profiler_start("fft_c2r")
 #endif
 
     if (format==PHYSICAL_IN_X) then
@@ -1031,7 +1049,10 @@ module decomp_2d_fft
     deallocate (wk1)
 #endif
 
-    return
+#ifdef PROFILER
+    if (decomp_profiler_fft) call decomp_profiler_end("fft_c2r")
+#endif
+
   end subroutine fft_3d_c2r
 
 

@@ -151,5 +151,6 @@ Makefile.settings:
 	echo "INC = $(INC)" >> $@
 	echo "LIBOPT = $(LIBOPT)" >> $@
 	echo "LIBFFT = ${LIBFFT}" >> $@
+	echo "LFLAGS = $(LFLAGS)" >> $@
 
 export

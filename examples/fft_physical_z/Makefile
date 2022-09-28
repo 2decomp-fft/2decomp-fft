@@ -7,7 +7,7 @@ LIBS = -L../../ -l$(LIBDECOMP) $(LIBFFT) $(LFLAGS)
 
 OBJ = fft_physical_z.o
 
-NP ?= 4
+NP ?= 1
 MPIRUN ?= mpirun
 
 fft_physical_z: $(OBJ)

@@ -8,7 +8,7 @@ LIBS = -L../../ -l$(LIBDECOMP) $(LFLAGS)
 
 OBJ = test2d.o
 
-NP ?= 2
+NP ?= 1
 MPIRUN ?= mpirun
 
 test2d: $(OBJ)

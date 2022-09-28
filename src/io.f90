@@ -131,6 +131,10 @@ contains
 #endif
 
 #ifdef ADIOS2
+#ifdef PROFILER
+  if (decomp_profiler_io) call decomp_profiler_start("io_init")
+#endif
+
   !! TODO: make this a runtime-option
   adios2_debug_mode = .true.
 
@@ -139,6 +143,10 @@ contains
      "Error initialising ADIOS2 - is "//trim(config_file)//" present and valid?")
 
   engine_live(:) = .false.
+
+#ifdef PROFILER
+  if (decomp_profiler_io) call decomp_profiler_end("io_init")
+#endif
 #endif
   
   end subroutine decomp_2d_io_init
@@ -155,9 +163,15 @@ contains
 #endif
     
 #ifdef ADIOS2
+#ifdef PROFILER
+    if (decomp_profiler_io) call decomp_profiler_start("io_fin")
+#endif
     call adios2_finalize(adios, ierror)
     if (ierror.ne.0) call decomp_2d_abort(__FILE__, __LINE__, ierror, &
        "adios2_finalize")
+#ifdef PROFILER
+    if (decomp_profiler_io) call decomp_profiler_end("io_fin")
+#endif
 #endif
 
   end subroutine decomp_2d_io_finalise
@@ -179,9 +193,17 @@ contains
     integer, dimension(3) :: sizes, subsizes, starts
     integer :: ierror, newtype, fh, data_type, info, gs
 
+#ifdef PROFILER
+  if (decomp_profiler_io) call decomp_profiler_start("io_write_one_real")
+#endif
+
     data_type = real_type
 
 #include "io_write_one.inc"
+
+#ifdef PROFILER
+  if (decomp_profiler_io) call decomp_profiler_end("io_write_one_real")
+#endif
 
     return
   end subroutine write_one_real
@@ -200,9 +222,17 @@ contains
     integer, dimension(3) :: sizes, subsizes, starts
     integer :: ierror, newtype, fh, data_type, info, gs
 
+#ifdef PROFILER
+  if (decomp_profiler_io) call decomp_profiler_start("io_write_one_cplx")
+#endif
+
     data_type = complex_type
 
 #include "io_write_one.inc"
+
+#ifdef PROFILER
+  if (decomp_profiler_io) call decomp_profiler_end("io_write_one_cplx")
+#endif
 
     return
   end subroutine write_one_complex
@@ -234,6 +264,10 @@ contains
     integer :: ierror, newtype
     character(len=:), allocatable :: full_io_name
     logical :: opened_new
+#endif
+
+#ifdef PROFILER
+    if (decomp_profiler_io) call decomp_profiler_start("io_read_one_real")
 #endif
     
     read_reduce_prec = .true.
@@ -346,7 +380,11 @@ contains
     associate(pncl => ipencil, opdcmp => opt_decomp, rdprec => reduce_prec) ! Silence unused arguments
     end associate
 #endif
-    return
+
+#ifdef PROFILER
+    if (decomp_profiler_io) call decomp_profiler_end("io_read_one_real")
+#endif
+
   end subroutine read_one_real
 
 
@@ -364,11 +402,17 @@ contains
     integer, dimension(3) :: sizes, subsizes, starts
     integer :: ierror, newtype, fh, data_type
 
+#ifdef PROFILER
+    if (decomp_profiler_io) call decomp_profiler_start("io_read_one_cplx")
+#endif
+
     data_type = complex_type
 
 #include "io_read_one.inc"
 
-    return
+#ifdef PROFILER
+    if (decomp_profiler_io) call decomp_profiler_end("io_read_one_cplx")
+#endif
 
   end subroutine read_one_complex
 
@@ -381,7 +425,7 @@ contains
     character(len=*), intent(in) :: io_name
     character*(*), intent(in) :: varname
     real(mytype), dimension(:,:,:), intent(out) :: var
-    
+
     integer :: ierror
     type(adios2_io) :: io_handle
     type(adios2_variable) :: var_handle
@@ -389,7 +433,11 @@ contains
 
     integer(kind=8) :: nsteps
     integer(kind=8) :: curstep
-    
+
+#ifdef PROFILER
+    if (decomp_profiler_io) call decomp_profiler_start("adios2_read_one_real")
+#endif
+
     call adios2_at_io(io_handle, adios, io_name, ierror)
     if (ierror.ne.0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "adios2_at_io "//trim(io_name))
     call adios2_inquire_variable(var_handle, io_handle, varname, ierror)
@@ -415,7 +463,9 @@ contains
     if (ierror.ne.0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "adios2_current_step")
     print *, "Current step: ", curstep
 
-    return
+#ifdef PROFILER
+    if (decomp_profiler_io) call decomp_profiler_end("adios2_read_one_real")
+#endif
     
   end subroutine adios2_read_one_real
 #endif
@@ -488,11 +538,18 @@ contains
     integer :: newtype
 #endif
 
+#ifdef PROFILER
+    if (decomp_profiler_io) call decomp_profiler_start("io_write_outflow")
+#endif
+
     data_type = real_type
 
 #include "io_write_outflow.f90"
 
-    return
+#ifdef PROFILER
+    if (decomp_profiler_io) call decomp_profiler_end("io_write_outflow")
+#endif
+
   end subroutine write_outflow
 
 
@@ -546,7 +603,7 @@ contains
 
 
   subroutine read_inflow(dirname,varname,ntimesteps,var,io_name,opt_decomp)
- 
+
     implicit none
 
     character(len=*), intent(in) :: dirname, varname, io_name
@@ -564,12 +621,19 @@ contains
 #else
     integer :: newtype
 #endif
-    
+
+#ifdef PROFILER
+    if (decomp_profiler_io) call decomp_profiler_start("io_read_inflow")
+#endif
+
     data_type = real_type
 
 #include "io_read_inflow.f90"
 
-    return
+#ifdef PROFILER
+    if (decomp_profiler_io) call decomp_profiler_end("io_read_inflow")
+#endif
+
   end subroutine read_inflow
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -889,12 +953,19 @@ contains
     character(len=:), allocatable :: full_io_name
     integer :: newtype
 #endif
-    
+
+#ifdef PROFILER
+    if (decomp_profiler_io) call decomp_profiler_start("io_write_plane_3d_real")
+#endif
+
     data_type = real_type
 
 #include "io_write_plane.inc"
 
-    return
+#ifdef PROFILER
+    if (decomp_profiler_io) call decomp_profiler_end("io_write_plane_3d_real")
+#endif
+
   end subroutine write_plane_3d_real
 
 
@@ -926,11 +997,18 @@ contains
     integer :: newtype
 #endif
 
+#ifdef PROFILER
+    if (decomp_profiler_io) call decomp_profiler_start("io_write_plane_3d_cplx")
+#endif
+
     data_type = complex_type
 
 #include "io_write_plane.inc"
 
-    return
+#ifdef PROFILER
+    if (decomp_profiler_io) call decomp_profiler_end("io_write_plane_3d_cplx")
+#endif
+
   end subroutine write_plane_3d_complex
 
 
@@ -978,11 +1056,18 @@ contains
     integer :: i,j,k, ierror, newtype, fh, key,color,newcomm, data_type
     integer, dimension(3) :: xsz,ysz,zsz,xst,yst,zst,xen,yen,zen,skip
 
+#ifdef PROFILER
+    if (decomp_profiler_io) call decomp_profiler_start("io_write_every_real")
+#endif
+
     data_type = real_type
 
 #include "io_write_every.inc"
 
-    return
+#ifdef PROFILER
+    if (decomp_profiler_io) call decomp_profiler_end("io_write_every_real")
+#endif
+
   end subroutine write_every_real
 
 
@@ -1004,11 +1089,18 @@ contains
     integer :: i,j,k, ierror, newtype, fh, key,color,newcomm, data_type
     integer, dimension(3) :: xsz,ysz,zsz,xst,yst,zst,xen,yen,zen,skip
 
+#ifdef PROFILER
+    if (decomp_profiler_io) call decomp_profiler_start("io_write_every_cplx")
+#endif
+
     data_type = complex_type
 
 #include "io_write_every.inc"
 
-    return
+#ifdef PROFILER
+    if (decomp_profiler_io) call decomp_profiler_end("io_write_every_cplx")
+#endif
+
   end subroutine write_every_complex
 
   subroutine coarse_extents(ipencil, icoarse, sizes, subsizes, starts, opt_decomp)
@@ -1144,6 +1236,10 @@ contains
     character(len=:), allocatable :: full_io_name
 #endif
 
+#ifdef PROFILER
+    if (decomp_profiler_io) call decomp_profiler_start("mpiio_write_real_coarse")
+#endif
+
     !! Set defaults
     write_reduce_prec = .true.
     if (present(opt_deferred_writes)) then
@@ -1267,7 +1363,10 @@ contains
     end associate
 #endif
 
-    return
+#ifdef PROFILER
+    if (decomp_profiler_io) call decomp_profiler_end("mpiio_write_real_coarse")
+#endif
+
   end subroutine mpiio_write_real_coarse
 
   subroutine decomp_2d_register_variable(io_name, varname, ipencil, icoarse, iplane, type, opt_decomp, opt_nplanes)
@@ -1373,6 +1472,10 @@ contains
     integer, dimension(4) :: sizes, subsizes, starts
     integer :: ierror, newtype, fh
 
+#ifdef PROFILER
+    if (decomp_profiler_io) call decomp_profiler_start("mpiio_write_real_probe")
+#endif
+
     sizes(1) = xszP(1)
     sizes(2) = yszP(2)
     sizes(3) = zszP(3)
@@ -1427,7 +1530,10 @@ contains
     call MPI_TYPE_FREE(newtype,ierror)
     if (ierror.ne.0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_TYPE_FREE")
 
-    return
+#ifdef PROFILER
+    if (decomp_profiler_io) call decomp_profiler_end("mpiio_write_real_probe")
+#endif
+
   end subroutine mpiio_write_real_probe
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -1448,6 +1554,10 @@ contains
     integer :: color, key, errorcode, newcomm, ierror
     integer :: newtype, fh, data_type, i, j, k
     integer :: i1, i2, j1, j2, k1, k2
+
+#ifdef PROFILER
+    if (decomp_profiler_io) call decomp_profiler_start("io_write_subdomain")
+#endif
 
     data_type = real_type
 
@@ -1640,7 +1750,10 @@ contains
 
     call decomp_mpi_comm_free(newcomm)
 
-    return
+#ifdef PROFILER
+    if (decomp_profiler_io) call decomp_profiler_end("io_write_subdomain")
+#endif
+
   end subroutine write_subdomain
 
   subroutine decomp_2d_init_io(io_name)
@@ -1685,6 +1798,10 @@ contains
     integer(MPI_OFFSET_KIND) :: filesize
 #else
     type(adios2_io) :: io
+#endif
+
+#ifdef PROFILER
+    if (decomp_profiler_io) call decomp_profiler_start("io_open_close")
 #endif
 
 #ifndef ADIOS2
@@ -1763,7 +1880,7 @@ contains
 #endif
        end if
     end if
-    
+
   end subroutine decomp_2d_open_io
 
   subroutine decomp_2d_close_io(io_name, io_dir)
@@ -1791,6 +1908,10 @@ contains
     names_ptr(idx) = ""
     live_ptrh(idx) = .false.
     nreg_io = nreg_io - 1
+
+#ifdef PROFILER
+    if (decomp_profiler_io) call decomp_profiler_start("io_open_close")
+#endif
 
   end subroutine decomp_2d_close_io
 

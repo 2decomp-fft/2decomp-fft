@@ -81,7 +81,7 @@ else ifeq ($(CMP),nvhpc)
      LFLAGS += -acc -lnvhpcwrapnvtx
   else ifeq ($(PARAMOD),gpu)
      CCXY=80
-     NCCL=yes     
+     NCCL=no     
      FFLAGS += -D_GPU
      ifeq ($(NCCL),yes)
        FFLAGS += -D_NCCL

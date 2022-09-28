@@ -50,7 +50,8 @@ To compile the library for GPU it is possible to execute the following
 make CMP=nvhpc FFT=cufft PARAMOD=gpu CUFFT_PATH=PATH_TO_NVHPC/Vers/Linux_x86_64/Vers/compilers/ 
 ``` 
 The `Makefile` will look for the relative libraries (NVCC, cuFFT, etc) under the `${CUFFT_PATH}/include`
-In case NCCL is not available it can  be deactivated adding NCCL=no. The current implementation relays also on opeanACC
+NCCL is not activated by default. If NCCL is installed/required use `NCCL=yes`. 
+The current implementation relays also on opeanACC
 and on automatic optimization of `do concurrent` loops.
 By default the compute architecture for the GPU is 80 (i.e. Ampere), to change it use `CCXY=XY` 
  

@@ -1910,7 +1910,7 @@ contains
     nreg_io = nreg_io - 1
 
 #ifdef PROFILER
-    if (decomp_profiler_io) call decomp_profiler_start("io_open_close")
+    if (decomp_profiler_io) call decomp_profiler_end("io_open_close")
 #endif
 
   end subroutine decomp_2d_close_io

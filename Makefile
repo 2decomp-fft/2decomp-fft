@@ -12,7 +12,7 @@ DEFS = -DDOUBLE_PREC -DVERSION=\"$(GIT_VERSION)\"
 
 LCL = local# local,lad,sdu,archer
 CMP = gcc# intel,gcc,nagfor,cray,nvhpc
-FFT ?= generic# fftw3,fftw3_f03,generic,mkl,cuFFT
+FFT ?= generic# fftw3,fftw3_f03,generic,mkl,cufft
 PARAMOD = mpi # multicore,gpu
 PROFILER ?= none# none, caliper
 
@@ -57,8 +57,13 @@ else ifeq ($(FFT),mkl)
   LIBFFT=-Wl,--start-group $(MKLROOT)/lib/intel64/libmkl_intel_lp64.a $(MKLROOT)/lib/intel64/libmkl_sequential.a $(MKLROOT)/lib/intel64/libmkl_core.a -Wl,--end-group -lpthread
   INC=-I$(MKLROOT)/include
 else ifeq ($(FFT),cufft)
+<<<<<<< HEAD
   CUFFT_PATH=${NVHPC}/Linux_x86_64/${EBVERSIONNVHPC}/compilers
   INC=-I${CUFFT_PATH}/include
+=======
+  CUFFT_PATH ?= $(NVHPC)/Linux_x86_64/$(EBVERSIONNVHPC)/compilers
+  INC=-I$(CUFFT_PATH)/include
+>>>>>>> 86037588b48c16fd9423ccd2264350b9db37e6f9
   #LIBFFT=-L$(CUFFT_PATH)/lib64 -Mcudalib=cufft 
 endif
 

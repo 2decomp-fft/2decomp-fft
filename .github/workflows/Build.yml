@@ -1,6 +1,6 @@
 # This is a basic workflow to help you get started with Actions
 
-name: Build
+name: Build_fast
 
 # Controls when the action will run. Triggers the workflow on push or pull request
 # events but only for the master branch
@@ -12,7 +12,7 @@ on:
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
-  # This workflow contains jobs called "bld_gnu_ompi", "bld_gnu_mpich" "bld_nvidia", "bld_intel", and "bld_fftw3"
+  # This workflow contains a job called "bld_gnu_ompi"
   bld_gnu_ompi:
     # The type of runner that the job will run on
     runs-on: ubuntu-latest
@@ -35,6 +35,17 @@ jobs:
     - name: Examples
       run: make examples
 
+name: Build_all
+
+# Controls when the action will run. Triggers the workflow on push
+# events but only for the master branch
+on:
+  push:
+    branches: [ main ]
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+  # This workflow contains jobs called "bld_gnu_mpich" "bld_nvidia", "bld_intel", "bld_fftw3" and "bld_caliper"
   bld_gnu_mpich:
     # The type of runner that the job will run on
     runs-on: ubuntu-latest
@@ -52,10 +63,7 @@ jobs:
 
     # Runs a set of commands using the runners shell
     - name: Compile
-      run: make BUILD=debug
-
-    - name: Examples
-      run: make examples
+      run: make BUILD=debug && make examples
 
   bld_nvidia:
     # The type of runner that the job will run on
@@ -79,14 +87,16 @@ jobs:
         sudo apt-get install -y nvhpc-22-7-cuda-multi
 
     # Runs a set of commands using the runners shell
-    - name: Compile
-      run: PATH=$TMP:$PATH make CMP=nvhpc BUILD=debug
-
-    - name: Examples
-      run: PATH=$TMP:$PATH make examples
+    - name: CPU version
+      run: |
+        PATH=$TMP:$PATH make CMP=nvhpc BUILD=debug
+        PATH=$TMP:$PATH make examples
 
     - name: GPU version
-      run: PATH=$TMP:$PATH make clean && PATH=$TMP:$PATH make CMP=nvhpc FFT=cufft PARAMOD=gpu CUFFT_PATH=/opt/nvidia/hpc_sdk/Linux_x86_64/22.7/compilers
+      run: |
+        PATH=$TMP:$PATH make clean
+        PATH=$TMP:$PATH make CMP=nvhpc FFT=cufft PARAMOD=gpu CUFFT_PATH=/opt/nvidia/hpc_sdk/Linux_x86_64/22.7/compilers
+        PATH=$TMP:$PATH make examples
 
   bld_intel:
     # The type of runner that the job will run on
@@ -109,10 +119,7 @@ jobs:
 
     # Runs a set of commands using the runners shell
     - name: Compile
-      run: source /opt/intel/oneapi/setvars.sh && make CMP=intel BUILD=debug
-
-    - name: Examples
-      run: source /opt/intel/oneapi/setvars.sh && make examples
+      run: source /opt/intel/oneapi/setvars.sh && make CMP=intel BUILD=debug && make examples
 
   bld_fftw3:
     # The type of runner that the job will run on
@@ -130,11 +137,17 @@ jobs:
         sudo apt-get install -y gfortran openmpi-bin libopenmpi-dev libfftw3-dev
 
     # Runs a set of commands using the runners shell
-    - name: Compile regular FFTW3
-      run: make clean && make BUILD=debug FFT=fftw3 FFTW3_PATH_INCLUDE=/usr/include FFTW3_PATH_LIB=/usr/lib/x86_64-linux-gnu
+    - name: Regular FFTW3
+      run: |
+        make clean
+        make BUILD=debug FFT=fftw3 FFTW3_PATH_INCLUDE=/usr/include FFTW3_PATH_LIB=/usr/lib/x86_64-linux-gnu
+        make examples
 
-    - name: Compile new FFTW3
-      run: make clean && make BUILD=debug FFT=fftw3_f03 FFTW3_PATH_INCLUDE=/usr/include FFTW3_PATH_LIB=/usr/lib/x86_64-linux-gnu
+    - name: New FFTW3
+      run: |
+        make clean
+        make BUILD=debug FFT=fftw3_f03 FFTW3_PATH_INCLUDE=/usr/include FFTW3_PATH_LIB=/usr/lib/x86_64-linux-gnu
+        make examples
 
   bld_caliper:
     # The type of runner that the job will run on
@@ -155,12 +168,14 @@ jobs:
     - name: Compile caliper
       run: |
         wget --no-check-certificate https://github.com/LLNL/Caliper/archive/refs/tags/v2.8.0.tar.gz
-        tar xzf v2.8.0.tar.gz
-        cd Caliper-2.8.0
+        tar xzf v2.8.0.tar.gz && cd Caliper-2.8.0
         mkdir build && cd build
         cmake -DCMAKE_C_COMPILER=gcc -DCMAKE_CXX_COMPILER=g++ -DCMAKE_Fortran_COMPILER=gfortran -DCMAKE_INSTALL_PREFIX=../../Caliper-2.8.0_bld -DWITH_FORTRAN=yes -DWITH_MPI=yes ../
         make -j && make install
         cd ../../
 
     - name: Compile
-      run: make clean && make BUILD=debug PROFILER=caliper CALIPER_PATH=./Caliper-2.8.0_bld
+      run: |
+        make clean
+        make BUILD=debug PROFILER=caliper CALIPER_PATH=./Caliper-2.8.0_bld
+        make examples

@@ -75,8 +75,8 @@ jobs:
     # Install dependencies
     - name: install
       run: |
-        sudo apt-get update
-        sudo apt-get install -y nvhpc-22-7
+        sudo apt-get update  -y
+        sudo apt-get install -y nvhpc-22-7-cuda-multi
 
     # Runs a set of commands using the runners shell
     - name: Compile
@@ -84,6 +84,9 @@ jobs:
 
     - name: Examples
       run: PATH=$TMP:$PATH make examples
+
+    - name: GPU version
+      run: PATH=$TMP:$PATH make clean && PATH=$TMP:$PATH make CMP=nvhpc FFT=cufft PARAMOD=gpu CUFFT_PATH=/opt/nvidia/hpc_sdk/Linux_x86_64/22.7/compilers
 
   bld_intel:
     # The type of runner that the job will run on

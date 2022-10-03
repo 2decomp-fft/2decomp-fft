@@ -40,6 +40,21 @@ which will (re)build 2decomp&fft as necessary.
 
 **TODO** Convert examples to tests and automate running them
 
+## GPU compilation
+
+The library can perform multi GPU offoloading using the NVHPC compiler suite for NVIDIA hardware. 
+The implementation is based on CUDA-aware MPI and NVIDIA Collective Communication Library (NCCL).
+The FFT is based on cuFFT. 
+To compile the library for GPU it is possible to execute the following
+```
+make CMP=nvhpc FFT=cufft PARAMOD=gpu CUFFT_PATH=PATH_TO_NVHPC/Vers/Linux_x86_64/Vers/compilers/ 
+``` 
+The `Makefile` will look for the relative libraries (NVCC, cuFFT, etc) under the `${CUFFT_PATH}/include`
+NCCL is not activated by default. If NCCL is installed/required use `NCCL=yes`. 
+The current implementation relays also on opeanACC
+and on automatic optimization of `do concurrent` loops.
+By default the compute architecture for the GPU is 80 (i.e. Ampere), to change it use `CCXY=XY` 
+ 
 ## Profiling
 
 Profiling can be activated in the Makefile. Set the variable `PROFILER` to one of the supported profilers (only `caliper` currently). If using `caliper`, provide the installation path in the variable `CALIPER_PATH`. When the profiling is active, one can tune it before calling `decomp_2d_init` using the subroutine `decomp_profiler_prep`. The input argument for this subroutine is a logical array of size 4. Each input allow activation / deactivation of the profiling as follows :

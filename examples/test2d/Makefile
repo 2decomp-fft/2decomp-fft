@@ -14,8 +14,14 @@ MPIRUN ?= mpirun
 test2d: $(OBJ)
 	$(FC) $(FFLAGS) $(OPT) $(DEFS) $(INC) -o $@ $(OBJ) $(LIBS)
 
+ifeq ($(PARAMOD),gpu)
+check:
+	$(MPIRUN) -n $(NP) ./bind.sh ./test2d
+else
 check:
 	$(MPIRUN) -n $(NP) ./test2d
+endif
+
 
 clean:
 	rm -f *.o test2d u*.dat *.log

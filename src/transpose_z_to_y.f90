@@ -25,6 +25,7 @@
 #if defined(_NCCL)
     integer :: row_rank_id
 #endif
+    integer :: istat
 #endif
 
 #ifdef SHM
@@ -67,7 +68,7 @@
     ! note the src array is suitable to be a send buffer
     ! so no split operation needed
 
-#if defined(GPU)
+#if defined(_GPU)
     istat = cudaMemcpy( work1_r_d, src, s1*s2*s3 )
 #endif
 
@@ -135,7 +136,7 @@
          decomp%y2dist, decomp)
 #else
 
-#if defined (_GPU)
+#if defined(_GPU)
     call mem_merge_zy_real(work2_r_d, d1, d2, d3, dst, dims(2), &
          decomp%y2dist, decomp)
 #else
@@ -167,6 +168,7 @@
 #if defined(_NCCL)
     integer :: row_rank_id
 #endif
+    integer :: istat
 #endif
 
 #ifdef SHM
@@ -209,7 +211,7 @@
     ! note the src array is suitable to be a send buffer
     ! so no split operation needed
 
-#if defined(GPU)
+#if defined(_GPU)
     istat = cudaMemcpy( work1_c_d, src, s1*s2*s3 )
 #endif
 
@@ -268,7 +270,7 @@
          decomp%y2dist, decomp)
 #else
 
-#if defined (_GPU)
+#if defined(_GPU)
     call mem_merge_zy_complex(work2_c_d, d1, d2, d3, dst, dims(2), &
          decomp%y2dist, decomp)
 #else

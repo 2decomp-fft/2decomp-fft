@@ -80,7 +80,6 @@ jobs:
       run: |
         PATH=$TMP:$PATH make clean
         PATH=$TMP:$PATH make CMP=nvhpc FFT=cufft PARAMOD=gpu CUFFT_PATH=/opt/nvidia/hpc_sdk/Linux_x86_64/22.7/compilers
-        PATH=$TMP:$PATH make examples
 
   bld_intel:
     # The type of runner that the job will run on
@@ -162,4 +161,3 @@ jobs:
       run: |
         make clean
         make BUILD=debug PROFILER=caliper CALIPER_PATH=./Caliper-2.8.0_bld
-        make examples

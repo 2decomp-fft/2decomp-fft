@@ -5,7 +5,15 @@ FFLAGS := $(subst $(MODFLAG),$(MODFLAG)../../,$(FFLAGS))
 FFLAGS := $(patsubst -I%,-I../../%,$(FFLAGS))
 LIBS = -L../../ -l$(LIBDECOMP) $(LFLAGS)
 
-all: io_test io_read io_var_test io_plane_test io_bench
+NP ?= 1
+MPIRUN ?= mpirun
+NROW ?= 0
+NCOL ?= 0
+
+all: $(DECOMPINC) io_test io_read io_var_test io_plane_test io_bench
+
+$(DECOMPINC):
+	mkdir $@
 
 io_test: io_test.o
 	$(FC) $(FFLAGS) $(OPT) $(DEFS) $(INC) -o $@ $< $(OBJ) $(LIBS)
@@ -23,11 +31,11 @@ io_bench: io_bench.o
 	$(FC) $(FFLAGS) $(OPT) $(DEFS) $(INC) -o $@ $< $(OBJ) $(LIBS)
 
 check:
-	mpirun -n 12 ./io_test
-	mpirun -n 6 ./io_read
-	mpirun -n 6 ./io_var_test 3 2
-	mpirun -n 12 ./io_plane_test
-	mpirun -n 16 ./io_bench
+	$(MPIRUN) -n $(NP) ./io_test
+	$(MPIRUN) -n $(NP) ./io_read
+	$(MPIRUN) -n $(NP) ./io_var_test $(NROW) $(NCOL)
+	$(MPIRUN) -n $(NP) ./io_plane_test
+	$(MPIRUN) -n $(NP) ./io_bench
 
 clean:
 	rm -f *.o io_test io_read io_var_test io_plane_test io_bench

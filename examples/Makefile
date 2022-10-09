@@ -1,16 +1,14 @@
-.PHONY: test2d fft_test_c2c fft_test_r2c timing halo_test io_test
+.PHONY: test2d fft_physical_z fft_physical_x halo_test io_test 
 
 # Just build the examples
-examples: test2d fft_test_c2c fft_test_r2c timing halo_test io_test
+examples: test2d fft_physical_z fft_physical_x halo_test io_test
 	@echo "Built the examples"
 
 test2d:
 	$(MAKE) -C $@ $@
-fft_test_c2c:
+fft_physical_z:
 	$(MAKE) -C $@ $@
-fft_test_r2c:
-	$(MAKE) -C $@ $@
-timing:
+fft_physical_x:
 	$(MAKE) -C $@ $@
 halo_test:
 	$(MAKE) -C $@ $@
@@ -19,17 +17,15 @@ io_test:
 
 check:
 	cd test2d; $(MAKE) $@
-	cd fft_test_c2c; $(MAKE) $@
-	cd fft_test_r2c; $(MAKE) $@
-	cd timing; $(MAKE) $@
+	cd fft_physical_z; $(MAKE) $@
+	cd fft_physical_x; $(MAKE) $@
 	cd halo_test; $(MAKE) $@
-	#cd io_test; $(MAKE) $@
+	cd io_test; $(MAKE) $@
 
 clean:
 	cd test2d; $(MAKE) $@
-	cd fft_test_c2c; $(MAKE) $@
-	cd fft_test_r2c; $(MAKE) $@
-	cd timing; $(MAKE) $@
+	cd fft_physical_z; $(MAKE) $@
+	cd fft_physical_x; $(MAKE) $@
 	cd halo_test; $(MAKE) $@
 	cd io_test; $(MAKE) $@
 

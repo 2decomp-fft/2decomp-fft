@@ -12,17 +12,29 @@
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   ! Halo cell support for neighbouring pencils to exchange data
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  subroutine update_halo_real(in, out, level, opt_decomp, opt_global)
+  subroutine update_halo_real_short(in, out, level, opt_global)
+
+    implicit none
+
+    integer, intent(IN) :: level      ! levels of halo cells required
+    real(mytype), dimension(:,:,:), intent(IN) :: in
+    real(mytype), allocatable, dimension(:,:,:), intent(OUT) :: out
+    logical, optional :: opt_global
+
+    call update_halo(in, out, level, decomp_main, opt_global)
+
+  end subroutine update_halo_real_short
+
+  subroutine update_halo_real(in, out, level, decomp, opt_global)
 
     implicit none
 
     integer, intent(IN) :: level      ! levels of halo cells required
     real(mytype), dimension(:,:,:), intent(IN) :: in    
     real(mytype), allocatable, dimension(:,:,:), intent(OUT) :: out
-    TYPE(DECOMP_INFO), optional :: opt_decomp
+    TYPE(DECOMP_INFO), intent(in) :: decomp
     logical, optional :: opt_global
 
-    TYPE(DECOMP_INFO) :: decomp
     logical :: global
 
     ! starting/ending index of array with halo cells
@@ -45,17 +57,29 @@
   end subroutine update_halo_real
 
 
-  subroutine update_halo_complex(in, out, level, opt_decomp, opt_global)
+  subroutine update_halo_complex_short(in, out, level, opt_global)
+
+    implicit none
+
+    integer, intent(IN) :: level      ! levels of halo cells required
+    complex(mytype), dimension(:,:,:), intent(IN) :: in
+    complex(mytype), allocatable, dimension(:,:,:), intent(OUT) :: out
+    logical, optional :: opt_global
+
+    call update_halo(in, out, level, decomp_main, opt_global)
+
+  end subroutine update_halo_complex_short
+
+  subroutine update_halo_complex(in, out, level, decomp, opt_global)
 
     implicit none
 
     integer, intent(IN) :: level      ! levels of halo cells required
     complex(mytype), dimension(:,:,:), intent(IN) :: in    
     complex(mytype), allocatable, dimension(:,:,:), intent(OUT) :: out
-    TYPE(DECOMP_INFO), optional :: opt_decomp
+    TYPE(DECOMP_INFO), intent(in) :: decomp
     logical, optional :: opt_global
 
-    TYPE(DECOMP_INFO) :: decomp
     logical :: global
 
     ! starting/ending index of array with halo cells

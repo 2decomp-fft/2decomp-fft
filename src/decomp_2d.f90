@@ -170,7 +170,9 @@ module decomp_2d
   END TYPE DECOMP_INFO
 
   ! main (default) decomposition information for global size nx*ny*nz
-  TYPE(DECOMP_INFO), save, public :: decomp_main
+  TYPE(DECOMP_INFO), target, save, public :: decomp_main
+  ! FIXME The extra decomp_info objects should be defined in the external code, not here
+  !       Currently keeping them to avoid breaking external codes
   TYPE(DECOMP_INFO), save, public :: phG,ph1,ph2,ph3,ph4
 
   ! staring/ending index and size of data held by current processor
@@ -261,42 +263,58 @@ module decomp_2d
 
   interface transpose_x_to_y
      module procedure transpose_x_to_y_real
+     module procedure transpose_x_to_y_real_short
      module procedure transpose_x_to_y_complex
+     module procedure transpose_x_to_y_complex_short
   end interface transpose_x_to_y
 
   interface transpose_y_to_z
      module procedure transpose_y_to_z_real
+     module procedure transpose_y_to_z_real_short
      module procedure transpose_y_to_z_complex
+     module procedure transpose_y_to_z_complex_short
   end interface transpose_y_to_z
 
   interface transpose_z_to_y
      module procedure transpose_z_to_y_real
+     module procedure transpose_z_to_y_real_short
      module procedure transpose_z_to_y_complex
+     module procedure transpose_z_to_y_complex_short
   end interface transpose_z_to_y
 
   interface transpose_y_to_x
      module procedure transpose_y_to_x_real
+     module procedure transpose_y_to_x_real_short
      module procedure transpose_y_to_x_complex
+     module procedure transpose_y_to_x_complex_short
   end interface transpose_y_to_x
 
   interface update_halo
      module procedure update_halo_real
+     module procedure update_halo_real_short
      module procedure update_halo_complex
+     module procedure update_halo_complex_short
   end interface update_halo
 
   interface alloc_x
      module procedure alloc_x_real
+     module procedure alloc_x_real_short
      module procedure alloc_x_complex
+     module procedure alloc_x_complex_short
   end interface alloc_x
 
   interface alloc_y
      module procedure alloc_y_real
+     module procedure alloc_y_real_short
      module procedure alloc_y_complex
+     module procedure alloc_y_complex_short
   end interface alloc_y
 
   interface alloc_z
      module procedure alloc_z_real
+     module procedure alloc_z_real_short
      module procedure alloc_z_complex
+     module procedure alloc_z_complex_short
   end interface alloc_z
 
   interface decomp_2d_abort
@@ -655,12 +673,17 @@ contains
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   ! Return the default decomposition object
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+  ! FIXME avoid a copy and return a pointer to decomp_main
+  ! TODO list the external codes using this subroutine
   subroutine get_decomp_info(decomp)
 
     implicit none
 
+    ! FIXME TYPE(DECOMP_INFO), pointer :: decomp
     TYPE(DECOMP_INFO), intent(OUT) :: decomp
 
+    ! FIXME decomp => decomp_main
     decomp = decomp_main
 
     return

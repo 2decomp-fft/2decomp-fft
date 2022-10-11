@@ -27,10 +27,11 @@ logical, save :: initialised = .false.
 integer, save :: nx_fft, ny_fft, nz_fft
 
 ! 2D processor grid
+! FIXME this is already available in the module decomp_2d
 integer, save, dimension(2) :: dims
 
 ! Decomposition objects
-TYPE(DECOMP_INFO), save :: ph  ! physical space
+TYPE(DECOMP_INFO), pointer, save :: ph=>null()  ! physical space
 TYPE(DECOMP_INFO), save :: sp  ! spectral space
 
 ! Workspace to store the intermediate Y-pencil data
@@ -112,6 +113,7 @@ ny_fft = ny
 nz_fft = nz
 
 ! determine the processor grid in use
+! FIXME this is already defined in the module decomp_2d
 call MPI_CART_GET(DECOMP_2D_COMM_CART_X, 2, &
 dims, dummy_periods, dummy_coords, ierror)
 if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_CART_GET")
@@ -122,7 +124,11 @@ if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_CART_GET"
 !         (nx/2+1)*ny*nz, if PHYSICAL_IN_X
 !      or nx*ny*(nz/2+1), if PHYSICAL_IN_Z
 
-call ph%init(nx, ny, nz)
+if (nx_fft==nx_global.and.ny_fft==ny_global.and.nz_fft==nz_global) then
+ph=>decomp_main
+else
+call ph=>init(nx, ny, nz)
+endif
 if (format==PHYSICAL_IN_X) then
 call sp%init(nx/2+1, ny, nz)
 else if (format==PHYSICAL_IN_Z) then
@@ -165,7 +171,11 @@ implicit none
 if (decomp_profiler_fft) call decomp_profiler_start("fft_fin")
 #endif
 
+if (nx_fft==nx_global.and.ny_fft==ny_global.and.nz_fft==nz_global) then
+nullify(ph)
+else
 call ph%fin()
+endif
 call sp%fin()
 
 if (allocated(wk2_c2c)) deallocate(wk2_c2c)

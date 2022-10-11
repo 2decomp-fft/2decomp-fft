@@ -12,12 +12,6 @@
 ! This file contain common code to be included by subroutines 
 ! 'update_halo_...' in halo.f90
 
-    if (present(opt_decomp)) then
-       decomp = opt_decomp
-    else
-       decomp = decomp_main
-    end if
-
     if (present(opt_global)) then
        global = opt_global
     else

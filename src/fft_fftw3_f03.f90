@@ -52,10 +52,11 @@ module decomp_2d_fft
   integer, save :: nx_fft, ny_fft, nz_fft
 
   ! 2D processor grid
+  ! FIXME this is already available in the module decomp_2d
   integer, save, dimension(2) :: dims
 
   ! Decomposition objects
-  TYPE(DECOMP_INFO), save :: ph  ! physical space
+  TYPE(DECOMP_INFO), pointer, save :: ph=>null()  ! physical space
   TYPE(DECOMP_INFO), save :: sp  ! spectral space
 
   ! Workspace to store the intermediate Y-pencil data
@@ -136,6 +137,7 @@ contains
     nz_fft = nz
 
     ! determine the processor grid in use
+    ! FIXME this is already defined in the module decomp_2d
     call MPI_CART_GET(DECOMP_2D_COMM_CART_X, 2, &
          dims, dummy_periods, dummy_coords, ierror)
 
@@ -145,7 +147,11 @@ contains
     !         (nx/2+1)*ny*nz, if PHYSICAL_IN_X
     !      or nx*ny*(nz/2+1), if PHYSICAL_IN_Z
 
-    call ph%init(nx, ny, nz)
+    if (nx_fft==nx_global.and.ny_fft==ny_global.and.nz_fft==nz_global) then
+       ph => decomp_main
+    else
+       call ph%init(nx, ny, nz)
+    endif
     if (format==PHYSICAL_IN_X) then
        call sp%init(nx/2+1, ny, nz)
     else if (format==PHYSICAL_IN_Z) then
@@ -194,7 +200,11 @@ contains
     if (decomp_profiler_fft) call decomp_profiler_start("fft_fin")
 #endif
 
-    call ph%fin()
+    if (nx_fft==nx_global.and.ny_fft==ny_global.and.nz_fft==nz_global) then
+      nullify(ph)
+    else
+      call ph%fin()
+    endif
     call sp%fin()
 
     call fftw_free(wk2_c2c_p)

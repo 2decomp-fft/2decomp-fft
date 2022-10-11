@@ -127,7 +127,7 @@ if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_CART_GET"
 if (nx_fft==nx_global.and.ny_fft==ny_global.and.nz_fft==nz_global) then
 ph=>decomp_main
 else
-call ph=>init(nx, ny, nz)
+call ph%init(nx, ny, nz)
 endif
 if (format==PHYSICAL_IN_X) then
 call sp%init(nx/2+1, ny, nz)

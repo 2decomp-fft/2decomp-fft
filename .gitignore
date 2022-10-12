@@ -39,5 +39,6 @@ build
 
 # Intel MKL FFT
 src/mkl_dfti.f90
+obj
 
 Makefile.settings

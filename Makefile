@@ -127,7 +127,6 @@ $(OBJDECOMP) : $(OBJDIR)/%.o : $(SRCDIR)/%.f90
 	$(FC) $(FFLAGS) $(OPT) $(DEFS) $(INC) -c $< -o $@
 
 $(OBJDECOMP_MKL) : $(OBJDIR)/%.o : $(MKLROOT)/include/%.f90
-	$(info "HI" $< $@ $(MKLROOT))
 	$(FC) $(FFLAGS) $(OPT) $(DEFS) $(INC) -c $(MKLROOT)/include/mkl_dfti.f90 -o $@
 
 examples: $(LIBDECOMP)

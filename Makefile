@@ -101,8 +101,8 @@ FFLAGS += $(MODFLAG)$(DECOMPINC) -I$(DECOMPINC)
 SRCDECOMP := $(SRCDECOMP) fft_$(FFT).f90
 SRCDECOMP_ = $(patsubst %.f90,$(SRCDIR)/%.f90,$(filter-out %/mkl_dfti.f90,$(SRCDECOMP)))
 SRCDECOMP_ += $(filter %/mkl_dfti.f90,$(SRCDECOMP))
-OBJDECOMP_MKL := $(patsubst $(MKLROOT)/include/%.f90,$(OBJDIR)/%.f90,$(filter %/mkl_dfti.f90,$(SRCDECOMP_)))
-OBJDECOMP_MKL := $(subst %.f90,%.o,$(OBJDECOMP_MKL))
+OBJDECOMP_MKL_ = $(patsubst $(MKLROOT)/include/%.f90,$(OBJDIR)/%.f90,$(filter %/mkl_dfti.f90,$(SRCDECOMP_)))
+OBJDECOMP_MKL = $(OBJDECOMP_MKL_:%.f90=%.o)
 OBJDECOMP = $(SRCDECOMP_:$(SRCDIR)/%.f90=$(OBJDIR)/%.o)
 
 OPT += $(OPTIO)
@@ -127,7 +127,7 @@ $(OBJDECOMP) : $(OBJDIR)/%.o : $(SRCDIR)/%.f90
 	$(FC) $(FFLAGS) $(OPT) $(DEFS) $(INC) -c $< -o $@
 
 $(OBJDECOMP_MKL) : $(OBJDIR)/%.o : $(MKLROOT)/include/%.f90
-	$(FC) $(FFLAGS) $(OPT) $(DEFS) $(INC) -c $(MKLROOT)/include/mkl_dfti.f90 -o $@
+	$(FC) $(FFLAGS) $(OPT) $(DEFS) $(INC) -c $(MKLROOT)/include/mkl_dfti.f90 -o $(OBJDIR)/mkl_dfti.o
 
 examples: $(LIBDECOMP)
 	$(MAKE) -C examples

@@ -37,4 +37,7 @@ build
 # Log files
 *.log
 
+# Intel MKL FFT
+src/mkl_dfti.f90
+
 Makefile.settings

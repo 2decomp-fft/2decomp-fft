@@ -88,12 +88,18 @@ module decomp_2d_fft
     status = DftiCreateDescriptor(desc, DFTI_SINGLE, &
          DFTI_COMPLEX, 1, decomp%xsz(1))
 #endif
+    if (status/=0) call decomp_2d_abort(__FILE__, __LINE__, status, "DftiCreateDescriptor")
     status = DftiSetValue(desc, DFTI_NUMBER_OF_TRANSFORMS, &
          decomp%xsz(2)*decomp%xsz(3))
+    if (status/=0) call decomp_2d_abort(__FILE__, __LINE__, status, "DftiSetValue")
     status = DftiSetValue(desc, DFTI_PLACEMENT, DFTI_NOT_INPLACE)
+    if (status/=0) call decomp_2d_abort(__FILE__, __LINE__, status, "DftiSetValue")
     status = DftiSetValue(desc, DFTI_INPUT_DISTANCE, decomp%xsz(1))
+    if (status/=0) call decomp_2d_abort(__FILE__, __LINE__, status, "DftiSetValue")
     status = DftiSetValue(desc, DFTI_OUTPUT_DISTANCE, decomp%xsz(1))
+    if (status/=0) call decomp_2d_abort(__FILE__, __LINE__, status, "DftiSetValue")
     status = DftiCommitDescriptor(desc)
+    if (status/=0) call decomp_2d_abort(__FILE__, __LINE__, status, "DftiCommitDescriptor")
 
     return
   end subroutine c2c_1m_x_plan
@@ -118,15 +124,23 @@ module decomp_2d_fft
     status = DftiCreateDescriptor(desc, DFTI_SINGLE, &
          DFTI_COMPLEX, 1, decomp%ysz(2))
 #endif
+    if (status/=0) call decomp_2d_abort(__FILE__, __LINE__, status, "DftiCreateDescriptor")
     status = DftiSetValue(desc, DFTI_PLACEMENT, DFTI_NOT_INPLACE)
+    if (status/=0) call decomp_2d_abort(__FILE__, __LINE__, status, "DftiSetValue")
     status = DftiSetValue(desc, DFTI_NUMBER_OF_TRANSFORMS, decomp%ysz(1))
+    if (status/=0) call decomp_2d_abort(__FILE__, __LINE__, status, "DftiSetValue")
     status = DftiSetValue(desc, DFTI_INPUT_DISTANCE, 1)
+    if (status/=0) call decomp_2d_abort(__FILE__, __LINE__, status, "DftiSetValue")
     status = DftiSetValue(desc, DFTI_OUTPUT_DISTANCE, 1)
+    if (status/=0) call decomp_2d_abort(__FILE__, __LINE__, status, "DftiSetValue")
     strides(1) = 0
     strides(2) = decomp%ysz(1)
     status = DftiSetValue(desc, DFTI_INPUT_STRIDES, strides)
+    if (status/=0) call decomp_2d_abort(__FILE__, __LINE__, status, "DftiSetValue")
     status = DftiSetValue(desc, DFTI_OUTPUT_STRIDES, strides)
+    if (status/=0) call decomp_2d_abort(__FILE__, __LINE__, status, "DftiSetValue")
     status = DftiCommitDescriptor(desc)
+    if (status/=0) call decomp_2d_abort(__FILE__, __LINE__, status, "DftiCommitDescriptor")
 
     return
   end subroutine c2c_1m_y_plan
@@ -148,16 +162,24 @@ module decomp_2d_fft
     status = DftiCreateDescriptor(desc, DFTI_SINGLE, &
          DFTI_COMPLEX, 1, decomp%zsz(3))
 #endif
+    if (status/=0) call decomp_2d_abort(__FILE__, __LINE__, status, "DftiCreateDescriptor")
     status = DftiSetValue(desc, DFTI_PLACEMENT, DFTI_NOT_INPLACE)
+    if (status/=0) call decomp_2d_abort(__FILE__, __LINE__, status, "DftiSetValue")
     status = DftiSetValue(desc, DFTI_NUMBER_OF_TRANSFORMS, &
          decomp%zsz(1)*decomp%zsz(2))
+    if (status/=0) call decomp_2d_abort(__FILE__, __LINE__, status, "DftiSetValue")
     status = DftiSetValue(desc, DFTI_INPUT_DISTANCE, 1)
+    if (status/=0) call decomp_2d_abort(__FILE__, __LINE__, status, "DftiSetValue")
     status = DftiSetValue(desc, DFTI_OUTPUT_DISTANCE, 1)
+    if (status/=0) call decomp_2d_abort(__FILE__, __LINE__, status, "DftiSetValue")
     strides(1) = 0
     strides(2) = decomp%zsz(1)*decomp%zsz(2)
     status = DftiSetValue(desc, DFTI_INPUT_STRIDES, strides)
+    if (status/=0) call decomp_2d_abort(__FILE__, __LINE__, status, "DftiSetValue")
     status = DftiSetValue(desc, DFTI_OUTPUT_STRIDES, strides)
-    status = DftiCommitDescriptor(desc)    
+    if (status/=0) call decomp_2d_abort(__FILE__, __LINE__, status, "DftiSetValue")
+    status = DftiCommitDescriptor(desc)
+    if (status/=0) call decomp_2d_abort(__FILE__, __LINE__, status, "DftiCommitDescriptor")
 
     return
   end subroutine c2c_1m_z_plan
@@ -182,23 +204,32 @@ module decomp_2d_fft
     status = DftiCreateDescriptor(desc, DFTI_SINGLE, &
          DFTI_REAL, 1, decomp_ph%xsz(1))
 #endif
+    if (status/=0) call decomp_2d_abort(__FILE__, __LINE__, status, "DftiCreateDescriptor")
     status = DftiSetValue(desc, DFTI_NUMBER_OF_TRANSFORMS, &
          decomp_ph%xsz(2)*decomp_ph%xsz(3))
+    if (status/=0) call decomp_2d_abort(__FILE__, __LINE__, status, "DftiSetValue")
     status = DftiSetValue(desc, DFTI_CONJUGATE_EVEN_STORAGE, &
          DFTI_COMPLEX_COMPLEX)
+    if (status/=0) call decomp_2d_abort(__FILE__, __LINE__, status, "DftiSetValue")
     status = DftiSetValue(desc, DFTI_PLACEMENT, DFTI_NOT_INPLACE)
+    if (status/=0) call decomp_2d_abort(__FILE__, __LINE__, status, "DftiSetValue")
     if (direction == -1) then  ! r2c
        status = DftiSetValue(desc, DFTI_INPUT_DISTANCE, &
             decomp_ph%xsz(1))
+       if (status/=0) call decomp_2d_abort(__FILE__, __LINE__, status, "DftiSetValue")
        status = DftiSetValue(desc, DFTI_OUTPUT_DISTANCE, &
             decomp_sp%xsz(1))
+       if (status/=0) call decomp_2d_abort(__FILE__, __LINE__, status, "DftiSetValue")
     else if (direction == 1) then  ! c2r
        status = DftiSetValue(desc, DFTI_INPUT_DISTANCE, &
             decomp_sp%xsz(1))
+       if (status/=0) call decomp_2d_abort(__FILE__, __LINE__, status, "DftiSetValue")
        status = DftiSetValue(desc, DFTI_OUTPUT_DISTANCE, &
             decomp_ph%xsz(1))
+       if (status/=0) call decomp_2d_abort(__FILE__, __LINE__, status, "DftiSetValue")
     end if
     status = DftiCommitDescriptor(desc)
+    if (status/=0) call decomp_2d_abort(__FILE__, __LINE__, status, "DftiCommitDescriptor")
 
     return
   end subroutine r2c_1m_x_plan
@@ -223,13 +254,19 @@ module decomp_2d_fft
     status = DftiCreateDescriptor(desc, DFTI_SINGLE, &
          DFTI_REAL, 1, decomp_ph%zsz(3))
 #endif
+    if (status/=0) call decomp_2d_abort(__FILE__, __LINE__, status, "DftiCreateDescriptor")
     status = DftiSetValue(desc, DFTI_NUMBER_OF_TRANSFORMS, &
          decomp_ph%zsz(1)*decomp_ph%zsz(2))
+    if (status/=0) call decomp_2d_abort(__FILE__, __LINE__, status, "DftiSetValue")
     status = DftiSetValue(desc, DFTI_CONJUGATE_EVEN_STORAGE, &
          DFTI_COMPLEX_COMPLEX)
+    if (status/=0) call decomp_2d_abort(__FILE__, __LINE__, status, "DftiSetValue")
     status = DftiSetValue(desc, DFTI_PLACEMENT, DFTI_NOT_INPLACE)
+    if (status/=0) call decomp_2d_abort(__FILE__, __LINE__, status, "DftiSetValue")
     status = DftiSetValue(desc, DFTI_INPUT_DISTANCE, 1)
+    if (status/=0) call decomp_2d_abort(__FILE__, __LINE__, status, "DftiSetValue")
     status = DftiSetValue(desc, DFTI_OUTPUT_DISTANCE, 1)
+    if (status/=0) call decomp_2d_abort(__FILE__, __LINE__, status, "DftiSetValue")
     strides(1) = 0
     strides(2) = decomp_ph%zsz(1)*decomp_ph%zsz(2)
     if (direction == -1) then
@@ -237,13 +274,16 @@ module decomp_2d_fft
     else if (direction == 1) then
        status = DftiSetValue(desc, DFTI_OUTPUT_STRIDES, strides)
     end if
+    if (status/=0) call decomp_2d_abort(__FILE__, __LINE__, status, "DftiSetValue")
     strides(2) = decomp_sp%zsz(1)*decomp_sp%zsz(2)
     if (direction == -1) then
        status = DftiSetValue(desc, DFTI_OUTPUT_STRIDES, strides)
     else if (direction == 1) then
        status = DftiSetValue(desc, DFTI_INPUT_STRIDES, strides)
     end if
+    if (status/=0) call decomp_2d_abort(__FILE__, __LINE__, status, "DftiSetValue")
     status = DftiCommitDescriptor(desc)
+    if (status/=0) call decomp_2d_abort(__FILE__, __LINE__, status, "DftiCommitDescriptor")
 
     return
   end subroutine r2c_1m_z_plan
@@ -259,18 +299,28 @@ module decomp_2d_fft
     integer :: status
 
     status = DftiFreeDescriptor(c2c_x)
+    if (status/=0) call decomp_2d_abort(__FILE__, __LINE__, status, "DftiFreeDescriptor")
     status = DftiFreeDescriptor(c2c_y)
+    if (status/=0) call decomp_2d_abort(__FILE__, __LINE__, status, "DftiFreeDescriptor")
     status = DftiFreeDescriptor(c2c_z)
+    if (status/=0) call decomp_2d_abort(__FILE__, __LINE__, status, "DftiFreeDescriptor")
     if (format==PHYSICAL_IN_X) then
        status = DftiFreeDescriptor(r2c_x)
+       if (status/=0) call decomp_2d_abort(__FILE__, __LINE__, status, "DftiFreeDescriptor")
        status = DftiFreeDescriptor(c2c_z2)
+       if (status/=0) call decomp_2d_abort(__FILE__, __LINE__, status, "DftiFreeDescriptor")
        status = DftiFreeDescriptor(c2r_x)
+       if (status/=0) call decomp_2d_abort(__FILE__, __LINE__, status, "DftiFreeDescriptor")
     else if (format==PHYSICAL_IN_Z) then
        status = DftiFreeDescriptor(r2c_z)
+       if (status/=0) call decomp_2d_abort(__FILE__, __LINE__, status, "DftiFreeDescriptor")
        status = DftiFreeDescriptor(c2c_x2)
+       if (status/=0) call decomp_2d_abort(__FILE__, __LINE__, status, "DftiFreeDescriptor")
        status = DftiFreeDescriptor(c2r_z)
+       if (status/=0) call decomp_2d_abort(__FILE__, __LINE__, status, "DftiFreeDescriptor")
     end if
     status = DftiFreeDescriptor(c2c_y2)
+    if (status/=0) call decomp_2d_abort(__FILE__, __LINE__, status, "DftiFreeDescriptor")
 
     return
   end subroutine finalize_fft_engine
@@ -305,6 +355,7 @@ if (decomp_profiler_fft) call decomp_profiler_start("fft_c2c")
        !          status = DftiComputeBackward(c2c_x, in(:,1,1), wk1(:,1,1))
        !       end if
        status = wrapper_c2c(c2c_x, in, wk1, isign)
+       if (status/=0) call decomp_2d_abort(__FILE__, __LINE__, status, "wrapper_c2c")
 
        ! ===== Swap X --> Y =====
        allocate (wk2(ph%ysz(1),ph%ysz(2),ph%ysz(3)))
@@ -319,6 +370,7 @@ if (decomp_profiler_fft) call decomp_profiler_start("fft_c2c")
           !             status = DftiComputeBackward(c2c_y, wk2(:,1,k), wk2b(:,1,k))
           !          end if
           status = wrapper_c2c(c2c_y, wk2(1,1,k), wk2b(1,1,k), isign)
+          if (status/=0) call decomp_2d_abort(__FILE__, __LINE__, status, "wrapper_c2c")
        end do
 
        ! ===== Swap Y --> Z =====
@@ -332,6 +384,7 @@ if (decomp_profiler_fft) call decomp_profiler_start("fft_c2c")
        !          status = DftiComputeBackward(c2c_z, wk3(:,1,1), out(:,1,1))
        !       end if
        status = wrapper_c2c(c2c_z, wk3, out, isign)
+       if (status/=0) call decomp_2d_abort(__FILE__, __LINE__, status, "wrapper_c2c")
 
     else if (format==PHYSICAL_IN_X .AND. isign==DECOMP_2D_FFT_BACKWARD &
          .OR. & 
@@ -345,6 +398,7 @@ if (decomp_profiler_fft) call decomp_profiler_start("fft_c2c")
        !          status = DftiComputeBackward(c2c_z, in(:,1,1), wk1(:,1,1))
        !       end if
        status = wrapper_c2c(c2c_z, in, wk1, isign)
+       if (status/=0) call decomp_2d_abort(__FILE__, __LINE__, status, "wrapper_c2c")
 
        ! ===== Swap Z --> Y =====
        allocate (wk2(ph%ysz(1),ph%ysz(2),ph%ysz(3)))
@@ -359,6 +413,7 @@ if (decomp_profiler_fft) call decomp_profiler_start("fft_c2c")
           !             status = DftiComputeBackward(c2c_y, wk2(:,1,k), wk2b(:,1,k))
           !          end if
           status = wrapper_c2c(c2c_y, wk2(1,1,k), wk2b(1,1,k), isign)
+          if (status/=0) call decomp_2d_abort(__FILE__, __LINE__, status, "wrapper_c2c")
        end do
 
        ! ===== Swap Y --> X =====
@@ -372,6 +427,7 @@ if (decomp_profiler_fft) call decomp_profiler_start("fft_c2c")
        !          status = DftiComputeBackward(c2c_x, wk3(:,1,1), out(:,1,1))
        !       end if
        status = wrapper_c2c(c2c_x, wk3, out, isign)
+       if (status/=0) call decomp_2d_abort(__FILE__, __LINE__, status, "wrapper_c2c")
 
     end if
 
@@ -408,6 +464,7 @@ if (decomp_profiler_fft) call decomp_profiler_start("fft_r2c")
        allocate(wk1(sp%xsz(1),sp%xsz(2),sp%xsz(3)))
        !       status = DftiComputeForward(r2c_x, in_r(:,1,1), wk1(:,1,1))       
        status = wrapper_r2c(r2c_x, in_r, wk1)
+       if (status/=0) call decomp_2d_abort(__FILE__, __LINE__, status, "wrapper_r2c")
 
        ! ===== Swap X --> Y =====
        allocate (wk2(sp%ysz(1),sp%ysz(2),sp%ysz(3)))
@@ -418,6 +475,7 @@ if (decomp_profiler_fft) call decomp_profiler_start("fft_r2c")
        do k=1,sp%ysz(3)
           !          status = DftiComputeForward(c2c_y2, wk2(:,1,k), wk2b(:,1,k))
           status = wrapper_c2c(c2c_y2, wk2(1,1,k), wk2b(1,1,k), isign)
+          if (status/=0) call decomp_2d_abort(__FILE__, __LINE__, status, "wrapper_c2c")
        end do
 
        ! ===== Swap Y --> Z =====
@@ -427,6 +485,7 @@ if (decomp_profiler_fft) call decomp_profiler_start("fft_r2c")
        ! ===== 1D FFTs in Z =====
        !       status = DftiComputeForward(c2c_z2, wk3(:,1,1), out_c(:,1,1))
        status = wrapper_c2c(c2c_z2, wk3, out_c, isign)
+       if (status/=0) call decomp_2d_abort(__FILE__, __LINE__, status, "wrapper_c2c")
 
     else if (format==PHYSICAL_IN_Z) then
 
@@ -434,6 +493,7 @@ if (decomp_profiler_fft) call decomp_profiler_start("fft_r2c")
        allocate(wk1(sp%zsz(1),sp%zsz(2),sp%zsz(3)))
        !       status = DftiComputeForward(r2c_z, in_r(:,1,1), wk1(:,1,1))
        status = wrapper_r2c(r2c_z, in_r, wk1)
+       if (status/=0) call decomp_2d_abort(__FILE__, __LINE__, status, "wrapper_r2c")
 
        ! ===== Swap Z --> Y =====
        allocate (wk2(sp%ysz(1),sp%ysz(2),sp%ysz(3)))
@@ -444,6 +504,7 @@ if (decomp_profiler_fft) call decomp_profiler_start("fft_r2c")
        do k=1,sp%ysz(3)
           !          status = DftiComputeForward(c2c_y2, wk2(:,1,k), wk2b(:,1,k))
           status = wrapper_c2c(c2c_y2, wk2(1,1,k), wk2b(1,1,k), isign)
+          if (status/=0) call decomp_2d_abort(__FILE__, __LINE__, status, "wrapper_c2c")
        end do
 
        ! ===== Swap Y --> X =====
@@ -453,6 +514,7 @@ if (decomp_profiler_fft) call decomp_profiler_start("fft_r2c")
        ! ===== 1D FFTs in X =====
        !       status = DftiComputeForward(c2c_x2, wk3(:,1,1), out_c(:,1,1))
        status = wrapper_c2c(c2c_x2, wk3, out_c, isign)
+       if (status/=0) call decomp_2d_abort(__FILE__, __LINE__, status, "wrapper_c2c")
 
     end if
 
@@ -489,6 +551,7 @@ if (decomp_profiler_fft) call decomp_profiler_start("fft_c2r")
        allocate (wk1(sp%zsz(1),sp%zsz(2),sp%zsz(3)))
        !       status = DftiComputeBackward(c2c_z2, in_c(:,1,1), wk1(:,1,1))
        status = wrapper_c2c(c2c_z2, in_c, wk1, isign)
+       if (status/=0) call decomp_2d_abort(__FILE__, __LINE__, status, "wrapper_c2c")
 
        ! ===== Swap Z --> Y =====
        allocate (wk2(sp%ysz(1),sp%ysz(2),sp%ysz(3)))
@@ -499,6 +562,7 @@ if (decomp_profiler_fft) call decomp_profiler_start("fft_c2r")
        do k=1,sp%ysz(3)
           !          status = DftiComputeBackward(c2c_y2, wk2(:,1,k), wk2b(:,1,k))
           status = wrapper_c2c(c2c_y2, wk2(1,1,k), wk2b(1,1,k), isign)
+          if (status/=0) call decomp_2d_abort(__FILE__, __LINE__, status, "wrapper_c2c")
        end do
 
        ! ===== Swap Y --> X =====
@@ -508,6 +572,7 @@ if (decomp_profiler_fft) call decomp_profiler_start("fft_c2r")
        ! ===== 1D FFTs in X =====
        !       status = DftiComputeBackward(c2r_x, wk3(:,1,1), out_r(:,1,1))
        status =  wrapper_c2r(c2r_x, wk3, out_r)
+       if (status/=0) call decomp_2d_abort(__FILE__, __LINE__, status, "wrapper_c2r")
 
     else if (format==PHYSICAL_IN_Z) then
 
@@ -515,6 +580,7 @@ if (decomp_profiler_fft) call decomp_profiler_start("fft_c2r")
        allocate(wk1(sp%xsz(1),sp%xsz(2),sp%xsz(3)))
        !       status = DftiComputeBackward(c2c_x2, in_c(:,1,1), wk1(:,1,1))
        status = wrapper_c2c(c2c_x2, in_c, wk1, isign)
+       if (status/=0) call decomp_2d_abort(__FILE__, __LINE__, status, "wrapper_c2c")
 
        ! ===== Swap X --> Y =====
        allocate (wk2(sp%ysz(1),sp%ysz(2),sp%ysz(3)))
@@ -525,6 +591,7 @@ if (decomp_profiler_fft) call decomp_profiler_start("fft_c2r")
        do k=1,sp%ysz(3)
           !          status = DftiComputeBackward(c2c_y2, wk2(:,1,k), wk2b(:,1,k))
           status = wrapper_c2c(c2c_y2, wk2(1,1,k), wk2b(1,1,k), isign)
+          if (status/=0) call decomp_2d_abort(__FILE__, __LINE__, status, "wrapper_c2c")
        end do
 
        ! ===== Swap Y --> Z =====
@@ -534,6 +601,7 @@ if (decomp_profiler_fft) call decomp_profiler_start("fft_c2r")
        ! ===== 1D FFTs in Z =====
        !       status = DftiComputeBackward(c2r_z, wk3(:,1,1), out_r(:,1,1))
        status =  wrapper_c2r(c2r_z, wk3, out_r)
+       if (status/=0) call decomp_2d_abort(__FILE__, __LINE__, status, "wrapper_c2r")
 
     end if
 

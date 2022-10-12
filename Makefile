@@ -147,6 +147,8 @@ clean-examples:
 Makefile.settings:
 	ls $(MKLROOT)
 	ls $(MKLROOT)/*
+	ls $(MKLROOT)/*/*
+	ls $(MKLROOT)/*/*/*
 	cp $(MKLROOT)/include/mkl_dfti.f90 ./src/
 	echo "FC = $(FC)" > $@
 	echo "FFLAGS = $(FFLAGS)" >> $@

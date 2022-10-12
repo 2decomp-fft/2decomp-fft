@@ -102,7 +102,7 @@ jobs:
 
     # Runs a set of commands using the runners shell
     - name: Compile
-      run: source /opt/intel/oneapi/setvars.sh && make CMP=intel BUILD=debug && make examples
+      run: source /opt/intel/oneapi/setvars.sh && make FFT=mkl CMP=intel BUILD=debug && make examples
 
   bld_fftw3:
     # The type of runner that the job will run on

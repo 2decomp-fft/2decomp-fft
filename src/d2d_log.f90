@@ -58,7 +58,7 @@ submodule (decomp_2d) d2d_log
 
     ! Git hash if available
 #if defined(VERSION)
-    write (io_unit, *) 'Git version        : ', "VERSION"
+    write (io_unit, *) 'Git version        : ', VERSION
 #else
     write (io_unit, *) 'Git version        : unknown'
 #endif

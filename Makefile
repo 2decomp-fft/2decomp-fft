@@ -53,7 +53,8 @@ else ifeq ($(FFT),generic)
   INC=
   LIBFFT=
 else ifeq ($(FFT),mkl)
-  SRCDECOMP := mkl_dfti.f90 $(SRCDECOMP)
+  $(shell cp $(MKLROOT)/include/mkl_dfti.f90 ./src/) # FIXME This is broken in CI
+  SRCDECOMP += mkl_dfti.f90
   LIBFFT=-Wl,--start-group $(MKLROOT)/lib/intel64/libmkl_intel_lp64.a $(MKLROOT)/lib/intel64/libmkl_sequential.a $(MKLROOT)/lib/intel64/libmkl_core.a -Wl,--end-group -lpthread
   INC=-I$(MKLROOT)/include
 else ifeq ($(FFT),cufft)

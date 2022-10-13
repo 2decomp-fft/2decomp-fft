@@ -53,8 +53,7 @@ else ifeq ($(FFT),generic)
   INC=
   LIBFFT=
 else ifeq ($(FFT),mkl)
-  $(shell cp $(MKLROOT)/include/mkl_dfti.f90 ./src/) # FIXME This is broken in CI
-  SRCDECOMP += mkl_dfti.f90
+  SRCDECOMP += $(MKLROOT)/include/mkl_dfti.f90
   LIBFFT=-Wl,--start-group $(MKLROOT)/lib/intel64/libmkl_intel_lp64.a $(MKLROOT)/lib/intel64/libmkl_sequential.a $(MKLROOT)/lib/intel64/libmkl_core.a -Wl,--end-group -lpthread
   INC=-I$(MKLROOT)/include
 else ifeq ($(FFT),cufft)
@@ -88,10 +87,6 @@ ifeq ($(PROFILER),caliper)
   LFLAGS := $(LFLAGS) -L$(CALIPER_PATH)/lib -lcaliper
 endif
 
-SRCDECOMP := $(SRCDECOMP) fft_$(FFT).f90
-SRCDECOMP_ = $(patsubst %.f90,$(SRCDIR)/%.f90,$(SRCDECOMP))
-OBJDECOMP = $(SRCDECOMP_:$(SRCDIR)/%.f90=$(OBJDIR)/%.o)
-
 #######OPTIONS settings###########
 OPT =
 LINKOPT = $(FFLAGS)
@@ -102,6 +97,13 @@ OBJDIR = obj
 SRCDIR = src
 DECOMPINC = mod
 FFLAGS += $(MODFLAG)$(DECOMPINC) -I$(DECOMPINC)
+
+SRCDECOMP := $(SRCDECOMP) fft_$(FFT).f90
+SRCDECOMP_ = $(patsubst %.f90,$(SRCDIR)/%.f90,$(filter-out %/mkl_dfti.f90,$(SRCDECOMP)))
+SRCDECOMP_ += $(filter %/mkl_dfti.f90,$(SRCDECOMP))
+OBJDECOMP_MKL_ = $(patsubst $(MKLROOT)/include/%.f90,$(OBJDIR)/%.f90,$(filter %/mkl_dfti.f90,$(SRCDECOMP_)))
+OBJDECOMP_MKL = $(OBJDECOMP_MKL_:%.f90=%.o)
+OBJDECOMP = $(SRCDECOMP_:$(SRCDIR)/%.f90=$(OBJDIR)/%.o)
 
 OPT += $(OPTIO)
 INC += $(INCIO)
@@ -115,7 +117,7 @@ $(DECOMPINC):
 
 $(LIBDECOMP) : Makefile.settings lib$(LIBDECOMP).a
 
-lib$(LIBDECOMP).a: $(OBJDECOMP)
+lib$(LIBDECOMP).a: $(OBJDECOMP_MKL) $(OBJDECOMP)
 	$(AR) $(LIBOPT) $@ $^
 
 $(OBJDIR):
@@ -123,6 +125,9 @@ $(OBJDIR):
 
 $(OBJDECOMP) : $(OBJDIR)/%.o : $(SRCDIR)/%.f90
 	$(FC) $(FFLAGS) $(OPT) $(DEFS) $(INC) -c $< -o $@
+
+$(OBJDECOMP_MKL) : $(OBJDIR)/%.o : $(MKLROOT)/include/%.f90
+	$(FC) $(FFLAGS) $(OPT) $(DEFS) $(INC) -c $(MKLROOT)/include/mkl_dfti.f90 -o $(OBJDIR)/mkl_dfti.o
 
 examples: $(LIBDECOMP)
 	$(MAKE) -C examples

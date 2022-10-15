@@ -33,6 +33,7 @@
        else if (s3 == decomp%zsz(3)) then
           ipencil = 3
        else
+          ipencil = 0
           call decomp_2d_abort(__FILE__, __LINE__, 1, "Invalid decomposition size")
        end if
     end if

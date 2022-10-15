@@ -26,7 +26,7 @@ program halo_test
 
   integer, allocatable, dimension(:) :: seed
 
-  real(mytype) :: err, err_local
+  real(mytype) :: err
   integer :: xlast, ylast, zlast
 
   integer :: nx_expected, ny_expected, nz_expected

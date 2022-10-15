@@ -42,3 +42,6 @@ src/mkl_dfti.f90
 obj
 
 Makefile.settings
+
+# emacs
+.dir-locals.el

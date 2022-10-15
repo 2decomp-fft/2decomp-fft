@@ -22,8 +22,23 @@
     s2 = size(in,2)
     s3 = size(in,3)
 
+    if (present(opt_pencil)) then
+       ipencil = opt_pencil
+    else
+       ! Historic/default behaviour
+       if (s1 == decomp%xsz(1)) then
+          ipencil = 1
+       else if (s2 == decomp%ysz(2)) then
+          ipencil = 2
+       else if (s3 == decomp%zsz(3)) then
+          ipencil = 3
+       else
+          call decomp_2d_abort(__FILE__, __LINE__, 1, "Invalid decomposition size")
+       end if
+    end if
+
     ! Calculate the starting index and ending index of output
-    if (s1==decomp%xsz(1)) then  ! X-pencil input
+    if (ipencil == 1) then  ! X-pencil input
        if (global) then
           xs = decomp%xst(1) 
           xe = decomp%xen(1)
@@ -39,7 +54,7 @@
           zs = 1 - level
           ze = s3 + level
        end if
-    else if (s2==decomp%ysz(2)) then  ! Y-pencil input
+    else if (ipencil == 2) then  ! Y-pencil input
        if (global) then
           xs = decomp%yst(1) - level 
           xe = decomp%yen(1) + level
@@ -55,7 +70,7 @@
           zs = 1 - level
           ze = s3 + level
        end if
-    else if (s3==decomp%zsz(3)) then  ! Z-pencil input
+    else if (ipencil == 3) then  ! Z-pencil input
        if (global) then
           xs = decomp%zst(1) - level 
           xe = decomp%zen(1) + level
@@ -79,7 +94,7 @@
        ys = 1; ye = 1
        zs = 1; ze = 1
        
-       call decomp_2d_abort(10, &
+       call decomp_2d_abort(__FILE__, __LINE__, 10, &
             'Invalid data passed to update_halo')
     end if
     allocate(out(xs:xe, ys:ye, zs:ze))
@@ -90,7 +105,7 @@
        ! using global coordinate
        ! note the input array passed in always has index starting from 1 
        ! need to work out the corresponding global index
-       if (s1==decomp%xsz(1)) then
+       if (ipencil == 1) then
           do k=decomp%xst(3),decomp%xen(3)
              do j=decomp%xst(2),decomp%xen(2)
                 do i=1,s1  ! x all local
@@ -98,7 +113,7 @@
                 end do
              end do
           end do
-       else if (s2==decomp%ysz(2)) then
+       else if (ipencil == 2) then
           do k=decomp%yst(3),decomp%yen(3)
              do j=1,s2  ! y all local
                 do i=decomp%yst(1),decomp%yen(1)
@@ -106,7 +121,7 @@
                 end do
              end do
           end do
-       else if (s3==decomp%zsz(3)) then
+       else if (ipencil == 3) then
           do k=1,s3  ! z all local
              do j=decomp%zst(2),decomp%zen(2)
                 do i=decomp%zst(1),decomp%zen(1)

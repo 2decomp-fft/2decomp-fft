@@ -210,15 +210,15 @@ contains
     
 #ifdef HALO_GLOBAL
     allocate(div2(xstart(1):xend(1), xstart(2):xend(2), xstart(3):xend(3)))
-    call update_halo(v1,vh,1,opt_global=.true.)
-    call update_halo(w1,wh,1,opt_global=.true.)
+    call update_halo(v1,vh,1,opt_global=.true.,opt_pencil=1)
+    call update_halo(w1,wh,1,opt_global=.true.,opt_pencil=1)
     
     k1 = xstart(3); kn = xend(3)
     j1 = xstart(2); jn = xend(2)
 #else
     allocate(div2(xsize(1), xsize(2), xsize(3)))
-    call update_halo(v1,vh,1)
-    call update_halo(w1,wh,1)
+    call update_halo(v1,vh,1,opt_pencil=1)
+    call update_halo(w1,wh,1,opt_pencil=1)
 
     k1 = 1; kn = xsize(3)
     j1 = 1; jn = xsize(2)
@@ -279,13 +279,13 @@ contains
 
     ! du/dx
 #ifdef HALO_GLOBAL
-    call update_halo(u2,uh,1,opt_global=.true.)
-    call update_halo(w2,wh,1,opt_global=.true.)
+    call update_halo(u2,uh,1,opt_global=.true.,opt_pencil=2)
+    call update_halo(w2,wh,1,opt_global=.true.,opt_pencil=2)
     k1 = ystart(3); kn = yend(3)
     i1 = ystart(1); in = yend(1)
 #else
-    call update_halo(u2,uh,1)
-    call update_halo(w2,wh,1)
+    call update_halo(u2,uh,1,opt_pencil=2)
+    call update_halo(w2,wh,1,opt_pencil=2)
     k1 = 1; kn = ysize(3)
     i1 = 1; in = ysize(1)
 #endif
@@ -348,9 +348,9 @@ contains
 
   ! du/dx
 #ifdef HALO_GLOBAL
-  call update_halo(u3,uh,1,opt_global=.true.)
+  call update_halo(u3,uh,1,opt_global=.true.,opt_pencil=3)
 #else
-  call update_halo(u3,uh,1)
+  call update_halo(u3,uh,1,opt_pencil=3)
 #endif
 
   call test_halo_size(uh, nx_expected, ny_expected, nz_expected, "Z:u")
@@ -370,9 +370,9 @@ contains
 
   ! dv/dy
 #ifdef HALO_GLOBAL
-  call update_halo(v3,vh,1,opt_global=.true.)
+  call update_halo(v3,vh,1,opt_global=.true.,opt_pencil=3)
 #else
-  call update_halo(v3,vh,1)
+  call update_halo(v3,vh,1,opt_pencil=3)
 #endif
 
   call test_halo_size(vh, nx_expected, ny_expected, nz_expected, "Z:v")

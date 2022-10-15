@@ -3,3 +3,5 @@ io_read
 io_bench
 io_plane_test
 io_var_test
+*.dat
+io_var_data.*

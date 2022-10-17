@@ -127,3 +127,7 @@ endif
 ifeq ($(strip $(FTN_MPI_WRAPPER)),1)
   FC = ftn
 endif
+
+# Local Variables:
+# mode: makefile
+# End:

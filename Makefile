@@ -108,7 +108,7 @@ OBJDECOMP = $(SRCDECOMP_:$(SRCDIR)/%.f90=$(OBJDIR)/%.o)
 OPT += $(OPTIO)
 INC += $(INCIO)
 
-include Makefile.settings
+-include Makefile.settings
 
 all: $(DECOMPINC) $(OBJDIR) $(LIBDECOMP)
 

@@ -147,7 +147,7 @@
     
     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     ! X-pencil
-    if (s1==decomp%xsz(1)) then
+    if (ipencil == 1) then
 
 #ifdef HALO_DEBUG
        if (nrank==4) then
@@ -256,7 +256,7 @@
 
     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!   
     ! Y-pencil   
-    else if (s2==decomp%ysz(2)) then
+    else if (ipencil == 2) then
 
 #ifdef HALO_DEBUG
        if (nrank==4) then
@@ -365,7 +365,7 @@
 
     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!   
     ! Z-pencil
-    else if (s3==decomp%zsz(3)) then   
+    else if (ipencil == 3) then   
 
 #ifdef HALO_DEBUG
        if (nrank==4) then

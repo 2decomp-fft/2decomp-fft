@@ -111,7 +111,7 @@ if (idx .lt. 1) then
    if (nrank==0) then
       inquire(file=dirname, exist=dir_exists)
       if (.not.dir_exists) then
-         call system("mkdir "//dirname//" 2> /dev/null")
+         call execute_command_line("mkdir "//dirname//" 2> /dev/null", wait=.true.)
       end if
    end if
    allocate(character(len(trim(dirname)) + 1 + len(trim(varname))) :: full_io_name)

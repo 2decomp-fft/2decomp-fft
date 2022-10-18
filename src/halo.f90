@@ -52,7 +52,8 @@
     integer :: tag_e, tag_w, tag_n, tag_s, tag_t, tag_b
 
     integer :: ipencil
-
+    logical, save :: first_call_x = .true., first_call_y = .true., first_call_z = .true.
+    
     data_type = real_type
 
 #include "halo_common.f90"
@@ -100,6 +101,7 @@
     integer :: tag_e, tag_w, tag_n, tag_s, tag_t, tag_b
 
     integer :: ipencil
+    logical, save :: first_call_x = .true., first_call_y = .true., first_call_z = .true.
     
     data_type = complex_type
 

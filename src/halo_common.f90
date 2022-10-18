@@ -28,10 +28,25 @@
        ! Historic/default behaviour
        if (s1 == decomp%xsz(1)) then
           ipencil = 1
+          if (first_call_x) then
+             first_call_x = .false.
+             call decomp_2d_warning(__FILE__, __LINE__, &
+                  0, "Deprecated interface - calling halo in X without explicit pencil")
+          end if
        else if (s2 == decomp%ysz(2)) then
           ipencil = 2
+          if (first_call_y) then
+             first_call_y = .false.
+             call decomp_2d_warning(__FILE__, __LINE__, &
+                  0, "Deprecated interface - calling halo in Y without explicit pencil")
+          end if
        else if (s3 == decomp%zsz(3)) then
           ipencil = 3
+          if (first_call_z) then
+             first_call_z = .false.
+             call decomp_2d_warning(__FILE__, __LINE__, &
+                  0, "Deprecated interface - calling halo in Z without explicit pencil")
+          end if
        else
           ipencil = 0
           call decomp_2d_abort(__FILE__, __LINE__, 1, "Invalid decomposition size")

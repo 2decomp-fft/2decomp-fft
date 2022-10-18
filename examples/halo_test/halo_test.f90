@@ -433,7 +433,7 @@ contains
        write(*,*) '-----------------------------------------------'
        write(*,*) 'Calculated via halo exchange (data in '//pencil//'-pencil)'
 #ifdef DEBUG
-       write(*,*) (div2(i,i,i), i=2,13)
+       write(*,*) (divh(i,i,i), i=2,13)
 #endif
        write(*,*) 'Error: ', err, '; Relative: ', err / divmag
        write(*,*) 'Pass: ', passing

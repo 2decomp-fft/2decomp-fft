@@ -33,7 +33,7 @@ module decomp_2d_fft
   ! For r2c/c2r transforms:
   !     use plan(0,j) for r2c transforms;
   !     use plan(2,j) for c2r transforms;
-  integer(C_INT64_T), save :: plan(-1:2,3)
+  type(C_PTR), save :: plan(-1:2,3)
 
   ! common code used for all engines, including global variables, 
   ! generic interface definitions and several subroutines
@@ -44,7 +44,7 @@ module decomp_2d_fft
 
     implicit none
 
-    integer(C_INT64_T), intent(OUT) :: plan1
+    type(C_PTR), intent(OUT) :: plan1
     TYPE(DECOMP_INFO), intent(IN) :: decomp
     integer, intent(IN) :: isign
 
@@ -74,7 +74,7 @@ module decomp_2d_fft
 
     implicit none
 
-    integer(C_INT64_T), intent(OUT) :: plan1
+    type(C_PTR), intent(OUT) :: plan1
     TYPE(DECOMP_INFO), intent(IN) :: decomp
     integer, intent(IN) :: isign
 
@@ -106,7 +106,7 @@ module decomp_2d_fft
 
     implicit none
 
-    integer(C_INT64_T), intent(OUT) :: plan1
+    type(C_PTR), intent(OUT) :: plan1
     TYPE(DECOMP_INFO), intent(IN) :: decomp
     integer, intent(IN) :: isign
 
@@ -137,7 +137,7 @@ module decomp_2d_fft
 
     implicit none
 
-    integer(C_INT64_T), intent(OUT) :: plan1
+    type(C_PTR), intent(OUT) :: plan1
     TYPE(DECOMP_INFO), intent(IN) :: decomp_ph
     TYPE(DECOMP_INFO), intent(IN) :: decomp_sp
 
@@ -168,7 +168,7 @@ module decomp_2d_fft
 
     implicit none
 
-    integer(C_INT64_T), intent(OUT) :: plan1
+    type(C_PTR), intent(OUT) :: plan1
     TYPE(DECOMP_INFO), intent(IN) :: decomp_sp
     TYPE(DECOMP_INFO), intent(IN) :: decomp_ph
 
@@ -199,7 +199,7 @@ module decomp_2d_fft
 
     implicit none
 
-    integer(C_INT64_T), intent(OUT) :: plan1
+    type(C_PTR), intent(OUT) :: plan1
     TYPE(DECOMP_INFO), intent(IN) :: decomp_ph
     TYPE(DECOMP_INFO), intent(IN) :: decomp_sp
 
@@ -230,7 +230,7 @@ module decomp_2d_fft
 
     implicit none
 
-    integer(C_INT64_T), intent(OUT) :: plan1
+    type(C_PTR), intent(OUT) :: plan1
     TYPE(DECOMP_INFO), intent(IN) :: decomp_sp
     TYPE(DECOMP_INFO), intent(IN) :: decomp_ph
 
@@ -345,7 +345,7 @@ module decomp_2d_fft
 
     complex(mytype), dimension(:,:,:), intent(INOUT) :: inout
     integer, intent(IN) :: isign
-    integer(C_INT64_T), intent(IN) :: plan1
+    type(C_PTR), intent(IN) :: plan1
 
 #ifdef DOUBLE_PREC
     call dfftw_execute_dft(plan1, inout, inout)
@@ -364,7 +364,7 @@ module decomp_2d_fft
 
     complex(mytype), dimension(:,:,:), intent(INOUT) :: inout
     integer, intent(IN) :: isign
-    integer(C_INT64_T), intent(IN) :: plan1
+    type(C_PTR), intent(IN) :: plan1
 
     integer :: k, s3
 
@@ -388,7 +388,7 @@ module decomp_2d_fft
 
     complex(mytype), dimension(:,:,:), intent(INOUT) :: inout
     integer, intent(IN) :: isign
-    integer(C_INT64_T), intent(IN) :: plan1
+    type(C_PTR), intent(IN) :: plan1
 
 #ifdef DOUBLE_PREC
     call dfftw_execute_dft(plan1, inout, inout)

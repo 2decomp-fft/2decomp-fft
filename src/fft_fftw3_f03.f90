@@ -13,6 +13,8 @@
 ! the Fortran 2003 interface introduced in FFTW 3.3-beta1
 
 module decomp_2d_fft
+
+  use MPI
   
   use decomp_2d  ! 2D decomposition module
   use, intrinsic :: iso_c_binding
@@ -119,7 +121,8 @@ contains
     logical, dimension(2) :: dummy_periods
     integer, dimension(2) :: dummy_coords
     integer :: status, errorcode
-    integer(C_SIZE_T) :: sz, ierror
+    integer :: ierror
+    integer(C_SIZE_T) :: sz
 
 #ifdef PROFILER
     if (decomp_profiler_fft) call decomp_profiler_start("fft_init")

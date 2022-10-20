@@ -120,7 +120,7 @@ contains
 
     logical, dimension(2) :: dummy_periods
     integer, dimension(2) :: dummy_coords
-    integer :: status, errorcode
+    integer :: errorcode
     integer :: ierror
     integer(C_SIZE_T) :: sz
 

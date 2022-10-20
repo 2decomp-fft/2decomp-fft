@@ -259,23 +259,30 @@ contains
     TYPE(DECOMP_INFO), intent(IN) :: decomp
     integer, intent(IN) :: isign
 
-    complex(mytype), pointer :: a1(:,:,:)
+#ifdef DOUBLE_PREC
+    complex(C_DOUBLE_COMPLEX), pointer :: a1(:,:,:)
+    complex(C_DOUBLE_COMPLEX), pointer :: a1o(:,:,:)
+#else
+    complex(C_FLOAT_COMPLEX), pointer :: a1(:,:,:)
+    complex(C_DOUBLE_COMPLEX), pointer :: a1o(:,:,:)
+#endif
     type(C_PTR) :: a1_p
     integer(C_SIZE_T) :: sz
 
     sz = decomp%xsz(1)*decomp%xsz(2)*decomp%xsz(3)
     a1_p = fftw_alloc_complex(sz)
     call c_f_pointer(a1_p,a1,[decomp%xsz(1),decomp%xsz(2),decomp%xsz(3)])
+    call c_f_pointer(a1_p,a1o,[decomp%xsz(1),decomp%xsz(2),decomp%xsz(3)])
 
 #ifdef DOUBLE_PREC
-    plan1 =  fftw_plan_many_dft(1, decomp%xsz(1), &
+    plan1 = fftw_plan_many_dft(1, decomp%xsz(1), &
          decomp%xsz(2)*decomp%xsz(3), a1, decomp%xsz(1), 1, &
-         decomp%xsz(1), a1, decomp%xsz(1), 1, decomp%xsz(1), &
+         decomp%xsz(1), a1o, decomp%xsz(1), 1, decomp%xsz(1), &
          isign, plan_type)
 #else
     plan1 = fftwf_plan_many_dft(1, decomp%xsz(1), &
          decomp%xsz(2)*decomp%xsz(3), a1, decomp%xsz(1), 1, &
-         decomp%xsz(1), a1, decomp%xsz(1), 1, decomp%xsz(1), &
+         decomp%xsz(1), a1o, decomp%xsz(1), 1, decomp%xsz(1), &
          isign, plan_type)
 #endif
 
@@ -293,7 +300,13 @@ contains
     TYPE(DECOMP_INFO), intent(IN) :: decomp
     integer, intent(IN) :: isign
 
-    complex(mytype), pointer :: a1(:,:)
+#ifdef DOUBLE_PREC
+    complex(C_DOUBLE_COMPLEX), pointer :: a1(:,:)
+    complex(C_DOUBLE_COMPLEX), pointer :: a1o(:,:)
+#else
+    complex(C_FLOAT_COMPLEX), pointer :: a1(:,:)
+    complex(C_FLOAT_COMPLEX), pointer :: a1o(:,:)
+#endif
     type(C_PTR) :: a1_p
     integer(C_SIZE_T) :: sz
 
@@ -302,14 +315,15 @@ contains
     sz = decomp%ysz(1)*decomp%ysz(2)
     a1_p = fftw_alloc_complex(sz)
     call c_f_pointer(a1_p,a1,[decomp%ysz(1),decomp%ysz(2)])
+    call c_f_pointer(a1_p,a1o,[decomp%ysz(1),decomp%ysz(2)])
 
 #ifdef DOUBLE_PREC
     plan1 =  fftw_plan_many_dft(1, decomp%ysz(2), decomp%ysz(1), &
-         a1, decomp%ysz(2), decomp%ysz(1), 1, a1, decomp%ysz(2), &
+         a1, decomp%ysz(2), decomp%ysz(1), 1, a1o, decomp%ysz(2), &
          decomp%ysz(1), 1, isign, plan_type)
 #else
     plan1 = fftwf_plan_many_dft(1, decomp%ysz(2), decomp%ysz(1), &
-         a1, decomp%ysz(2), decomp%ysz(1), 1, a1, decomp%ysz(2), &
+         a1, decomp%ysz(2), decomp%ysz(1), 1, a1o, decomp%ysz(2), &
          decomp%ysz(1), 1, isign, plan_type)
 #endif
 
@@ -327,23 +341,30 @@ contains
     TYPE(DECOMP_INFO), intent(IN) :: decomp
     integer, intent(IN) :: isign
 
-    complex(mytype), pointer :: a1(:,:,:)
+#ifdef DOUBLE_PREC
+    complex(C_DOUBLE_COMPLEX), pointer :: a1(:,:,:)
+    complex(C_DOUBLE_COMPLEX), pointer :: a1o(:,:,:)
+#else
+    complex(C_FLOAT_COMPLEX), pointer :: a1(:,:,:)
+    complex(C_FLOAT_COMPLEX), pointer :: a1o(:,:,:)
+#endif
     type(C_PTR) :: a1_p
     integer(C_SIZE_T) :: sz
 
     sz = decomp%zsz(1)*decomp%zsz(2)*decomp%zsz(3)
     a1_p = fftw_alloc_complex(sz)
     call c_f_pointer(a1_p,a1,[decomp%zsz(1),decomp%zsz(2),decomp%zsz(3)])
+    call c_f_pointer(a1_p,a1o,[decomp%zsz(1),decomp%zsz(2),decomp%zsz(3)])
 
 #ifdef DOUBLE_PREC
     plan1 =  fftw_plan_many_dft(1, decomp%zsz(3), &
          decomp%zsz(1)*decomp%zsz(2), a1, decomp%zsz(3), &
-         decomp%zsz(1)*decomp%zsz(2), 1, a1, decomp%zsz(3), &
+         decomp%zsz(1)*decomp%zsz(2), 1, a1o, decomp%zsz(3), &
          decomp%zsz(1)*decomp%zsz(2), 1, isign, plan_type)
 #else
     plan1 = fftwf_plan_many_dft(1, decomp%zsz(3), &
          decomp%zsz(1)*decomp%zsz(2), a1, decomp%zsz(3), &
-         decomp%zsz(1)*decomp%zsz(2), 1, a1, decomp%zsz(3), &
+         decomp%zsz(1)*decomp%zsz(2), 1, a1o, decomp%zsz(3), &
          decomp%zsz(1)*decomp%zsz(2), 1, isign, plan_type)
 #endif
 

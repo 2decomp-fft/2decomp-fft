@@ -264,7 +264,7 @@ contains
     complex(C_DOUBLE_COMPLEX), pointer :: a1o(:,:,:)
 #else
     complex(C_FLOAT_COMPLEX), pointer :: a1(:,:,:)
-    complex(C_DOUBLE_COMPLEX), pointer :: a1o(:,:,:)
+    complex(C_FLOAT_COMPLEX), pointer :: a1o(:,:,:)
 #endif
     type(C_PTR) :: a1_p
     integer(C_SIZE_T) :: sz

@@ -628,6 +628,10 @@ contains
     integer, intent(IN) :: isign
     type(C_PTR) :: plan1
 
+    integer :: foo
+
+    foo = isign ! Silence unused dummy argument
+    
 #ifdef DOUBLE_PREC
     call fftw_execute_dft(plan1, inout, inout)
 #else
@@ -649,6 +653,10 @@ contains
 
     integer :: k, s3
 
+    integer :: foo
+
+    foo = isign ! Silence unused dummy argument
+    
     s3 = size(inout,3)
 
     do k=1,s3  ! transform on one Z-plane at a time
@@ -671,6 +679,10 @@ contains
     integer, intent(IN) :: isign
     type(C_PTR) :: plan1
 
+    integer :: foo
+
+    foo = isign ! Silence unused dummy argument
+    
 #ifdef DOUBLE_PREC
        call fftw_execute_dft(plan1, inout, inout)
 #else

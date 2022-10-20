@@ -781,6 +781,8 @@ contains
     complex(mytype), pointer :: wk1(:,:,:)
     integer(C_SIZE_T) :: sz
     type(C_PTR) :: wk1_p
+
+    wk1_p = c_null_ptr ! Initialise to NULL pointer
 #endif
 
 #ifdef PROFILER
@@ -961,6 +963,8 @@ contains
     complex(mytype), pointer :: wk1(:,:,:)
     integer(C_SIZE_T) :: sz
     type(C_PTR) :: wk1_p
+
+    wk1_p = c_null_ptr ! Initialise to NULL pointer
 #endif
 
 #ifdef PROFILER

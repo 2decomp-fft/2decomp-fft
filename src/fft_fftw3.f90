@@ -347,6 +347,10 @@ module decomp_2d_fft
     integer, intent(IN) :: isign
     type(C_PTR), intent(IN) :: plan1
 
+    integer :: foo
+
+    foo = isign ! Silence unused dummy argument
+    
 #ifdef DOUBLE_PREC
     call dfftw_execute_dft(plan1, inout, inout)
 #else
@@ -368,6 +372,10 @@ module decomp_2d_fft
 
     integer :: k, s3
 
+    integer :: foo
+
+    foo = isign ! Silence unused dummy argument
+    
     ! transform on one Z-plane at a time
     s3 = size(inout,3)
     do k=1,s3
@@ -390,6 +398,10 @@ module decomp_2d_fft
     integer, intent(IN) :: isign
     type(C_PTR), intent(IN) :: plan1
 
+    integer :: foo
+
+    foo = isign ! Silence unused dummy argument
+    
 #ifdef DOUBLE_PREC
     call dfftw_execute_dft(plan1, inout, inout)
 #else

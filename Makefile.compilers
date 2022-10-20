@@ -50,9 +50,12 @@ else ifeq ($(CMP),gcc)
   ifeq ($(BUILD),dev)
     # Add additional, stricter flags
     FFLAGS += -Wall -Wpedantic
-    ifeq ($(MPI_FAMILY),openmpi)
-      # MPICH doesn't export interfaces...
-      FFLAGS += -Wimplicit-procedure -Wimplicit-interface
+    ifneq ($(FFT),fftw3)
+      # FFTW3 (legacy) doesn't have interfaces
+      ifeq ($(MPI_FAMILY),openmpi)
+        # MPICH doesn't export interfaces...
+        FFLAGS += -Wimplicit-procedure -Wimplicit-interface
+      endif
     endif
     FFLAGS += -Wno-unused-function
     FFLAGS += -Werror -Wno-integer-division

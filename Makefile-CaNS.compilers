@@ -30,7 +30,8 @@ endif
 FC = mpifort
 ifeq ($(CMP),INTEL)
   FC = mpiifort
-  FFLAGS += -fpp
+
+  FFLAGS += -fpp -std08
   ifeq ($(DEBUG_BUILD),yes)
     DEFS += -DDEBUG
     FFLAGS += -g -O0
@@ -46,7 +47,7 @@ ifeq ($(CMP),INTEL)
   MODFLAG = -module # Explicit space
 else ifeq ($(CMP),GNU)
   FC = mpifort
-  FFLAGS += -cpp
+  FFLAGS += -cpp -std=f2008
   ifeq "$(shell expr `gfortran -dumpversion | cut -f1 -d.` \>= 10)" "1"
     FFLAGS += -fallow-argument-mismatch
   endif
@@ -66,9 +67,12 @@ else ifeq ($(CMP),GNU)
   ifeq ($(BUILD),dev)
     # Add additional, stricter flags
     FFLAGS += -Wall -Wpedantic
-    ifeq ($(MPI_FAMILY),openmpi)
-      # MPICH doesn't export interfaces...
-      FFLAGS += -Wimplicit-procedure -Wimplicit-interface
+    ifneq ($(FFT),fftw3)
+      # FFTW3 (legacy) doesn't have interfaces
+      ifeq ($(MPI_FAMILY),openmpi)
+        # MPICH doesn't export interfaces...
+        FFLAGS += -Wimplicit-procedure -Wimplicit-interface
+      endif
     endif
     FFLAGS += -Wno-unused-function
     FFLAGS += -Werror
@@ -107,8 +111,8 @@ else ifeq ($(CMP),NVIDIA)
      else
        FFLAGS += -cudalib=cufft
      endif
-     #FFLAGS = -D_GPU -D_NCCL -Mfree -Kieee -Minfo=accel,stdpar -stdpar=gpu -gpu=cc80,managed,lineinfo -acc -target=gpu -traceback -O3 -DUSE_CUDA -cuda -cudalib=cufft,nccl
-     FFLAGS += -Mfree -D_GPU -Kieee -Minfo=accel,stdpar -stdpar=gpu -gpu=cc80,managed,lineinfo -acc -target=gpu -traceback -O3 -DUSE_CUDA -cuda
+     #FFLAGS += -D_GPU -Mfree -Kieee -Minfo=accel,stdpar -stdpar=gpu -gpu=cc80,managed,lineinfo -acc -target=gpu -traceback -O3 -DUSE_CUDA -cuda -cudalib=cufft
+     #FFLAGS += -Mfree -Kieee -Minfo=accel,stdpar -stdpar=gpu -gpu=cc80,managed,lineinfo -acc -target=gpu -traceback -O3 -DUSE_CUDA -cuda -cudalib=cufft
      LFLAGS += -acc -lnvhpcwrapnvtx
   else
     ifeq ($(DEBUG_BUILD),yes)

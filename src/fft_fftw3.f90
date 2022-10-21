@@ -35,6 +35,13 @@ module decomp_2d_fft
   !     use plan(2,j) for c2r transforms;
   type(C_PTR), save :: plan(-1:2,3)
 
+  ! This is defined in fftw3.f03 but not in fftw3.f
+  interface
+    subroutine fftw_cleanup() bind(C, name='fftw_cleanup')
+      import
+    end subroutine fftw_cleanup
+  end interface
+
   ! common code used for all engines, including global variables, 
   ! generic interface definitions and several subroutines
 #include "fft_common.f90"
@@ -311,7 +318,6 @@ module decomp_2d_fft
     return
   end subroutine init_fft_engine
 
-
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   !  This routine performs one-time finalisations for the FFT engine
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -330,6 +336,8 @@ module decomp_2d_fft
 #endif
        end do
     end do
+
+    call fftw_cleanup()
 
     return
   end subroutine finalize_fft_engine

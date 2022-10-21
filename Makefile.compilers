@@ -13,7 +13,7 @@ endif
 ifeq ($(CMP),intel)
   FC = mpiifort
 
-  FFLAGS += -fpp
+  FFLAGS += -fpp -std08
   ifeq ($(DEBUG_BUILD),yes)
     DEFS += -DDEBUG
     FFLAGS += -g -O0
@@ -29,7 +29,7 @@ ifeq ($(CMP),intel)
   MODFLAG = -module # Explicit space
 else ifeq ($(CMP),gcc)
   FC = mpif90
-  FFLAGS += -cpp
+  FFLAGS += -cpp -std=f2008
   ifeq "$(shell expr `gfortran -dumpversion | cut -f1 -d.` \>= 10)" "1"
     FFLAGS += -fallow-argument-mismatch
   endif
@@ -50,9 +50,12 @@ else ifeq ($(CMP),gcc)
   ifeq ($(BUILD),dev)
     # Add additional, stricter flags
     FFLAGS += -Wall -Wpedantic
-    ifeq ($(MPI_FAMILY),openmpi)
-      # MPICH doesn't export interfaces...
-      FFLAGS += -Wimplicit-procedure -Wimplicit-interface
+    ifneq ($(FFT),fftw3)
+      # FFTW3 (legacy) doesn't have interfaces
+      ifeq ($(MPI_FAMILY),openmpi)
+        # MPICH doesn't export interfaces...
+        FFLAGS += -Wimplicit-procedure -Wimplicit-interface
+      endif
     endif
     FFLAGS += -Wno-unused-function
     FFLAGS += -Werror -Wno-integer-division

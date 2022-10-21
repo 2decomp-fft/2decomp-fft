@@ -14,6 +14,7 @@
 module decomp_2d_fft
 
   use decomp_2d  ! 2D decomposition module
+  use iso_c_binding
 
   implicit none
 
@@ -32,7 +33,14 @@ module decomp_2d_fft
   ! For r2c/c2r transforms:
   !     use plan(0,j) for r2c transforms;
   !     use plan(2,j) for c2r transforms;
-  integer*8, save :: plan(-1:2,3)
+  type(C_PTR), save :: plan(-1:2,3)
+
+  ! This is defined in fftw3.f03 but not in fftw3.f
+  interface
+    subroutine fftw_cleanup() bind(C, name='fftw_cleanup')
+      import
+    end subroutine fftw_cleanup
+  end interface
 
   ! common code used for all engines, including global variables, 
   ! generic interface definitions and several subroutines
@@ -43,7 +51,7 @@ module decomp_2d_fft
 
     implicit none
 
-    integer*8, intent(OUT) :: plan1
+    type(C_PTR), intent(OUT) :: plan1
     TYPE(DECOMP_INFO), intent(IN) :: decomp
     integer, intent(IN) :: isign
 
@@ -73,7 +81,7 @@ module decomp_2d_fft
 
     implicit none
 
-    integer*8, intent(OUT) :: plan1
+    type(C_PTR), intent(OUT) :: plan1
     TYPE(DECOMP_INFO), intent(IN) :: decomp
     integer, intent(IN) :: isign
 
@@ -105,7 +113,7 @@ module decomp_2d_fft
 
     implicit none
 
-    integer*8, intent(OUT) :: plan1
+    type(C_PTR), intent(OUT) :: plan1
     TYPE(DECOMP_INFO), intent(IN) :: decomp
     integer, intent(IN) :: isign
 
@@ -136,7 +144,7 @@ module decomp_2d_fft
 
     implicit none
 
-    integer*8, intent(OUT) :: plan1
+    type(C_PTR), intent(OUT) :: plan1
     TYPE(DECOMP_INFO), intent(IN) :: decomp_ph
     TYPE(DECOMP_INFO), intent(IN) :: decomp_sp
 
@@ -167,7 +175,7 @@ module decomp_2d_fft
 
     implicit none
 
-    integer*8, intent(OUT) :: plan1
+    type(C_PTR), intent(OUT) :: plan1
     TYPE(DECOMP_INFO), intent(IN) :: decomp_sp
     TYPE(DECOMP_INFO), intent(IN) :: decomp_ph
 
@@ -198,7 +206,7 @@ module decomp_2d_fft
 
     implicit none
 
-    integer*8, intent(OUT) :: plan1
+    type(C_PTR), intent(OUT) :: plan1
     TYPE(DECOMP_INFO), intent(IN) :: decomp_ph
     TYPE(DECOMP_INFO), intent(IN) :: decomp_sp
 
@@ -229,7 +237,7 @@ module decomp_2d_fft
 
     implicit none
 
-    integer*8, intent(OUT) :: plan1
+    type(C_PTR), intent(OUT) :: plan1
     TYPE(DECOMP_INFO), intent(IN) :: decomp_sp
     TYPE(DECOMP_INFO), intent(IN) :: decomp_ph
 
@@ -310,7 +318,6 @@ module decomp_2d_fft
     return
   end subroutine init_fft_engine
 
-
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   !  This routine performs one-time finalisations for the FFT engine
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -330,6 +337,8 @@ module decomp_2d_fft
        end do
     end do
 
+    call fftw_cleanup()
+
     return
   end subroutine finalize_fft_engine
 
@@ -344,8 +353,12 @@ module decomp_2d_fft
 
     complex(mytype), dimension(:,:,:), intent(INOUT) :: inout
     integer, intent(IN) :: isign
-    integer*8, intent(IN) :: plan1
+    type(C_PTR), intent(IN) :: plan1
 
+    integer :: foo
+
+    foo = isign ! Silence unused dummy argument
+    
 #ifdef DOUBLE_PREC
     call dfftw_execute_dft(plan1, inout, inout)
 #else
@@ -363,10 +376,14 @@ module decomp_2d_fft
 
     complex(mytype), dimension(:,:,:), intent(INOUT) :: inout
     integer, intent(IN) :: isign
-    integer*8, intent(IN) :: plan1
+    type(C_PTR), intent(IN) :: plan1
 
     integer :: k, s3
 
+    integer :: foo
+
+    foo = isign ! Silence unused dummy argument
+    
     ! transform on one Z-plane at a time
     s3 = size(inout,3)
     do k=1,s3
@@ -387,8 +404,12 @@ module decomp_2d_fft
 
     complex(mytype), dimension(:,:,:), intent(INOUT) :: inout
     integer, intent(IN) :: isign
-    integer*8, intent(IN) :: plan1
+    type(C_PTR), intent(IN) :: plan1
 
+    integer :: foo
+
+    foo = isign ! Silence unused dummy argument
+    
 #ifdef DOUBLE_PREC
     call dfftw_execute_dft(plan1, inout, inout)
 #else

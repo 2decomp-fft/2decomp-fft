@@ -18,7 +18,7 @@ jobs:
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
     # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
 
     # Runs a single command using the runners shell
     - name: Install requirements
@@ -28,7 +28,7 @@ jobs:
 
     # Runs a set of commands using the runners shell
     - name: Compile
-      run: make BUILD=debug && make examples
+      run: make BUILD=dev && make examples
 
   bld_gnu_mpich:
     # The type of runner that the job will run on
@@ -37,7 +37,7 @@ jobs:
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
     # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
 
     # Runs a single command using the runners shell
     - name: Install requirements
@@ -47,7 +47,7 @@ jobs:
 
     # Runs a set of commands using the runners shell
     - name: Compile
-      run: make BUILD=debug && make examples
+      run: make BUILD=dev && make examples
 
 ###  bld_nvidia:
 ###    # The type of runner that the job will run on
@@ -58,7 +58,7 @@ jobs:
 ###    # Steps represent a sequence of tasks that will be executed as part of the job
 ###    steps:
 ###    # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
-###    - uses: actions/checkout@v2
+###    - uses: actions/checkout@v3
 ###
 ###    # Add Nvidia HPC SDK
 ###    - name: setup repo
@@ -88,7 +88,7 @@ jobs:
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
     # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
 
     # Add Intel OneApi
     - name: setup repo
@@ -111,7 +111,7 @@ jobs:
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
     # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
 
     # Runs a single command using the runners shell
     - name: Install requirements
@@ -123,13 +123,13 @@ jobs:
     - name: Regular FFTW3
       run: |
         make clean
-        make BUILD=debug FFT=fftw3 FFTW3_PATH_INCLUDE=/usr/include FFTW3_PATH_LIB=/usr/lib/x86_64-linux-gnu
+        make BUILD=dev FFT=fftw3 FFTW3_PATH_INCLUDE=/usr/include FFTW3_PATH_LIB=/usr/lib/x86_64-linux-gnu
         make examples
 
     - name: New FFTW3
       run: |
         make clean
-        make BUILD=debug FFT=fftw3_f03 FFTW3_PATH_INCLUDE=/usr/include FFTW3_PATH_LIB=/usr/lib/x86_64-linux-gnu
+        make BUILD=dev FFT=fftw3_f03 FFTW3_PATH_INCLUDE=/usr/include FFTW3_PATH_LIB=/usr/lib/x86_64-linux-gnu
         make examples
 
   bld_caliper:
@@ -139,7 +139,7 @@ jobs:
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
     # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
 
     # Runs a single command using the runners shell
     - name: Install requirements
@@ -160,4 +160,4 @@ jobs:
     - name: Compile
       run: |
         make clean
-        make BUILD=debug PROFILER=caliper CALIPER_PATH=./Caliper-2.8.0_bld
+        make BUILD=dev PROFILER=caliper CALIPER_PATH=./Caliper-2.8.0_bld

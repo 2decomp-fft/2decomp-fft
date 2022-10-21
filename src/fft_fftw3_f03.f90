@@ -592,7 +592,6 @@ contains
     return
   end subroutine init_fft_engine
 
-
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   !  This routine performs one-time finalisations for the FFT engine
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -611,6 +610,8 @@ contains
 #endif
        end do
     end do
+
+    call fftw_cleanup()
 
     return
   end subroutine finalize_fft_engine

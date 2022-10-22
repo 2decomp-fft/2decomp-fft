@@ -29,7 +29,12 @@ AR = ar
 LIBOPT = rcs
 
 #######CMP settings###########
-CMPINC = Makefile-CaNS.compilers
+CANS_CONF=../../build.conf
+ifeq ("$(wildcard $(CANS_CONF))","")
+  CMPINC = Makefile.compilers
+else
+  CMPINC = Makefile-CaNS.compilers
+endif
 include $(CMPINC)
 
 ### List of files for the main code

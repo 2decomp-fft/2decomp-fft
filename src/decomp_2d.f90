@@ -241,7 +241,7 @@ module decomp_2d
        alloc_x, alloc_y, alloc_z, &
        update_halo, decomp_2d_abort, &
        decomp_2d_warning, get_decomp_info, &
-       decomp_mpi_comm_free
+       decomp_mpi_comm_free, get_decomp_dims
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   ! These are routines to perform global data transpositions
@@ -689,6 +689,18 @@ contains
     return
   end subroutine get_decomp_info
 
+  !
+  ! Return the 2D processor grid
+  !
+  function get_decomp_dims()
+
+    implicit none
+
+    integer, dimension(2) :: get_decomp_dims
+
+    get_decomp_dims = dims
+
+  end function get_decomp_dims
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   ! Advanced Interface allowing applications to define globle domain of

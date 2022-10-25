@@ -86,16 +86,12 @@ end subroutine fft_init_arg
 ! Initialise the FFT library to perform arbitrary size transforms
 subroutine fft_init_general(pencil, nx, ny, nz)
 
-use mpi
-  
 implicit none
 
 integer, intent(IN) :: pencil
 integer, intent(IN) :: nx, ny, nz
 
-logical, dimension(2) :: dummy_periods
-integer, dimension(2) :: dummy_coords
-integer :: status, errorcode, ierror
+integer :: status, errorcode
 
 #ifdef PROFILER
 if (decomp_profiler_fft) call decomp_profiler_start("fft_init")
@@ -113,10 +109,7 @@ ny_fft = ny
 nz_fft = nz
 
 ! determine the processor grid in use
-! FIXME this is already defined in the module decomp_2d
-call MPI_CART_GET(DECOMP_2D_COMM_CART_X, 2, &
-dims, dummy_periods, dummy_coords, ierror)
-if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_CART_GET")
+dims = get_decomp_dims()
 
 ! for c2r/r2c interface:
 ! if in physical space, a real array is of size: nx*ny*nz

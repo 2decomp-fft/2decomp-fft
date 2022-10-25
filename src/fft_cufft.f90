@@ -55,15 +55,15 @@ module decomp_2d_fft
     call c_f_pointer( c_null_ptr, null_fptr )
    
     istat = cufftCreate(plan1)
-    istat = istat + cufftSetAutoAllocation(plan1,0)
-    istat = istat + cufftMakePlanMany(plan1,1,decomp%xsz(1),     &
+    if (istat /= 0) call decomp_2d_abort(__FILE__, __LINE__, istat, "cufftCreate")
+    istat = cufftSetAutoAllocation(plan1,0)
+    if (istat /= 0) call decomp_2d_abort(__FILE__, __LINE__, istat, "cufftSetAutoAllocation")
+    istat = cufftMakePlanMany(plan1,1,decomp%xsz(1),     &
                                       decomp%xsz(1),1,decomp%xsz(1),     &
                                       decomp%xsz(1),1,decomp%xsz(1),     &
                                       cufft_type,decomp%xsz(2)*decomp%xsz(3),worksize)
-    if (istat /= 0) &
-       write (*,*) "Cannot create plan for c2c_1m_x_plan FFTs batch (cufftPlanMany)"
+    if (istat /= 0) call decomp_2d_abort(__FILE__, __LINE__, istat, "cufftMakePlanMany")
 
-    return
   end subroutine c2c_1m_x_plan
 
   ! Return a cuFFT plan for multiple 1D FFTs in Y direction: C2C case
@@ -83,15 +83,15 @@ module decomp_2d_fft
     call c_f_pointer( c_null_ptr, null_fptr )
    
     istat = cufftCreate(plan1)
-    istat = istat + cufftSetAutoAllocation(plan1,0)
-    istat = istat + cufftMakePlanMany(plan1,1,decomp%ysz(2),     &
+    if (istat /= 0) call decomp_2d_abort(__FILE__, __LINE__, istat, "cufftCreate")
+    istat = cufftSetAutoAllocation(plan1,0)
+    if (istat /= 0) call decomp_2d_abort(__FILE__, __LINE__, istat, "cufftSetAutoAllocation")
+    istat = cufftMakePlanMany(plan1,1,decomp%ysz(2),     &
                                       decomp%ysz(2),decomp%ysz(1),1,     &
                                       decomp%ysz(2),decomp%ysz(1),1,     &
                                       cufft_type,decomp%ysz(1),worksize)
-    if (istat /= 0) &
-       write (*,*) "Cannot create plan for c2c_1m_y_plan FFTs batch (cufftPlanMany)"
+    if (istat /= 0) call decomp_2d_abort(__FILE__, __LINE__, istat, "cufftMakePlanMany")
 
-    return 
   end subroutine c2c_1m_y_plan
 
   ! Return a cuFFT plan for multiple 1D FFTs in Z direction: C2C case
@@ -107,17 +107,17 @@ module decomp_2d_fft
     integer(int_ptr_kind()), intent(out) :: worksize
     integer, pointer :: null_fptr
     call c_f_pointer( c_null_ptr, null_fptr )
-   
+
     istat = cufftCreate(plan1)
-    istat = istat + cufftSetAutoAllocation(plan1,0)
-    istat = istat + cufftMakePlanMany(plan1,1,decomp%zsz(3),                           &
+    if (istat /= 0) call decomp_2d_abort(__FILE__, __LINE__, istat, "cufftCreate")
+    istat = cufftSetAutoAllocation(plan1,0)
+    if (istat /= 0) call decomp_2d_abort(__FILE__, __LINE__, istat, "cufftSetAutoAllocation")
+    istat = cufftMakePlanMany(plan1,1,decomp%zsz(3),                           &
                                       decomp%zsz(3),decomp%zsz(1)*decomp%zsz(2),1,     &
                                       decomp%zsz(3),decomp%zsz(1)*decomp%zsz(2),1,     &
                                       cufft_type,decomp%zsz(1)*decomp%zsz(2),worksize)
-    if (istat /= 0) &
-       write (*,*) "Cannot create plan for c2c_1m_z_plan FFTs batch (cufftPlanMany)"
+    if (istat /= 0) call decomp_2d_abort(__FILE__, __LINE__, istat, "cufftMakePlanMany")
 
-    return
   end subroutine c2c_1m_z_plan
 
   ! Return a cuFFT plan for multiple 1D FFTs in X direction: R2C case
@@ -136,15 +136,15 @@ module decomp_2d_fft
     call c_f_pointer( c_null_ptr, null_fptr )
 
     istat = cufftCreate(plan1)
-    istat = istat + cufftSetAutoAllocation(plan1,0)
-    istat = istat + cufftMakePlanMany(plan1,1,decomp_ph%xsz(1),     &
+    if (istat /= 0) call decomp_2d_abort(__FILE__, __LINE__, istat, "cufftCreate")
+    istat = cufftSetAutoAllocation(plan1,0)
+    if (istat /= 0) call decomp_2d_abort(__FILE__, __LINE__, istat, "cufftSetAutoAllocation")
+    istat = cufftMakePlanMany(plan1,1,decomp_ph%xsz(1),     &
                                       decomp_ph%xsz(1),1,decomp_ph%xsz(1),     &
                                       decomp_sp%xsz(1),1,decomp_sp%xsz(1),     &
                                       cufft_type,decomp_ph%xsz(2)*decomp_ph%xsz(3),worksize)
-    if (istat /= 0) &
-       write (*,*) "Cannot create plan for r2c_1m_x_plan FFTs batch (cufftPlanMany)"
+    if (istat /= 0) call decomp_2d_abort(__FILE__, __LINE__, istat, "cufftMakePlanMany")
 
-    return
   end subroutine r2c_1m_x_plan
 
   ! Return a cuFFT plan for multiple 1D FFTs in X direction: C2R case
@@ -163,15 +163,15 @@ module decomp_2d_fft
     call c_f_pointer( c_null_ptr, null_fptr )
 
     istat = cufftCreate(plan1)
-    istat = istat + cufftSetAutoAllocation(plan1,0)
-    istat = istat + cufftMakePlanMany(plan1,1,decomp_ph%xsz(1),     &
+    if (istat /= 0) call decomp_2d_abort(__FILE__, __LINE__, istat, "cufftCreate")
+    istat = cufftSetAutoAllocation(plan1,0)
+    if (istat /= 0) call decomp_2d_abort(__FILE__, __LINE__, istat, "cufftSetAutoAllocation")
+    istat = cufftMakePlanMany(plan1,1,decomp_ph%xsz(1),     &
                                       decomp_sp%xsz(1),1,decomp_sp%xsz(1),     &
                                       decomp_ph%xsz(1),1,decomp_ph%xsz(1),     &
                                       cufft_type,decomp_ph%xsz(2)*decomp_ph%xsz(3),worksize)
-    if (istat /= 0) &
-       write (*,*) "Cannot create plan for c2r_1m_x_plan FFTs batch (cufftPlanMany)"
+    if (istat /= 0) call decomp_2d_abort(__FILE__, __LINE__, istat, "cufftMakePlanMany")
 
-    return
   end subroutine c2r_1m_x_plan
 
   ! Return a cuFFT plan for multiple 1D FFTs in X direction: R2C case
@@ -190,15 +190,15 @@ module decomp_2d_fft
     call c_f_pointer( c_null_ptr, null_fptr )
 
     istat = cufftCreate(plan1)
-    istat = istat + cufftSetAutoAllocation(plan1,0)
-    istat = istat + cufftMakePlanMany(plan1,1,decomp_ph%zsz(3),                           &
+    if (istat /= 0) call decomp_2d_abort(__FILE__, __LINE__, istat, "cufftCreate")
+    istat = cufftSetAutoAllocation(plan1,0)
+    if (istat /= 0) call decomp_2d_abort(__FILE__, __LINE__, istat, "cufftSetAutoAllocation")
+    istat = cufftMakePlanMany(plan1,1,decomp_ph%zsz(3),                           &
                                       decomp_ph%zsz(3),decomp_ph%zsz(1)*decomp_ph%zsz(2),1,     &
                                       decomp_sp%zsz(3),decomp_sp%zsz(1)*decomp_sp%zsz(2),1,     &
                                       cufft_type,decomp_ph%zsz(1)*decomp_ph%zsz(2),worksize)
-    if (istat /= 0) &
-       write (*,*) "Cannot create plan for r2c_1m_z_plan FFTs batch (cufftPlanMany)"
+    if (istat /= 0) call decomp_2d_abort(__FILE__, __LINE__, istat, "cufftMakePlanMany")
 
-    return
   end subroutine r2c_1m_z_plan
 
   ! Return a cuFFT plan for multiple 1D FFTs in X direction: C2R case
@@ -217,15 +217,15 @@ module decomp_2d_fft
     call c_f_pointer( c_null_ptr, null_fptr )
 
     istat = cufftCreate(plan1)
-    istat = istat + cufftSetAutoAllocation(plan1,0)
-    istat = istat + cufftMakePlanMany(plan1,1,decomp_ph%zsz(3),                           &
+    if (istat /= 0) call decomp_2d_abort(__FILE__, __LINE__, istat, "cufftCreate")
+    istat = cufftSetAutoAllocation(plan1,0)
+    if (istat /= 0) call decomp_2d_abort(__FILE__, __LINE__, istat, "cufftSetAutoAllocation")
+    istat = cufftMakePlanMany(plan1,1,decomp_ph%zsz(3),                           &
                                       decomp_sp%zsz(3),decomp_sp%zsz(1)*decomp_sp%zsz(2),1,     &
                                       decomp_ph%zsz(3),decomp_ph%zsz(1)*decomp_ph%zsz(2),1,     &
                                       cufft_type,decomp_ph%zsz(1)*decomp_ph%zsz(2),worksize)
-    if (istat /= 0) &
-       write (*,*) "Cannot create plan for c2r_1m_z_plan FFTs batch (cufftPlanMany)"
+    if (istat /= 0) call decomp_2d_abort(__FILE__, __LINE__, istat, "cufftMakePlanMany")
 
-    return
   end subroutine c2r_1m_z_plan
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -373,10 +373,10 @@ module decomp_2d_fft
     do j=1,3
        do i=-1,2
          istat = cufftSetWorkArea(plan(i,j),cufft_workspace)
+         if (istat /= 0) call decomp_2d_abort(__FILE__, __LINE__, istat, "cufftSetWorkArea")
       enddo
     enddo
 
-    return
   end subroutine init_fft_engine
 
 
@@ -392,10 +392,10 @@ module decomp_2d_fft
     do j=1,3
        do i=-1,2
           istat = cufftDestroy(plan(i,j))
+          if (istat /= 0) call decomp_2d_abort(__FILE__, __LINE__, istat, "cufftDestroy")
        end do
     end do
 
-    return
   end subroutine finalize_fft_engine
 
 
@@ -424,13 +424,12 @@ module decomp_2d_fft
     istat = cufftExecC2C(plan1, inout, output,isign)
     !$acc end host_data
 #endif
-    if (istat /= 0) &
-       write (*,*) "Error in executing c2c_1m_x"
+    if (istat /= 0) call decomp_2d_abort(__FILE__, __LINE__, istat, "cufftExecC2C/Z2Z")
     !$acc kernels
     inout = output
     !$acc end kernels 
     deallocate(output)
-    return
+
   end subroutine c2c_1m_x
 
 
@@ -459,14 +458,12 @@ module decomp_2d_fft
        istat = cufftExecC2C(plan1, inout(:,:,k), output(:,:,k),isign)
        !$acc end host_data
 #endif
-    if (istat /= 0) &
-       write (*,*) "Error in executing c2c_1m_y istat ", istat, isign
-    end do
+    if (istat /= 0) call decomp_2d_abort(__FILE__, __LINE__, istat, "cufftExecC2C/Z2Z")
     !$acc kernels
     inout = output
     !$acc end kernels 
     deallocate(output)
-    return
+
   end subroutine c2c_1m_y
 
   ! c2c transform, multiple 1D FFTs in z direction
@@ -493,14 +490,12 @@ module decomp_2d_fft
     istat = cufftExecC2C(plan1, inout, output,isign)
     !$acc end host_data
 #endif
-    if (istat /= 0) &
-       write (*,*) "Error in executing c2c_1m_z", istat, isign
+    if (istat /= 0) call decomp_2d_abort(__FILE__, __LINE__, istat, "cufftExecC2C/Z2Z")
     !$acc kernels
     inout = output
     !$acc end kernels
     deallocate(output)
 
-    return
   end subroutine c2c_1m_z
 
   ! r2c transform, multiple 1D FFTs in x direction
@@ -522,10 +517,7 @@ module decomp_2d_fft
     istat =  cufftExecR2C(plan(0,1), input, output)
     !$acc end host_data
 #endif    
-    if (istat /= 0) &
-       write (*,*) "Error in executing r2c_1m_x istat ", istat
-
-    return
+    if (istat /= 0) call decomp_2d_abort(__FILE__, __LINE__, istat, "cufftExecR2C/D2Z")
 
   end subroutine r2c_1m_x
 
@@ -548,10 +540,7 @@ module decomp_2d_fft
     istat = cufftExecR2C(plan(0,3), input, output)
     !$acc end host_data
 #endif
-    if (istat /= 0) &
-       write (*,*) "Error in executing r2c_1m_z istat ", istat
-
-    return
+    if (istat /= 0) call decomp_2d_abort(__FILE__, __LINE__, istat, "cufftExecR2C/D2Z")
 
   end subroutine r2c_1m_z
 
@@ -574,10 +563,7 @@ module decomp_2d_fft
     istat = cufftExecC2R(plan(2,1), input, output)
     !$acc end host_data
 #endif
-    if (istat /= 0) &
-       write (*,*) "Error in executing c2r_1m_x"
-
-    return
+    if (istat /= 0) call decomp_2d_abort(__FILE__, __LINE__, istat, "cufftExecC2R/Z2D")
 
   end subroutine c2r_1m_x
 
@@ -600,10 +586,7 @@ module decomp_2d_fft
     istat = cufftExecC2R(plan(2,3), input, output)
     !$acc end host_data
 #endif
-    if (istat /= 0) &
-       write (*,*) "Error in executing c2r_1m_z"
-
-    return
+    if (istat /= 0) call decomp_2d_abort(__FILE__, __LINE__, istat, "cufftExecC2R/Z2D")
 
   end subroutine c2r_1m_z
 

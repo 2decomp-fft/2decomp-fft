@@ -30,10 +30,8 @@
     real(mytype), dimension(:,:,:), intent(OUT) :: dst
     TYPE(DECOMP_INFO), intent(IN) :: decomp
 
-#if defined(_GPU)
-#if defined(_NCCL)
-    integer :: col_rank_id
-#endif
+#if defined(_GPU) && defined(_NCCL)
+    integer :: col_rank_id, cuda_stat
 #endif
 
 #ifdef SHM

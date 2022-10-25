@@ -32,7 +32,7 @@
 
 #if defined(_GPU)
 #if defined(_NCCL)
-    integer :: row_rank_id
+    integer :: row_rank_id, cuda_stat
 #endif
     integer :: istat
 #endif

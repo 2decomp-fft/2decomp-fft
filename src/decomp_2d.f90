@@ -196,7 +196,6 @@ module decomp_2d
   integer, allocatable, dimension(:) :: local_to_global_col, local_to_global_row
   type(ncclUniqueId) :: nccl_uid_2decomp
   type(ncclComm) :: nccl_comm_2decomp
-  integer cuda_stat
   integer(kind=cuda_stream_kind) :: cuda_stream_2decomp
 #endif
 #endif
@@ -404,6 +403,9 @@ contains
     integer, intent(in), optional :: comm
 
     integer :: errorcode, ierror, row, col, iounit
+#if defined(_GPU) && defined(_NCCL)
+    integer :: cuda_stat
+#endif
 #ifdef DEBUG
     character(len=7) fname ! Sufficient for up to O(1M) ranks
 #endif

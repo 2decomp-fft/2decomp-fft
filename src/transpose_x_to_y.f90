@@ -99,14 +99,19 @@
 #if defined(_GPU)
 #if defined(_NCCL)
     nccl_stat = ncclGroupStart()
+    if (nccl_stat /= ncclSuccess) call decomp_2d_abort(__FILE__, __LINE__, nccl_stat, "ncclGroupStart")
     do col_rank_id = 0, (col_comm_size - 1)
         nccl_stat = ncclSend(work1_r_d( decomp%x1disp(col_rank_id)+1 ), decomp%x1cnts(col_rank_id), &
           ncclDouble, local_to_global_col(col_rank_id+1), nccl_comm_2decomp, cuda_stream_2decomp)
+        if (nccl_stat /= ncclSuccess) call decomp_2d_abort(__FILE__, __LINE__, nccl_stat, "ncclSend")
         nccl_stat = ncclRecv(work2_r_d( decomp%y1disp(col_rank_id)+1 ), decomp%y1cnts(col_rank_id), &
           ncclDouble, local_to_global_col(col_rank_id+1), nccl_comm_2decomp, cuda_stream_2decomp)
+        if (nccl_stat /= ncclSuccess) call decomp_2d_abort(__FILE__, __LINE__, nccl_stat, "ncclRecv")
     end do
     nccl_stat = ncclGroupEnd()
+    if (nccl_stat /= ncclSuccess) call decomp_2d_abort(__FILE__, __LINE__, nccl_stat, "ncclGroupEnd")
     cuda_stat = cudaStreamSynchronize(cuda_stream_2decomp)
+    if (cuda_stat /= 0) call decomp_2d_abort(__FILE__, __LINE__, cuda_stat, "cudaStreamSynchronize")
 #else
     call MPI_ALLTOALLV(work1_r_d, decomp%x1cnts, decomp%x1disp, &
          real_type, work2_r_d, decomp%y1cnts, decomp%y1disp, &
@@ -312,6 +317,7 @@
 
 #if defined(_GPU)
        istat = cudaMemcpy2D( out(pos), i2-i1+1, in(i1,1,1), n1, i2-i1+1, n2*n3, cudaMemcpyDeviceToDevice )
+       if (istat /= 0) call decomp_2d_abort(__FILE__, __LINE__, istat, "cudaMemcpy2D")
 #else
        do k=1,n3
           do j=1,n2
@@ -366,6 +372,7 @@
 
 #if defined(_GPU)
        istat = cudaMemcpy2D( out(pos), i2-i1+1, in(i1,1,1), n1, i2-i1+1, n2*n3, cudaMemcpyDeviceToDevice )
+       if (istat /= 0) call decomp_2d_abort(__FILE__, __LINE__, istat, "cudaMemcpy2D")
 #else
        do k=1,n3
           do j=1,n2
@@ -420,6 +427,7 @@
 
 #if defined(_GPU)
        istat = cudaMemcpy2D( out(1,i1,1), n1*n2, in(pos), n1*(i2-i1+1), n1*(i2-i1+1), n3, cudaMemcpyDeviceToDevice )
+       if (istat /= 0) call decomp_2d_abort(__FILE__, __LINE__, istat, "cudaMemcpy2D")
 #else
        do k=1,n3
           do j=i1,i2
@@ -474,6 +482,7 @@
 
 #if defined(_GPU)
        istat = cudaMemcpy2D( out(1,i1,1), n1*n2, in(pos), n1*(i2-i1+1), n1*(i2-i1+1), n3, cudaMemcpyDeviceToDevice )
+       if (istat /= 0) call decomp_2d_abort(__FILE__, __LINE__, istat, "cudaMemcpy2D")
 #else
        do k=1,n3
           do j=i1,i2

@@ -564,12 +564,15 @@ contains
 
     if (nrank .eq. 0) then
        nccl_stat = ncclGetUniqueId(nccl_uid_2decomp)
+       if (nccl_stat /= ncclSuccess) call decomp_2d_abort(__FILE__, __LINE__, nccl_stat, "ncclGetUniqueId")
     end if
     call MPI_Bcast(nccl_uid_2decomp, int(sizeof(ncclUniqueId)), MPI_BYTE, 0, decomp_2d_comm, ierror)
     if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_BCAST")
 
     nccl_stat = ncclCommInitRank(nccl_comm_2decomp, nproc, nccl_uid_2decomp, nrank)
+    if (nccl_stat /= ncclSuccess) call decomp_2d_abort(__FILE__, __LINE__, nccl_stat, "ncclCommInitRank")
     cuda_stat = cudaStreamCreate(cuda_stream_2decomp)
+    if (cuda_stat /= 0) call decomp_2d_abort(__FILE__, __LINE__, cuda_stat, "cudaStreamCreate")
 #endif
 #endif
 
@@ -635,6 +638,7 @@ contains
 
 #if defined(_NCCL)
     nccl_stat = ncclCommDestroy(nccl_comm_2decomp)
+    if (nccl_stat /= ncclSuccess) call decomp_2d_abort(__FILE__, __LINE__, nccl_stat, "ncclCommDestroy")
 #endif
 #endif
 

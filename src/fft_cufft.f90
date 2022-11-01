@@ -458,7 +458,8 @@ module decomp_2d_fft
        istat = cufftExecC2C(plan1, inout(:,:,k), output(:,:,k),isign)
        !$acc end host_data
 #endif
-    if (istat /= 0) call decomp_2d_abort(__FILE__, __LINE__, istat, "cufftExecC2C/Z2Z")
+       if (istat /= 0) call decomp_2d_abort(__FILE__, __LINE__, istat, "cufftExecC2C/Z2Z")
+    enddo
     !$acc kernels
     inout = output
     !$acc end kernels 

@@ -2006,8 +2006,6 @@ contains
   !
   subroutine decomp_2d_abort_nccl_basic(errorcode, msg)
 
-    use iso_fortran_env, only : error_unit
-
     implicit none
 
     type(ncclresult), intent(IN) :: errorcode
@@ -2022,8 +2020,6 @@ contains
   ! Small wrapper for NCCL errors
   !
   subroutine decomp_2d_abort_nccl_file_line(file, line, errorcode, msg)
-
-    use iso_fortran_env, only : error_unit
 
     implicit none
 

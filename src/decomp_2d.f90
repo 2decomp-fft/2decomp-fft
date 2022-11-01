@@ -319,8 +319,10 @@ module decomp_2d
   interface decomp_2d_abort
      module procedure decomp_2d_abort_basic
      module procedure decomp_2d_abort_file_line
+#if defined(_GPU) && defined(_NCCL)
      module procedure decomp_2d_abort_nccl_basic
      module procedure decomp_2d_abort_nccl_file_line
+#endif
   end interface decomp_2d_abort
 
   interface decomp_2d_warning

@@ -1983,6 +1983,7 @@ contains
        write(*,*) 'ERROR MESSAGE: ' // msg
        write(error_unit,*) '2DECOMP&FFT ERROR - NCCL'
        write(error_unit,*) 'ERROR MESSAGE: ' // msg
+       write(error_unit,*) 'NCCL ERROR: ' // ncclGetErrorString(errorcode)
     end if
     call MPI_ABORT(decomp_2d_comm,ierror,ierror)
 
@@ -2009,6 +2010,7 @@ contains
        write(error_unit,*) '  error in file  ' // file
        write(error_unit,*) '           line  ', line
        write(error_unit,*) '  error message: ' // msg
+       write(error_unit,*) '  NCCL ERROR: ' // ncclGetErrorString(errorcode)
     end if
     call MPI_ABORT(decomp_2d_comm,ierror,ierror)
 

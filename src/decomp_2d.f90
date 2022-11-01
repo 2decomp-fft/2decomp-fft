@@ -1969,52 +1969,72 @@ contains
   end subroutine decomp_2d_abort_file_line
 
 #if defined(_GPU) && defined(_NCCL)
+  !
+  ! This is based on the file "nccl.h" in nvhpc 22.1
+  !
+  function _ncclresult_to_integer(errorcode)
+
+    implicit none
+
+    type(ncclresult), intent(IN) :: errorcode
+    integer :: _ncclresult_to_integer
+
+    if (errorcode == ncclSuccess) then
+        _ncclresult_to_integer = 0
+    elseif (errorcode == ncclUnhandledCudaError) then
+        _ncclresult_to_integer = 1
+    elseif (errorcode == ncclSystemError) then
+        _ncclresult_to_integer = 2
+    elseif (errorcode == ncclInternalError) then
+        _ncclresult_to_integer = 3
+    elseif (errorcode == ncclInvalidArgument) then
+        _ncclresult_to_integer = 4
+    elseif (errorcode == ncclInvalidUsage) then
+        _ncclresult_to_integer = 5
+    elseif (errorcode == ncclNumResults) then
+        _ncclresult_to_integer = 6
+    else
+      _ncclresult_to_integer = -1
+      call decomp_2d_warning(__FILE__, __LINE__, _ncclresult_to_integer, &
+                             "NCCL error handling needs some update")
+    end if
+
+  end function _ncclresult_to_integer
+
+  !
+  ! Small wrapper for basic NCCL errors
+  !
   subroutine decomp_2d_abort_nccl_basic(errorcode, msg)
 
     use iso_fortran_env, only : error_unit
 
     implicit none
 
-    type(ncclresult), intent(IN) :: errorcode ! FIXME : convert to integer ?
+    type(ncclresult), intent(IN) :: errorcode
     character(len=*), intent(IN) :: msg
 
-    integer :: ierror
-
-    if (nrank==0) then
-       write(*,*) '2DECOMP&FFT ERROR - NCCL'
-       write(*,*) 'ERROR MESSAGE: ' // msg
-       write(error_unit,*) '2DECOMP&FFT ERROR - NCCL'
-       write(error_unit,*) 'ERROR MESSAGE: ' // msg
-       write(error_unit,*) 'NCCL ERROR: ' // ncclGetErrorString(errorcode)
-    end if
-    call MPI_ABORT(decomp_2d_comm,ierror,ierror)
+    call decomp_2d_abort(_ncclresult_to_integer(errorcode), &
+                         msg // " " // ncclGetErrorString(errorcode))
 
   end subroutine decomp_2d_abort_nccl_basic
 
+  !
+  ! Small wrapper for NCCL errors
+  !
   subroutine decomp_2d_abort_nccl_file_line(file, line, errorcode, msg)
 
     use iso_fortran_env, only : error_unit
 
     implicit none
 
-    type(ncclresult), intent(IN) :: errorcode ! FIXME : convert to integer ?
+    type(ncclresult), intent(IN) :: errorcode
     integer, intent(in) :: line
     character(len=*), intent(IN) :: msg, file
 
-    integer :: ierror
-
-    if (nrank==0) then
-       write(*,*) '2DECOMP&FFT ERROR - NCCL'
-       write(*,*) '  error in file  ' // file
-       write(*,*) '           line  ', line
-       write(*,*) '  error message: ' // msg
-       write(error_unit,*) '2DECOMP&FFT ERROR - NCCL'
-       write(error_unit,*) '  error in file  ' // file
-       write(error_unit,*) '           line  ', line
-       write(error_unit,*) '  error message: ' // msg
-       write(error_unit,*) '  NCCL ERROR: ' // ncclGetErrorString(errorcode)
-    end if
-    call MPI_ABORT(decomp_2d_comm,ierror,ierror)
+    call decomp_2d_abort(file, &
+                         line, &
+                         _ncclresult_to_integer(errorcode), &
+                         msg // " " // ncclGetErrorString(errorcode))
 
   end subroutine decomp_2d_abort_nccl_file_line
 #endif

@@ -319,6 +319,8 @@ module decomp_2d
   interface decomp_2d_abort
      module procedure decomp_2d_abort_basic
      module procedure decomp_2d_abort_file_line
+     module procedure decomp_2d_abort_nccl_basic
+     module procedure decomp_2d_abort_nccl_file_line
   end interface decomp_2d_abort
 
   interface decomp_2d_warning
@@ -1949,12 +1951,12 @@ contains
     integer :: ierror
 
     if (nrank==0) then
-       write(*,*) '2DECOMP&FFT / X3D ERROR'
+       write(*,*) '2DECOMP&FFT ERROR'
        write(*,*) '  errorcode:     ', errorcode
        write(*,*) '  error in file  ' // file
        write(*,*) '           line  ', line
        write(*,*) '  error message: ' // msg
-       write(error_unit,*) '2DECOMP&FFT / X3D ERROR'
+       write(error_unit,*) '2DECOMP&FFT ERROR'
        write(error_unit,*) '  errorcode:     ', errorcode
        write(error_unit,*) '  error in file  ' // file
        write(error_unit,*) '           line  ', line
@@ -1963,6 +1965,55 @@ contains
     call MPI_ABORT(decomp_2d_comm,errorcode,ierror)
 
   end subroutine decomp_2d_abort_file_line
+
+#if defined(_GPU) && defined(_NCCL)
+  subroutine decomp_2d_abort_nccl_basic(errorcode, msg)
+
+    use iso_fortran_env, only : error_unit
+
+    implicit none
+
+    type(ncclresult), intent(IN) :: errorcode ! FIXME : convert to integer ?
+    character(len=*), intent(IN) :: msg
+
+    integer :: ierror
+
+    if (nrank==0) then
+       write(*,*) '2DECOMP&FFT ERROR - NCCL'
+       write(*,*) 'ERROR MESSAGE: ' // msg
+       write(error_unit,*) '2DECOMP&FFT ERROR - NCCL'
+       write(error_unit,*) 'ERROR MESSAGE: ' // msg
+    end if
+    call MPI_ABORT(decomp_2d_comm,ierror,ierror)
+
+  end subroutine decomp_2d_abort_nccl_basic
+
+  subroutine decomp_2d_abort_nccl_file_line(file, line, errorcode, msg)
+
+    use iso_fortran_env, only : error_unit
+
+    implicit none
+
+    type(ncclresult), intent(IN) :: errorcode ! FIXME : convert to integer ?
+    integer, intent(in) :: line
+    character(len=*), intent(IN) :: msg, file
+
+    integer :: ierror
+
+    if (nrank==0) then
+       write(*,*) '2DECOMP&FFT ERROR - NCCL'
+       write(*,*) '  error in file  ' // file
+       write(*,*) '           line  ', line
+       write(*,*) '  error message: ' // msg
+       write(error_unit,*) '2DECOMP&FFT ERROR - NCCL'
+       write(error_unit,*) '  error in file  ' // file
+       write(error_unit,*) '           line  ', line
+       write(error_unit,*) '  error message: ' // msg
+    end if
+    call MPI_ABORT(decomp_2d_comm,ierror,ierror)
+
+  end subroutine decomp_2d_abort_nccl_file_line
+#endif
 
   subroutine decomp_2d_warning_basic(errorcode, msg)
 
@@ -1992,12 +2043,12 @@ contains
     character(len=*), intent(IN) :: msg, file
 
     if (nrank==0) then
-       write(*,*) '2DECOMP&FFT / X3D WARNING'
+       write(*,*) '2DECOMP&FFT WARNING'
        write(*,*) '  errorcode:     ', errorcode
        write(*,*) '  error in file  ' // file
        write(*,*) '           line  ', line
        write(*,*) '  error message: ' // msg
-       write(error_unit,*) '2DECOMP&FFT / X3D WARNING'
+       write(error_unit,*) '2DECOMP&FFT WARNING'
        write(error_unit,*) '  errorcode:     ', errorcode
        write(error_unit,*) '  error in file  ' // file
        write(error_unit,*) '           line  ', line

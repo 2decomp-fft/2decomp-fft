@@ -32,6 +32,7 @@
 
 #if defined(_GPU)
 #if defined(_NCCL)
+    type(ncclResult) :: nccl_stat
     integer :: row_rank_id, cuda_stat
 #endif
     integer :: istat
@@ -183,11 +184,8 @@
     complex(mytype), dimension(:,:,:), intent(IN) :: src
     complex(mytype), dimension(:,:,:), intent(OUT) :: dst
     TYPE(DECOMP_INFO), intent(IN) :: decomp
-    
+
 #if defined(_GPU)
-#if defined(_NCCL)
-    integer :: row_rank_id
-#endif
     integer :: istat
 #endif
 

@@ -33,6 +33,7 @@
 
 #if defined(_GPU) && defined(_NCCL)
     integer :: col_rank_id, cuda_stat
+    type(ncclResult) :: nccl_stat
 #endif
 
 #ifdef SHM
@@ -170,12 +171,6 @@
     complex(mytype), dimension(:,:,:), intent(IN) :: src
     complex(mytype), dimension(:,:,:), intent(OUT) :: dst
     TYPE(DECOMP_INFO), intent(IN) :: decomp
-
-#if defined(_GPU)
-#if defined(_NCCL)
-    integer :: col_rank_id
-#endif
-#endif
 
 #ifdef SHM
     complex(mytype) :: work1(*), work2(*)

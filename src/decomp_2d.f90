@@ -192,7 +192,6 @@ module decomp_2d
 
 #if defined(_NCCL)
   integer col_comm_size, row_comm_size
-  type(ncclResult) :: nccl_stat
   integer, allocatable, dimension(:) :: local_to_global_col, local_to_global_row
   type(ncclUniqueId) :: nccl_uid_2decomp
   type(ncclComm) :: nccl_comm_2decomp
@@ -409,6 +408,7 @@ contains
     integer :: errorcode, ierror, row, col, iounit
 #if defined(_GPU) && defined(_NCCL)
     integer :: cuda_stat
+    type(ncclResult) :: nccl_stat
 #endif
 #ifdef DEBUG
     character(len=7) fname ! Sufficient for up to O(1M) ranks
@@ -624,6 +624,10 @@ contains
   subroutine decomp_2d_finalize
     
     implicit none
+
+#if defined(_GPU) && defined(_NCCL)
+    type(ncclResult) :: nccl_stat
+#endif
  
 #ifdef PROFILER
     if (decomp_profiler_d2d) call decomp_profiler_start("decomp_2d_fin")

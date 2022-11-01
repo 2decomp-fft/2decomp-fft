@@ -1620,44 +1620,6 @@ contains
 #include "transpose_z_to_y.f90"
 #include "transpose_y_to_x.f90"
 
-
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  ! Auto-tuning algorithm to select the best 2D processor grid
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  subroutine best_2d_grid(iproc, best_p_row, best_p_col)
-
-    implicit none
-
-    integer, intent(IN) :: iproc
-    integer, intent(OUT) :: best_p_row, best_p_col
-
-    integer, allocatable, dimension(:) :: factors
-    integer :: nfact, i, col, i_best
-
-    if (nrank==0) write(*,*) 'In auto-tuning mode......'
-
-    i = int(sqrt(real(iproc))) + 10  ! enough space to save all factors 
-    allocate(factors(i))
-    call findfactor(iproc, factors, nfact)
-    if (nrank==0) write(*,*) 'factors: ', (factors(i), i=1,nfact)
-
-    i_best=nfact/2+1
-    col=factors(i_best)
-
-    best_p_col = col
-    best_p_row=iproc/col
-    if (nrank==0) print *,'p_row x p_col', best_p_row, best_p_col
-    if ((best_p_col==1).and.(nrank==0)) then
-       print *,'WARNING: current 2D DECOMP set-up might not work'
-    endif
-    
-    deallocate(factors)
-
-    return
-  end subroutine best_2d_grid
-
-#include "factor.f90"
-
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   ! Halo cell support
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -1761,45 +1723,6 @@ contains
   ! Utility routines to help allocate 3D arrays
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 #include "alloc.f90"
-    
-#ifdef DEBUG
-  !
-  ! Try to read the environment variable DECOMP_2D_DEBUG to change the debug level
-  !
-  ! The expected value is an integer below 9999
-  !
-  subroutine decomp_2d_debug
-
-    implicit none
-
-    integer :: ierror
-    character(len=4) :: val
-    character(len=*), parameter :: varname = "DECOMP_2D_DEBUG"
-
-    ! Read the variable
-    call get_environment_variable(varname, value=val, status=ierror)
-
-    ! Return if no variable, or no support for env. variable
-    if (ierror >= 1) return
-
-    ! Minor error, print warning and return
-    if (ierror /= 0) then
-       call decomp_2d_warning(__FILE__, &
-                              __LINE__, &
-                              ierror, &
-                              "Error when reading DECOMP_2D_DEBUG : "//val)
-       return
-    endif
-
-    ! Conversion to integer if possible
-    read(val, '(i4)', iostat=ierror) decomp_debug
-    if (ierror /= 0) call decomp_2d_warning(__FILE__, &
-                                            __LINE__, &
-                                            ierror, &
-                                            "Error when reading DECOMP_2D_DEBUG : "//val)
-
-  end subroutine decomp_2d_debug
-#endif
   
 end module decomp_2d
 

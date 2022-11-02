@@ -15,8 +15,6 @@ submodule (decomp_2d) decomp_2d_init_fin
   use factor
 
   implicit none
-  
-  logical, save, dimension(2) :: periodic
 
 contains
 
@@ -41,6 +39,7 @@ contains
     integer, intent(in), optional :: comm
 
     integer :: errorcode, ierror, row, col, iounit
+    logical, dimension(2) :: periodic
 #ifdef DEBUG
     character(len=7) fname ! Sufficient for up to O(1M) ranks
 #endif

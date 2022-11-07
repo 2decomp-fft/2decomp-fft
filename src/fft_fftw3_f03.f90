@@ -14,8 +14,6 @@
 
 module decomp_2d_fft
 
-  use MPI
-  
   use decomp_2d  ! 2D decomposition module
   use, intrinsic :: iso_c_binding
   
@@ -118,10 +116,7 @@ contains
     integer, intent(IN) :: pencil
     integer, intent(IN) :: nx, ny, nz
 
-    logical, dimension(2) :: dummy_periods
-    integer, dimension(2) :: dummy_coords
     integer :: errorcode
-    integer :: ierror
     integer(C_SIZE_T) :: sz
 
 #ifdef PROFILER
@@ -140,9 +135,7 @@ contains
     nz_fft = nz
 
     ! determine the processor grid in use
-    ! FIXME this is already defined in the module decomp_2d
-    call MPI_CART_GET(DECOMP_2D_COMM_CART_X, 2, &
-         dims, dummy_periods, dummy_coords, ierror)
+    dims = get_decomp_dims()
 
     ! for c2r/r2c interface:
     ! if in physical space, a real array is of size: nx*ny*nz

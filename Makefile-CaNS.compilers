@@ -34,7 +34,7 @@ ifeq ($(CMP),INTEL)
   FFLAGS += -fpp -std08
   ifeq ($(DEBUG_BUILD),yes)
     DEFS += -DDEBUG
-    FFLAGS += -g -O0
+    FFLAGS += -g -O0 -debug extended -traceback
   else
     FFLAGS += -O3 -mavx2 -march=core-avx2 -mtune=core-avx2
   endif

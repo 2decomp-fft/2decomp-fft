@@ -12,6 +12,7 @@
 
 submodule (decomp_2d) decomp_2d_init_fin
 
+  use mpi
   use factor
 
   implicit none

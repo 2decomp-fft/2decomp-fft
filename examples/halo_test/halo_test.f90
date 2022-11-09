@@ -418,9 +418,18 @@ contains
     real(mytype), dimension(:,:,:), intent(in) :: divh
     character(len=*), intent(in) :: pencil
 
+    real(mytype), dimension(:,:,:), allocatable :: tmp
+
     real(mytype) :: divmag
-    
-    err = mag(divh(2:xlast,2:ylast,2:zlast) - div1(2:xlast,2:ylast,2:zlast))
+
+    ! XXX: The Intel compiler SEGFAULTs if the array difference is computed inplace
+    !      i.e. mag(divh(2:xlast,2:ylast,2:zlast) - div1(2:xlast,2:ylast,2:zlast))
+    !      causes a SEGFAULT. Explicitly computing the difference in a temporary
+    !      array seems to be OK.
+    allocate(tmp(size(divh, 1), size(divh, 2), size(divh, 3)))
+    tmp(2:xlast,2:ylast,2:zlast) = divh(2:xlast,2:ylast,2:zlast) - div1(2:xlast,2:ylast,2:zlast)
+    err = mag(tmp(2:xlast,2:ylast,2:zlast))
+    deallocate(tmp)
     divmag = mag(div1(2:xlast,2:ylast,2:zlast))
     if (err < epsilon(divmag) * divmag) then
        passing = .true.
@@ -438,6 +447,7 @@ contains
        write(*,*) 'Error: ', err, '; Relative: ', err / divmag
        write(*,*) 'Pass: ', passing
     end if
+
   end subroutine check_err
 
   real(mytype) function mag(a)

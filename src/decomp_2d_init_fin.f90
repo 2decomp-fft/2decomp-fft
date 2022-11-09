@@ -33,6 +33,10 @@
 
     integer :: errorcode, ierror, row, col, iounit
     logical, dimension(2) :: periodic
+#if defined(_GPU) && defined(_NCCL)
+    integer :: cuda_stat
+    type(ncclResult) :: nccl_stat
+#endif
 #ifdef DEBUG
     character(len=7) fname ! Sufficient for up to O(1M) ranks
 #endif
@@ -243,6 +247,10 @@
   subroutine decomp_2d_finalize_ref
     
     implicit none
+#if defined(_GPU) && defined(_NCCL)
+    type(ncclResult) :: nccl_stat
+#endif
+    
  
 #ifdef PROFILER
     if (decomp_profiler_d2d) call decomp_profiler_start("decomp_2d_fin")

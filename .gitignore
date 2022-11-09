@@ -45,3 +45,4 @@ Makefile.settings
 
 # emacs
 .dir-locals.el
+TAGS

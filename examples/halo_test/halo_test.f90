@@ -86,7 +86,7 @@ contains
 
     call random_seed(size = n)
     allocate(seed(n))
-    seed = nrank
+    seed = nrank+1
     call random_seed(put=seed)
     call random_number(u1)
     call random_number(v1)

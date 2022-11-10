@@ -8,9 +8,3 @@ echo ""
 
 $* 
 
-#if [[ ${LOCAL_RANK} == 0 ]]; then
-#        #nsys profile --trace=cuda,nvtx,mpi,openacc --cuda-memory-usage=true --gpu-metrics-device=0 $*
-#        nsys profile --trace=cuda,nvtx,mpi,openacc --cuda-memory-usage=true $*
-#else
-#        $*
-#fi

@@ -10,14 +10,6 @@
 !!!
 !!!=======================================================================
 
-submodule (decomp_2d) decomp_2d_init_fin
-
-  use factor
-
-  implicit none
-
-contains
-
   !======================================================================
   ! Routine to be called by applications to initialise this library
   !   INPUT:
@@ -27,8 +19,9 @@ contains
   !     all internal data structures initialised properly
   !     library ready to use
   !======================================================================
-  module subroutine decomp_2d_init_ref(nx,ny,nz,p_row,p_col,periodic_bc,comm)
+  subroutine decomp_2d_init_ref(nx,ny,nz,p_row,p_col,periodic_bc,comm)
 
+    use mpi
     use iso_fortran_env, only : output_unit
 
     implicit none
@@ -40,6 +33,10 @@ contains
 
     integer :: errorcode, ierror, row, col, iounit
     logical, dimension(2) :: periodic
+#if defined(_GPU) && defined(_NCCL)
+    integer :: cuda_stat
+    type(ncclResult) :: nccl_stat
+#endif
 #ifdef DEBUG
     character(len=7) fname ! Sufficient for up to O(1M) ranks
 #endif
@@ -247,9 +244,13 @@ contains
   !======================================================================
   ! Routine to be called by applications to clean things up
   !======================================================================
-  module subroutine decomp_2d_finalize_ref
+  subroutine decomp_2d_finalize_ref
     
     implicit none
+#if defined(_GPU) && defined(_NCCL)
+    type(ncclResult) :: nccl_stat
+#endif
+    
  
 #ifdef PROFILER
     if (decomp_profiler_d2d) call decomp_profiler_start("decomp_2d_fin")
@@ -399,6 +400,3 @@ contains
     neighbour(3,6) = MPI_PROC_NULL               ! bottom
     return
   end subroutine init_neighbour
-
-end submodule decomp_2d_init_fin
-

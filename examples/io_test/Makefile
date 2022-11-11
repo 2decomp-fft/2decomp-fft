@@ -30,12 +30,21 @@ io_plane_test: io_plane_test.o
 io_bench: io_bench.o
 	$(FC) $(FFLAGS) $(OPT) $(DEFS) $(INC) -o $@ $< $(OBJ) $(LIBS)
 
+ifeq ($(PARAMOD),gpu)
+check:
+	$(MPIRUN) -n $(NP) ./bind.sh ./io_test
+	$(MPIRUN) -n $(NP) ./bind.sh ./io_read
+	$(MPIRUN) -n $(NP) ./bind.sh ./io_var_test $(NROW) $(NCOL)
+	$(MPIRUN) -n $(NP) ./bind.sh ./io_plane_test
+	$(MPIRUN) -n $(NP) ./bind.sh ./io_bench
+else
 check:
 	$(MPIRUN) -n $(NP) ./io_test
 	$(MPIRUN) -n $(NP) ./io_read
 	$(MPIRUN) -n $(NP) ./io_var_test $(NROW) $(NCOL)
 	$(MPIRUN) -n $(NP) ./io_plane_test
 	$(MPIRUN) -n $(NP) ./io_bench
+endif
 
 clean:
 	rm -f *.o io_test io_read io_var_test io_plane_test io_bench

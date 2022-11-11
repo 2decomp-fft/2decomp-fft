@@ -16,6 +16,7 @@ module decomp_2d
 
   use MPI
   use, intrinsic :: iso_fortran_env, only : real32, real64
+  use factor
 #if defined(_GPU)
   use cudafor
 #if defined(_NCCL)
@@ -191,11 +192,9 @@ module decomp_2d
 
 #if defined(_NCCL)
   integer col_comm_size, row_comm_size
-  type(ncclResult) :: nccl_stat
   integer, allocatable, dimension(:) :: local_to_global_col, local_to_global_row
   type(ncclUniqueId) :: nccl_uid_2decomp
   type(ncclComm) :: nccl_comm_2decomp
-  integer cuda_stat
   integer(kind=cuda_stream_kind) :: cuda_stream_2decomp
 #endif
 #endif
@@ -261,16 +260,11 @@ module decomp_2d
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
   interface decomp_2d_init
-     module subroutine decomp_2d_init_ref(nx,ny,nz,p_row,p_col,periodic_bc,comm)
-       integer, intent(IN) :: nx,ny,nz
-       integer, intent(INOUT) :: p_row,p_col
-       logical, dimension(3), intent(IN), optional :: periodic_bc
-       integer, intent(in), optional :: comm
-     end subroutine decomp_2d_init_ref
+     module procedure decomp_2d_init_ref
   end interface decomp_2d_init
+
   interface decomp_2d_finalize
-     module subroutine decomp_2d_finalize_ref()
-     end subroutine decomp_2d_finalize_ref
+     module procedure decomp_2d_finalize_ref
   end interface decomp_2d_finalize
   
   interface transpose_x_to_y
@@ -332,6 +326,10 @@ module decomp_2d
   interface decomp_2d_abort
      module procedure decomp_2d_abort_basic
      module procedure decomp_2d_abort_file_line
+#if defined(_GPU) && defined(_NCCL)
+     module procedure decomp_2d_abort_nccl_basic
+     module procedure decomp_2d_abort_nccl_file_line
+#endif
   end interface decomp_2d_abort
 
   interface decomp_2d_warning
@@ -394,6 +392,8 @@ module decomp_2d
    end interface decomp_profiler_end
 
 contains
+        
+#include "decomp_2d_init_fin.f90"
 
   !
   ! Small wrapper to free a MPI communicator
@@ -1679,12 +1679,12 @@ contains
     integer :: ierror
 
     if (nrank==0) then
-       write(*,*) '2DECOMP&FFT / X3D ERROR'
+       write(*,*) '2DECOMP&FFT ERROR'
        write(*,*) '  errorcode:     ', errorcode
        write(*,*) '  error in file  ' // file
        write(*,*) '           line  ', line
        write(*,*) '  error message: ' // msg
-       write(error_unit,*) '2DECOMP&FFT / X3D ERROR'
+       write(error_unit,*) '2DECOMP&FFT ERROR'
        write(error_unit,*) '  errorcode:     ', errorcode
        write(error_unit,*) '  error in file  ' // file
        write(error_unit,*) '           line  ', line
@@ -1693,6 +1693,73 @@ contains
     call MPI_ABORT(decomp_2d_comm,errorcode,ierror)
 
   end subroutine decomp_2d_abort_file_line
+
+#if defined(_GPU) && defined(_NCCL)
+  !
+  ! This is based on the file "nccl.h" in nvhpc 22.1
+  !
+  function _ncclresult_to_integer(errorcode)
+
+    implicit none
+
+    type(ncclresult), intent(IN) :: errorcode
+    integer :: _ncclresult_to_integer
+
+    if (errorcode == ncclSuccess) then
+        _ncclresult_to_integer = 0
+    elseif (errorcode == ncclUnhandledCudaError) then
+        _ncclresult_to_integer = 1
+    elseif (errorcode == ncclSystemError) then
+        _ncclresult_to_integer = 2
+    elseif (errorcode == ncclInternalError) then
+        _ncclresult_to_integer = 3
+    elseif (errorcode == ncclInvalidArgument) then
+        _ncclresult_to_integer = 4
+    elseif (errorcode == ncclInvalidUsage) then
+        _ncclresult_to_integer = 5
+    elseif (errorcode == ncclNumResults) then
+        _ncclresult_to_integer = 6
+    else
+      _ncclresult_to_integer = -1
+      call decomp_2d_warning(__FILE__, __LINE__, _ncclresult_to_integer, &
+                             "NCCL error handling needs some update")
+    end if
+
+  end function _ncclresult_to_integer
+
+  !
+  ! Small wrapper for basic NCCL errors
+  !
+  subroutine decomp_2d_abort_nccl_basic(errorcode, msg)
+
+    implicit none
+
+    type(ncclresult), intent(IN) :: errorcode
+    character(len=*), intent(IN) :: msg
+
+    call decomp_2d_abort(_ncclresult_to_integer(errorcode), &
+                         msg // " " // ncclGetErrorString(errorcode))
+
+  end subroutine decomp_2d_abort_nccl_basic
+
+  !
+  ! Small wrapper for NCCL errors
+  !
+  subroutine decomp_2d_abort_nccl_file_line(file, line, errorcode, msg)
+
+    implicit none
+
+    type(ncclresult), intent(IN) :: errorcode
+    integer, intent(in) :: line
+    character(len=*), intent(IN) :: msg, file
+
+    call decomp_2d_abort(file, &
+                         line, &
+                         _ncclresult_to_integer(errorcode), &
+                         msg // " " // ncclGetErrorString(errorcode))
+
+  end subroutine decomp_2d_abort_nccl_file_line
+#endif
 
   subroutine decomp_2d_warning_basic(errorcode, msg)
 
@@ -1722,12 +1789,12 @@ contains
     character(len=*), intent(IN) :: msg, file
 
     if (nrank==0) then
-       write(*,*) '2DECOMP&FFT / X3D WARNING'
+       write(*,*) '2DECOMP&FFT WARNING'
        write(*,*) '  errorcode:     ', errorcode
        write(*,*) '  error in file  ' // file
        write(*,*) '           line  ', line
        write(*,*) '  error message: ' // msg
-       write(error_unit,*) '2DECOMP&FFT / X3D WARNING'
+       write(error_unit,*) '2DECOMP&FFT WARNING'
        write(error_unit,*) '  errorcode:     ', errorcode
        write(error_unit,*) '  error in file  ' // file
        write(error_unit,*) '           line  ', line

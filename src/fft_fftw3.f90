@@ -1,7 +1,7 @@
 !=======================================================================
 ! This is part of the 2DECOMP&FFT library
-! 
-! 2DECOMP&FFT is a software framework for general-purpose 2D (pencil) 
+!
+! 2DECOMP&FFT is a software framework for general-purpose 2D (pencil)
 ! decomposition. It also implements a highly scalable distributed
 ! three-dimensional Fast Fourier Transform (FFT).
 !
@@ -26,15 +26,16 @@ module decomp_2d_fft
 
   ! FFTW plans
   ! j=1,2,3 corresponds to the 1D FFTs in X,Y,Z direction, respectively
-  ! For c2c transforms: 
-  !     use plan(-1,j) for  forward transform; 
+  ! For c2c transforms:
+  !     use plan(-1,j) for  forward transform;
   !     use plan( 1,j) for backward transform;
   ! For r2c/c2r transforms:
   !     use plan(0,j) for r2c transforms;
   !     use plan(2,j) for c2r transforms;
-  integer*8, save :: plan(-1:2,3)
+  integer*8, save, public :: plan(-1:2,3)
 
-  ! common code used for all engines, including global variables, 
+  public :: r2c_1m_x, c2c_1m_y, c2r_1m_x
+  ! common code used for all engines, including global variables,
   ! generic interface definitions and several subroutines
 #include "fft_common.f90"
 
@@ -156,7 +157,7 @@ module decomp_2d_fft
          decomp_ph%xsz(1), a2, decomp_sp%xsz(1), 1, decomp_sp%xsz(1), &
          plan_type)
 #endif
-    deallocate(a1,a2)    
+    deallocate(a1,a2)
 
     return
   end subroutine r2c_1m_x_plan
@@ -250,7 +251,7 @@ module decomp_2d_fft
          decomp_sp%zsz(1)*decomp_sp%zsz(2), 1, a2, decomp_ph%zsz(3), &
          decomp_ph%zsz(1)*decomp_ph%zsz(2), 1, plan_type)
 #endif
-    deallocate(a1,a2)     
+    deallocate(a1,a2)
 
     return
   end subroutine c2r_1m_z_plan
@@ -291,7 +292,7 @@ module decomp_2d_fft
 
        ! For C2C transforms
        call c2c_1m_z_plan(plan(-1,3), ph, FFTW_FORWARD )
-       call c2c_1m_y_plan(plan(-1,2), ph, FFTW_FORWARD ) 
+       call c2c_1m_y_plan(plan(-1,2), ph, FFTW_FORWARD )
        call c2c_1m_x_plan(plan(-1,1), ph, FFTW_FORWARD )
        call c2c_1m_x_plan(plan( 1,1), ph, FFTW_BACKWARD)
        call c2c_1m_y_plan(plan( 1,2), ph, FFTW_BACKWARD)
@@ -334,7 +335,7 @@ module decomp_2d_fft
   end subroutine finalize_fft_engine
 
 
-  ! Following routines calculate multiple one-dimensional FFTs to form 
+  ! Following routines calculate multiple one-dimensional FFTs to form
   ! the basis of three-dimensional FFTs.
 
   ! c2c transform, multiple 1D FFTs in x direction
@@ -410,7 +411,7 @@ module decomp_2d_fft
     call dfftw_execute_dft_r2c(plan(0,1), input, output)
 #else
     call sfftw_execute_dft_r2c(plan(0,1), input, output)
-#endif    
+#endif
 
     return
 
@@ -464,7 +465,7 @@ module decomp_2d_fft
     call dfftw_execute_dft_c2r(plan(2,3), input, output)
 #else
     call sfftw_execute_dft_c2r(plan(2,3), input, output)
-#endif    
+#endif
 
     return
 
@@ -529,7 +530,7 @@ module decomp_2d_fft
        call c2c_1m_z(out,isign,plan(isign,3))
 
     else if (format==PHYSICAL_IN_X .AND. isign==DECOMP_2D_FFT_BACKWARD &
-         .OR. & 
+         .OR. &
          format==PHYSICAL_IN_Z .AND. isign==DECOMP_2D_FFT_FORWARD) then
 
        ! ===== 1D FFTs in Z =====
@@ -649,7 +650,7 @@ module decomp_2d_fft
 
        ! ===== 1D FFTs in Z =====
 #ifdef OVERWRITE
-       call c2c_1m_z(in_c,1,plan(2,3))       
+       call c2c_1m_z(in_c,1,plan(2,3))
 #else
        allocate (wk1(sp%zsz(1),sp%zsz(2),sp%zsz(3)))
        wk1 = in_c

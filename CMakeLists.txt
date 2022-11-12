@@ -11,9 +11,7 @@ find_package(MPI REQUIRED)
 
 set(CMAKE_Fortran_FLAGS "-g -fbacktrace -fdefault-real-8 -ffree-line-length-none -ffpe-trap=invalid,zero,overflow -fallow-argument-mismatch -cpp -O3")
 
-file(GLOB files_decomp src/decomp_2d.f90
-	               src/d2d_log.f90
-                       src/glassman.f90)
+file(GLOB files_decomp src/factor.f90 src/decomp_2d.f90 src/log.f90 src/glassman.f90)
 
 #if(${FFT_Choice} MATCHES "generic")
 #  file(GLOB files_fft src/fft_generic.f90)
@@ -52,7 +50,7 @@ endif(FFTW_FOUND)
 #install(TARGETS decomp2d
 #        RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
 #        LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-#        ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR} 
+#        ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
 #)
 
 #add_subdirectory(examples)

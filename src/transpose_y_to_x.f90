@@ -11,20 +11,28 @@
 
 ! This file contains the routines that transpose data from Y to X pencil
 
-  subroutine transpose_y_to_x_real(src, dst, opt_decomp)
+  subroutine transpose_y_to_x_real_short(src, dst)
+
+    implicit none
+
+    real(mytype), dimension(:,:,:), intent(IN) :: src
+    real(mytype), dimension(:,:,:), intent(OUT) :: dst
+
+    call transpose_y_to_x(src, dst, decomp_main)
+
+  end subroutine transpose_y_to_x_real_short
+
+  subroutine transpose_y_to_x_real(src, dst, decomp)
 
     implicit none
     
     real(mytype), dimension(:,:,:), intent(IN) :: src
     real(mytype), dimension(:,:,:), intent(OUT) :: dst
-    TYPE(DECOMP_INFO), intent(IN), optional :: opt_decomp
+    TYPE(DECOMP_INFO), intent(IN) :: decomp
 
-    TYPE(DECOMP_INFO) :: decomp
-
-#if defined(_GPU)
-#if defined(_NCCL)
-    integer :: col_rank_id
-#endif
+#if defined(_GPU) && defined(_NCCL)
+    type(ncclResult) :: nccl_stat
+    integer :: col_rank_id, cuda_stat
 #endif
 
 #ifdef SHM
@@ -38,12 +46,6 @@
 #ifdef PROFILER
     if (decomp_profiler_transpose) call decomp_profiler_start("transp_y_x_r")
 #endif
-
-    if (present(opt_decomp)) then
-       decomp = opt_decomp
-    else
-       decomp = decomp_main
-    end if
 
     s1 = SIZE(src,1)
     s2 = SIZE(src,2)
@@ -95,14 +97,19 @@
 #if defined(_GPU)
 #if defined(_NCCL)
     nccl_stat = ncclGroupStart()
+    if (nccl_stat /= ncclSuccess) call decomp_2d_abort(__FILE__, __LINE__, nccl_stat, "ncclGroupStart")
     do col_rank_id = 0, (col_comm_size - 1)
      nccl_stat = ncclSend(work1_r_d( decomp%y1disp(col_rank_id)+1 ), decomp%y1cnts(col_rank_id), &
        ncclDouble, local_to_global_col(col_rank_id+1), nccl_comm_2decomp, cuda_stream_2decomp)
+     if (nccl_stat /= ncclSuccess) call decomp_2d_abort(__FILE__, __LINE__, nccl_stat, "ncclSend")
      nccl_stat = ncclRecv(work2_r_d( decomp%x1disp(col_rank_id)+1 ), decomp%x1cnts(col_rank_id), &
        ncclDouble, local_to_global_col(col_rank_id+1), nccl_comm_2decomp, cuda_stream_2decomp)
+     if (nccl_stat /= ncclSuccess) call decomp_2d_abort(__FILE__, __LINE__, nccl_stat, "ncclRecv")
     end do
     nccl_stat = ncclGroupEnd()
+    if (nccl_stat /= ncclSuccess) call decomp_2d_abort(__FILE__, __LINE__, nccl_stat, "ncclGroupEnd")
     cuda_stat = cudaStreamSynchronize(cuda_stream_2decomp)
+    if (cuda_stat /= 0) call decomp_2d_abort(__FILE__, __LINE__, cuda_stat, "cudaStreamSynchronize")
 #else
     call MPI_ALLTOALLV(work1_r_d, decomp%y1cnts, decomp%y1disp, &
          real_type, work2_r_d, decomp%x1cnts, decomp%x1disp, &
@@ -145,21 +152,24 @@
   end subroutine transpose_y_to_x_real
 
 
-  subroutine transpose_y_to_x_complex(src, dst, opt_decomp)
+  subroutine transpose_y_to_x_complex_short(src, dst)
+
+    implicit none
+
+    complex(mytype), dimension(:,:,:), intent(IN) :: src
+    complex(mytype), dimension(:,:,:), intent(OUT) :: dst
+
+    call transpose_y_to_x(src, dst, decomp_main)
+
+  end subroutine transpose_y_to_x_complex_short
+
+  subroutine transpose_y_to_x_complex(src, dst, decomp)
 
     implicit none
     
     complex(mytype), dimension(:,:,:), intent(IN) :: src
     complex(mytype), dimension(:,:,:), intent(OUT) :: dst
-    TYPE(DECOMP_INFO), intent(IN), optional :: opt_decomp
-
-    TYPE(DECOMP_INFO) :: decomp
-
-#if defined(_GPU)
-#if defined(_NCCL)
-    integer :: col_rank_id
-#endif
-#endif
+    TYPE(DECOMP_INFO), intent(IN) :: decomp
 
 #ifdef SHM
     complex(mytype) :: work1(*), work2(*)
@@ -172,12 +182,6 @@
 #ifdef PROFILER
     if (decomp_profiler_transpose) call decomp_profiler_start("transp_y_x_c")
 #endif
-
-    if (present(opt_decomp)) then
-       decomp = opt_decomp
-    else
-       decomp = decomp_main
-    end if
 
     s1 = SIZE(src,1)
     s2 = SIZE(src,2)
@@ -305,6 +309,7 @@
 
 #if defined(_GPU)
        istat = cudaMemcpy2D( out(pos), n1*(i2-i1+1), in(1,i1,1), n1*n2, n1*(i2-i1+1), n3, cudaMemcpyDeviceToDevice )
+       if (istat /= 0) call decomp_2d_abort(__FILE__, __LINE__, istat, "cudaMemcpy2D")
 #else
        do k=1,n3
           do j=i1,i2
@@ -359,6 +364,7 @@
 
 #if defined(_GPU)
        istat = cudaMemcpy2D( out(pos), n1*(i2-i1+1), in(1,i1,1), n1*n2, n1*(i2-i1+1), n3, cudaMemcpyDeviceToDevice )
+       if (istat /= 0) call decomp_2d_abort(__FILE__, __LINE__, istat, "cudaMemcpy2D")
 #else
        do k=1,n3
           do j=i1,i2
@@ -413,6 +419,7 @@
 
 #if defined(_GPU)
        istat = cudaMemcpy2D( out(i1,1,1), n1, in(pos), i2-i1+1, i2-i1+1, n2*n3, cudaMemcpyDeviceToDevice )
+       if (istat /= 0) call decomp_2d_abort(__FILE__, __LINE__, istat, "cudaMemcpy2D")
 #else
        do k=1,n3
           do j=1,n2
@@ -467,6 +474,7 @@
 
 #if defined(_GPU)
        istat = cudaMemcpy2D( out(i1,1,1), n1, in(pos), i2-i1+1, i2-i1+1, n2*n3, cudaMemcpyDeviceToDevice )
+       if (istat /= 0) call decomp_2d_abort(__FILE__, __LINE__, istat, "cudaMemcpy2D")
 #else
        do k=1,n3
           do j=1,n2

@@ -11,20 +11,31 @@
 
 ! This file contains the routines that transpose data from Z to Y pencil
 
-  subroutine transpose_z_to_y_real(src, dst, opt_decomp)
+  subroutine transpose_z_to_y_real_short(src, dst)
+
+    implicit none
+
+    real(mytype), dimension(:,:,:), intent(IN) :: src
+    real(mytype), dimension(:,:,:), intent(OUT) :: dst
+
+    call transpose_z_to_y(src, dst, decomp_main)
+
+  end subroutine transpose_z_to_y_real_short
+
+  subroutine transpose_z_to_y_real(src, dst, decomp)
 
     implicit none
     
     real(mytype), dimension(:,:,:), intent(IN) :: src
     real(mytype), dimension(:,:,:), intent(OUT) :: dst
-    TYPE(DECOMP_INFO), intent(IN), optional :: opt_decomp
-
-    TYPE(DECOMP_INFO) :: decomp
+    TYPE(DECOMP_INFO), intent(IN) :: decomp
 
 #if defined(_GPU)
 #if defined(_NCCL)
-    integer :: row_rank_id
+    type(ncclResult) :: nccl_stat
+    integer :: row_rank_id, cuda_stat
 #endif
+    integer :: istat
 #endif
 
 #ifdef SHM
@@ -38,12 +49,6 @@
 #ifdef PROFILER
     if (decomp_profiler_transpose) call decomp_profiler_start("transp_z_y_r")
 #endif
-
-    if (present(opt_decomp)) then
-       decomp = opt_decomp
-    else
-       decomp = decomp_main
-    end if
 
     s1 = SIZE(src,1)
     s2 = SIZE(src,2)
@@ -67,7 +72,7 @@
     ! note the src array is suitable to be a send buffer
     ! so no split operation needed
 
-#if defined(GPU)
+#if defined(_GPU)
     istat = cudaMemcpy( work1_r_d, src, s1*s2*s3 )
 #endif
 
@@ -105,14 +110,19 @@
 #if defined(_GPU)
 #if defined(_NCCL)
     nccl_stat = ncclGroupStart()
+    if (nccl_stat /= ncclSuccess) call decomp_2d_abort(__FILE__, __LINE__, nccl_stat, "ncclGroupStart")
     do row_rank_id = 0, (row_comm_size - 1)
         nccl_stat = ncclSend(work1_r_d( decomp%z2disp(row_rank_id)+1 ), decomp%z2cnts(row_rank_id), &
           ncclDouble, local_to_global_row(row_rank_id+1), nccl_comm_2decomp, cuda_stream_2decomp)
+        if (nccl_stat /= ncclSuccess) call decomp_2d_abort(__FILE__, __LINE__, nccl_stat, "ncclSend")
         nccl_stat = ncclRecv(work2_r_d( decomp%y2disp(row_rank_id)+1 ), decomp%y2cnts(row_rank_id), &
           ncclDouble, local_to_global_row(row_rank_id+1), nccl_comm_2decomp, cuda_stream_2decomp)
+        if (nccl_stat /= ncclSuccess) call decomp_2d_abort(__FILE__, __LINE__, nccl_stat, "ncclRecv")
     end do
     nccl_stat = ncclGroupEnd()
+    if (nccl_stat /= ncclSuccess) call decomp_2d_abort(__FILE__, __LINE__, nccl_stat, "ncclGroupEnd")
     cuda_stat = cudaStreamSynchronize(cuda_stream_2decomp)
+    if (cuda_stat /= 0) call decomp_2d_abort(__FILE__, __LINE__, cuda_stat, "cudaStreamSynchronize")
 #else
     call MPI_ALLTOALLV(work1_r_d, decomp%z2cnts, decomp%z2disp, &
          real_type, work2_r_d, decomp%y2cnts, decomp%y2disp, &
@@ -135,7 +145,7 @@
          decomp%y2dist, decomp)
 #else
 
-#if defined (_GPU)
+#if defined(_GPU)
     call mem_merge_zy_real(work2_r_d, d1, d2, d3, dst, dims(2), &
          decomp%y2dist, decomp)
 #else
@@ -153,20 +163,27 @@
   end subroutine transpose_z_to_y_real
 
 
-  subroutine transpose_z_to_y_complex(src, dst, opt_decomp)
+  subroutine transpose_z_to_y_complex_short(src, dst)
+
+    implicit none
+
+    complex(mytype), dimension(:,:,:), intent(IN) :: src
+    complex(mytype), dimension(:,:,:), intent(OUT) :: dst
+
+    call transpose_z_to_y(src, dst, decomp_main)
+
+  end subroutine transpose_z_to_y_complex_short
+
+  subroutine transpose_z_to_y_complex(src, dst, decomp)
 
     implicit none
     
     complex(mytype), dimension(:,:,:), intent(IN) :: src
     complex(mytype), dimension(:,:,:), intent(OUT) :: dst
-    TYPE(DECOMP_INFO), intent(IN), optional :: opt_decomp
-
-    TYPE(DECOMP_INFO) :: decomp
+    TYPE(DECOMP_INFO), intent(IN) :: decomp
 
 #if defined(_GPU)
-#if defined(_NCCL)
-    integer :: row_rank_id
-#endif
+    integer :: istat
 #endif
 
 #ifdef SHM
@@ -180,12 +197,6 @@
 #ifdef PROFILER
     if (decomp_profiler_transpose) call decomp_profiler_start("transp_z_y_c")
 #endif
-
-    if (present(opt_decomp)) then
-       decomp = opt_decomp
-    else
-       decomp = decomp_main
-    end if
 
     s1 = SIZE(src,1)
     s2 = SIZE(src,2)
@@ -209,7 +220,7 @@
     ! note the src array is suitable to be a send buffer
     ! so no split operation needed
 
-#if defined(GPU)
+#if defined(_GPU)
     istat = cudaMemcpy( work1_c_d, src, s1*s2*s3 )
 #endif
 
@@ -268,7 +279,7 @@
          decomp%y2dist, decomp)
 #else
 
-#if defined (_GPU)
+#if defined(_GPU)
     call mem_merge_zy_complex(work2_c_d, d1, d2, d3, dst, dims(2), &
          decomp%y2dist, decomp)
 #else
@@ -418,6 +429,7 @@
 
 #if defined(_GPU)
        istat = cudaMemcpy2D( out(1,i1,1), n1*n2, in(pos), n1*(i2-i1+1), n1*(i2-i1+1), n3, cudaMemcpyDeviceToDevice )
+       if (istat /= 0) call decomp_2d_abort(__FILE__, __LINE__, istat, "cudaMemcpy2D")
 #else
        do k=1,n3
           do j=i1,i2
@@ -473,6 +485,7 @@
 
 #if defined(_GPU)
        istat = cudaMemcpy2D( out(1,i1,1), n1*n2, in(pos), n1*(i2-i1+1), n1*(i2-i1+1), n3, cudaMemcpyDeviceToDevice )
+       if (istat /= 0) call decomp_2d_abort(__FILE__, __LINE__, istat, "cudaMemcpy2D")
 #else
        do k=1,n3
           do j=i1,i2

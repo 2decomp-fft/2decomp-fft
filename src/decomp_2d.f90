@@ -16,6 +16,7 @@ module decomp_2d
 
   use MPI
   use, intrinsic :: iso_fortran_env, only : real32, real64
+  use factor
 #if defined(_GPU)
   use cudafor
 #if defined(_NCCL)
@@ -59,7 +60,6 @@ module decomp_2d
 
   ! parameters for 2D Cartesian topology
   integer, save, dimension(2) :: dims, coord
-  logical, save, dimension(2) :: periodic
   integer, save, public :: DECOMP_2D_COMM_CART_X = MPI_COMM_NULL
   integer, save, public :: DECOMP_2D_COMM_CART_Y = MPI_COMM_NULL
   integer, save, public :: DECOMP_2D_COMM_CART_Z = MPI_COMM_NULL
@@ -173,7 +173,9 @@ module decomp_2d
   END TYPE DECOMP_INFO
 
   ! main (default) decomposition information for global size nx*ny*nz
-  TYPE(DECOMP_INFO), save, public :: decomp_main
+  TYPE(DECOMP_INFO), target, save, public :: decomp_main
+  ! FIXME The extra decomp_info objects should be defined in the external code, not here
+  !       Currently keeping them to avoid breaking external codes
   TYPE(DECOMP_INFO), save, public :: phG,ph1,ph2,ph3,ph4
 
   ! staring/ending index and size of data held by current processor
@@ -193,11 +195,9 @@ module decomp_2d
 
 #if defined(_NCCL)
   integer col_comm_size, row_comm_size
-  type(ncclResult) :: nccl_stat
   integer, allocatable, dimension(:) :: local_to_global_col, local_to_global_row
   type(ncclUniqueId) :: nccl_uid_2decomp
   type(ncclComm) :: nccl_comm_2decomp
-  integer cuda_stat
   integer(kind=cuda_stream_kind) :: cuda_stream_2decomp
 #endif
 #endif
@@ -240,8 +240,10 @@ module decomp_2d
        init_coarser_mesh_statV,fine_to_coarseV,&
        init_coarser_mesh_statP,fine_to_coarseP,&
        alloc_x, alloc_y, alloc_z, &
-       update_halo, exchange_halo_x, exchange_halo_y, exchange_halo_z,&
-       decomp_2d_abort, decomp_2d_warning, get_decomp_info
+       update_halo, decomp_2d_abort, &
+       decomp_2d_warning, get_decomp_info, &
+       decomp_mpi_comm_free, get_decomp_dims, &
+       exchange_halo_x, exchange_halo_y, exchange_halo_z
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   ! These are routines to perform global data transpositions
@@ -261,29 +263,47 @@ module decomp_2d
   !       * as the case in fft r2c/c2r interface
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
+  interface decomp_2d_init
+     module procedure decomp_2d_init_ref
+  end interface decomp_2d_init
+
+  interface decomp_2d_finalize
+     module procedure decomp_2d_finalize_ref
+  end interface decomp_2d_finalize
+
   interface transpose_x_to_y
      module procedure transpose_x_to_y_real
+     module procedure transpose_x_to_y_real_short
      module procedure transpose_x_to_y_complex
+     module procedure transpose_x_to_y_complex_short
   end interface transpose_x_to_y
 
   interface transpose_y_to_z
      module procedure transpose_y_to_z_real
+     module procedure transpose_y_to_z_real_short
      module procedure transpose_y_to_z_complex
+     module procedure transpose_y_to_z_complex_short
   end interface transpose_y_to_z
 
   interface transpose_z_to_y
      module procedure transpose_z_to_y_real
+     module procedure transpose_z_to_y_real_short
      module procedure transpose_z_to_y_complex
+     module procedure transpose_z_to_y_complex_short
   end interface transpose_z_to_y
 
   interface transpose_y_to_x
      module procedure transpose_y_to_x_real
+     module procedure transpose_y_to_x_real_short
      module procedure transpose_y_to_x_complex
+     module procedure transpose_y_to_x_complex_short
   end interface transpose_y_to_x
 
   interface update_halo
      module procedure update_halo_real
+     module procedure update_halo_real_short
      module procedure update_halo_complex
+     module procedure update_halo_complex_short
   end interface update_halo
 
   interface exchange_halo_x
@@ -303,22 +323,32 @@ module decomp_2d
 
   interface alloc_x
      module procedure alloc_x_real
+     module procedure alloc_x_real_short
      module procedure alloc_x_complex
+     module procedure alloc_x_complex_short
   end interface alloc_x
 
   interface alloc_y
      module procedure alloc_y_real
+     module procedure alloc_y_real_short
      module procedure alloc_y_complex
+     module procedure alloc_y_complex_short
   end interface alloc_y
 
   interface alloc_z
      module procedure alloc_z_real
+     module procedure alloc_z_real_short
      module procedure alloc_z_complex
+     module procedure alloc_z_complex_short
   end interface alloc_z
 
   interface decomp_2d_abort
      module procedure decomp_2d_abort_basic
      module procedure decomp_2d_abort_file_line
+#if defined(_GPU) && defined(_NCCL)
+     module procedure decomp_2d_abort_nccl_basic
+     module procedure decomp_2d_abort_nccl_file_line
+#endif
   end interface decomp_2d_abort
 
   interface decomp_2d_warning
@@ -382,272 +412,7 @@ module decomp_2d
 
 contains
 
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  ! Routine to be called by applications to initialise this library
-  !   INPUT:
-  !     nx, ny, nz   - global data dimension
-  !     p_row, p_col - 2D processor grid
-  !   OUTPUT:
-  !     all internal data structures initialised properly
-  !     library ready to use
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  subroutine decomp_2d_init(nx,ny,nz,p_row,p_col,periodic_bc,comm)
-
-    use iso_fortran_env, only : output_unit
-
-    implicit none
-
-    integer, intent(IN) :: nx,ny,nz
-    integer, intent(INOUT) :: p_row,p_col
-    logical, dimension(3), intent(IN), optional :: periodic_bc
-    integer, intent(in), optional :: comm
-
-    integer :: errorcode, ierror, row, col, iounit
-#ifdef DEBUG
-    character(len=7) fname ! Sufficient for up to O(1M) ranks
-#endif
-
-#ifdef PROFILER
-    ! Prepare the profiler if it was not already prepared
-    if (decomp_profiler.eq.decomp_profiler_none) call decomp_profiler_prep()
-    ! Start the profiler
-    call decomp_profiler_init()
-    ! Start the timer for decomp_2d_init
-    if (decomp_profiler_d2d) call decomp_profiler_start("decomp_2d_init")
-#endif
-
-    ! Use the provided MPI communicator if present
-    if (present(comm)) then
-       decomp_2d_comm = comm
-    else
-       decomp_2d_comm = MPI_COMM_WORLD
-    endif
-
-    ! If the external code has not set nrank and nproc
-    if (nrank == -1) then
-       call MPI_COMM_RANK(decomp_2d_comm, nrank, ierror)
-       if (ierror /= 0) call decomp_2d_abort(__FILE__, &
-                                             __LINE__, &
-                                             ierror, &
-                                             "MPI_COMM_RANK")
-    endif
-    if (nproc == -1) then
-       call MPI_COMM_SIZE(decomp_2d_comm, nproc, ierror)
-       if (ierror /= 0) call decomp_2d_abort(__FILE__, &
-                                             __LINE__, &
-                                             ierror, &
-                                             "MPI_COMM_SIZE")
-    endif
-#ifdef DEBUG
-    ! Check if a modification of the debug level is needed
-    call decomp_2d_debug()
-#endif
-
-    nx_global = nx
-    ny_global = ny
-    nz_global = nz
-
-    if (present(periodic_bc)) then
-       periodic_x = periodic_bc(1)
-       periodic_y = periodic_bc(2)
-       periodic_z = periodic_bc(3)
-    else
-       periodic_x = .false.
-       periodic_y = .false.
-       periodic_z = .false.
-    end if
-
-    if (p_row==0 .and. p_col==0) then
-       ! determine the best 2D processor grid
-       call best_2d_grid(nproc, row, col)
-       p_row = row
-       p_col = col
-    else
-       if (nproc /= p_row*p_col) then
-          errorcode = 1
-          call decomp_2d_abort(__FILE__, __LINE__, errorcode, &
-               'Invalid 2D processor grid - nproc /= p_row*p_col')
-       else
-          row = p_row
-          col = p_col
-       end if
-    end if
-
-    ! Create 2D Catersian topology
-    ! Note that in order to support periodic B.C. in the halo-cell code,
-    ! need to create multiple topology objects: DECOMP_2D_COMM_CART_?,
-    ! corresponding to three pencil orientations. They contain almost
-    ! identical topological information but allow different combinations
-    ! of periodic conditions.
-    dims(1) = row
-    dims(2) = col
-    periodic(1) = periodic_y
-    periodic(2) = periodic_z
-    call MPI_CART_CREATE(decomp_2d_comm,2,dims,periodic, &
-         .false., &  ! do not reorder rank
-         DECOMP_2D_COMM_CART_X, ierror)
-    if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_CART_CREATE")
-    periodic(1) = periodic_x
-    periodic(2) = periodic_z
-    call MPI_CART_CREATE(decomp_2d_comm,2,dims,periodic, &
-         .false., DECOMP_2D_COMM_CART_Y, ierror)
-    if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_CART_CREATE")
-    periodic(1) = periodic_x
-    periodic(2) = periodic_y
-    call MPI_CART_CREATE(decomp_2d_comm,2,dims,periodic, &
-         .false., DECOMP_2D_COMM_CART_Z, ierror)
-    if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_CART_CREATE")
-
-    call MPI_CART_COORDS(DECOMP_2D_COMM_CART_X,nrank,2,coord,ierror)
-    if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_CART_COORDS")
-
-    ! derive communicators defining sub-groups for ALLTOALL(V)
-    call MPI_CART_SUB(DECOMP_2D_COMM_CART_X,(/.true.,.false./), &
-         DECOMP_2D_COMM_COL,ierror)
-    if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_CART_SUB")
-    call MPI_CART_SUB(DECOMP_2D_COMM_CART_X,(/.false.,.true./), &
-         DECOMP_2D_COMM_ROW,ierror)
-    if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_CART_SUB")
-
-    ! gather information for halo-cell support code
-    call init_neighbour
-
-    ! actually generate all 2D decomposition information
-    call decomp_info_init(nx,ny,nz,decomp_main)
-
-    ! make a copy of the decomposition information associated with the
-    ! default global size in these global variables so applications can
-    ! use them to create data structures
-    xstart = decomp_main%xst
-    ystart = decomp_main%yst
-    zstart = decomp_main%zst
-    xend   = decomp_main%xen
-    yend   = decomp_main%yen
-    zend   = decomp_main%zen
-    xsize  = decomp_main%xsz
-    ysize  = decomp_main%ysz
-    zsize  = decomp_main%zsz
-
-    ! determine the number of bytes per float number
-    ! do not use 'mytype' which is compiler dependent
-    ! also possible to use inquire(iolength=...)
-    call MPI_TYPE_SIZE(real_type,mytype_bytes,ierror)
-    if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_TYPE_SIZE")
-
-#ifdef EVEN
-    if (nrank==0) write(*,*) 'Padded ALLTOALL optimisation on'
-#endif
-
-#if defined(_GPU)
-#if defined(_NCCL)
-    call MPI_COMM_RANK(DECOMP_2D_COMM_COL,col_rank,ierror)
-    if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_COMM_RANK")
-    call MPI_COMM_RANK(DECOMP_2D_COMM_ROW,row_rank,ierror)
-    if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_COMM_RANK")
-    call MPI_COMM_SIZE(DECOMP_2D_COMM_COL,col_comm_size,ierror)
-    if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_COMM_SIZE")
-    call MPI_COMM_SIZE(DECOMP_2D_COMM_ROW,row_comm_size,ierror)
-    if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_COMM_SIZE")
-
-    allocate(local_to_global_col(col_comm_size), local_to_global_row(row_comm_size))
-
-    local_to_global_col(:) = 0
-    local_to_global_row(:) = 0
-    local_to_global_col(col_rank+1) = nrank
-    local_to_global_row(row_rank+1) = nrank
-
-    call mpi_allreduce(MPI_IN_PLACE,local_to_global_col,col_comm_size,MPI_INTEGER,MPI_SUM,DECOMP_2D_COMM_COL,ierror)
-    if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_ALLREDUCE")
-    call mpi_allreduce(MPI_IN_PLACE,local_to_global_row,row_comm_size,MPI_INTEGER,MPI_SUM,DECOMP_2D_COMM_ROW,ierror)
-    if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_ALLREDUCE")
-
-    if (nrank .eq. 0) then
-       nccl_stat = ncclGetUniqueId(nccl_uid_2decomp)
-    end if
-    call MPI_Bcast(nccl_uid_2decomp, int(sizeof(ncclUniqueId)), MPI_BYTE, 0, decomp_2d_comm, ierror)
-    if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_BCAST")
-
-    nccl_stat = ncclCommInitRank(nccl_comm_2decomp, nproc, nccl_uid_2decomp, nrank)
-    cuda_stat = cudaStreamCreate(cuda_stream_2decomp)
-#endif
-#endif
-
-    !
-    ! Select the IO unit for decomp_2d setup
-    !
-#ifdef DEBUG
-    write(fname, "(I0)") nrank ! Adapt to magnitude of nrank
-    open(newunit=iounit, file='decomp_2d_setup_'//trim(fname)//'.log', iostat=ierror)
-#else
-    if (nrank == 0) then
-       open(newunit=iounit, file="decomp_2d_setup.log", iostat=ierror)
-    else
-       iounit = output_unit
-       ierror = 0
-    endif
-#endif
-    if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "Could not open log file")
-    !
-    ! Print the decomp_2d setup
-    !
-    call d2d_listing(iounit)
-    !
-    ! Close the IO unit if it was not stdout
-    !
-    if (iounit /= output_unit) then
-       close(iounit, iostat=ierror)
-       if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "Could not close log file")
-    endif
-
-#ifdef PROFILER
-    ! Stop the timer for decomp_2d_init
-    if (decomp_profiler_d2d) call decomp_profiler_end("decomp_2d_init")
-#endif
-
-    return
-  end subroutine decomp_2d_init
-
-
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  ! Routine to be called by applications to clean things up
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  subroutine decomp_2d_finalize
-
-    implicit none
-
-#ifdef PROFILER
-    if (decomp_profiler_d2d) call decomp_profiler_start("decomp_2d_fin")
-#endif
-
-    call decomp_mpi_comm_free(DECOMP_2D_COMM_ROW)
-    call decomp_mpi_comm_free(DECOMP_2D_COMM_COL)
-    call decomp_mpi_comm_free(DECOMP_2D_COMM_CART_X)
-    call decomp_mpi_comm_free(DECOMP_2D_COMM_CART_Y)
-    call decomp_mpi_comm_free(DECOMP_2D_COMM_CART_Z)
-
-    call decomp_info_finalize(decomp_main)
-
-    decomp_buf_size = 0
-    deallocate(work1_r, work2_r, work1_c, work2_c)
-#if defined(_GPU)
-    deallocate(work1_r_d, work2_r_d, work1_c_d, work2_c_d)
-
-#if defined(_NCCL)
-    nccl_stat = ncclCommDestroy(nccl_comm_2decomp)
-#endif
-#endif
-
-    nrank = -1
-    nproc = -1
-
-#ifdef PROFILER
-    if (decomp_profiler_d2d) call decomp_profiler_end("decomp_2d_fin")
-    ! Finalize the profiler
-    call decomp_profiler_fin()
-#endif
-
-    return
-  end subroutine decomp_2d_finalize
+#include "decomp_2d_init_fin.f90"
 
   !
   ! Small wrapper to free a MPI communicator
@@ -672,17 +437,34 @@ contains
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   ! Return the default decomposition object
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+  ! FIXME avoid a copy and return a pointer to decomp_main
+  ! TODO list the external codes using this subroutine
   subroutine get_decomp_info(decomp)
 
     implicit none
 
+    ! FIXME TYPE(DECOMP_INFO), pointer :: decomp
     TYPE(DECOMP_INFO), intent(OUT) :: decomp
 
+    ! FIXME decomp => decomp_main
     decomp = decomp_main
 
     return
   end subroutine get_decomp_info
 
+  !
+  ! Return the 2D processor grid
+  !
+  function get_decomp_dims()
+
+    implicit none
+
+    integer, dimension(2) :: get_decomp_dims
+
+    get_decomp_dims = dims
+
+  end function get_decomp_dims
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   ! Advanced Interface allowing applications to define globle domain of
@@ -1862,44 +1644,6 @@ contains
 #include "transpose_z_to_y.f90"
 #include "transpose_y_to_x.f90"
 
-
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  ! Auto-tuning algorithm to select the best 2D processor grid
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  subroutine best_2d_grid(iproc, best_p_row, best_p_col)
-
-    implicit none
-
-    integer, intent(IN) :: iproc
-    integer, intent(OUT) :: best_p_row, best_p_col
-
-    integer, allocatable, dimension(:) :: factors
-    integer :: nfact, i, col, i_best
-
-    if (nrank==0) write(*,*) 'In auto-tuning mode......'
-
-    i = int(sqrt(real(iproc))) + 10  ! enough space to save all factors
-    allocate(factors(i))
-    call findfactor(iproc, factors, nfact)
-    if (nrank==0) write(*,*) 'factors: ', (factors(i), i=1,nfact)
-
-    i_best=nfact/2+1
-    col=factors(i_best)
-
-    best_p_col = col
-    best_p_row=iproc/col
-    if (nrank==0) print *,'p_row x p_col', best_p_row, best_p_col
-    if ((best_p_col==1).and.(nrank==0)) then
-       print *,'WARNING: current 2D DECOMP set-up might not work'
-    endif
-
-    deallocate(factors)
-
-    return
-  end subroutine best_2d_grid
-
-#include "factor.f90"
-
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   ! Halo cell support
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -1942,12 +1686,12 @@ contains
     integer :: ierror
 
     if (nrank==0) then
-       write(*,*) '2DECOMP&FFT / X3D ERROR'
+       write(*,*) '2DECOMP&FFT ERROR'
        write(*,*) '  errorcode:     ', errorcode
        write(*,*) '  error in file  ' // file
        write(*,*) '           line  ', line
        write(*,*) '  error message: ' // msg
-       write(error_unit,*) '2DECOMP&FFT / X3D ERROR'
+       write(error_unit,*) '2DECOMP&FFT ERROR'
        write(error_unit,*) '  errorcode:     ', errorcode
        write(error_unit,*) '  error in file  ' // file
        write(error_unit,*) '           line  ', line
@@ -1956,6 +1700,73 @@ contains
     call MPI_ABORT(decomp_2d_comm,errorcode,ierror)
 
   end subroutine decomp_2d_abort_file_line
+
+#if defined(_GPU) && defined(_NCCL)
+  !
+  ! This is based on the file "nccl.h" in nvhpc 22.1
+  !
+  function _ncclresult_to_integer(errorcode)
+
+    implicit none
+
+    type(ncclresult), intent(IN) :: errorcode
+    integer :: _ncclresult_to_integer
+
+    if (errorcode == ncclSuccess) then
+        _ncclresult_to_integer = 0
+    elseif (errorcode == ncclUnhandledCudaError) then
+        _ncclresult_to_integer = 1
+    elseif (errorcode == ncclSystemError) then
+        _ncclresult_to_integer = 2
+    elseif (errorcode == ncclInternalError) then
+        _ncclresult_to_integer = 3
+    elseif (errorcode == ncclInvalidArgument) then
+        _ncclresult_to_integer = 4
+    elseif (errorcode == ncclInvalidUsage) then
+        _ncclresult_to_integer = 5
+    elseif (errorcode == ncclNumResults) then
+        _ncclresult_to_integer = 6
+    else
+      _ncclresult_to_integer = -1
+      call decomp_2d_warning(__FILE__, __LINE__, _ncclresult_to_integer, &
+                             "NCCL error handling needs some update")
+    end if
+
+  end function _ncclresult_to_integer
+
+  !
+  ! Small wrapper for basic NCCL errors
+  !
+  subroutine decomp_2d_abort_nccl_basic(errorcode, msg)
+
+    implicit none
+
+    type(ncclresult), intent(IN) :: errorcode
+    character(len=*), intent(IN) :: msg
+
+    call decomp_2d_abort(_ncclresult_to_integer(errorcode), &
+                         msg // " " // ncclGetErrorString(errorcode))
+
+  end subroutine decomp_2d_abort_nccl_basic
+
+  !
+  ! Small wrapper for NCCL errors
+  !
+  subroutine decomp_2d_abort_nccl_file_line(file, line, errorcode, msg)
+
+    implicit none
+
+    type(ncclresult), intent(IN) :: errorcode
+    integer, intent(in) :: line
+    character(len=*), intent(IN) :: msg, file
+
+    call decomp_2d_abort(file, &
+                         line, &
+                         _ncclresult_to_integer(errorcode), &
+                         msg // " " // ncclGetErrorString(errorcode))
+
+  end subroutine decomp_2d_abort_nccl_file_line
+#endif
 
   subroutine decomp_2d_warning_basic(errorcode, msg)
 
@@ -1985,12 +1796,12 @@ contains
     character(len=*), intent(IN) :: msg, file
 
     if (nrank==0) then
-       write(*,*) '2DECOMP&FFT / X3D WARNING'
+       write(*,*) '2DECOMP&FFT WARNING'
        write(*,*) '  errorcode:     ', errorcode
        write(*,*) '  error in file  ' // file
        write(*,*) '           line  ', line
        write(*,*) '  error message: ' // msg
-       write(error_unit,*) '2DECOMP&FFT / X3D WARNING'
+       write(error_unit,*) '2DECOMP&FFT WARNING'
        write(error_unit,*) '  errorcode:     ', errorcode
        write(error_unit,*) '  error in file  ' // file
        write(error_unit,*) '           line  ', line
@@ -2003,44 +1814,5 @@ contains
   ! Utility routines to help allocate 3D arrays
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 #include "alloc.f90"
-
-#ifdef DEBUG
-  !
-  ! Try to read the environment variable DECOMP_2D_DEBUG to change the debug level
-  !
-  ! The expected value is an integer below 9999
-  !
-  subroutine decomp_2d_debug
-
-    implicit none
-
-    integer :: ierror
-    character(len=4) :: val
-    character(len=*), parameter :: varname = "DECOMP_2D_DEBUG"
-
-    ! Read the variable
-    call get_environment_variable(varname, value=val, status=ierror)
-
-    ! Return if no variable, or no support for env. variable
-    if (ierror >= 1) return
-
-    ! Minor error, print warning and return
-    if (ierror /= 0) then
-       call decomp_2d_warning(__FILE__, &
-                              __LINE__, &
-                              ierror, &
-                              "Error when reading DECOMP_2D_DEBUG : "//val)
-       return
-    endif
-
-    ! Conversion to integer if possible
-    read(val, '(i4)', iostat=ierror) decomp_debug
-    if (ierror /= 0) call decomp_2d_warning(__FILE__, &
-                                            __LINE__, &
-                                            ierror, &
-                                            "Error when reading DECOMP_2D_DEBUG : "//val)
-
-  end subroutine decomp_2d_debug
-#endif
 
 end module decomp_2d

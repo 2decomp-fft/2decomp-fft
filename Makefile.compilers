@@ -13,10 +13,10 @@ endif
 ifeq ($(CMP),intel)
   FC = mpiifort
 
-  FFLAGS += -fpp
+  FFLAGS += -fpp -std08
   ifeq ($(DEBUG_BUILD),yes)
     DEFS += -DDEBUG
-    FFLAGS += -g -O0
+    FFLAGS += -g -O0 -debug extended -traceback
   else
     FFLAGS += -O3 -mavx2 -march=core-avx2 -mtune=core-avx2
   endif
@@ -29,7 +29,7 @@ ifeq ($(CMP),intel)
   MODFLAG = -module # Explicit space
 else ifeq ($(CMP),gcc)
   FC = mpif90
-  FFLAGS += -cpp
+  FFLAGS += -cpp -std=f2008
   ifeq "$(shell expr `gfortran -dumpversion | cut -f1 -d.` \>= 10)" "1"
     FFLAGS += -fallow-argument-mismatch
   endif
@@ -50,9 +50,12 @@ else ifeq ($(CMP),gcc)
   ifeq ($(BUILD),dev)
     # Add additional, stricter flags
     FFLAGS += -Wall -Wpedantic
-    ifeq ($(MPI_FAMILY),openmpi)
-      # MPICH doesn't export interfaces...
-      FFLAGS += -Wimplicit-procedure -Wimplicit-interface
+    ifneq ($(FFT),fftw3)
+      # FFTW3 (legacy) doesn't have interfaces
+      ifeq ($(MPI_FAMILY),openmpi)
+        # MPICH doesn't export interfaces...
+        FFLAGS += -Wimplicit-procedure -Wimplicit-interface
+      endif
     endif
     FFLAGS += -Wno-unused-function
     FFLAGS += -Werror -Wno-integer-division
@@ -80,8 +83,20 @@ else ifeq ($(CMP),nvhpc)
      FFLAGS += -O3 -Minfo=accel -stdpar -acc -target=multicore
      LFLAGS += -acc -lnvhpcwrapnvtx
   else ifeq ($(PARAMOD),gpu)
-     #FFLAGS = -D_GPU -D_NCCL -Mfree -Kieee -Minfo=accel,stdpar -stdpar=gpu -gpu=cc80,managed,lineinfo -acc -target=gpu -traceback -O3 -DUSE_CUDA -cuda -cudalib=cufft,nccl
-     FFLAGS += -Mfree -D_GPU -Kieee -Minfo=accel,stdpar -stdpar=gpu -gpu=cc80,managed,lineinfo -acc -target=gpu -traceback -O3 -DUSE_CUDA -cuda
+     CCXY=80
+     NCCL=no     
+     FFLAGS += -D_GPU
+     ifeq ($(NCCL),yes)
+       FFLAGS += -D_NCCL
+     endif
+     FFLAGS += -Mfree -Kieee -Minfo=accel,stdpar -stdpar=gpu -gpu=cc${CCXY},managed,lineinfo -acc -target=gpu -traceback -O3 -DUSE_CUDA -cuda 
+     ifeq ($(NCCL),yes)
+       FFLAGS += -cudalib=cufft,nccl
+     else
+       FFLAGS += -cudalib=cufft
+     endif
+     #FFLAGS += -D_GPU -Mfree -Kieee -Minfo=accel,stdpar -stdpar=gpu -gpu=cc80,managed,lineinfo -acc -target=gpu -traceback -O3 -DUSE_CUDA -cuda -cudalib=cufft
+     #FFLAGS += -Mfree -Kieee -Minfo=accel,stdpar -stdpar=gpu -gpu=cc80,managed,lineinfo -acc -target=gpu -traceback -O3 -DUSE_CUDA -cuda -cudalib=cufft
      LFLAGS += -acc -lnvhpcwrapnvtx
   else
     ifeq ($(DEBUG_BUILD),yes)
@@ -97,3 +112,7 @@ else ifeq ($(CMP),nvhpc)
   #FFLAGS += -cpp -O3 -Minfo=accel -stdpar -acc -target=multicore
   #FFLAGS = -cpp -Mfree -Kieee -Minfo=accel -g -acc -target=gpu -fast -O3 -Minstrument
 endif
+
+# Local Variables:
+# mode: makefile
+# End:

@@ -13,7 +13,7 @@
 ! the Fortran 2003 interface introduced in FFTW 3.3-beta1
 
 module decomp_2d_fft
-  
+
   use decomp_2d  ! 2D decomposition module
   use, intrinsic :: iso_c_binding
   
@@ -52,10 +52,11 @@ module decomp_2d_fft
   integer, save :: nx_fft, ny_fft, nz_fft
 
   ! 2D processor grid
+  ! FIXME this is already available in the module decomp_2d
   integer, save, dimension(2) :: dims
 
   ! Decomposition objects
-  TYPE(DECOMP_INFO), save :: ph  ! physical space
+  TYPE(DECOMP_INFO), pointer, save :: ph=>null()  ! physical space
   TYPE(DECOMP_INFO), save :: sp  ! spectral space
 
   ! Workspace to store the intermediate Y-pencil data
@@ -115,10 +116,8 @@ contains
     integer, intent(IN) :: pencil
     integer, intent(IN) :: nx, ny, nz
 
-    logical, dimension(2) :: dummy_periods
-    integer, dimension(2) :: dummy_coords
-    integer :: status, errorcode
-    integer(C_SIZE_T) :: sz, ierror
+    integer :: errorcode
+    integer(C_SIZE_T) :: sz
 
 #ifdef PROFILER
     if (decomp_profiler_fft) call decomp_profiler_start("fft_init")
@@ -136,8 +135,7 @@ contains
     nz_fft = nz
 
     ! determine the processor grid in use
-    call MPI_CART_GET(DECOMP_2D_COMM_CART_X, 2, &
-         dims, dummy_periods, dummy_coords, ierror)
+    dims = get_decomp_dims()
 
     ! for c2r/r2c interface:
     ! if in physical space, a real array is of size: nx*ny*nz
@@ -145,7 +143,11 @@ contains
     !         (nx/2+1)*ny*nz, if PHYSICAL_IN_X
     !      or nx*ny*(nz/2+1), if PHYSICAL_IN_Z
 
-    call decomp_info_init(nx, ny, nz, ph)
+    if (nx_fft==nx_global.and.ny_fft==ny_global.and.nz_fft==nz_global) then
+       ph => decomp_main
+    else
+       call decomp_info_init(nx, ny, nz, ph)
+    endif
     if (format==PHYSICAL_IN_X) then
        call decomp_info_init(nx/2+1, ny, nz, sp)
     else if (format==PHYSICAL_IN_Z) then
@@ -194,7 +196,11 @@ contains
     if (decomp_profiler_fft) call decomp_profiler_start("fft_fin")
 #endif
 
-    call decomp_info_finalize(ph)
+    if (nx_fft==nx_global.and.ny_fft==ny_global.and.nz_fft==nz_global) then
+      nullify(ph)
+    else
+      call decomp_info_finalize(ph)
+    endif
     call decomp_info_finalize(sp)
 
     call fftw_free(wk2_c2c_p)
@@ -246,23 +252,30 @@ contains
     TYPE(DECOMP_INFO), intent(IN) :: decomp
     integer, intent(IN) :: isign
 
-    complex(mytype), pointer :: a1(:,:,:)
+#ifdef DOUBLE_PREC
+    complex(C_DOUBLE_COMPLEX), pointer :: a1(:,:,:)
+    complex(C_DOUBLE_COMPLEX), pointer :: a1o(:,:,:)
+#else
+    complex(C_FLOAT_COMPLEX), pointer :: a1(:,:,:)
+    complex(C_FLOAT_COMPLEX), pointer :: a1o(:,:,:)
+#endif
     type(C_PTR) :: a1_p
     integer(C_SIZE_T) :: sz
 
     sz = decomp%xsz(1)*decomp%xsz(2)*decomp%xsz(3)
     a1_p = fftw_alloc_complex(sz)
     call c_f_pointer(a1_p,a1,[decomp%xsz(1),decomp%xsz(2),decomp%xsz(3)])
+    call c_f_pointer(a1_p,a1o,[decomp%xsz(1),decomp%xsz(2),decomp%xsz(3)])
 
 #ifdef DOUBLE_PREC
-    plan1 =  fftw_plan_many_dft(1, decomp%xsz(1), &
+    plan1 = fftw_plan_many_dft(1, decomp%xsz(1), &
          decomp%xsz(2)*decomp%xsz(3), a1, decomp%xsz(1), 1, &
-         decomp%xsz(1), a1, decomp%xsz(1), 1, decomp%xsz(1), &
+         decomp%xsz(1), a1o, decomp%xsz(1), 1, decomp%xsz(1), &
          isign, plan_type)
 #else
     plan1 = fftwf_plan_many_dft(1, decomp%xsz(1), &
          decomp%xsz(2)*decomp%xsz(3), a1, decomp%xsz(1), 1, &
-         decomp%xsz(1), a1, decomp%xsz(1), 1, decomp%xsz(1), &
+         decomp%xsz(1), a1o, decomp%xsz(1), 1, decomp%xsz(1), &
          isign, plan_type)
 #endif
 
@@ -280,7 +293,13 @@ contains
     TYPE(DECOMP_INFO), intent(IN) :: decomp
     integer, intent(IN) :: isign
 
-    complex(mytype), pointer :: a1(:,:)
+#ifdef DOUBLE_PREC
+    complex(C_DOUBLE_COMPLEX), pointer :: a1(:,:)
+    complex(C_DOUBLE_COMPLEX), pointer :: a1o(:,:)
+#else
+    complex(C_FLOAT_COMPLEX), pointer :: a1(:,:)
+    complex(C_FLOAT_COMPLEX), pointer :: a1o(:,:)
+#endif
     type(C_PTR) :: a1_p
     integer(C_SIZE_T) :: sz
 
@@ -289,14 +308,15 @@ contains
     sz = decomp%ysz(1)*decomp%ysz(2)
     a1_p = fftw_alloc_complex(sz)
     call c_f_pointer(a1_p,a1,[decomp%ysz(1),decomp%ysz(2)])
+    call c_f_pointer(a1_p,a1o,[decomp%ysz(1),decomp%ysz(2)])
 
 #ifdef DOUBLE_PREC
     plan1 =  fftw_plan_many_dft(1, decomp%ysz(2), decomp%ysz(1), &
-         a1, decomp%ysz(2), decomp%ysz(1), 1, a1, decomp%ysz(2), &
+         a1, decomp%ysz(2), decomp%ysz(1), 1, a1o, decomp%ysz(2), &
          decomp%ysz(1), 1, isign, plan_type)
 #else
     plan1 = fftwf_plan_many_dft(1, decomp%ysz(2), decomp%ysz(1), &
-         a1, decomp%ysz(2), decomp%ysz(1), 1, a1, decomp%ysz(2), &
+         a1, decomp%ysz(2), decomp%ysz(1), 1, a1o, decomp%ysz(2), &
          decomp%ysz(1), 1, isign, plan_type)
 #endif
 
@@ -314,23 +334,30 @@ contains
     TYPE(DECOMP_INFO), intent(IN) :: decomp
     integer, intent(IN) :: isign
 
-    complex(mytype), pointer :: a1(:,:,:)
+#ifdef DOUBLE_PREC
+    complex(C_DOUBLE_COMPLEX), pointer :: a1(:,:,:)
+    complex(C_DOUBLE_COMPLEX), pointer :: a1o(:,:,:)
+#else
+    complex(C_FLOAT_COMPLEX), pointer :: a1(:,:,:)
+    complex(C_FLOAT_COMPLEX), pointer :: a1o(:,:,:)
+#endif
     type(C_PTR) :: a1_p
     integer(C_SIZE_T) :: sz
 
     sz = decomp%zsz(1)*decomp%zsz(2)*decomp%zsz(3)
     a1_p = fftw_alloc_complex(sz)
     call c_f_pointer(a1_p,a1,[decomp%zsz(1),decomp%zsz(2),decomp%zsz(3)])
+    call c_f_pointer(a1_p,a1o,[decomp%zsz(1),decomp%zsz(2),decomp%zsz(3)])
 
 #ifdef DOUBLE_PREC
     plan1 =  fftw_plan_many_dft(1, decomp%zsz(3), &
          decomp%zsz(1)*decomp%zsz(2), a1, decomp%zsz(3), &
-         decomp%zsz(1)*decomp%zsz(2), 1, a1, decomp%zsz(3), &
+         decomp%zsz(1)*decomp%zsz(2), 1, a1o, decomp%zsz(3), &
          decomp%zsz(1)*decomp%zsz(2), 1, isign, plan_type)
 #else
     plan1 = fftwf_plan_many_dft(1, decomp%zsz(3), &
          decomp%zsz(1)*decomp%zsz(2), a1, decomp%zsz(3), &
-         decomp%zsz(1)*decomp%zsz(2), 1, a1, decomp%zsz(3), &
+         decomp%zsz(1)*decomp%zsz(2), 1, a1o, decomp%zsz(3), &
          decomp%zsz(1)*decomp%zsz(2), 1, isign, plan_type)
 #endif
 
@@ -558,7 +585,6 @@ contains
     return
   end subroutine init_fft_engine
 
-
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   !  This routine performs one-time finalisations for the FFT engine
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -578,6 +604,8 @@ contains
        end do
     end do
 
+    call fftw_cleanup()
+
     return
   end subroutine finalize_fft_engine
 
@@ -594,6 +622,10 @@ contains
     integer, intent(IN) :: isign
     type(C_PTR) :: plan1
 
+    integer :: foo
+
+    foo = isign ! Silence unused dummy argument
+    
 #ifdef DOUBLE_PREC
     call fftw_execute_dft(plan1, inout, inout)
 #else
@@ -615,6 +647,10 @@ contains
 
     integer :: k, s3
 
+    integer :: foo
+
+    foo = isign ! Silence unused dummy argument
+    
     s3 = size(inout,3)
 
     do k=1,s3  ! transform on one Z-plane at a time
@@ -637,6 +673,10 @@ contains
     integer, intent(IN) :: isign
     type(C_PTR) :: plan1
 
+    integer :: foo
+
+    foo = isign ! Silence unused dummy argument
+    
 #ifdef DOUBLE_PREC
        call fftw_execute_dft(plan1, inout, inout)
 #else
@@ -735,6 +775,8 @@ contains
     complex(mytype), pointer :: wk1(:,:,:)
     integer(C_SIZE_T) :: sz
     type(C_PTR) :: wk1_p
+
+    wk1_p = c_null_ptr ! Initialise to NULL pointer
 #endif
 
 #ifdef PROFILER
@@ -915,6 +957,8 @@ contains
     complex(mytype), pointer :: wk1(:,:,:)
     integer(C_SIZE_T) :: sz
     type(C_PTR) :: wk1_p
+
+    wk1_p = c_null_ptr ! Initialise to NULL pointer
 #endif
 
 #ifdef PROFILER

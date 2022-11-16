@@ -455,11 +455,11 @@ contains
     call get_dist(nx,ny,nz,decomp)
 
     ! generate partition information - starting/ending index etc.
-    call partition(nx, ny, nz, (/ 1,2,3 /), &
+    call partition_impl(nx, ny, nz, (/ 1,2,3 /), &
          decomp%xst, decomp%xen, decomp%xsz)
-    call partition(nx, ny, nz, (/ 2,1,3 /), &
+    call partition_impl(nx, ny, nz, (/ 2,1,3 /), &
          decomp%yst, decomp%yen, decomp%ysz)
-    call partition(nx, ny, nz, (/ 2,3,1 /), &
+    call partition_impl(nx, ny, nz, (/ 2,3,1 /), &
          decomp%zst, decomp%zen, decomp%zsz)
 
     ! prepare send/receive buffer displacement and count for ALLTOALL(V)

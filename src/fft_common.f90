@@ -91,6 +91,7 @@ implicit none
 integer, intent(IN) :: pencil
 integer, intent(IN) :: nx, ny, nz
 
+type(decomp_info), target :: tmp
 integer :: status, errorcode
 
 #ifdef PROFILER
@@ -120,7 +121,8 @@ dims = get_decomp_dims()
 if (nx_fft==nx_global.and.ny_fft==ny_global.and.nz_fft==nz_global) then
 ph=>decomp_main
 else
-call decomp_info_init(nx, ny, nz, ph)
+call decomp_info_init(nx, ny, nz, tmp)
+ph=>tmp
 endif
 if (format==PHYSICAL_IN_X) then
 call decomp_info_init(nx/2+1, ny, nz, sp)

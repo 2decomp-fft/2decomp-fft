@@ -76,10 +76,12 @@ program io_plane_test
            m=m+1
         end do
      end do
-     write(*,*) ' '
-     write(*,'(15I5)') int(work)
+!     write(*,*) ' '
+!     write(*,'(15I5)') int(work)
      close(10)
      deallocate(work)
+
+     write(*,*) 'passed self test x-plane'
 
      ! Y-plane
      allocate(work(nx,1,nz))
@@ -92,10 +94,12 @@ program io_plane_test
            m=m+1
         end do
      end do
-     write(*,*) ' '
-     write(*,'(15I5)') int(work)
+!     write(*,*) ' '
+!     write(*,'(15I5)') int(work)
      close(10)
      deallocate(work)
+
+     write(*,*) 'passed self test y-plane'
 
      ! Z-plane
      allocate(work(nx,ny,1))
@@ -108,10 +112,12 @@ program io_plane_test
            m=m+1
         end do
      end do
-     write(*,*) ' '
-     write(*,'(15I5)') int(work)
+!     write(*,*) ' '
+!     write(*,'(15I5)') int(work)
      close(10)
      deallocate(work)
+
+     write(*,*) 'passed self test z-plane'
 
   end if
 

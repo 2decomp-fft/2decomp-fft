@@ -9,7 +9,7 @@ test2d:
 fft_physical_z:
 	$(MAKE) -C $@ $@
 fft_physical_x:
-	$(MAKE) -C $@ $@
+	$(MAKE) -C $@ all
 halo_test:
 	$(MAKE) -C $@ $@
 io_test:

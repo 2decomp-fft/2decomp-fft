@@ -212,6 +212,8 @@ end subroutine decomp_2d_fft_get_size
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 ! Return a pointer to the decomp_info object ph
+!
+! The caller should not apply decomp_info_finalize on the pointer
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 function decomp_2d_fft_get_ph()
 
@@ -229,6 +231,8 @@ end function decomp_2d_fft_get_ph
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 ! Return a pointer to the decomp_info object sp
+!
+! The caller should not apply decomp_info_finalize on the pointer
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 function decomp_2d_fft_get_sp()
 

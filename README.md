@@ -64,6 +64,25 @@ Profiling can be activated in the Makefile. Set the variable `PROFILER` to one o
 3. Profile FFT operations (default : true)
 4. Profile decomp_2d init / fin subroutines (default : true)
 
+## Miscellaneous
+
+### Print the log to a file or to stdout
+
+Before calling `decomp_2d_init`, the external code can modify the variable `decomp_log` to change the output for the log. The expected value is defined by the integer constants
+```
+integer, parameter, public :: D2D_LOG_QUIET = 0       ! No logging output
+integer, parameter, public :: D2D_LOG_STDOUT = 1      ! Root rank logs output to stdout
+integer, parameter, public :: D2D_LOG_TOFILE = 2      ! Root rank logs output to the file "decomp_2d_setup.log"
+integer, parameter, public :: D2D_LOG_TOFILE_FULL = 3 ! All ranks log output to a dedicated file
+```
+exported by the `decomp_2d` module.
+Although their values are shown here, users should not rely on these and are recommended to prefer to use the named variables `D2D_LOG_QUIET`, etc. instead.
+The default value used is `D2D_LOG_TOFILE` for the default build and `D2D_LOG_TOFILE_FULL` for a debug build.
+
+### Change the debug level for debug builds
+
+Before calling `decomp_2d_init`, the external code can modify the variable `decomp_debug` to change the debug level. The user can also modify this variable using the environment variable `DECOMP_2D_DEBUG`. Please note that the environment variable is processed only for debug builds. The expected value for the variable `decomp_debug` is some integer between 0 and 6, bounds included.
+
 ## Optional dependencies
 
 ### FFTW

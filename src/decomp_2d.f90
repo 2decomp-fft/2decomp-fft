@@ -84,16 +84,14 @@ module decomp_2d
   !
   ! The default value is 2 (3 for debug builds)
   !
-  enum, bind(c)
-     enumerator :: D2D_LOG_NO = 0
-     enumerator :: D2D_LOG_STDOUT = 1
-     enumerator :: D2D_LOG_FILE = 2
-     enumerator :: D2D_LOG_ALL = 3
-  end enum
+  integer, parameter, public :: D2D_LOG_NO = 0
+  integer, parameter, public :: D2D_LOG_STDOUT = 1
+  integer, parameter, public :: D2D_LOG_FILE = 2
+  integer, parameter, public :: D2D_LOG_ALL = 3
 #ifdef DEBUG
-  integer(kind(D2D_LOG_NO)), public, save :: decomp_log = D2D_LOG_ALL
+  integer, public, save :: decomp_log = D2D_LOG_ALL
 #else
-  integer(kind(D2D_LOG_NO)), public, save :: decomp_log = D2D_LOG_FILE
+  integer, public, save :: decomp_log = D2D_LOG_FILE
 #endif
 
   !

@@ -68,12 +68,16 @@ Profiling can be activated in the Makefile. Set the variable `PROFILER` to one o
 
 ### Print the log to a file or to stdout
 
-Before calling `decomp_2d_init`, the external code can modify the variable `decomp_log` to change the output for the log. The expected value is some integer between 0 and 3, bounds included.
-
-0. No log output
-1. Master rank log output to stdout
-2. Master rank log output to the file "decomp_2d_setup.log" (default)
-3. All ranks log output to a dedicated file (default for debug builds)
+Before calling `decomp_2d_init`, the external code can modify the variable `decomp_log` to change the output for the log. The expected value is defined by the integer constants
+```
+integer, parameter, public :: D2D_LOG_QUIET = 0       ! No logging output
+integer, parameter, public :: D2D_LOG_STDOUT = 1      ! Root rank logs output to stdout
+integer, parameter, public :: D2D_LOG_TOFILE = 2      ! Root rank logs output to the file "decomp_2d_setup.log"
+integer, parameter, public :: D2D_LOG_TOFILE_FULL = 3 ! All ranks log output to a dedicated file
+```
+exported by the `decomp_2d` module.
+Although their values are shown here, users should not rely on these and are recommended to prefer to use the named variables `D2D_LOG_QUIET`, etc. instead.
+The default value used is `D2D_LOG_TOFILE` for the default build and `D2D_LOG_TOFILE_FULL` for a debug build.
 
 ### Change the debug level for debug builds
 

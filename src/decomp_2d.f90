@@ -84,14 +84,14 @@ module decomp_2d
   !
   ! The default value is 2 (3 for debug builds)
   !
-  integer, parameter, public :: D2D_LOG_NO = 0
+  integer, parameter, public :: D2D_LOG_QUIET = 0
   integer, parameter, public :: D2D_LOG_STDOUT = 1
-  integer, parameter, public :: D2D_LOG_FILE = 2
-  integer, parameter, public :: D2D_LOG_ALL = 3
+  integer, parameter, public :: D2D_LOG_TOFILE = 2
+  integer, parameter, public :: D2D_LOG_TOFILE_FULL = 3
 #ifdef DEBUG
-  integer, public, save :: decomp_log = D2D_LOG_ALL
+  integer, public, save :: decomp_log = D2D_LOG_TOFILE_FULL
 #else
-  integer, public, save :: decomp_log = D2D_LOG_FILE
+  integer, public, save :: decomp_log = D2D_LOG_TOFILE
 #endif
 
   !

@@ -207,10 +207,10 @@
     !
     ! Select the IO unit for decomp_2d setup
     !
-    if (decomp_log == D2D_LOG_ALL) then
+    if (decomp_log == D2D_LOG_TOFILE_FULL) then
        write(fname, "(I0)") nrank ! Adapt to magnitude of nrank
        open(newunit=iounit, file='decomp_2d_setup_'//trim(fname)//'.log', iostat=ierror)
-    elseif (nrank == 0 .and. decomp_log == D2D_LOG_FILE) then
+    elseif (nrank == 0 .and. decomp_log == D2D_LOG_TOFILE) then
        open(newunit=iounit, file="decomp_2d_setup.log", iostat=ierror)
     else
        iounit = output_unit

@@ -36,9 +36,9 @@ submodule (decomp_2d) d2d_log
 #endif
 
     ! Output log if needed
-    if (decomp_log == D2D_LOG_NO) return
+    if (decomp_log == D2D_LOG_QUIET) return
     if (decomp_log == D2D_LOG_STDOUT .and. nrank /= 0) return
-    if (decomp_log == D2D_LOG_FILE .and. nrank /= 0) return
+    if (decomp_log == D2D_LOG_TOFILE .and. nrank /= 0) return
 
     ! If no IO unit provided, use stdout
     if (present(given_io_unit)) then

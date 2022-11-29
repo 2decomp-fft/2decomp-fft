@@ -64,6 +64,21 @@ Profiling can be activated in the Makefile. Set the variable `PROFILER` to one o
 3. Profile FFT operations (default : true)
 4. Profile decomp_2d init / fin subroutines (default : true)
 
+## Miscellaneous
+
+### Print the log to a file or to stdout
+
+Before calling `decomp_2d_init`, the external code can modify the variable `decomp_log` to change the output for the log. The expected value is some integer between 0 and 3, bounds included.
+
+0. No log output
+1. Master rank log output to stdout
+2. Master rank log output to the file "decomp_2d_setup.log" (default)
+3. All ranks log output to a dedicated file (default for debug builds)
+
+### Change the debug level for debug builds
+
+Before calling `decomp_2d_init`, the external code can modify the variable `decomp_debug` to change the debug level. The user can also modify this variable using the environment variable `DECOMP_2D_DEBUG`. Please note that the environment variable is processed only for debug builds. The expected value for the variable `decomp_debug` is some integer between 0 and 6, bounds included.
+
 ## Optional dependencies
 
 ### FFTW

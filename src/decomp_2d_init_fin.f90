@@ -37,9 +37,7 @@
     integer :: cuda_stat
     type(ncclResult) :: nccl_stat
 #endif
-#ifdef DEBUG
     character(len=7) fname ! Sufficient for up to O(1M) ranks
-#endif
 
 #ifdef PROFILER
     ! Prepare the profiler if it was not already prepared
@@ -209,17 +207,15 @@
     !
     ! Select the IO unit for decomp_2d setup
     !
-#ifdef DEBUG
-    write(fname, "(I0)") nrank ! Adapt to magnitude of nrank
-    open(newunit=iounit, file='decomp_2d_setup_'//trim(fname)//'.log', iostat=ierror)
-#else
-    if (nrank == 0) then
+    if (decomp_log == D2D_LOG_ALL) then
+       write(fname, "(I0)") nrank ! Adapt to magnitude of nrank
+       open(newunit=iounit, file='decomp_2d_setup_'//trim(fname)//'.log', iostat=ierror)
+    elseif (nrank == 0 .and. decomp_log == D2D_LOG_FILE) then
        open(newunit=iounit, file="decomp_2d_setup.log", iostat=ierror)
     else
        iounit = output_unit
        ierror = 0
     endif
-#endif
     if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "Could not open log file")
     !
     ! Print the decomp_2d setup

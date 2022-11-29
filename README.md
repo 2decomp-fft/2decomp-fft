@@ -38,7 +38,13 @@ make check
 ```
 which will (re)build 2decomp&fft as necessary.
 
-**TODO** Convert examples to tests and automate running them
+By default this will run the tests/examples on a single rank, launched with ``mpirun``.
+The number of ranks can be controlled by setting the ``NP`` variable and the launcher is overridden by
+setting ``MPIRUN``, for example to run tests on 4 ranks using an ``mpiexec`` launcher installed at
+``${HOME}/bin/mpiexec`` the command would be
+```
+make NP=4 MPIRUN=${HOME}/bin/mpiexec check
+```
 
 ## GPU compilation
 

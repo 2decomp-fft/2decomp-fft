@@ -147,6 +147,7 @@ contains
     if (nx_fft==nx_global.and.ny_fft==ny_global.and.nz_fft==nz_global) then
        ph => decomp_main
     else
+       if (.not.associated(ph)) allocate(ph)
        call decomp_info_init(nx, ny, nz, ph)
     endif
     if (format==PHYSICAL_IN_X) then
@@ -197,11 +198,11 @@ contains
     if (decomp_profiler_fft) call decomp_profiler_start("fft_fin")
 #endif
 
-    if (nx_fft==nx_global.and.ny_fft==ny_global.and.nz_fft==nz_global) then
-      nullify(ph)
-    else
+    if (nx_fft/=nx_global.or.ny_fft/=ny_global.or.nz_fft/=nz_global) then
       call decomp_info_finalize(ph)
+      deallocate(ph)
     endif
+    nullify(ph)
     call decomp_info_finalize(sp)
 
     call fftw_free(wk2_c2c_p)

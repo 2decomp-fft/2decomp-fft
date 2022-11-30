@@ -75,6 +75,26 @@ module decomp_2d
   logical, save :: periodic_x, periodic_y, periodic_z
 
   !
+  ! Output for the log can be changed by the external code before calling decomp_2d_init
+  !
+  !    0 => No log output
+  !    1 => Master rank log output to stdout
+  !    2 => Master rank log output to the file "decomp_2d_setup.log"
+  !    3 => All ranks log output to a dedicated file
+  !
+  ! The default value is 2 (3 for debug builds)
+  !
+  integer, parameter, public :: D2D_LOG_QUIET = 0
+  integer, parameter, public :: D2D_LOG_STDOUT = 1
+  integer, parameter, public :: D2D_LOG_TOFILE = 2
+  integer, parameter, public :: D2D_LOG_TOFILE_FULL = 3
+#ifdef DEBUG
+  integer, public, save :: decomp_log = D2D_LOG_TOFILE_FULL
+#else
+  integer, public, save :: decomp_log = D2D_LOG_TOFILE
+#endif
+
+  !
   ! Debug level can be changed by the external code before calling decomp_2d_init
   !
   ! The environment variable "DECOMP_2D_DEBUG" can be used to change the debug level

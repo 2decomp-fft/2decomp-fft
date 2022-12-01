@@ -55,6 +55,12 @@
        decomp_2d_comm = MPI_COMM_WORLD
     endif
 
+    ! Safety check
+    if (MPI_SUCCESS /= 0) call decomp_2d_abort(__FILE__, &
+                                               __LINE__, &
+                                               MPI_SUCCESS, &
+                                               "MPI error check is broken")
+
     ! If the external code has not set nrank and nproc
     if (nrank == -1) then
        call MPI_COMM_RANK(decomp_2d_comm, nrank, ierror)

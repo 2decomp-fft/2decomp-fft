@@ -1,4 +1,3 @@
-FFLAGS := $(subst $(MODFLAG),$(MODFLAG)../../,$(FFLAGS))
 FFLAGS := $(patsubst -I%,-I../../%,$(FFLAGS))
 LIBS = -L../../ -l$(LIBDECOMP) $(LFLAGS)
 
@@ -6,6 +5,12 @@ OBJ = init_test.o
 
 NP ?= 1
 MPIRUN ?= mpirun
+MODDIR ?= $(DECOMPINC)
+
+all: $(MODDIR) init_test
+
+$(MODDIR):
+	mkdir -p $@
 
 init_test: $(OBJ)
 	$(FC) $(FFLAGS) $(OPT) $(DEFS) $(INC) -o $@ $(OBJ) $(LIBS)
@@ -19,7 +24,7 @@ check:
 endif
 
 clean:
-	rm -f *.o init_test *.log
+	rm -f *.o init_test *.log *.mod *.smod $(MODDIR)/*.mod $(MODDIR)/*.smod
 
 %.o : %.f90
 	$(FC) $(FFLAGS) $(OPT) $(DEFS) $(INC) -c $< -o $@

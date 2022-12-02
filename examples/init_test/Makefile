@@ -1,7 +1,7 @@
 FFLAGS := $(patsubst -I%,-I../../%,$(FFLAGS))
 LIBS = -L../../ -l$(LIBDECOMP) $(LFLAGS)
 
-OBJ = init_test.o
+OBJ = utilities.o init_test.o
 
 NP ?= 1
 MPIRUN ?= mpirun

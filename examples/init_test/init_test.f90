@@ -6,6 +6,8 @@ program init_test
 
   use MPI
   use decomp_2d
+
+  use init_utils
   
   implicit none
 
@@ -33,42 +35,12 @@ contains
 
     call decomp_2d_init(nx, ny, nz, p_row, p_col)
 
-    call check_axis("X")
-    call check_axis("Y")
-    call check_axis("Z")
+    call check_axis("X", nexpect)
+    call check_axis("Y", nexpect)
+    call check_axis("Z", nexpect)
     
     call decomp_2d_finalize()
     
   end subroutine run
-
-  subroutine check_axis(axis)
-
-    character(len=*), intent(in) :: axis
-
-    integer :: suml
-    integer :: sumg
-    integer, dimension(3) :: sizes
-
-    if (axis == "X") then
-       sizes = xsize
-    else if (axis == "Y") then
-       sizes = ysize
-    else if (axis == "Z") then
-       sizes = zsize
-    else
-       sizes = 0
-       print *, "ERROR: unknown axis requested!"
-       stop 1
-    end if
-
-    suml = product(sizes)
-    call MPI_Allreduce(suml, sumg, 1, MPI_INTEGER, MPI_SUM, MPI_COMM_WORLD, ierr)
-    
-    if (sumg /= nexpect) then
-       print *, "ERROR: got ", sumg, " nodes, expected ", nexpect
-       stop 1
-    end if
-    
-  end subroutine check_axis
   
 end program init_test

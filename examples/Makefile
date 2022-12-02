@@ -13,7 +13,7 @@ fft_physical_x:
 halo_test:
 	$(MAKE) -C $@ $@
 init_test:
-	$(MAKE) -C $@ $@
+	$(MAKE) -C $@ all
 io_test:
 	$(MAKE) -C $@ all
 
@@ -22,6 +22,7 @@ check:
 	cd fft_physical_z; $(MAKE) $@
 	cd fft_physical_x; $(MAKE) $@
 	cd halo_test; $(MAKE) $@
+	cd init_test; $(MAKE) $@
 	cd io_test; $(MAKE) $@
 
 clean:
@@ -29,6 +30,7 @@ clean:
 	cd fft_physical_z; $(MAKE) $@
 	cd fft_physical_x; $(MAKE) $@
 	cd halo_test; $(MAKE) $@
+	cd init_test; $(MAKE) $@
 	cd io_test; $(MAKE) $@
 
 export

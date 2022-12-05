@@ -367,7 +367,10 @@ contains
       call MPI_TYPE_FREE(newtype,ierror)
       if (ierror.ne.0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_TYPE_FREE")
 
-      disp = disp + sizes(1) * sizes(2) * sizes(3) * disp_bytes
+      disp = disp + int(sizes(1), kind=MPI_OFFSET_KIND) &
+                  * int(sizes(2), kind=MPI_OFFSET_KIND) &
+                  * int(sizes(3), kind=MPI_OFFSET_KIND) &
+                  * int(disp_bytes, kind=MPI_OFFSET_KIND)
     end associate
 
     if (opened_new) then
@@ -665,7 +668,8 @@ contains
     call MPI_FILE_WRITE_ALL(fh, var, m, real_type, &
          MPI_STATUS_IGNORE, ierror)
     if (ierror.ne.0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_FILE_WRITE_ALL")
-    disp = disp + n*mytype_bytes
+    disp = disp + int(n, kind=MPI_OFFSET_KIND) &
+                * int(mytype_bytes, kind=MPI_OFFSET_KIND)
 
     return
   end subroutine write_scalar_real
@@ -693,7 +697,9 @@ contains
     call MPI_FILE_WRITE_ALL(fh, var, m, complex_type, &
          MPI_STATUS_IGNORE, ierror)
     if (ierror.ne.0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_FILE_WRITE_ALL")
-    disp = disp + n*mytype_bytes*2
+    disp = disp + int(n, kind=MPI_OFFSET_KIND) &
+                * int(mytype_bytes, kind=MPI_OFFSET_KIND) &
+                * 2_MPI_OFFSET_KIND
 
     return
   end subroutine write_scalar_complex
@@ -723,7 +729,8 @@ contains
     if (ierror.ne.0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_FILE_WRITE_ALL")
     call MPI_TYPE_SIZE(MPI_INTEGER,m,ierror)
     if (ierror.ne.0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_TYPE_SIZE")
-    disp = disp + n*m
+    disp = disp + int(n, kind=MPI_OFFSET_KIND) &
+                * int(m, kind=MPI_OFFSET_KIND)
 
     return
   end subroutine write_scalar_integer
@@ -753,7 +760,8 @@ contains
     if (ierror.ne.0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_FILE_WRITE_ALL")
     call MPI_TYPE_SIZE(MPI_LOGICAL,m,ierror)
     if (ierror.ne.0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_TYPE_SIZE")
-    disp = disp + n*m
+    disp = disp + int(n, kind=MPI_OFFSET_KIND) &
+                * int(m, kind=MPI_OFFSET_KIND)
 
     return
   end subroutine write_scalar_logical
@@ -783,7 +791,8 @@ contains
     call MPI_FILE_READ_ALL(fh, var, n, real_type, &
          MPI_STATUS_IGNORE, ierror)
     if (ierror.ne.0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_FILE_READ_ALL")
-    disp = disp + n*mytype_bytes
+    disp = disp + int(n, kind=MPI_OFFSET_KIND) &
+                * int(mytype_bytes, kind=MPI_OFFSET_KIND)
 
     return
   end subroutine read_scalar_real
@@ -806,7 +815,9 @@ contains
     call MPI_FILE_READ_ALL(fh, var, n, complex_type, &
          MPI_STATUS_IGNORE, ierror)
     if (ierror.ne.0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_FILE_READ_ALL")
-    disp = disp + n*mytype_bytes*2
+    disp = disp + int(n, kind=MPI_OFFSET_KIND) &
+                * int(mytype_bytes, kind=MPI_OFFSET_KIND) &
+                * 2_MPI_OFFSET_KIND
 
     return
   end subroutine read_scalar_complex
@@ -831,7 +842,8 @@ contains
     if (ierror.ne.0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_FILE_READ_ALL")
     call MPI_TYPE_SIZE(MPI_INTEGER,m,ierror)
     if (ierror.ne.0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_TYPE_SIZE")
-    disp = disp + n*m
+    disp = disp + int(n, kind=MPI_OFFSET_KIND) &
+                * int(m, kind=MPI_OFFSET_KIND)
 
     return
   end subroutine read_scalar_integer
@@ -856,7 +868,8 @@ contains
     if (ierror.ne.0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_FILE_READ_ALL")
     call MPI_TYPE_SIZE(MPI_LOGICAL,m,ierror)
     if (ierror.ne.0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_TYPE_SIZE")
-    disp = disp + n*m
+    disp = disp + int(n, kind=MPI_OFFSET_KIND) &
+                * int(m, kind=MPI_OFFSET_KIND)
 
     return
   end subroutine read_scalar_logical
@@ -1318,7 +1331,10 @@ contains
     end if
     if (ierror.ne.0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_FILE_WRITE_ALL")
     
-    fh_disp(idx) = fh_disp(idx) + sizes(1) * sizes(2) * sizes(3) * disp_bytes
+    fh_disp(idx) = fh_disp(idx) + int(sizes(1), kind=MPI_OFFSET_KIND) &
+                                * int(sizes(2), kind=MPI_OFFSET_KIND) &
+                                * int(sizes(3), kind=MPI_OFFSET_KIND) &
+                                * int(disp_bytes, kind=MPI_OFFSET_KIND)
     
     if (opened_new) then
        call decomp_2d_close_io(io_name, full_io_name)

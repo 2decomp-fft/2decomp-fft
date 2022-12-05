@@ -184,7 +184,7 @@ contains
     implicit none
 
     integer, intent(IN) :: ipencil
-    real(mytype), dimension(:,:,:), intent(IN) :: var
+    real(mytype), contiguous, dimension(:,:,:), intent(IN) :: var
     character(len=*), intent(IN) :: filename
     TYPE(DECOMP_INFO), intent(IN), optional :: opt_decomp
 
@@ -213,7 +213,7 @@ contains
     implicit none
 
     integer, intent(IN) :: ipencil
-    complex(mytype), dimension(:,:,:), intent(IN) :: var
+    complex(mytype), contiguous, dimension(:,:,:), intent(IN) :: var
     character(len=*), intent(IN) :: filename
     TYPE(DECOMP_INFO), intent(IN), optional :: opt_decomp
 
@@ -246,7 +246,7 @@ contains
     implicit none
 
     integer, intent(IN) :: ipencil
-    real(mytype), dimension(:,:,:), intent(INOUT) :: var
+    real(mytype), contiguous, dimension(:,:,:), intent(INOUT) :: var
     character(len=*), intent(IN) :: varname, dirname, io_name
     TYPE(DECOMP_INFO), intent(IN), optional :: opt_decomp
     logical, intent(in), optional :: reduce_prec
@@ -277,7 +277,7 @@ contains
     opened_new = .false.
     if (idx .lt. 1) then
        ! Check file exists
-       full_io_name = dirname//"/"//varname
+       full_io_name = trim(dirname)//"/"//trim(varname)
        if (nrank==0) then
           inquire(file=full_io_name, exist=dir_exists)
           if (.not.dir_exists) then
@@ -338,6 +338,8 @@ contains
        starts(1) = decomp%zst(1)-1
        starts(2) = decomp%zst(2)-1
        starts(3) = decomp%zst(3)-1
+    else
+       call decomp_2d_abort(-1, "IO/read_one_real : Wrong value for ipencil")
     endif
 
     associate(fh => fh_registry(idx), &
@@ -367,7 +369,10 @@ contains
       call MPI_TYPE_FREE(newtype,ierror)
       if (ierror.ne.0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_TYPE_FREE")
 
-      disp = disp + sizes(1) * sizes(2) * sizes(3) * disp_bytes
+      disp = disp + int(sizes(1), kind=MPI_OFFSET_KIND) &
+                  * int(sizes(2), kind=MPI_OFFSET_KIND) &
+                  * int(sizes(3), kind=MPI_OFFSET_KIND) &
+                  * int(disp_bytes, kind=MPI_OFFSET_KIND)
     end associate
 
     if (opened_new) then
@@ -393,7 +398,7 @@ contains
     implicit none
 
     integer, intent(IN) :: ipencil
-    complex(mytype), dimension(:,:,:), intent(INOUT) :: var
+    complex(mytype), contiguous, dimension(:,:,:), intent(INOUT) :: var
     character(len=*), intent(IN) :: filename
     TYPE(DECOMP_INFO), intent(IN), optional :: opt_decomp
 
@@ -424,7 +429,7 @@ contains
     character(len=*), intent(in) :: engine_name
     character(len=*), intent(in) :: io_name
     character*(*), intent(in) :: varname
-    real(mytype), dimension(:,:,:), intent(out) :: var
+    real(mytype), contiguous, dimension(:,:,:), intent(out) :: var
 
     integer :: ierror
     type(adios2_io) :: io_handle
@@ -482,7 +487,7 @@ contains
     integer, intent(IN) :: fh
     integer(KIND=MPI_OFFSET_KIND), intent(INOUT) :: disp
     integer, intent(IN) :: ipencil
-    real(mytype), dimension(:,:,:), intent(IN) :: var
+    real(mytype), contiguous, dimension(:,:,:), intent(IN) :: var
     TYPE(DECOMP_INFO), intent(IN), optional :: opt_decomp
 
     TYPE(DECOMP_INFO) :: decomp
@@ -503,7 +508,7 @@ contains
     integer, intent(IN) :: fh
     integer(KIND=MPI_OFFSET_KIND), intent(INOUT) :: disp
     integer, intent(IN) :: ipencil
-    complex(mytype), dimension(:,:,:), intent(IN) :: var
+    complex(mytype), contiguous, dimension(:,:,:), intent(IN) :: var
     TYPE(DECOMP_INFO), intent(IN), optional :: opt_decomp
 
     TYPE(DECOMP_INFO) :: decomp
@@ -524,7 +529,7 @@ contains
 
     character(len=*), intent(in) :: dirname, varname, io_name
     integer, intent(IN) :: ntimesteps 
-    real(mytype), dimension(:,:,:), intent(IN) :: var
+    real(mytype), contiguous, dimension(:,:,:), intent(IN) :: var
     TYPE(DECOMP_INFO), intent(IN), optional :: opt_decomp
 
     TYPE(DECOMP_INFO) :: decomp
@@ -565,7 +570,7 @@ contains
     integer, intent(IN) :: fh
     integer(KIND=MPI_OFFSET_KIND), intent(INOUT) :: disp
     integer, intent(IN) :: ipencil
-    real(mytype), dimension(:,:,:), intent(INOUT) :: var
+    real(mytype), contiguous, dimension(:,:,:), intent(INOUT) :: var
     TYPE(DECOMP_INFO), intent(IN), optional :: opt_decomp
 
     TYPE(DECOMP_INFO) :: decomp
@@ -587,7 +592,7 @@ contains
     integer, intent(IN) :: fh
     integer(KIND=MPI_OFFSET_KIND), intent(INOUT) :: disp
     integer, intent(IN) :: ipencil
-    complex(mytype), dimension(:,:,:), intent(INOUT) :: var
+    complex(mytype), contiguous, dimension(:,:,:), intent(INOUT) :: var
     TYPE(DECOMP_INFO), intent(IN), optional :: opt_decomp
 
     TYPE(DECOMP_INFO) :: decomp
@@ -608,7 +613,7 @@ contains
 
     character(len=*), intent(in) :: dirname, varname, io_name
     integer, intent(IN) :: ntimesteps
-    real(mytype), dimension(:,:,:), intent(INOUT) :: var
+    real(mytype), contiguous, dimension(:,:,:), intent(INOUT) :: var
     TYPE(DECOMP_INFO), intent(IN), optional :: opt_decomp
 
     TYPE(DECOMP_INFO) :: decomp
@@ -665,7 +670,8 @@ contains
     call MPI_FILE_WRITE_ALL(fh, var, m, real_type, &
          MPI_STATUS_IGNORE, ierror)
     if (ierror.ne.0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_FILE_WRITE_ALL")
-    disp = disp + n*mytype_bytes
+    disp = disp + int(n, kind=MPI_OFFSET_KIND) &
+                * int(mytype_bytes, kind=MPI_OFFSET_KIND)
 
     return
   end subroutine write_scalar_real
@@ -693,7 +699,9 @@ contains
     call MPI_FILE_WRITE_ALL(fh, var, m, complex_type, &
          MPI_STATUS_IGNORE, ierror)
     if (ierror.ne.0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_FILE_WRITE_ALL")
-    disp = disp + n*mytype_bytes*2
+    disp = disp + int(n, kind=MPI_OFFSET_KIND) &
+                * int(mytype_bytes, kind=MPI_OFFSET_KIND) &
+                * 2_MPI_OFFSET_KIND
 
     return
   end subroutine write_scalar_complex
@@ -723,7 +731,8 @@ contains
     if (ierror.ne.0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_FILE_WRITE_ALL")
     call MPI_TYPE_SIZE(MPI_INTEGER,m,ierror)
     if (ierror.ne.0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_TYPE_SIZE")
-    disp = disp + n*m
+    disp = disp + int(n, kind=MPI_OFFSET_KIND) &
+                * int(m, kind=MPI_OFFSET_KIND)
 
     return
   end subroutine write_scalar_integer
@@ -753,7 +762,8 @@ contains
     if (ierror.ne.0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_FILE_WRITE_ALL")
     call MPI_TYPE_SIZE(MPI_LOGICAL,m,ierror)
     if (ierror.ne.0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_TYPE_SIZE")
-    disp = disp + n*m
+    disp = disp + int(n, kind=MPI_OFFSET_KIND) &
+                * int(m, kind=MPI_OFFSET_KIND)
 
     return
   end subroutine write_scalar_logical
@@ -783,7 +793,8 @@ contains
     call MPI_FILE_READ_ALL(fh, var, n, real_type, &
          MPI_STATUS_IGNORE, ierror)
     if (ierror.ne.0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_FILE_READ_ALL")
-    disp = disp + n*mytype_bytes
+    disp = disp + int(n, kind=MPI_OFFSET_KIND) &
+                * int(mytype_bytes, kind=MPI_OFFSET_KIND)
 
     return
   end subroutine read_scalar_real
@@ -806,7 +817,9 @@ contains
     call MPI_FILE_READ_ALL(fh, var, n, complex_type, &
          MPI_STATUS_IGNORE, ierror)
     if (ierror.ne.0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_FILE_READ_ALL")
-    disp = disp + n*mytype_bytes*2
+    disp = disp + int(n, kind=MPI_OFFSET_KIND) &
+                * int(mytype_bytes, kind=MPI_OFFSET_KIND) &
+                * 2_MPI_OFFSET_KIND
 
     return
   end subroutine read_scalar_complex
@@ -831,7 +844,8 @@ contains
     if (ierror.ne.0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_FILE_READ_ALL")
     call MPI_TYPE_SIZE(MPI_INTEGER,m,ierror)
     if (ierror.ne.0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_TYPE_SIZE")
-    disp = disp + n*m
+    disp = disp + int(n, kind=MPI_OFFSET_KIND) &
+                * int(m, kind=MPI_OFFSET_KIND)
 
     return
   end subroutine read_scalar_integer
@@ -856,7 +870,8 @@ contains
     if (ierror.ne.0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_FILE_READ_ALL")
     call MPI_TYPE_SIZE(MPI_LOGICAL,m,ierror)
     if (ierror.ne.0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_TYPE_SIZE")
-    disp = disp + n*m
+    disp = disp + int(n, kind=MPI_OFFSET_KIND) &
+                * int(m, kind=MPI_OFFSET_KIND)
 
     return
   end subroutine read_scalar_logical
@@ -931,7 +946,7 @@ contains
     implicit none
 
     integer, intent(IN) :: ipencil !(x-pencil=1; y-pencil=2; z-pencil=3)
-    real(mytype), dimension(:,:,:), intent(IN) :: var
+    real(mytype), contiguous, dimension(:,:,:), intent(IN) :: var
     integer, intent(IN) :: iplane !(x-plane=1; y-plane=2; z-plane=3)
     integer, intent(IN) :: n ! which plane to write (global coordinate)
     character(len=*), intent(IN) :: dirname,varname,io_name
@@ -975,7 +990,7 @@ contains
     implicit none
 
     integer, intent(IN) :: ipencil !(x-pencil=1; y-pencil=2; z-pencil=3)
-    complex(mytype), dimension(:,:,:), intent(IN) :: var
+    complex(mytype), contiguous, dimension(:,:,:), intent(IN) :: var
     integer, intent(IN) :: iplane !(x-plane=1; y-plane=2; z-plane=3)
     integer, intent(IN) :: n ! which plane to write (global coordinate)
     character(len=*), intent(IN) :: dirname,varname,io_name
@@ -1044,7 +1059,7 @@ contains
     implicit none
 
     integer, intent(IN) :: ipencil !(x-pencil=1; y-pencil=2; z-pencil=3)
-    real(mytype), dimension(:,:,:), intent(IN) :: var
+    real(mytype), contiguous, dimension(:,:,:), intent(IN) :: var
     integer, intent(IN) :: iskip,jskip,kskip 
     character(len=*), intent(IN) :: filename
     logical, intent(IN) :: from1  ! .true.  - save 1,n+1,2n+1...
@@ -1077,7 +1092,7 @@ contains
     implicit none
 
     integer, intent(IN) :: ipencil !(x-pencil=1; y-pencil=2; z-pencil=3)
-    complex(mytype), dimension(:,:,:), intent(IN) :: var
+    complex(mytype), contiguous, dimension(:,:,:), intent(IN) :: var
     integer, intent(IN) :: iskip,jskip,kskip 
     character(len=*), intent(IN) :: filename
     logical, intent(IN) :: from1  ! .true.  - save 1,n+1,2n+1...
@@ -1143,6 +1158,8 @@ contains
        elseif (ipencil == 3) then
           subsizes(1:3) = decomp%zsz(1:3)
           starts(1:3) = decomp%zst(1:3) - 1
+       else
+          call decomp_2d_abort(-1, "IO/coarse_extents : Wrong value for ipencil")
        endif
     elseif (icoarse==1) then
        sizes(1) = xszS(1)
@@ -1170,6 +1187,8 @@ contains
           starts(1) = zstS(1)-1
           starts(2) = zstS(2)-1
           starts(3) = zstS(3)-1
+       else
+          call decomp_2d_abort(-1, "IO/coarse_extents : Wrong value for ipencil")
        endif
     elseif (icoarse==2) then
        sizes(1) = xszV(1)
@@ -1197,6 +1216,8 @@ contains
           starts(1) = zstV(1)-1
           starts(2) = zstV(2)-1
           starts(3) = zstV(3)-1
+       else
+          call decomp_2d_abort(-1, "IO/coarse_extents : Wrong value for ipencil")
        endif
     endif
     
@@ -1211,7 +1232,7 @@ contains
 
     integer, intent(IN) :: ipencil !(x-pencil=1; y-pencil=2; z-pencil=3)
     integer, intent(IN) :: icoarse !(nstat=1; nvisu=2)
-    real(mytype), dimension(:,:,:), intent(IN) :: var
+    real(mytype), contiguous, dimension(:,:,:), intent(IN) :: var
     character(len=*), intent(in) :: dirname, varname, io_name
     type(decomp_info), intent(in), optional :: opt_decomp
     logical, intent(in), optional :: reduce_prec
@@ -1293,7 +1314,7 @@ contains
              call execute_command_line("mkdir "//dirname//" 2> /dev/null", wait=.true.)
           end if
        end if
-       full_io_name = dirname//"/"//varname
+       full_io_name = trim(dirname)//"/"//trim(varname)
        call decomp_2d_open_io(io_name, full_io_name, decomp_2d_write_mode)
        idx = get_io_idx(io_name, full_io_name)
        opened_new = .true.
@@ -1318,7 +1339,10 @@ contains
     end if
     if (ierror.ne.0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_FILE_WRITE_ALL")
     
-    fh_disp(idx) = fh_disp(idx) + sizes(1) * sizes(2) * sizes(3) * disp_bytes
+    fh_disp(idx) = fh_disp(idx) + int(sizes(1), kind=MPI_OFFSET_KIND) &
+                                * int(sizes(2), kind=MPI_OFFSET_KIND) &
+                                * int(sizes(3), kind=MPI_OFFSET_KIND) &
+                                * int(disp_bytes, kind=MPI_OFFSET_KIND)
     
     if (opened_new) then
        call decomp_2d_close_io(io_name, full_io_name)
@@ -1464,7 +1488,7 @@ contains
 
     integer, intent(IN) :: ipencil !(x-pencil=1; y-pencil=2; z-pencil=3)
     integer, intent(in) :: nlength
-    real(mytype), dimension(:,:,:,:), intent(IN) :: var
+    real(mytype), contiguous, dimension(:,:,:,:), intent(IN) :: var
 
     character(len=*) :: filename
 
@@ -1544,7 +1568,7 @@ contains
     implicit none
 
     integer, intent(IN) :: ipencil !(x-pencil=1; y-pencil=2; z-pencil=3)
-    real(mytype), dimension(:,:,:), intent(IN) :: var
+    real(mytype), contiguous, dimension(:,:,:), intent(IN) :: var
     integer, intent(IN) :: is, ie, js, je, ks, ke
     character(len=*), intent(IN) :: filename
 

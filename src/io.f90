@@ -184,7 +184,7 @@ contains
     implicit none
 
     integer, intent(IN) :: ipencil
-    real(mytype), dimension(:,:,:), intent(IN) :: var
+    real(mytype), contiguous, dimension(:,:,:), intent(IN) :: var
     character(len=*), intent(IN) :: filename
     TYPE(DECOMP_INFO), intent(IN), optional :: opt_decomp
 
@@ -213,7 +213,7 @@ contains
     implicit none
 
     integer, intent(IN) :: ipencil
-    complex(mytype), dimension(:,:,:), intent(IN) :: var
+    complex(mytype), contiguous, dimension(:,:,:), intent(IN) :: var
     character(len=*), intent(IN) :: filename
     TYPE(DECOMP_INFO), intent(IN), optional :: opt_decomp
 
@@ -246,7 +246,7 @@ contains
     implicit none
 
     integer, intent(IN) :: ipencil
-    real(mytype), dimension(:,:,:), intent(INOUT) :: var
+    real(mytype), contiguous, dimension(:,:,:), intent(INOUT) :: var
     character(len=*), intent(IN) :: varname, dirname, io_name
     TYPE(DECOMP_INFO), intent(IN), optional :: opt_decomp
     logical, intent(in), optional :: reduce_prec
@@ -393,7 +393,7 @@ contains
     implicit none
 
     integer, intent(IN) :: ipencil
-    complex(mytype), dimension(:,:,:), intent(INOUT) :: var
+    complex(mytype), contiguous, dimension(:,:,:), intent(INOUT) :: var
     character(len=*), intent(IN) :: filename
     TYPE(DECOMP_INFO), intent(IN), optional :: opt_decomp
 
@@ -424,7 +424,7 @@ contains
     character(len=*), intent(in) :: engine_name
     character(len=*), intent(in) :: io_name
     character*(*), intent(in) :: varname
-    real(mytype), dimension(:,:,:), intent(out) :: var
+    real(mytype), contiguous, dimension(:,:,:), intent(out) :: var
 
     integer :: ierror
     type(adios2_io) :: io_handle
@@ -482,7 +482,7 @@ contains
     integer, intent(IN) :: fh
     integer(KIND=MPI_OFFSET_KIND), intent(INOUT) :: disp
     integer, intent(IN) :: ipencil
-    real(mytype), dimension(:,:,:), intent(IN) :: var
+    real(mytype), contiguous, dimension(:,:,:), intent(IN) :: var
     TYPE(DECOMP_INFO), intent(IN), optional :: opt_decomp
 
     TYPE(DECOMP_INFO) :: decomp
@@ -503,7 +503,7 @@ contains
     integer, intent(IN) :: fh
     integer(KIND=MPI_OFFSET_KIND), intent(INOUT) :: disp
     integer, intent(IN) :: ipencil
-    complex(mytype), dimension(:,:,:), intent(IN) :: var
+    complex(mytype), contiguous, dimension(:,:,:), intent(IN) :: var
     TYPE(DECOMP_INFO), intent(IN), optional :: opt_decomp
 
     TYPE(DECOMP_INFO) :: decomp
@@ -524,7 +524,7 @@ contains
 
     character(len=*), intent(in) :: dirname, varname, io_name
     integer, intent(IN) :: ntimesteps 
-    real(mytype), dimension(:,:,:), intent(IN) :: var
+    real(mytype), contiguous, dimension(:,:,:), intent(IN) :: var
     TYPE(DECOMP_INFO), intent(IN), optional :: opt_decomp
 
     TYPE(DECOMP_INFO) :: decomp
@@ -565,7 +565,7 @@ contains
     integer, intent(IN) :: fh
     integer(KIND=MPI_OFFSET_KIND), intent(INOUT) :: disp
     integer, intent(IN) :: ipencil
-    real(mytype), dimension(:,:,:), intent(INOUT) :: var
+    real(mytype), contiguous, dimension(:,:,:), intent(INOUT) :: var
     TYPE(DECOMP_INFO), intent(IN), optional :: opt_decomp
 
     TYPE(DECOMP_INFO) :: decomp
@@ -587,7 +587,7 @@ contains
     integer, intent(IN) :: fh
     integer(KIND=MPI_OFFSET_KIND), intent(INOUT) :: disp
     integer, intent(IN) :: ipencil
-    complex(mytype), dimension(:,:,:), intent(INOUT) :: var
+    complex(mytype), contiguous, dimension(:,:,:), intent(INOUT) :: var
     TYPE(DECOMP_INFO), intent(IN), optional :: opt_decomp
 
     TYPE(DECOMP_INFO) :: decomp
@@ -608,7 +608,7 @@ contains
 
     character(len=*), intent(in) :: dirname, varname, io_name
     integer, intent(IN) :: ntimesteps
-    real(mytype), dimension(:,:,:), intent(INOUT) :: var
+    real(mytype), contiguous, dimension(:,:,:), intent(INOUT) :: var
     TYPE(DECOMP_INFO), intent(IN), optional :: opt_decomp
 
     TYPE(DECOMP_INFO) :: decomp
@@ -931,7 +931,7 @@ contains
     implicit none
 
     integer, intent(IN) :: ipencil !(x-pencil=1; y-pencil=2; z-pencil=3)
-    real(mytype), dimension(:,:,:), intent(IN) :: var
+    real(mytype), contiguous, dimension(:,:,:), intent(IN) :: var
     integer, intent(IN) :: iplane !(x-plane=1; y-plane=2; z-plane=3)
     integer, intent(IN) :: n ! which plane to write (global coordinate)
     character(len=*), intent(IN) :: dirname,varname,io_name
@@ -975,7 +975,7 @@ contains
     implicit none
 
     integer, intent(IN) :: ipencil !(x-pencil=1; y-pencil=2; z-pencil=3)
-    complex(mytype), dimension(:,:,:), intent(IN) :: var
+    complex(mytype), contiguous, dimension(:,:,:), intent(IN) :: var
     integer, intent(IN) :: iplane !(x-plane=1; y-plane=2; z-plane=3)
     integer, intent(IN) :: n ! which plane to write (global coordinate)
     character(len=*), intent(IN) :: dirname,varname,io_name
@@ -1044,7 +1044,7 @@ contains
     implicit none
 
     integer, intent(IN) :: ipencil !(x-pencil=1; y-pencil=2; z-pencil=3)
-    real(mytype), dimension(:,:,:), intent(IN) :: var
+    real(mytype), contiguous, dimension(:,:,:), intent(IN) :: var
     integer, intent(IN) :: iskip,jskip,kskip 
     character(len=*), intent(IN) :: filename
     logical, intent(IN) :: from1  ! .true.  - save 1,n+1,2n+1...
@@ -1077,7 +1077,7 @@ contains
     implicit none
 
     integer, intent(IN) :: ipencil !(x-pencil=1; y-pencil=2; z-pencil=3)
-    complex(mytype), dimension(:,:,:), intent(IN) :: var
+    complex(mytype), contiguous, dimension(:,:,:), intent(IN) :: var
     integer, intent(IN) :: iskip,jskip,kskip 
     character(len=*), intent(IN) :: filename
     logical, intent(IN) :: from1  ! .true.  - save 1,n+1,2n+1...
@@ -1211,7 +1211,7 @@ contains
 
     integer, intent(IN) :: ipencil !(x-pencil=1; y-pencil=2; z-pencil=3)
     integer, intent(IN) :: icoarse !(nstat=1; nvisu=2)
-    real(mytype), dimension(:,:,:), intent(IN) :: var
+    real(mytype), contiguous, dimension(:,:,:), intent(IN) :: var
     character(len=*), intent(in) :: dirname, varname, io_name
     type(decomp_info), intent(in), optional :: opt_decomp
     logical, intent(in), optional :: reduce_prec
@@ -1464,7 +1464,7 @@ contains
 
     integer, intent(IN) :: ipencil !(x-pencil=1; y-pencil=2; z-pencil=3)
     integer, intent(in) :: nlength
-    real(mytype), dimension(:,:,:,:), intent(IN) :: var
+    real(mytype), contiguous, dimension(:,:,:,:), intent(IN) :: var
 
     character(len=*) :: filename
 
@@ -1544,7 +1544,7 @@ contains
     implicit none
 
     integer, intent(IN) :: ipencil !(x-pencil=1; y-pencil=2; z-pencil=3)
-    real(mytype), dimension(:,:,:), intent(IN) :: var
+    real(mytype), contiguous, dimension(:,:,:), intent(IN) :: var
     integer, intent(IN) :: is, ie, js, je, ks, ke
     character(len=*), intent(IN) :: filename
 

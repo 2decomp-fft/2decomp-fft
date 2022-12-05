@@ -338,6 +338,8 @@ contains
        starts(1) = decomp%zst(1)-1
        starts(2) = decomp%zst(2)-1
        starts(3) = decomp%zst(3)-1
+    else
+       call decomp_2d_abort(-1, "IO/read_one_real : Wrong value for ipencil")
     endif
 
     associate(fh => fh_registry(idx), &
@@ -1156,6 +1158,8 @@ contains
        elseif (ipencil == 3) then
           subsizes(1:3) = decomp%zsz(1:3)
           starts(1:3) = decomp%zst(1:3) - 1
+       else
+          call decomp_2d_abort(-1, "IO/coarse_extents : Wrong value for ipencil")
        endif
     elseif (icoarse==1) then
        sizes(1) = xszS(1)
@@ -1183,6 +1187,8 @@ contains
           starts(1) = zstS(1)-1
           starts(2) = zstS(2)-1
           starts(3) = zstS(3)-1
+       else
+          call decomp_2d_abort(-1, "IO/coarse_extents : Wrong value for ipencil")
        endif
     elseif (icoarse==2) then
        sizes(1) = xszV(1)
@@ -1210,6 +1216,8 @@ contains
           starts(1) = zstV(1)-1
           starts(2) = zstV(2)-1
           starts(3) = zstV(3)-1
+       else
+          call decomp_2d_abort(-1, "IO/coarse_extents : Wrong value for ipencil")
        endif
     endif
     

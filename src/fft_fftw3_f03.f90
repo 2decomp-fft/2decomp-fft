@@ -57,7 +57,7 @@ module decomp_2d_fft
 
   ! Decomposition objects
   TYPE(DECOMP_INFO), pointer, save :: ph=>null()  ! physical space
-  TYPE(DECOMP_INFO), save :: sp  ! spectral space
+  TYPE(DECOMP_INFO), target, save :: sp  ! spectral space
 
   ! Workspace to store the intermediate Y-pencil data
   ! *** TODO: investigate how to use only one workspace array
@@ -65,7 +65,8 @@ module decomp_2d_fft
   type(C_PTR) :: wk2_c2c_p, wk2_r2c_p, wk13_p
 
   public :: decomp_2d_fft_init, decomp_2d_fft_3d, &
-       decomp_2d_fft_finalize, decomp_2d_fft_get_size
+       decomp_2d_fft_finalize, decomp_2d_fft_get_size, &
+       decomp_2d_fft_get_ph, decomp_2d_fft_get_sp
   
   ! Declare generic interfaces to handle different inputs
   
@@ -243,6 +244,43 @@ contains
     return
   end subroutine decomp_2d_fft_get_size
 
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  ! Return a pointer to the decomp_info object ph
+  !
+  ! The caller should not apply decomp_info_finalize on the pointer
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  function decomp_2d_fft_get_ph()
+
+    implicit none
+
+    type(decomp_info), pointer :: decomp_2d_fft_get_ph
+
+    if (.not.associated(ph)) call decomp_2d_abort(__FILE__, &
+                                                  __LINE__, &
+                                                  -1, &
+                                                  'FFT library must be initialised first')
+    decomp_2d_fft_get_ph => ph
+
+  end function decomp_2d_fft_get_ph
+
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  ! Return a pointer to the decomp_info object sp
+  !
+  ! The caller should not apply decomp_info_finalize on the pointer
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  function decomp_2d_fft_get_sp()
+
+    implicit none
+
+    type(decomp_info), pointer :: decomp_2d_fft_get_sp
+
+    if (.not.associated(ph)) call decomp_2d_abort(__FILE__, &
+                                                  __LINE__, &
+                                                  -1, &
+                                                  'FFT library must be initialised first')
+    decomp_2d_fft_get_sp => sp
+
+  end function decomp_2d_fft_get_sp
 
   ! Return a FFTW3 plan for multiple 1D c2c FFTs in X direction
   subroutine c2c_1m_x_plan(plan1, decomp, isign)

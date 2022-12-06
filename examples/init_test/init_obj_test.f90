@@ -12,12 +12,14 @@ program init_obj_test
   
   implicit none
 
-  type compute_grid_extents
-     integer, dimension(:), allocatable :: n
+  type grid_extents
+     integer, dimension(:), allocatable :: g
+  end type grid_extents
+  
+  type, extends(grid_extents) :: compute_grid_extents
   end type compute_grid_extents
 
-  type processor_grid_extents
-     integer, dimension(:), allocatable :: p
+  type, extends(grid_extents) :: processor_grid_extents
   end type processor_grid_extents
 
   integer, parameter :: nx = 5
@@ -44,14 +46,14 @@ contains
     type(compute_grid_extents) :: cgrid_extents
     type(processor_grid_extents) :: pgrid_extents
 
-    call make_compute_grid_extents(3, cgrid_extents)
-    call set_compute_grid_extents(1, nx, cgrid_extents)
-    call set_compute_grid_extents(2, ny, cgrid_extents)
-    call set_compute_grid_extents(3, nz, cgrid_extents)
+    call make_grid_extents(3, cgrid_extents)
+    call set_grid_extents(1, nx, cgrid_extents)
+    call set_grid_extents(2, ny, cgrid_extents)
+    call set_grid_extents(3, nz, cgrid_extents)
 
-    call make_processor_grid_extents(2, pgrid_extents)
-    call set_processor_grid_extents(1, p_row, pgrid_extents)
-    call set_processor_grid_extents(2, p_col, pgrid_extents)
+    call make_grid_extents(2, pgrid_extents)
+    call set_grid_extents(1, p_row, pgrid_extents)
+    call set_grid_extents(2, p_col, pgrid_extents)
 
     call decomp_2d_init_new(cgrid_extents, pgrid_extents)
 
@@ -59,82 +61,63 @@ contains
     call check_axis("Y", nexpect)
     call check_axis("Z", nexpect)
 
-    call free_compute_grid_extents(cgrid_extents)   ! TODO: Make this type-bound finaliser
-    call free_processor_grid_extents(pgrid_extents) ! TODO: Make this type-bound finaliser
+    call free_grid_extents(cgrid_extents) ! TODO: Make this type-bound finaliser
+    call free_grid_extents(pgrid_extents) ! TODO: Make this type-bound finaliser
     
     call decomp_2d_finalize()
     
   end subroutine run
 
-  subroutine decomp_2d_init_new(cgrid_extents, pgrid_extents)
+  subroutine decomp_2d_init_new(cgrid, pgrid)
 
-    type(compute_grid_extents), intent(in) :: cgrid_extents
-    type(processor_grid_extents), intent(inout) :: pgrid_extents
+    type(compute_grid_extents), intent(in) :: cgrid
+    type(processor_grid_extents), intent(inout) :: pgrid
 
-    associate(nx => cgrid_extents%n(1), &
-         ny => cgrid_extents%n(2), &
-         nz => cgrid_extents%n(3), &
-         p_row => pgrid_extents%p(1), &
-         p_col => pgrid_extents%p(2))
+    associate(nx => get_grid_extents(1, cgrid), &
+         ny => get_grid_extents(2, cgrid), &
+         nz => get_grid_extents(3, cgrid), &
+         p_row => pgrid%g(1), &
+         p_col => pgrid%g(2))
       call decomp_2d_init(nx, ny, nz, p_row, p_col)
     end associate
 
   end subroutine decomp_2d_init_new
   
-  subroutine make_compute_grid_extents(ndim, grid_extents)
+  subroutine make_grid_extents(ndim, grid)
 
     integer, intent(in) :: ndim
-    type(compute_grid_extents), intent(out) :: grid_extents
+    class(grid_extents), intent(out) :: grid
 
-    allocate(grid_extents%n(ndim))
-    grid_extents%n(:) = 0
+    allocate(grid%g(ndim))
+    grid%g(:) = 0
     
-  end subroutine make_compute_grid_extents
+  end subroutine make_grid_extents
 
-  subroutine make_processor_grid_extents(ndim, grid_extents)
+  subroutine set_grid_extents(dim, n, grid)
 
-    integer, intent(in) :: ndim
-    type(processor_grid_extents), intent(out) :: grid_extents
+    integer, intent(in) :: dim                 ! Which dimension to set
+    integer, intent(in) :: n                   ! Grid_Extents size
+    class(grid_extents), intent(inout) :: grid ! The grid_extents
 
-    allocate(grid_extents%p(ndim))
-    grid_extents%p(:) = 0
+    grid%g(dim) = n
 
-  end subroutine make_processor_grid_extents
+  end subroutine set_grid_extents
 
-  subroutine set_compute_grid_extents(dim, n, grid_extents)
+  integer function get_grid_extents(dim, grid)
 
-    integer, intent(in) :: dim                                ! Which dimension to set
-    integer, intent(in) :: n                                  ! Grid_Extents size
-    type(compute_grid_extents), intent(inout) :: grid_extents ! The computational grid_extents
+    integer, intent(in) :: dim
+    class(grid_extents), intent(in) :: grid
 
-    grid_extents%n(dim) = n
+    get_grid_extents = grid%g(dim)
 
-  end subroutine set_compute_grid_extents
+  end function get_grid_extents
 
-  subroutine free_compute_grid_extents(grid_extents)
+  subroutine free_grid_extents(grid)
 
-    type(compute_grid_extents), intent(inout) :: grid_extents
+    class(grid_extents), intent(inout) :: grid
 
-    deallocate(grid_extents%n)
+    deallocate(grid%g)
     
-  end subroutine free_compute_grid_extents
-
-  subroutine set_processor_grid_extents(dim, n, grid_extents)
-
-    integer, intent(in) :: dim                                  ! Which dimension to set
-    integer, intent(in) :: n                                    ! Grid_Extents size
-    type(processor_grid_extents), intent(inout) :: grid_extents ! The processor grid_extents
-
-    grid_extents%p(dim) = n
-    
-  end subroutine set_processor_grid_extents
-
-  subroutine free_processor_grid_extents(grid_extents)
-
-    type(processor_grid_extents), intent(inout) :: grid_extents
-
-    deallocate(grid_extents%p)
-    
-  end subroutine free_processor_grid_extents
+  end subroutine free_grid_extents
   
 end program init_obj_test

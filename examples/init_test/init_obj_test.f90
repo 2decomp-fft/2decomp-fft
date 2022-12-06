@@ -16,6 +16,10 @@ program init_obj_test
      integer, dimension(:), allocatable :: n
   end type compute_grid
 
+  type processor_grid
+     integer, dimension(:), allocatable :: p
+  end type processor_grid
+
   integer, parameter :: nx = 5
   integer, parameter :: ny = 6
   integer, parameter :: nz = 7
@@ -37,33 +41,41 @@ contains
   subroutine run(p_row, p_col)
 
     integer, intent(inout) :: p_row, p_col
-    type(compute_grid) :: grid
+    type(compute_grid) :: cgrid
+    type(processor_grid) :: pgrid
 
-    call make_compute_grid(3, grid)
-    call set_compute_grid(1, nx, grid)
-    call set_compute_grid(2, ny, grid)
-    call set_compute_grid(3, nz, grid)
+    call make_compute_grid(3, cgrid)
+    call set_compute_grid(1, nx, cgrid)
+    call set_compute_grid(2, ny, cgrid)
+    call set_compute_grid(3, nz, cgrid)
 
-    call decomp_2d_init_new(grid, p_row, p_col)
+    call make_processor_grid(2, pgrid)
+    call set_processor_grid(1, p_row, pgrid)
+    call set_processor_grid(2, p_col, pgrid)
+
+    call decomp_2d_init_new(cgrid, pgrid)
 
     call check_axis("X", nexpect)
     call check_axis("Y", nexpect)
     call check_axis("Z", nexpect)
 
-    call free_compute_grid(grid) ! TODO: Make this type-bound finaliser
+    call free_compute_grid(cgrid)   ! TODO: Make this type-bound finaliser
+    call free_processor_grid(pgrid) ! TODO: Make this type-bound finaliser
     
     call decomp_2d_finalize()
     
   end subroutine run
 
-  subroutine decomp_2d_init_new(grid, p_row, p_col)
+  subroutine decomp_2d_init_new(cgrid, pgrid)
 
-    type(compute_grid), intent(in) :: grid
-    integer, intent(inout) :: p_row, p_col
+    type(compute_grid), intent(in) :: cgrid
+    type(processor_grid), intent(inout) :: pgrid
 
-    associate(nx => grid%n(1), &
-         ny => grid%n(2), &
-         nz => grid%n(3))
+    associate(nx => cgrid%n(1), &
+         ny => cgrid%n(2), &
+         nz => cgrid%n(3), &
+         p_row => pgrid%p(1), &
+         p_col => pgrid%p(2))
       call decomp_2d_init(nx, ny, nz, p_row, p_col)
     end associate
 
@@ -78,6 +90,16 @@ contains
     grid%n(:) = 0
     
   end subroutine make_compute_grid
+
+  subroutine make_processor_grid(ndim, grid)
+
+    integer, intent(in) :: ndim
+    type(processor_grid), intent(out) :: grid
+
+    allocate(grid%p(ndim))
+    grid%p(:) = 0
+
+  end subroutine make_processor_grid
 
   subroutine set_compute_grid(dim, n, grid)
 
@@ -96,5 +118,23 @@ contains
     deallocate(grid%n)
     
   end subroutine free_compute_grid
+
+  subroutine set_processor_grid(dim, n, grid)
+
+    integer, intent(in) :: dim                  ! Which dimension to set
+    integer, intent(in) :: n                    ! Grid size
+    type(processor_grid), intent(inout) :: grid ! The computational grid
+
+    grid%p(dim) = n
+    
+  end subroutine set_processor_grid
+
+  subroutine free_processor_grid(grid)
+
+    type(processor_grid), intent(inout) :: grid
+
+    deallocate(grid%p)
+    
+  end subroutine free_processor_grid
   
 end program init_obj_test

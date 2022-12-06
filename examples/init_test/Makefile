@@ -20,9 +20,11 @@ init_obj_test: $(OBJ) init_obj_test.o
 ifeq ($(PARAMOD),gpu)
 check:
 	$(MPIRUN) -n $(NP) ./bind.sh ./init_test
+	$(MPIRUN) -n $(NP) ./bind.sh ./init_obj_test
 else
 check:
 	$(MPIRUN) -n $(NP) ./init_test
+	$(MPIRUN) -n $(NP) ./init_obj_test
 endif
 
 clean:

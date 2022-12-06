@@ -9,7 +9,25 @@ endif()
 
 find_package(MPI REQUIRED)
 
-set(CMAKE_Fortran_FLAGS "-g -fbacktrace -fdefault-real-8 -ffree-line-length-none -ffpe-trap=invalid,zero,overflow -fallow-argument-mismatch -cpp -O3")
+if(CMAKE_Fortran_COMPILER_ID MATCHES "GNU")
+    set(CMAKE_Fortran_FLAGS "-g -fbacktrace -fdefault-real-8 -ffree-line-length-none -ffpe-trap=invalid,zero,overflow -fallow-argument-mismatch -cpp")
+    set(CMAKE_Fortran_FLAGS_DEBUG "-O0 -finit-real=nan -fcheck=all -Wextra -Wconversion -pedantic")
+    set(CMAKE_Fortran_FLAGS_RELEASE "-O3")
+elseif(CMAKE_Fortran_COMPILER_ID MATCHES "Intel")
+    # FIXME: `-heap-arrays 10` required as using Intel Fortran
+    # means they are stored on the stack (by default), whereas GNU Fortran stores
+    # them on the heap (https://github.com/uDALES/u-dales/issues/13).
+    set(CMAKE_Fortran_FLAGS "-g -traceback -r8 -fpe0 -heap-arrays 10")
+    set(CMAKE_Fortran_FLAGS_DEBUG "-O0 -init=snan -CB -check all")
+    set(CMAKE_Fortran_FLAGS_RELEASE "-O3")
+elseif(CMAKE_Fortran_COMPILER_ID MATCHES "Cray")
+    # https://pubs.cray.com/content/S-3901/8.5/cray-fortran-reference-manual-85
+    set(CMAKE_Fortran_FLAGS "-eF -N 1023 -M 296")
+    set(CMAKE_Fortran_FLAGS_DEBUG "-G2 -en")
+    set(CMAKE_Fortran_FLAGS_RELEASE "-g -O3")
+else()
+    message(FATAL_ERROR "Only GNU, Intel, and Cray Fortran compilers are supported")
+endif()
 
 file(GLOB files_decomp src/factor.f90 src/decomp_2d.f90 src/log.f90 src/glassman.f90)
 

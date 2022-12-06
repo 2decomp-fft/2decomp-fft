@@ -43,31 +43,52 @@ contains
   subroutine run(p_row, p_col)
 
     integer, intent(inout) :: p_row, p_col
-    type(compute_grid_extents) :: cgrid_extents
-    type(processor_grid_extents) :: pgrid_extents
+    type(compute_grid_extents) :: cgrid
+    type(processor_grid_extents) :: pgrid
 
-    call make_grid_extents(3, cgrid_extents)
-    call set_grid_extents(1, nx, cgrid_extents)
-    call set_grid_extents(2, ny, cgrid_extents)
-    call set_grid_extents(3, nz, cgrid_extents)
+    call make_grid_extents(3, cgrid)
+    call set_grid_extents(1, nx, cgrid)
+    call set_grid_extents(2, ny, cgrid)
+    call set_grid_extents(3, nz, cgrid)
 
-    call make_grid_extents(2, pgrid_extents)
-    call set_grid_extents(1, p_row, pgrid_extents)
-    call set_grid_extents(2, p_col, pgrid_extents)
+    call make_grid_extents(2, pgrid)
+    call set_grid_extents(1, p_row, pgrid)
+    call set_grid_extents(2, p_col, pgrid)
 
-    call decomp_2d_init_new(cgrid_extents, pgrid_extents)
+    call decomp_2d_init_new(cgrid, pgrid)
 
     call check_axis("X", nexpect)
     call check_axis("Y", nexpect)
     call check_axis("Z", nexpect)
 
-    call free_grid_extents(cgrid_extents) ! TODO: Make this type-bound finaliser
-    call free_grid_extents(pgrid_extents) ! TODO: Make this type-bound finaliser
+    call check_processor_grid(pgrid)
+
+    call free_grid_extents(cgrid) ! TODO: Make this type-bound finaliser
+    call free_grid_extents(pgrid) ! TODO: Make this type-bound finaliser
     
     call decomp_2d_finalize()
     
   end subroutine run
 
+  subroutine check_processor_grid(pgrid)
+
+    type(processor_grid_extents), intent(in) :: pgrid
+
+    integer :: i
+    integer :: p
+
+    p = 1
+    do i = 1, get_grid_dimension(pgrid)
+       p = p * get_grid_extents(i, pgrid)
+    end do
+
+    if (p /= nproc) then
+       print *, "ERROR: processor grid not set correctly!"
+       stop 1
+    end if
+    
+  end subroutine check_processor_grid
+  
   subroutine decomp_2d_init_new(cgrid, pgrid)
 
     type(compute_grid_extents), intent(in) :: cgrid
@@ -111,6 +132,14 @@ contains
     get_grid_extents = grid%g(dim)
 
   end function get_grid_extents
+
+  integer function get_grid_dimension(grid)
+
+    class(grid_extents), intent(in) :: grid
+
+    get_grid_dimension = size(grid%g)
+
+  end function get_grid_dimension
 
   subroutine free_grid_extents(grid)
 

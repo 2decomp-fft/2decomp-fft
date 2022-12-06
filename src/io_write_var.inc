@@ -68,7 +68,11 @@ call MPI_TYPE_FREE(newtype,ierror)
 if (ierror.ne.0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_TYPE_FREE")
 
 ! update displacement for the next write operation
-disp = disp + sizes(1)*sizes(2)*sizes(3)*mytype_bytes
-if (data_type == complex_type) then
-   disp = disp + sizes(1)*sizes(2)*sizes(3)*mytype_bytes
-end if
+disp = disp + int(sizes(1), kind=MPI_OFFSET_KIND) &
+            * int(sizes(2), kind=MPI_OFFSET_KIND) &
+            * int(sizes(3), kind=MPI_OFFSET_KIND) &
+            * int(mytype_bytes, kind=MPI_OFFSET_KIND)
+if (data_type == complex_type) disp = disp + int(sizes(1), kind=MPI_OFFSET_KIND) &
+                                           * int(sizes(2), kind=MPI_OFFSET_KIND) &
+                                           * int(sizes(3), kind=MPI_OFFSET_KIND) &
+                                           * int(mytype_bytes, kind=MPI_OFFSET_KIND)

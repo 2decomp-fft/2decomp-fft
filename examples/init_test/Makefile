@@ -1,19 +1,21 @@
 FFLAGS := $(patsubst -I%,-I../../%,$(FFLAGS))
 LIBS = -L../../ -l$(LIBDECOMP) $(LFLAGS)
 
-OBJ = utilities.o init_test.o
+OBJ = utilities.o #init_test.o init_obj_test.o
 
 NP ?= 1
 MPIRUN ?= mpirun
 MODDIR ?= $(DECOMPINC)
 
-all: $(MODDIR) init_test
+all: $(MODDIR) init_test init_obj_test
 
 $(MODDIR):
 	mkdir -p $@
 
-init_test: $(OBJ)
-	$(FC) $(FFLAGS) $(OPT) $(DEFS) $(INC) -o $@ $(OBJ) $(LIBS)
+init_test: $(OBJ) init_test.o
+	$(FC) $(FFLAGS) $(OPT) $(DEFS) $(INC) -o $@ $^ $(LIBS)
+init_obj_test: $(OBJ) init_obj_test.o
+	$(FC) $(FFLAGS) $(OPT) $(DEFS) $(INC) -o $@ $^ $(LIBS)
 
 ifeq ($(PARAMOD),gpu)
 check:

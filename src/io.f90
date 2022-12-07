@@ -17,9 +17,6 @@ module decomp_2d_io
 
   use decomp_2d
   use MPI
-#ifdef T3PIO
-  use t3pio
-#endif
 
 #ifdef ADIOS2
   use adios2
@@ -191,7 +188,7 @@ contains
     TYPE(DECOMP_INFO) :: decomp
     integer(kind=MPI_OFFSET_KIND) :: filesize, disp
     integer, dimension(3) :: sizes, subsizes, starts
-    integer :: ierror, newtype, fh, data_type, info, gs
+    integer :: ierror, newtype, fh, data_type
 
 #ifdef PROFILER
   if (decomp_profiler_io) call decomp_profiler_start("io_write_one_real")
@@ -220,7 +217,7 @@ contains
     TYPE(DECOMP_INFO) :: decomp
     integer(kind=MPI_OFFSET_KIND) :: filesize, disp
     integer, dimension(3) :: sizes, subsizes, starts
-    integer :: ierror, newtype, fh, data_type, info, gs
+    integer :: ierror, newtype, fh, data_type
 
 #ifdef PROFILER
   if (decomp_profiler_io) call decomp_profiler_start("io_write_one_cplx")

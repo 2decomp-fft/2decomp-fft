@@ -50,31 +50,14 @@ else if (ipencil == 3) then
    starts(3) = decomp%zst(3)-1
 endif
 
-#ifdef T3PIO
-call MPI_INFO_CREATE(info, ierror)
-if (ierror.ne.0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_INFO_CREATE")
-gs = ceiling(real(sizes(1),mytype)*real(sizes(2),mytype)* &
-     real(sizes(3),mytype)/1024./1024.)
-call t3pio_set_info(decomp_2d_comm, info, "./", ierror, &
-     GLOBAL_SIZE=gs, factor=1)
-#else
-gs = 1 ! Silence unused variable
-info = 1 ! Silence unused variable
-#endif
-
 call MPI_TYPE_CREATE_SUBARRAY(3, sizes, subsizes, starts,  &
      MPI_ORDER_FORTRAN, data_type, newtype, ierror)
 if (ierror.ne.0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_TYPE_CREATE_SUBARRAY")
 call MPI_TYPE_COMMIT(newtype,ierror)
 if (ierror.ne.0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_TYPE_COMMIT")
-#ifdef T3PIO
-call MPI_FILE_OPEN(decomp_2d_comm, filename, &
-     MPI_MODE_CREATE+MPI_MODE_WRONLY, info, fh, ierror)
-#else
 call MPI_FILE_OPEN(decomp_2d_comm, filename, &
      MPI_MODE_CREATE+MPI_MODE_WRONLY, MPI_INFO_NULL, &
      fh, ierror)
-#endif
 if (ierror.ne.0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_FILE_OPEN")
 filesize = 0_MPI_OFFSET_KIND
 call MPI_FILE_SET_SIZE(fh,filesize,ierror)  ! guarantee overwriting
@@ -91,7 +74,3 @@ call MPI_FILE_CLOSE(fh,ierror)
 if (ierror.ne.0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_FILE_CLOSE")
 call MPI_TYPE_FREE(newtype,ierror)
 if (ierror.ne.0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_TYPE_FREE")
-#ifdef T3PIO
-call MPI_INFO_FREE(info,ierror)
-if (ierror.ne.0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_INFO_FREE")
-#endif

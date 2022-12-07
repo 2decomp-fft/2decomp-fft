@@ -21,10 +21,7 @@ program fft_c2c_z
   integer, parameter :: ntest = 10  ! repeat test this times
   
   complex(mytype), allocatable, dimension(:,:,:) :: in, out
-  real(mytype), allocatable, dimension(:,:,:) :: in_r
 
-  integer, dimension(3) :: fft_start, fft_end, fft_size
-  
   real(mytype) :: dr,di, error, err_all, n1,flops
   integer :: ierror, i,j,k,m
   real(mytype) :: t1, t2, t3 ,t4

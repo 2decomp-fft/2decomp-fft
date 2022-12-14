@@ -504,7 +504,7 @@ module decomp_2d_fft
       real(mytype), dimension(:, :, :), intent(IN) :: in_r
       complex(mytype), dimension(:, :, :), intent(OUT) :: out_c
 
-      complex(mytype), allocatable, dimension(:, :, :) :: wk1, wk2b, wk3
+      complex(mytype), allocatable, dimension(:, :, :) :: wk2b, wk3
       integer :: k, status, isign
 
 #ifdef PROFILER
@@ -516,13 +516,12 @@ module decomp_2d_fft
       if (format == PHYSICAL_IN_X) then
 
          ! ===== 1D FFTs in X =====
-         allocate (wk1(sp%xsz(1), sp%xsz(2), sp%xsz(3)))
          !       status = DftiComputeForward(r2c_x, in_r(:,1,1), wk1(:,1,1))
-         status = wrapper_r2c(r2c_x, in_r, wk1)
+         status = wrapper_r2c(r2c_x, in_r, wk13)
          if (status /= 0) call decomp_2d_abort(__FILE__, __LINE__, status, "wrapper_r2c")
 
          ! ===== Swap X --> Y =====
-         call transpose_x_to_y(wk1, wk2_r2c, sp)
+         call transpose_x_to_y(wk13, wk2_r2c, sp)
 
          ! ===== 1D FFTs in Y =====
 #ifdef OVERWRITE
@@ -559,13 +558,12 @@ module decomp_2d_fft
       else if (format == PHYSICAL_IN_Z) then
 
          ! ===== 1D FFTs in Z =====
-         allocate (wk1(sp%zsz(1), sp%zsz(2), sp%zsz(3)))
          !       status = DftiComputeForward(r2c_z, in_r(:,1,1), wk1(:,1,1))
-         status = wrapper_r2c(r2c_z, in_r, wk1)
+         status = wrapper_r2c(r2c_z, in_r, wk13)
          if (status /= 0) call decomp_2d_abort(__FILE__, __LINE__, status, "wrapper_r2c")
 
          ! ===== Swap Z --> Y =====
-         call transpose_z_to_y(wk1, wk2_r2c, sp)
+         call transpose_z_to_y(wk13, wk2_r2c, sp)
 
          ! ===== 1D FFTs in Y =====
 #ifdef OVERWRITE

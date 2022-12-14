@@ -349,7 +349,9 @@ module decomp_2d_fft
       complex(mytype), dimension(:, :, :), intent(OUT) :: out
       integer, intent(IN) :: isign
 
+#ifndef OVERWRITE
       complex(mytype), allocatable, dimension(:, :, :) :: wk1, wk2b, wk3
+#endif
       integer :: k, status
 
 #ifdef PROFILER
@@ -487,6 +489,12 @@ module decomp_2d_fft
 
       end if
 
+      ! Free memory
+#ifndef OVERWRITE
+      deallocate(wk1, wk2b, wk3)
+#endif
+
+
 #ifdef PROFILER
       if (decomp_profiler_fft) call decomp_profiler_end("fft_c2c")
 #endif
@@ -504,7 +512,9 @@ module decomp_2d_fft
       real(mytype), dimension(:, :, :), intent(IN) :: in_r
       complex(mytype), dimension(:, :, :), intent(OUT) :: out_c
 
+#ifndef OVERWRITE
       complex(mytype), allocatable, dimension(:, :, :) :: wk2b, wk3
+#endif
       integer :: k, status, isign
 
 #ifdef PROFILER
@@ -599,6 +609,11 @@ module decomp_2d_fft
 
       end if
 
+      ! Free memory
+#ifndef OVERWRITE
+      deallocate(wk2b, wk3)
+#endif
+
 #ifdef PROFILER
       if (decomp_profiler_fft) call decomp_profiler_end("fft_r2c")
 #endif
@@ -616,7 +631,9 @@ module decomp_2d_fft
       complex(mytype), dimension(:, :, :), intent(IN) :: in_c
       real(mytype), dimension(:, :, :), intent(OUT) :: out_r
 
+#ifndef OVERWRITE
       complex(mytype), allocatable, dimension(:, :, :) :: wk1, wk2b
+#endif
       integer :: k, status, isign
 
 #ifdef PROFILER
@@ -718,6 +735,11 @@ module decomp_2d_fft
          if (status /= 0) call decomp_2d_abort(__FILE__, __LINE__, status, "wrapper_c2r")
 
       end if
+
+      ! Free memory
+#ifndef OVERWRITE
+      deallocate(wk1, wk2b)
+#endif
 
 #ifdef PROFILER
       if (decomp_profiler_fft) call decomp_profiler_end("fft_c2r")

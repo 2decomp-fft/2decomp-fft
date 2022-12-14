@@ -46,9 +46,6 @@ module decomp_2d_fft
          write (*, *) '***** Using the MKL engine *****'
          write (*, *) ' '
       end if
-#ifdef OVERWRITE
-      call decomp_2d_warning(0, "MKL FFT engine does not support the OVERWRITE flag.")
-#endif
 
       ! For C2C transforms
       call c2c_1m_x_plan(c2c_x, ph)

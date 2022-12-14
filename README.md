@@ -89,6 +89,56 @@ The default value used is `D2D_LOG_TOFILE` for the default build and `D2D_LOG_TO
 
 Before calling `decomp_2d_init`, the external code can modify the variable `decomp_debug` to change the debug level. The user can also modify this variable using the environment variable `DECOMP_2D_DEBUG`. Please note that the environment variable is processed only for debug builds. The expected value for the variable `decomp_debug` is some integer between 0 and 6, bounds included.
 
+### List of preprocessor variables
+
+#### DEBUG
+
+This variable is automatically added in debug and dev builds. Extra information is printed when it is present.
+
+#### DOUBLE_PREC
+
+When this variable is not present, the library uses single precision. When it is present, the library uses double precision
+
+#### SAVE_SINGLE
+
+This variable is valid for double precision builds only. When it is present, snapshots are written in single precision.
+
+#### PROFILER
+
+This variable is automatically added when selecting the profiler. It activates the profiling sectionsof the code.
+
+#### EVEN
+
+This preprocessor variable is not valid for GPU builds. It leads to padded alltoall operations.
+
+#### OVERWRITE
+
+This variable leads to overwrite the input array when computing FFT (complex-to-complex and complex-to-real).
+
+#### HALO_DEBUG
+
+This variable is used to debug the halo operations.
+
+#### _GPU
+
+This variable is automatically added in GPU builds.
+
+#### _NCCL
+
+This variable is valid only for GPU builds. The NVIDIA Collective Communication Library (NCCL) implements multi-GPU and multi-node communication primitives optimized for NVIDIA GPUs and Networking.
+
+#### OCC
+
+This variable is not supported
+
+#### SHM
+
+This variable is not supported.
+
+#### SHM_DEBUG
+
+This variable is not supported
+
 ## Optional dependencies
 
 ### FFTW

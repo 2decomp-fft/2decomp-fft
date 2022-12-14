@@ -796,7 +796,7 @@ module decomp_2d_fft
          status = DftiComputeBackward(desc, inout)
       end if
 
-      wrapper_c2c = status
+      wrapper_c2c_inplace = status
 
       return
    end function wrapper_c2c_inplace

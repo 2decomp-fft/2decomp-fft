@@ -113,7 +113,7 @@ This preprocessor variable is not valid for GPU builds. It leads to padded allto
 
 #### OVERWRITE
 
-This variable is not supported by the MKL FFT backend. It leads to overwrite the input array when computing FFT (complex-to-complex and complex-to-real).
+This variable leads to overwrite the input array when computing FFT (complex-to-complex and complex-to-real).
 
 #### HALO_DEBUG
 

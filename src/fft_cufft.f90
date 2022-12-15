@@ -13,6 +13,7 @@
 
 module decomp_2d_fft
 
+   use decomp_2d_constants
    use decomp_2d  ! 2D decomposition module
    use iso_c_binding
    use cudafor
@@ -35,6 +36,8 @@ module decomp_2d_fft
    !     use plan(2,j) for c2r transforms;
    integer*4, save :: plan(-1:2, 3)
    complex*8, device, allocatable, dimension(:) :: cufft_workspace
+
+   integer, parameter, public :: D2D_FFT_BACKEND = D2D_FFT_BACKEND_CUFFT
 
    ! common code used for all engines, including global variables,
    ! generic interface definitions and several subroutines
@@ -233,16 +236,25 @@ module decomp_2d_fft
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
    subroutine init_fft_engine
 
+      use iso_fortran_env, only: output_unit
+
       implicit none
 
       !integer*4 :: cufft_ws, ws
       integer(int_ptr_kind()) :: cufft_ws, ws
-      integer   :: i, j, istat
+      integer   :: i, j, istat, iounit, ierror
 
-      if (nrank == 0) then
-         write (*, *) ' '
-         write (*, *) '***** Using the New cuFFT engine *****'
-         write (*, *) ' '
+      if ((decomp_log == D2D_LOG_STDOUT .and. nrank == 0) .or. &
+          (decomp_log == D2D_LOG_TOFILE .and. nrank == 0) .or. &
+          (decomp_log == D2D_LOG_TOFILE_FULL)) then
+         iounit = d2d_listing_get_unit()
+         write (iounit, *) ' '
+         write (iounit, *) '***** Using the New cuFFT engine *****'
+         write (iounit, *) ' '
+         if (iounit /= output_unit) then
+            close (iounit, iostat=ierror)
+            if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "Could not close log file")
+         end if
       end if
 
       cufft_ws = 0

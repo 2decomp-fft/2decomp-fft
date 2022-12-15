@@ -70,6 +70,19 @@ Profiling can be activated in the Makefile. Set the variable `PROFILER` to one o
 3. Profile FFT operations (default : true)
 4. Profile decomp_2d init / fin subroutines (default : true)
 
+## FFT backends
+
+The library provides a built-in FFT engine and supports various FFT backends : FFTW, Intel oneMKL, Nvidia cuFFT. The FFT engine selected during compilation is available through the variable `D2D_FFT_BACKEND` defined in the module `decomp_2d_fft`. The expected value is defined by the integer constants
+```
+integer, parameter, public :: D2D_FFT_BACKEND_GENERIC = 0   ! Built-in engine
+integer, parameter, public :: D2D_FFT_BACKEND_FFTW3 = 1     ! FFTW
+integer, parameter, public :: D2D_FFT_BACKEND_FFTW3_F03 = 2 ! FFTW (Fortran 2003)
+integer, parameter, public :: D2D_FFT_BACKEND_MKL = 3       ! Intel oneMKL
+integer, parameter, public :: D2D_FFT_BACKEND_CUFFT = 4     ! Nvidia cuFFT
+```
+exported by the module `decomp_2d_constants`.
+The external code can use the named variables to check the FFT backend used in a given build.
+
 ## Miscellaneous
 
 ### Print the log to a file or to stdout
@@ -81,7 +94,7 @@ integer, parameter, public :: D2D_LOG_STDOUT = 1      ! Root rank logs output to
 integer, parameter, public :: D2D_LOG_TOFILE = 2      ! Root rank logs output to the file "decomp_2d_setup.log"
 integer, parameter, public :: D2D_LOG_TOFILE_FULL = 3 ! All ranks log output to a dedicated file
 ```
-exported by the `decomp_2d` module.
+exported by the `decomp_2d_constants` module.
 Although their values are shown here, users should not rely on these and are recommended to prefer to use the named variables `D2D_LOG_QUIET`, etc. instead.
 The default value used is `D2D_LOG_TOFILE` for the default build and `D2D_LOG_TOFILE_FULL` for a debug build.
 

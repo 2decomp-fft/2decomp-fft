@@ -17,6 +17,7 @@ module decomp_2d
    use MPI
    use, intrinsic :: iso_fortran_env, only: real32, real64
    use factor
+   use decomp_2d_constants
 #if defined(_GPU)
    use cudafor
 #if defined(_NCCL)
@@ -84,10 +85,6 @@ module decomp_2d
    !
    ! The default value is 2 (3 for debug builds)
    !
-   integer, parameter, public :: D2D_LOG_QUIET = 0
-   integer, parameter, public :: D2D_LOG_STDOUT = 1
-   integer, parameter, public :: D2D_LOG_TOFILE = 2
-   integer, parameter, public :: D2D_LOG_TOFILE_FULL = 3
 #ifdef DEBUG
    integer, public, save :: decomp_log = D2D_LOG_TOFILE_FULL
 #else
@@ -101,15 +98,6 @@ module decomp_2d
    !
    ! Debug checks are performed only when the preprocessor variable DEBUG is defined
    !
-   enum, bind(c)
-      enumerator :: D2D_DEBUG_LEVEL_OFF = 0
-      enumerator :: D2D_DEBUG_LEVEL_CRITICAL = 1
-      enumerator :: D2D_DEBUG_LEVEL_ERROR = 2
-      enumerator :: D2D_DEBUG_LEVEL_WARN = 3
-      enumerator :: D2D_DEBUG_LEVEL_INFO = 4
-      enumerator :: D2D_DEBUG_LEVEL_DEBUG = 5
-      enumerator :: D2D_DEBUG_LEVEL_TRACE = 6
-   end enum
 #ifdef DEBUG
    integer(kind(D2D_DEBUG_LEVEL_OFF)), public, save :: decomp_debug = D2D_DEBUG_LEVEL_INFO
 #else
@@ -235,10 +223,6 @@ module decomp_2d
    !    0 => no profiling, default
    !    1 => Caliper (https://github.com/LLNL/Caliper)
    !
-   enum, bind(c)
-      enumerator :: decomp_profiler_none = 0
-      enumerator :: decomp_profiler_caliper = 1
-   end enum
    integer(kind(decomp_profiler_none)), save, public :: decomp_profiler = decomp_profiler_none
    ! Default : profile everything
    logical, save, public :: decomp_profiler_transpose = .true.
@@ -259,7 +243,8 @@ module decomp_2d
              alloc_x, alloc_y, alloc_z, &
              update_halo, decomp_2d_abort, &
              decomp_2d_warning, get_decomp_info, &
-             decomp_mpi_comm_free, get_decomp_dims
+             decomp_mpi_comm_free, get_decomp_dims, &
+             d2d_listing_get_unit
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
    ! These are routines to perform global data transpositions
@@ -358,6 +343,10 @@ module decomp_2d
    end interface decomp_2d_warning
 
    interface
+
+      module function d2d_listing_get_unit()
+         integer :: d2d_listing_get_unit
+      end function d2d_listing_get_unit
 
       module subroutine d2d_listing(given_io_unit)
          integer, intent(in), optional :: given_io_unit

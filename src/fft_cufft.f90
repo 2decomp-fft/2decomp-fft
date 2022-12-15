@@ -39,6 +39,7 @@ module decomp_2d_fft
    ! common code used for all engines, including global variables,
    ! generic interface definitions and several subroutines
 #include "fft_common.f90"
+   integer, parameter, public :: D2D_FFT_BACKEND = D2D_FFT_BACKEND_CUFFT
 
    ! Return a cuFFT plan for multiple 1D FFTs in X direction: C2C case
    subroutine c2c_1m_x_plan(plan1, decomp, cufft_type, worksize)

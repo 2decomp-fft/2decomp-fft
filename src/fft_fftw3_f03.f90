@@ -43,6 +43,14 @@ module decomp_2d_fft
    integer, parameter, public :: PHYSICAL_IN_X = 1
    integer, parameter, public :: PHYSICAL_IN_Z = 3
 
+   ! Supported FFT backends
+   integer, parameter, public :: D2D_FFT_BACKEND_GENERIC = 0
+   integer, parameter, public :: D2D_FFT_BACKEND_FFTW3 = 1
+   integer, parameter, public :: D2D_FFT_BACKEND_FFTW3_F03 = 2
+   integer, parameter, public :: D2D_FFT_BACKEND_MKL = 3
+   integer, parameter, public :: D2D_FFT_BACKEND_CUFFT = 4
+   integer, parameter, public :: D2D_FFT_BACKEND = D2D_FFT_BACKEND_FFTW3_F03
+
    integer, save :: format                 ! input X-pencil or Z-pencil
 
    ! The libary can only be initialised once

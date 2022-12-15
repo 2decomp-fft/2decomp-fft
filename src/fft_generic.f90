@@ -26,6 +26,7 @@ module decomp_2d_fft
    ! common code used for all engines, including global variables,
    ! generic interface definitions and several subroutines
 #include "fft_common.f90"
+   integer, parameter, public :: D2D_FFT_BACKEND = D2D_FFT_BACKEND_GENERIC
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
    !  This routine performs one-time initialisations for the FFT engine

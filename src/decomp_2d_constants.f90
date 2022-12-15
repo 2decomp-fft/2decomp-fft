@@ -69,6 +69,5 @@ module decomp_2d_constants
    integer, parameter, public :: D2D_FFT_BACKEND_MKL = 3
    integer, parameter, public :: D2D_FFT_BACKEND_CUFFT = 4
 
-
 end module decomp_2d_constants
 

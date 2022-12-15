@@ -17,6 +17,62 @@ submodule(decomp_2d) d2d_log
 contains
 
    !
+   ! Get the IO unit for the log
+   !
+   module function d2d_listing_get_unit()
+
+      use iso_fortran_env, only: output_unit
+
+      implicit none
+
+      ! Output
+      integer :: d2d_listing_get_unit
+
+      ! Local variables
+      logical :: found
+      integer :: ierror
+      character(len=7) fname ! Sufficient for up to O(1M) ranks
+
+      if (decomp_log == D2D_LOG_TOFILE_FULL) then
+         write (fname, "(I0)") nrank ! Adapt to magnitude of nrank
+         inquire(file='decomp_2d_setup_'//trim(fname)//'.log', &
+                 exist=found)
+         if (found) then
+            open (newunit=d2d_listing_get_unit, &
+                  file='decomp_2d_setup_'//trim(fname)//'.log', &
+                  status="old", &
+                  position="append", &
+                  iostat=ierror)
+         else
+            open (newunit=d2d_listing_get_unit, &
+                  file='decomp_2d_setup_'//trim(fname)//'.log', &
+                  status="new", &
+                  iostat=ierror)
+         endif
+      elseif (nrank == 0 .and. decomp_log == D2D_LOG_TOFILE) then
+         inquire (file="decomp_2d_setup.log", &
+                  exist=found)
+         if (found) then
+            open (newunit=d2d_listing_get_unit, &
+                  file="decomp_2d_setup.log", &
+                  status="old", &
+                  position="append", &
+                  iostat=ierror)
+         else
+            open (newunit=d2d_listing_get_unit, &                                                    
+                  file="decomp_2d_setup.log", &
+                  status="new", &
+                  iostat=ierror)
+         endif
+      else
+         d2d_listing_get_unit = output_unit
+         ierror = 0
+      endif
+      if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "Could not open log file")
+
+   end function d2d_listing_get_unit
+
+   !
    ! Print some information about decomp_2d
    !
    module subroutine d2d_listing(given_io_unit)
@@ -141,6 +197,7 @@ contains
 #endif
       write (io_unit, *) '==========================================================='
       write (io_unit, *) '==========================================================='
+
 #ifdef DEBUG
       !
       ! In DEBUG mode, rank 0 will also print environment variables
@@ -161,9 +218,20 @@ contains
                                                   __LINE__, &
                                                   ierror, &
                                                   "No name for the log file")
-            call execute_command_line("env >> "//trim(fname), wait=.false.)
+            ! Close the IO unit to print the environment variables
+            close (io_unit, iostat=ierror)
+            if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "Could not close log file")
+            call execute_command_line("env >> "//trim(fname), wait=.true.)
          end if
       end if
+#else
+      !
+      ! Close the IO unit if it was not stdout
+      !
+      if (io_unit /= output_unit) then
+         close (io_unit, iostat=ierror)
+         if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "Could not close log file")
+      endif
 #endif
 
    end subroutine d2d_listing

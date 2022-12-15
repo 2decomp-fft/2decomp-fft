@@ -359,6 +359,10 @@ module decomp_2d
 
    interface
 
+      module function d2d_listing_get_unit()
+         integer :: d2d_listing_get_unit
+      end function d2d_listing_get_unit
+
       module subroutine d2d_listing(given_io_unit)
          integer, intent(in), optional :: given_io_unit
       end subroutine d2d_listing

@@ -36,12 +36,6 @@ module decomp_2d_fft
    integer*4, save :: plan(-1:2, 3)
    complex*8, device, allocatable, dimension(:) :: cufft_workspace
 
-   ! Supported FFT backends
-   integer, parameter, public :: D2D_FFT_BACKEND_GENERIC = 0
-   integer, parameter, public :: D2D_FFT_BACKEND_FFTW3 = 1
-   integer, parameter, public :: D2D_FFT_BACKEND_FFTW3_F03 = 2
-   integer, parameter, public :: D2D_FFT_BACKEND_MKL = 3
-   integer, parameter, public :: D2D_FFT_BACKEND_CUFFT = 4
    integer, parameter, public :: D2D_FFT_BACKEND = D2D_FFT_BACKEND_CUFFT
 
    ! common code used for all engines, including global variables,

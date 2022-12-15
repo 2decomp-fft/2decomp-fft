@@ -13,6 +13,7 @@
 
 module decomp_2d_fft
 
+   use decomp_2d_constants
    use decomp_2d  ! 2D decomposition module
    use iso_c_binding
    use cudafor
@@ -235,6 +236,8 @@ module decomp_2d_fft
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
    subroutine init_fft_engine
 
+      use iso_fortran_env, only: output_unit
+
       implicit none
 
       !integer*4 :: cufft_ws, ws
@@ -249,9 +252,9 @@ module decomp_2d_fft
          write (iounit, *) '***** Using the New cuFFT engine *****'
          write (iounit, *) ' '
          if (iounit /= output_unit) then
-            close(iounit, iostat=ierror)
+            close (iounit, iostat=ierror)
             if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "Could not close log file")
-         endif
+         end if
       end if
 
       cufft_ws = 0

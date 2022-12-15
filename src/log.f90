@@ -35,8 +35,8 @@ contains
 
       if (decomp_log == D2D_LOG_TOFILE_FULL) then
          write (fname, "(I0)") nrank ! Adapt to magnitude of nrank
-         inquire(file='decomp_2d_setup_'//trim(fname)//'.log', &
-                 exist=found)
+         inquire (file='decomp_2d_setup_'//trim(fname)//'.log', &
+                  exist=found)
          if (found) then
             open (newunit=d2d_listing_get_unit, &
                   file='decomp_2d_setup_'//trim(fname)//'.log', &
@@ -48,7 +48,7 @@ contains
                   file='decomp_2d_setup_'//trim(fname)//'.log', &
                   status="new", &
                   iostat=ierror)
-         endif
+         end if
       elseif (nrank == 0 .and. decomp_log == D2D_LOG_TOFILE) then
          inquire (file="decomp_2d_setup.log", &
                   exist=found)
@@ -59,15 +59,15 @@ contains
                   position="append", &
                   iostat=ierror)
          else
-            open (newunit=d2d_listing_get_unit, &                                                    
+            open (newunit=d2d_listing_get_unit, &
                   file="decomp_2d_setup.log", &
                   status="new", &
                   iostat=ierror)
-         endif
+         end if
       else
          d2d_listing_get_unit = output_unit
          ierror = 0
-      endif
+      end if
       if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "Could not open log file")
 
    end function d2d_listing_get_unit
@@ -231,7 +231,7 @@ contains
       if (io_unit /= output_unit) then
          close (io_unit, iostat=ierror)
          if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "Could not close log file")
-      endif
+      end if
 #endif
 
    end subroutine d2d_listing

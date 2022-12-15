@@ -579,7 +579,9 @@ contains
 
       implicit none
 
-      if (nrank == 0) then
+      ! FIXME decomp_log == D2D_LOG_TOFILE
+      !                     D2D_LOG_TOFILE_FULL
+      if (decomp_log == D2D_LOG_STDOUT .and. nrank == 0) then
          write (*, *) ' '
          write (*, *) '***** Using the FFTW (F2003 interface) engine *****'
          write (*, *) ' '

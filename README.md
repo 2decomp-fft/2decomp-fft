@@ -66,9 +66,22 @@ By default the compute architecture for the GPU is 80 (i.e. Ampere), to change i
 Profiling can be activated in the Makefile. Set the variable `PROFILER` to one of the supported profilers (only `caliper` currently). If using `caliper`, provide the installation path in the variable `CALIPER_PATH`. When the profiling is active, one can tune it before calling `decomp_2d_init` using the subroutine `decomp_profiler_prep`. The input argument for this subroutine is a logical array of size 4. Each input allow activation / deactivation of the profiling as follows :
 
 1. Profile transpose operations (default : true)
-2. Profile IO operations (default : true))
+2. Profile IO operations (default : true)
 3. Profile FFT operations (default : true)
 4. Profile decomp_2d init / fin subroutines (default : true)
+
+## FFT backends
+
+The library provides a built-in FFT engine and supports various FFT backends : FFTW, Intel oneMKL, Nvidia cuFFT. The FFT engine selected during compilation is available through the variable `D2D_FFT_BACKEND` defined in the module `decomp_2d_fft`. The expected value is defined by the integer constants
+```
+integer, parameter, public :: D2D_FFT_BACKEND_GENERIC = 0   ! Built-in engine
+integer, parameter, public :: D2D_FFT_BACKEND_FFTW3 = 1     ! FFTW
+integer, parameter, public :: D2D_FFT_BACKEND_FFTW3_F03 = 2 ! FFTW (Fortran 2003)
+integer, parameter, public :: D2D_FFT_BACKEND_MKL = 3       ! Intel oneMKL
+integer, parameter, public :: D2D_FFT_BACKEND_CUFFT = 4     ! Nvidia cuFFT
+```
+exported by the module `decomp_2d_constants`.
+The external code can use the named variables to check the FFT backend used in a given build.
 
 ## Miscellaneous
 
@@ -81,13 +94,63 @@ integer, parameter, public :: D2D_LOG_STDOUT = 1      ! Root rank logs output to
 integer, parameter, public :: D2D_LOG_TOFILE = 2      ! Root rank logs output to the file "decomp_2d_setup.log"
 integer, parameter, public :: D2D_LOG_TOFILE_FULL = 3 ! All ranks log output to a dedicated file
 ```
-exported by the `decomp_2d` module.
+exported by the `decomp_2d_constants` module.
 Although their values are shown here, users should not rely on these and are recommended to prefer to use the named variables `D2D_LOG_QUIET`, etc. instead.
 The default value used is `D2D_LOG_TOFILE` for the default build and `D2D_LOG_TOFILE_FULL` for a debug build.
 
 ### Change the debug level for debug builds
 
 Before calling `decomp_2d_init`, the external code can modify the variable `decomp_debug` to change the debug level. The user can also modify this variable using the environment variable `DECOMP_2D_DEBUG`. Please note that the environment variable is processed only for debug builds. The expected value for the variable `decomp_debug` is some integer between 0 and 6, bounds included.
+
+### List of preprocessor variables
+
+#### DEBUG
+
+This variable is automatically added in debug and dev builds. Extra information is printed when it is present.
+
+#### DOUBLE_PREC
+
+When this variable is not present, the library uses single precision. When it is present, the library uses double precision
+
+#### SAVE_SINGLE
+
+This variable is valid for double precision builds only. When it is present, snapshots are written in single precision.
+
+#### PROFILER
+
+This variable is automatically added when selecting the profiler. It activates the profiling sectionsof the code.
+
+#### EVEN
+
+This preprocessor variable is not valid for GPU builds. It leads to padded alltoall operations.
+
+#### OVERWRITE
+
+This variable leads to overwrite the input array when computing FFT (complex-to-complex and complex-to-real).
+
+#### HALO_DEBUG
+
+This variable is used to debug the halo operations.
+
+#### _GPU
+
+This variable is automatically added in GPU builds.
+
+#### _NCCL
+
+This variable is valid only for GPU builds. The NVIDIA Collective Communication Library (NCCL) implements multi-GPU and multi-node communication primitives optimized for NVIDIA GPUs and Networking.
+
+#### OCC
+
+This variable is not supported
+
+#### SHM
+
+This variable is not supported.
+
+#### SHM_DEBUG
+
+This variable is not supported
 
 ## Optional dependencies
 

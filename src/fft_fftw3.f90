@@ -13,6 +13,7 @@
 
 module decomp_2d_fft
 
+   use decomp_2d_constants
    use decomp_2d  ! 2D decomposition module
    use iso_c_binding
 
@@ -41,6 +42,8 @@ module decomp_2d_fft
          import
       end subroutine fftw_cleanup
    end interface
+
+   integer, parameter, public :: D2D_FFT_BACKEND = D2D_FFT_BACKEND_FFTW3
 
    ! common code used for all engines, including global variables,
    ! generic interface definitions and several subroutines
@@ -263,12 +266,23 @@ module decomp_2d_fft
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
    subroutine init_fft_engine
 
+      use iso_fortran_env, only: output_unit
+
       implicit none
 
-      if (nrank == 0) then
-         write (*, *) ' '
-         write (*, *) '***** Using the FFTW (version 3.x) engine *****'
-         write (*, *) ' '
+      integer :: iounit, ierror
+
+      if ((decomp_log == D2D_LOG_STDOUT .and. nrank == 0) .or. &
+          (decomp_log == D2D_LOG_TOFILE .and. nrank == 0) .or. &
+          (decomp_log == D2D_LOG_TOFILE_FULL)) then
+         iounit = d2d_listing_get_unit()
+         write (iounit, *) ' '
+         write (iounit, *) '***** Using the FFTW (version 3.x) engine *****'
+         write (iounit, *) ' '
+         if (iounit /= output_unit) then
+            close (iounit, iostat=ierror)
+            if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "Could not close log file")
+         end if
       end if
 
       if (format == PHYSICAL_IN_X) then

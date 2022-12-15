@@ -33,7 +33,7 @@ CMPINC = Makefile.compilers
 include $(CMPINC)
 
 ### List of files for the main code
-SRCDECOMP = factor.f90 decomp_2d.f90 log.f90 io.f90
+SRCDECOMP = decomp_2d_constants.f90 factor.f90 decomp_2d.f90 log.f90 io.f90
 
 #######FFT settings##########
 ifeq ($(FFT),fftw3)

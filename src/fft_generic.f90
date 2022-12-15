@@ -13,6 +13,7 @@
 
 module decomp_2d_fft
 
+   use decomp_2d_constants
    use decomp_2d  ! 2D decomposition module
    use glassman
 
@@ -23,6 +24,8 @@ module decomp_2d_fft
    ! engine-specific global variables
    complex(mytype), allocatable, dimension(:) :: buf, scratch
 
+   integer, parameter, public :: D2D_FFT_BACKEND = D2D_FFT_BACKEND_GENERIC
+
    ! common code used for all engines, including global variables,
    ! generic interface definitions and several subroutines
 #include "fft_common.f90"
@@ -32,14 +35,23 @@ module decomp_2d_fft
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
    subroutine init_fft_engine
 
+      use iso_fortran_env, only: output_unit
+
       implicit none
 
-      integer :: cbuf_size
+      integer :: cbuf_size, iounit, ierror
 
-      if (nrank == 0) then
-         write (*, *) ' '
-         write (*, *) '***** Using the generic FFT engine *****'
-         write (*, *) ' '
+      if ((decomp_log == D2D_LOG_STDOUT .and. nrank == 0) .or. &
+          (decomp_log == D2D_LOG_TOFILE .and. nrank == 0) .or. &
+          (decomp_log == D2D_LOG_TOFILE_FULL)) then
+         iounit = d2d_listing_get_unit()
+         write (iounit, *) ' '
+         write (iounit, *) '***** Using the generic FFT engine *****'
+         write (iounit, *) ' '
+         if (iounit /= output_unit) then
+            close (iounit, iostat=ierror)
+            if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "Could not close log file")
+         end if
       end if
 
       cbuf_size = max(ph%xsz(1), ph%ysz(2))

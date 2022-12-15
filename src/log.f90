@@ -12,6 +12,8 @@
 
 submodule(decomp_2d) d2d_log
 
+   use decomp_2d_constants
+
    implicit none
 
 contains

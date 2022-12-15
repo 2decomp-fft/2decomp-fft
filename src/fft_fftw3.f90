@@ -273,12 +273,19 @@ module decomp_2d_fft
 
       implicit none
 
-      ! FIXME decomp_log == D2D_LOG_TOFILE
-      !                     D2D_LOG_TOFILE_FULL
-      if (decomp_log == D2D_LOG_STDOUT .and. nrank == 0) then
-         write (*, *) ' '
-         write (*, *) '***** Using the FFTW (version 3.x) engine *****'
-         write (*, *) ' '
+      integer :: iounit, ierror
+
+      if ((decomp_log == D2D_LOG_STDOUT .and. nrank == 0) .or. &
+          (decomp_log == D2D_LOG_TOFILE .and. nrank == 0) .or. &
+          (decomp_log == D2D_LOG_TOFILE_FULL)) then
+         iounit = d2d_listing_get_unit()
+         write (iounit, *) ' '
+         write (iounit, *) '***** Using the FFTW (version 3.x) engine *****'
+         write (iounit, *) ' '
+         if (iounit /= output_unit) then
+            close(iounit, iostat=ierror)
+            if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "Could not close log file")
+         endif
       end if
 
       if (format == PHYSICAL_IN_X) then

@@ -259,7 +259,8 @@ module decomp_2d
              alloc_x, alloc_y, alloc_z, &
              update_halo, decomp_2d_abort, &
              decomp_2d_warning, get_decomp_info, &
-             decomp_mpi_comm_free, get_decomp_dims
+             decomp_mpi_comm_free, get_decomp_dims, &
+             d2d_listing_get_unit
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
    ! These are routines to perform global data transpositions

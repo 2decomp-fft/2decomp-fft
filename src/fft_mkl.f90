@@ -30,10 +30,17 @@ module decomp_2d_fft
    !  for r2c/c2r transforms, PHYSICAL_IN_Z
    type(DFTI_DESCRIPTOR), pointer :: r2c_z, c2c_x2, c2r_z
 
+   ! Supported FFT backends
+   integer, parameter, public :: D2D_FFT_BACKEND_GENERIC = 0
+   integer, parameter, public :: D2D_FFT_BACKEND_FFTW3 = 1
+   integer, parameter, public :: D2D_FFT_BACKEND_FFTW3_F03 = 2
+   integer, parameter, public :: D2D_FFT_BACKEND_MKL = 3
+   integer, parameter, public :: D2D_FFT_BACKEND_CUFFT = 4
+   integer, parameter, public :: D2D_FFT_BACKEND = D2D_FFT_BACKEND_MKL
+
    ! common code used for all engines, including global variables,
    ! generic interface definitions and several subroutines
 #include "fft_common.f90"
-   integer, parameter, public :: D2D_FFT_BACKEND = D2D_FFT_BACKEND_MKL
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
    !  This routine performs one-time initialisations for the FFT engine

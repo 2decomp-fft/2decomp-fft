@@ -502,9 +502,8 @@ module decomp_2d_fft
 
       ! Free memory
 #ifndef OVERWRITE
-      deallocate(wk1, wk2b, wk3)
+      deallocate (wk1, wk2b, wk3)
 #endif
-
 
 #ifdef PROFILER
       if (decomp_profiler_fft) call decomp_profiler_end("fft_c2c")
@@ -622,7 +621,7 @@ module decomp_2d_fft
 
       ! Free memory
 #ifndef OVERWRITE
-      deallocate(wk2b, wk3)
+      deallocate (wk2b, wk3)
 #endif
 
 #ifdef PROFILER
@@ -749,7 +748,7 @@ module decomp_2d_fft
 
       ! Free memory
 #ifndef OVERWRITE
-      deallocate(wk1, wk2b)
+      deallocate (wk1, wk2b)
 #endif
 
 #ifdef PROFILER

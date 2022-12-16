@@ -423,7 +423,7 @@ contains
 
       character(len=*), intent(in) :: engine_name
       character(len=*), intent(in) :: io_name
-      character*(*), intent(in) :: varname
+      character(len=*), intent(in) :: varname
       real(mytype), contiguous, dimension(:, :, :), intent(out) :: var
 
       integer :: ierror
@@ -1387,7 +1387,7 @@ contains
       integer, intent(in), optional :: opt_nplanes
 
       integer :: nplanes
-      character*(*), intent(in) :: varname
+      character(len=*), intent(in) :: varname
 #ifdef ADIOS2
       integer, dimension(3) :: sizes, subsizes, starts
       type(adios2_io) :: io_handle

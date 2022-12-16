@@ -23,9 +23,8 @@ subroutine fft_3d_c2c(in, out, isign)
    complex(mytype), dimension(:, :, :), intent(OUT) :: out
    integer, intent(IN) :: isign
 
-   integer :: i, j, k
-
 #ifndef OVERWRITE
+   integer :: i, j, k
    complex(mytype), allocatable, dimension(:, :, :) :: wk1
 #endif
 
@@ -202,9 +201,8 @@ subroutine fft_3d_c2r(in_c, out_r)
    complex(mytype), dimension(:, :, :), intent(INOUT) :: in_c
    real(mytype), dimension(:, :, :), intent(OUT) :: out_r
 
-   integer :: i, j, k
-
 #ifndef OVERWRITE
+   integer :: i, j, k
    complex(mytype), allocatable, dimension(:, :, :) :: wk1
 #endif
 

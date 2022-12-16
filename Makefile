@@ -9,7 +9,7 @@
 # generate a Git version string
 GIT_VERSION := $(shell git describe --tag --long --always)
 
-DEFS = -DDOUBLE_PREC -DVERSION=\"$(GIT_VERSION)\" -DOVERWRITE
+DEFS = -DDOUBLE_PREC -DVERSION=\"$(GIT_VERSION)\"
 
 LCL = local# local,lad,sdu,archer
 CMP = gcc# intel,gcc,nagfor,cray,nvhpc

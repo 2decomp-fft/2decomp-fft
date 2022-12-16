@@ -5,6 +5,7 @@
 #   -DDOUBLE_PREC - use double-precision
 #   -DSAVE_SINGLE - Save 3D data in single-precision
 #   -DDEBG        - debugging
+#   -DOVERWIR     - Enable overwriting optimisation in MKL FFT
 # generate a Git version string
 GIT_VERSION := $(shell git describe --tag --long --always)
 

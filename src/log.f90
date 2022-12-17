@@ -246,8 +246,7 @@ contains
                                                   ierror, &
                                                   "No name for the log file")
             ! Close the IO unit to print the environment variables
-            close (io_unit, iostat=ierror)
-            if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "Could not close log file")
+            call d2d_listing_close_unit(io_unit)
             call execute_command_line("env >> "//trim(fname), wait=.true.)
          end if
       end if

@@ -73,16 +73,18 @@ contains
 
    subroutine initialise()
 
-      ! initialise u,v,w with random numbers in X-pencil
+      implicit none
+
 #ifdef HALO_GLOBAL
-      allocate (u1(xstart(1):xend(1), xstart(2):xend(2), xstart(3):xend(3)))
-      allocate (v1(xstart(1):xend(1), xstart(2):xend(2), xstart(3):xend(3)))
-      allocate (w1(xstart(1):xend(1), xstart(2):xend(2), xstart(3):xend(3)))
+      logical, parameter :: global = .true.
 #else
-      allocate (u1(xsize(1), xsize(2), xsize(3)))
-      allocate (v1(xsize(1), xsize(2), xsize(3)))
-      allocate (w1(xsize(1), xsize(2), xsize(3)))
+      logical, parameter :: global = .false.
 #endif
+
+      ! initialise u,v,w with random numbers in X-pencil
+      call alloc_x(u1, global)
+      call alloc_x(v1, global)
+      call alloc_x(w1, global)
 
       call random_seed(size=n)
       allocate (seed(n))
@@ -101,17 +103,23 @@ contains
    !=====================================================================
    subroutine test_div_transpose()
 
+      implicit none
+
+#ifdef HALO_GLOBAL
+      logical, parameter :: global = .true.
+#else
+      logical, parameter :: global = .false.
+#endif
       integer :: i1, in ! I loop start/end
       integer :: j1, jn ! J loop start/end
       integer :: k1, kn ! K loop start/end
 
       ! du/dx calculated on X-pencil
+      call alloc_x(div1, global)
 #ifdef HALO_GLOBAL
-      allocate (div1(xstart(1):xend(1), xstart(2):xend(2), xstart(3):xend(3)))
       k1 = xstart(3); kn = xend(3)
       j1 = xstart(2); jn = xend(2)
 #else
-      allocate (div1(xsize(1), xsize(2), xsize(3)))
       k1 = 1; kn = xsize(3)
       j1 = 1; jn = xsize(2)
 #endif
@@ -127,14 +135,12 @@ contains
       end do
 
       ! dv/dy calculated on Y-pencil
+      call alloc_y(v2, global)
+      call alloc_y(wk2, global)
 #ifdef HALO_GLOBAL
-      allocate (v2(ystart(1):yend(1), ystart(2):yend(2), ystart(3):yend(3)))
-      allocate (wk2(ystart(1):yend(1), ystart(2):yend(2), ystart(3):yend(3)))
       k1 = ystart(3); kn = yend(3)
       i1 = ystart(1); in = yend(1)
 #else
-      allocate (v2(ysize(1), ysize(2), ysize(3)))
-      allocate (wk2(ysize(1), ysize(2), ysize(3)))
       k1 = 1; kn = ysize(3)
       i1 = 1; in = ysize(1)
 #endif
@@ -152,16 +158,13 @@ contains
       end do
 
       ! dw/dz calculated on Z-pencil
+      call alloc_y(w2, global)
+      call alloc_z(w3, global)
+      call alloc_z(wk3, global)
 #ifdef HALO_GLOBAL
-      allocate (w2(ystart(1):yend(1), ystart(2):yend(2), ystart(3):yend(3)))
-      allocate (w3(zstart(1):zend(1), zstart(2):zend(2), zstart(3):zend(3)))
-      allocate (wk3(zstart(1):zend(1), zstart(2):zend(2), zstart(3):zend(3)))
       j1 = zstart(2); jn = zend(2)
       i1 = zstart(1); in = zend(1)
 #else
-      allocate (w2(ysize(1), ysize(2), ysize(3)))
-      allocate (w3(zsize(1), zsize(2), zsize(3)))
-      allocate (wk3(zsize(1), zsize(2), zsize(3)))
       j1 = 1; jn = zsize(2)
       i1 = 1; in = zsize(1)
 #endif
@@ -199,6 +202,13 @@ contains
    !=====================================================================
    subroutine test_div_haloX()
 
+      implicit none
+
+#ifdef HALO_GLOBAL
+      logical, parameter :: global = .true.
+#else
+      logical, parameter :: global = .false.
+#endif
       integer :: i1, in ! I loop start/end
       integer :: j1, jn ! J loop start/end
       integer :: k1, kn ! K loop start/end
@@ -208,15 +218,14 @@ contains
       ny_expected = xsize(2) + 2
       nz_expected = xsize(3) + 2
 
+      call alloc_x(div2, global)
 #ifdef HALO_GLOBAL
-      allocate (div2(xstart(1):xend(1), xstart(2):xend(2), xstart(3):xend(3)))
       call update_halo(v1, vh, 1, opt_global=.true., opt_pencil=1)
       call update_halo(w1, wh, 1, opt_global=.true., opt_pencil=1)
 
       k1 = xstart(3); kn = xend(3)
       j1 = xstart(2); jn = xend(2)
 #else
-      allocate (div2(xsize(1), xsize(2), xsize(3)))
       call update_halo(v1, vh, 1, opt_pencil=1)
       call update_halo(w1, wh, 1, opt_pencil=1)
 
@@ -251,6 +260,13 @@ contains
    !=====================================================================
    subroutine test_div_haloY()
 
+      implicit none
+
+#ifdef HALO_GLOBAL
+      logical, parameter :: global = .true.
+#else
+      logical, parameter :: global = .false.
+#endif
       integer :: i1, in ! I loop start/end
       integer :: j1, jn ! J loop start/end
       integer :: k1, kn ! K loop start/end
@@ -260,19 +276,12 @@ contains
       ny_expected = ny
       nz_expected = ysize(3) + 2
 
-#ifdef HALO_GLOBAL
-      allocate (u2(ystart(1):yend(1), ystart(2):yend(2), ystart(3):yend(3)))
-      allocate (v2(ystart(1):yend(1), ystart(2):yend(2), ystart(3):yend(3)))
-      allocate (w2(ystart(1):yend(1), ystart(2):yend(2), ystart(3):yend(3)))
-      allocate (div3(xstart(1):xend(1), xstart(2):xend(2), xstart(3):xend(3)))
-      allocate (wk2(ystart(1):yend(1), ystart(2):yend(2), ystart(3):yend(3)))
-#else
-      allocate (u2(ysize(1), ysize(2), ysize(3)))
-      allocate (v2(ysize(1), ysize(2), ysize(3)))
-      allocate (w2(ysize(1), ysize(2), ysize(3)))
-      allocate (div3(xsize(1), xsize(2), xsize(3)))
-      allocate (wk2(ysize(1), ysize(2), ysize(3)))
-#endif
+      call alloc_y(u2, global)
+      call alloc_y(v2, global)
+      call alloc_y(w2, global)
+      call alloc_x(div3, global)
+      call alloc_y(wk2, global)
+
       call transpose_x_to_y(u1, u2)
       call transpose_x_to_y(v1, v2)
       call transpose_x_to_y(w1, w2)
@@ -318,33 +327,30 @@ contains
    !=====================================================================
    subroutine test_div_haloZ()
 
+      implicit none
+
+#ifdef HALO_GLOBAL
+      logical, parameter :: global = .true.
+#else
+      logical, parameter :: global = .false.
+#endif
+
       ! Expected sizes
       nx_expected = zsize(1) + 2
       ny_expected = zsize(2) + 2
       nz_expected = nz
 
-#ifdef HALO_GLOBAL
-      allocate (u3(zstart(1):zend(1), zstart(2):zend(2), zstart(3):zend(3)))
-      allocate (v3(zstart(1):zend(1), zstart(2):zend(2), zstart(3):zend(3)))
-      allocate (w3(zstart(1):zend(1), zstart(2):zend(2), zstart(3):zend(3)))
-#else
-      allocate (u3(zsize(1), zsize(2), zsize(3)))
-      allocate (v3(zsize(1), zsize(2), zsize(3)))
-      allocate (w3(zsize(1), zsize(2), zsize(3)))
-#endif
+      call alloc_z(u3, global)
+      call alloc_z(v3, global)
+      call alloc_z(w3, global)
+
       call transpose_y_to_z(u2, u3)
       call transpose_y_to_z(v2, v3)
       call transpose_y_to_z(w2, w3)
 
-#ifdef HALO_GLOBAL
-      allocate (div4(xstart(1):xend(1), xstart(2):xend(2), xstart(3):xend(3)))
-      allocate (wk2(ystart(1):yend(1), ystart(2):yend(2), ystart(3):yend(3)))
-      allocate (wk3(zstart(1):zend(1), zstart(2):zend(2), zstart(3):zend(3)))
-#else
-      allocate (div4(xsize(1), xsize(2), xsize(3)))
-      allocate (wk2(ysize(1), ysize(2), ysize(3)))
-      allocate (wk3(zsize(1), zsize(2), zsize(3)))
-#endif
+      call alloc_x(div4, global)
+      call alloc_y(wk2, global)
+      call alloc_z(wk3, global)
 
       ! du/dx
 #ifdef HALO_GLOBAL

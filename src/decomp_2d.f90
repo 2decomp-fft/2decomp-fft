@@ -244,7 +244,7 @@ module decomp_2d
              update_halo, decomp_2d_abort, &
              decomp_2d_warning, get_decomp_info, &
              decomp_mpi_comm_free, get_decomp_dims, &
-             d2d_listing_get_unit
+             d2d_listing_get_unit, d2d_listing_close_unit
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
    ! These are routines to perform global data transpositions
@@ -347,6 +347,10 @@ module decomp_2d
       module function d2d_listing_get_unit()
          integer :: d2d_listing_get_unit
       end function d2d_listing_get_unit
+
+      module subroutine d2d_listing_close_unit(io_unit)
+         integer, intent(in) :: io_unit
+      end subroutine d2d_listing_close_unit
 
       module subroutine d2d_listing(given_io_unit)
          integer, intent(in), optional :: given_io_unit

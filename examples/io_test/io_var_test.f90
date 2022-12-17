@@ -90,32 +90,26 @@ program io_var_test
    end do
 
    ! allocate memory
-   allocate (u1(xstart(1):xend(1), xstart(2):xend(2), xstart(3):xend(3)))
-   allocate (u2(ystart(1):yend(1), ystart(2):yend(2), ystart(3):yend(3)))
-   allocate (u3(zstart(1):zend(1), zstart(2):zend(2), zstart(3):zend(3)))
-   allocate (u1_b(xstart(1):xend(1), xstart(2):xend(2), xstart(3):xend(3)))
-   allocate (u2_b(ystart(1):yend(1), ystart(2):yend(2), ystart(3):yend(3)))
-   allocate (u3_b(zstart(1):zend(1), zstart(2):zend(2), zstart(3):zend(3)))
+   call alloc_x(u1, .true.)
+   call alloc_y(u2, .true.)
+   call alloc_z(u3, .true.)
+   call alloc_x(u1_b, .true.)
+   call alloc_y(u2_b, .true.)
+   call alloc_z(u3_b, .true.)
 
-   allocate (cu1(xstart(1):xend(1), xstart(2):xend(2), xstart(3):xend(3)))
-   allocate (cu2(ystart(1):yend(1), ystart(2):yend(2), ystart(3):yend(3)))
-   allocate (cu3(zstart(1):zend(1), zstart(2):zend(2), zstart(3):zend(3)))
-   allocate (cu1_b(xstart(1):xend(1), xstart(2):xend(2), xstart(3):xend(3)))
-   allocate (cu2_b(ystart(1):yend(1), ystart(2):yend(2), ystart(3):yend(3)))
-   allocate (cu3_b(zstart(1):zend(1), zstart(2):zend(2), zstart(3):zend(3)))
+   call alloc_x(cu1, .true.)
+   call alloc_y(cu2, .true.)
+   call alloc_z(cu3, .true.)
+   call alloc_x(cu1_b, .true.)
+   call alloc_y(cu2_b, .true.)
+   call alloc_z(cu3_b, .true.)
 
-   allocate (u1l(large%xst(1):large%xen(1), large%xst(2):large%xen(2), &
-                 large%xst(3):large%xen(3)))
-   allocate (u2l(large%yst(1):large%yen(1), large%yst(2):large%yen(2), &
-                 large%yst(3):large%yen(3)))
-   allocate (u3l(large%zst(1):large%zen(1), large%zst(2):large%zen(2), &
-                 large%zst(3):large%zen(3)))
-   allocate (u1l_b(large%xst(1):large%xen(1), large%xst(2):large%xen(2), &
-                   large%xst(3):large%xen(3)))
-   allocate (u2l_b(large%yst(1):large%yen(1), large%yst(2):large%yen(2), &
-                   large%yst(3):large%yen(3)))
-   allocate (u3l_b(large%zst(1):large%zen(1), large%zst(2):large%zen(2), &
-                   large%zst(3):large%zen(3)))
+   call alloc_x(u1l, large, .true.)
+   call alloc_y(u2l, large, .true.)
+   call alloc_z(u3l, large, .true.)
+   call alloc_x(u1l_b, large, .true.)
+   call alloc_y(u2l_b, large, .true.)
+   call alloc_z(u3l_b, large, .true.)
 
    ! distribute the data
    do k = xstart(3), xend(3)
@@ -271,15 +265,15 @@ program io_var_test
    if (nrank == 0) write (*, *) 'passed self test'
 
    ! clean up
-   call decomp_info_finalize(large)
-   call decomp_2d_finalize
-   call MPI_FINALIZE(ierror)
    deallocate (u1, u2, u3)
    deallocate (u1l, u2l, u3l)
    deallocate (cu1, cu2, cu3)
    deallocate (u1_b, u2_b, u3_b)
    deallocate (u1l_b, u2l_b, u3l_b)
    deallocate (cu1_b, cu2_b, cu3_b)
+   call decomp_info_finalize(large)
+   call decomp_2d_finalize
+   call MPI_FINALIZE(ierror)
    deallocate (data1_large)
 
 end program io_var_test

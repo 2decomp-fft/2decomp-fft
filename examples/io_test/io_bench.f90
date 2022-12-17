@@ -19,7 +19,7 @@ program io_bench
    call MPI_COMM_RANK(MPI_COMM_WORLD, nrank, ierror)
    call decomp_2d_init(nx, ny, nz, p_row, p_col)
 
-   allocate (u1(xstart(1):xend(1), xstart(2):xend(2), xstart(3):xend(3)))
+   call alloc_x(u1, .true.)
    call random_number(u1)
 
    t1 = MPI_WTIME()
@@ -28,9 +28,9 @@ program io_bench
 
    if (nrank == 0) write (*, *) 'I/O time: ', t2 - t1
 
+   deallocate (u1)
    call decomp_2d_finalize
    call MPI_FINALIZE(ierror)
-   deallocate (u1)
 
 end program io_bench
 

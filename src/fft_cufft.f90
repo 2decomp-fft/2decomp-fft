@@ -236,13 +236,11 @@ module decomp_2d_fft
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
    subroutine init_fft_engine
 
-      use iso_fortran_env, only: output_unit
-
       implicit none
 
       !integer*4 :: cufft_ws, ws
       integer(int_ptr_kind()) :: cufft_ws, ws
-      integer   :: i, j, istat, iounit, ierror
+      integer :: i, j, istat, iounit
 
       if ((decomp_log == D2D_LOG_STDOUT .and. nrank == 0) .or. &
           (decomp_log == D2D_LOG_TOFILE .and. nrank == 0) .or. &
@@ -251,10 +249,7 @@ module decomp_2d_fft
          write (iounit, *) ' '
          write (iounit, *) '***** Using the New cuFFT engine *****'
          write (iounit, *) ' '
-         if (iounit /= output_unit) then
-            close (iounit, iostat=ierror)
-            if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "Could not close log file")
-         end if
+         call d2d_listing_close_unit(iounit)
       end if
 
       cufft_ws = 0

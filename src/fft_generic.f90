@@ -35,11 +35,9 @@ module decomp_2d_fft
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
    subroutine init_fft_engine
 
-      use iso_fortran_env, only: output_unit
-
       implicit none
 
-      integer :: cbuf_size, iounit, ierror
+      integer :: cbuf_size, iounit
 
       if ((decomp_log == D2D_LOG_STDOUT .and. nrank == 0) .or. &
           (decomp_log == D2D_LOG_TOFILE .and. nrank == 0) .or. &
@@ -48,10 +46,7 @@ module decomp_2d_fft
          write (iounit, *) ' '
          write (iounit, *) '***** Using the generic FFT engine *****'
          write (iounit, *) ' '
-         if (iounit /= output_unit) then
-            close (iounit, iostat=ierror)
-            if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "Could not close log file")
-         end if
+         call d2d_listing_close_unit(iounit)
       end if
 
       cbuf_size = max(ph%xsz(1), ph%ysz(2))
@@ -59,7 +54,6 @@ module decomp_2d_fft
       allocate (buf(cbuf_size))
       allocate (scratch(cbuf_size))
 
-      return
    end subroutine init_fft_engine
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!

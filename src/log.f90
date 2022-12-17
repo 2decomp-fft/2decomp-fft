@@ -75,6 +75,31 @@ contains
    end function d2d_listing_get_unit
 
    !
+   ! Close the IO unit for the log if needed
+   !
+   module subroutine d2d_listing_close_unit(io_unit)
+
+      use iso_fortran_env, only: output_unit
+
+      implicit none
+
+      ! Input
+      integer, intent(in) :: io_unit
+
+      ! Local variables
+      integer :: ierror
+
+      !
+      ! Close the IO unit if it was not stdout
+      !
+      if (io_unit /= output_unit) then
+         close (io_unit, iostat=ierror)
+         if (ierror /= 0) call decomp_2d_abort(ierror, "Could not close log file")
+      end if
+
+   end subroutine d2d_listing_close_unit
+
+   !
    ! Print some information about decomp_2d
    !
    module subroutine d2d_listing(given_io_unit)
@@ -221,19 +246,13 @@ contains
                                                   ierror, &
                                                   "No name for the log file")
             ! Close the IO unit to print the environment variables
-            close (io_unit, iostat=ierror)
-            if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "Could not close log file")
+            call d2d_listing_close_unit(io_unit)
             call execute_command_line("env >> "//trim(fname), wait=.true.)
          end if
       end if
 #else
-      !
-      ! Close the IO unit if it was not stdout
-      !
-      if (io_unit /= output_unit) then
-         close (io_unit, iostat=ierror)
-         if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "Could not close log file")
-      end if
+      ! Close the IO unit if needed
+      call d2d_listing_close_unit(io_unit)
 #endif
 
    end subroutine d2d_listing

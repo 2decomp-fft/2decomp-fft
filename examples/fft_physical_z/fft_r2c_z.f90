@@ -20,10 +20,9 @@ program fft_r2c_z
 
    integer, parameter :: ntest = 10  ! repeat test this times
 
+   type(decomp_info), pointer :: ph => null(), sp => null()
    complex(mytype), allocatable, dimension(:, :, :) :: out
    real(mytype), allocatable, dimension(:, :, :) :: in_r
-
-   integer, dimension(3) :: fft_start, fft_end, fft_size
 
    real(mytype) :: dr, error, err_all
    integer :: ierror, i, j, k, m
@@ -44,11 +43,12 @@ program fft_r2c_z
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
    call decomp_2d_fft_init(PHYSICAL_IN_Z) ! non-default Z-pencil input
 
-   allocate (in_r(zstart(1):zend(1), zstart(2):zend(2), zstart(3):zend(3)))
-   call decomp_2d_fft_get_size(fft_start, fft_end, fft_size)
-   allocate (out(fft_start(1):fft_end(1), &
-                 fft_start(2):fft_end(2), &
-                 fft_start(3):fft_end(3)))
+   ph => decomp_2d_fft_get_ph()
+   sp => decomp_2d_fft_get_sp()
+   !  input is Z-pencil data
+   ! output is X-pencil data
+   call alloc_z(in_r, ph, .true.)
+   call alloc_x(out, sp, .true.)
 
    ! initilise input
    do k = zstart(3), zend(3)
@@ -114,6 +114,8 @@ program fft_r2c_z
    end if
 
    deallocate (in_r, out)
+   nullify(ph)
+   nullify(sp)
    call decomp_2d_fft_finalize
    call decomp_2d_finalize
    call MPI_FINALIZE(ierror)

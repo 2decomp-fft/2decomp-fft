@@ -44,13 +44,13 @@ program io_test
       end do
    end do
 
-   allocate (u1(xstart(1):xend(1), xstart(2):xend(2), xstart(3):xend(3)))
-   allocate (u2(ystart(1):yend(1), ystart(2):yend(2), ystart(3):yend(3)))
-   allocate (u3(zstart(1):zend(1), zstart(2):zend(2), zstart(3):zend(3)))
+   call alloc_x(u1, .true.)
+   call alloc_y(u2, .true.)
+   call alloc_z(u3, .true.)
 
-   allocate (u1b(xstart(1):xend(1), xstart(2):xend(2), xstart(3):xend(3)))
-   allocate (u2b(ystart(1):yend(1), ystart(2):yend(2), ystart(3):yend(3)))
-   allocate (u3b(zstart(1):zend(1), zstart(2):zend(2), zstart(3):zend(3)))
+   call alloc_x(u1b, .true.)
+   call alloc_y(u2b, .true.)
+   call alloc_z(u3b, .true.)
 
    ! original x-pencil based data
    do k = xstart(3), xend(3)
@@ -125,9 +125,9 @@ program io_test
       end do
    end do
 
-   call decomp_2d_finalize
-   call MPI_FINALIZE(ierror)
    deallocate (u1, u2, u3)
    deallocate (u1b, u2b, u3b)
+   call decomp_2d_finalize
+   call MPI_FINALIZE(ierror)
 
 end program io_test

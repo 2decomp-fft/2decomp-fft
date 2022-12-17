@@ -33,9 +33,9 @@ program io_plane_test
       end do
    end do
 
-   allocate (u1(xstart(1):xend(1), xstart(2):xend(2), xstart(3):xend(3)))
-   allocate (u2(ystart(1):yend(1), ystart(2):yend(2), ystart(3):yend(3)))
-   allocate (u3(zstart(1):zend(1), zstart(2):zend(2), zstart(3):zend(3)))
+   call alloc_x(u1, .true.)
+   call alloc_y(u2, .true.)
+   call alloc_z(u3, .true.)
 
    ! original X-pensil based data
    do k = xstart(3), xend(3)
@@ -121,8 +121,8 @@ program io_plane_test
 
    end if
 
+   deallocate (u1, u2, u3)
    call decomp_2d_finalize
    call MPI_FINALIZE(ierror)
-   deallocate (u1, u2, u3)
 
 end program io_plane_test

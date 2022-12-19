@@ -36,7 +36,7 @@ TYPE(DECOMP_INFO), target, save :: sp  ! spectral space
 
 ! Workspace to store the intermediate Y-pencil data
 complex(mytype), allocatable, target, dimension(:, :, :) :: wk2_c2c
-complex(mytype), pointer, dimension(:, :, :) :: wk2_r2c => null()
+complex(mytype), contiguous, pointer, dimension(:, :, :) :: wk2_r2c => null()
 ! Workspace for r2c and c2r transforms
 ! FIXME could be removed using in-place r2c and c2r ?
 complex(mytype), allocatable, dimension(:, :, :) :: wk13

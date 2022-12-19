@@ -542,14 +542,14 @@ module decomp_2d_fft
          ! ===== 1D FFTs in Y =====
 #ifdef OVERWRITE
          do k = 1, sp%ysz(3)
-            status = wrapper_c2c_inplace(c2c_y2, wk2_r2c(1, 1, k), isign)
+            status = wrapper_c2c_inplace(c2c_y2, wk2_r2c(:, :, k), isign)
             if (status /= 0) call decomp_2d_abort(__FILE__, __LINE__, status, "wrapper_c2c")
          end do
 #else
          allocate (wk2b(sp%ysz(1), sp%ysz(2), sp%ysz(3)))
          do k = 1, sp%ysz(3)
             !          status = DftiComputeForward(c2c_y2, wk2(:,1,k), wk2b(:,1,k))
-            status = wrapper_c2c(c2c_y2, wk2_r2c(1, 1, k), wk2b(1, 1, k), isign)
+            status = wrapper_c2c(c2c_y2, wk2_r2c(:, :, k), wk2b(1, 1, k), isign)
             if (status /= 0) call decomp_2d_abort(__FILE__, __LINE__, status, "wrapper_c2c")
          end do
 #endif
@@ -584,14 +584,14 @@ module decomp_2d_fft
          ! ===== 1D FFTs in Y =====
 #ifdef OVERWRITE
          do k = 1, sp%ysz(3)
-            status = wrapper_c2c_inplace(c2c_y2, wk2_r2c(1, 1, k), isign)
+            status = wrapper_c2c_inplace(c2c_y2, wk2_r2c(:, :, k), isign)
             if (status /= 0) call decomp_2d_abort(__FILE__, __LINE__, status, "wrapper_c2c")
          end do
 #else
          allocate (wk2b(sp%ysz(1), sp%ysz(2), sp%ysz(3)))
          do k = 1, sp%ysz(3)
             !          status = DftiComputeForward(c2c_y2, wk2(:,1,k), wk2b(:,1,k))
-            status = wrapper_c2c(c2c_y2, wk2_r2c(1, 1, k), wk2b(1, 1, k), isign)
+            status = wrapper_c2c(c2c_y2, wk2_r2c(:, :, k), wk2b(1, 1, k), isign)
             if (status /= 0) call decomp_2d_abort(__FILE__, __LINE__, status, "wrapper_c2c")
          end do
 #endif
@@ -670,14 +670,14 @@ module decomp_2d_fft
          ! ===== 1D FFTs in Y =====
 #ifdef OVERWRITE
          do k = 1, sp%ysz(3)
-            status = wrapper_c2c_inplace(c2c_y2, wk2_r2c(1, 1, k), isign)
+            status = wrapper_c2c_inplace(c2c_y2, wk2_r2c(:, :, k), isign)
             if (status /= 0) call decomp_2d_abort(__FILE__, __LINE__, status, "wrapper_c2c")
          end do
 #else
          allocate (wk2b(sp%ysz(1), sp%ysz(2), sp%ysz(3)))
          do k = 1, sp%ysz(3)
             !          status = DftiComputeBackward(c2c_y2, wk2(:,1,k), wk2b(:,1,k))
-            status = wrapper_c2c(c2c_y2, wk2_r2c(1, 1, k), wk2b(1, 1, k), isign)
+            status = wrapper_c2c(c2c_y2, wk2_r2c(:, :, k), wk2b(1, 1, k), isign)
             if (status /= 0) call decomp_2d_abort(__FILE__, __LINE__, status, "wrapper_c2c")
          end do
 #endif
@@ -716,14 +716,14 @@ module decomp_2d_fft
          ! ===== 1D FFTs in Y =====
 #ifdef OVERWRITE
          do k = 1, sp%ysz(3)
-            status = wrapper_c2c_inplace(c2c_y2, wk2_r2c(1, 1, k), isign)
+            status = wrapper_c2c_inplace(c2c_y2, wk2_r2c(:, :, k), isign)
             if (status /= 0) call decomp_2d_abort(__FILE__, __LINE__, status, "wrapper_c2c")
          end do
 #else
          allocate (wk2b(sp%ysz(1), sp%ysz(2), sp%ysz(3)))
          do k = 1, sp%ysz(3)
             !          status = DftiComputeBackward(c2c_y2, wk2(:,1,k), wk2b(:,1,k))
-            status = wrapper_c2c(c2c_y2, wk2_r2c(1, 1, k), wk2b(1, 1, k), isign)
+            status = wrapper_c2c(c2c_y2, wk2_r2c(:, :, k), wk2b(1, 1, k), isign)
             if (status /= 0) call decomp_2d_abort(__FILE__, __LINE__, status, "wrapper_c2c")
          end do
 #endif

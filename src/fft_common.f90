@@ -36,7 +36,7 @@ TYPE(DECOMP_INFO), target, save :: sp  ! spectral space
 
 ! Workspace to store the intermediate Y-pencil data
 complex(mytype), allocatable, target, dimension(:, :, :) :: wk2_c2c
-complex(mytype), pointer, dimension(:,:,:) :: wk2_r2c => null()
+complex(mytype), pointer, dimension(:, :, :) :: wk2_r2c => null()
 ! Workspace for r2c and c2r transforms
 ! FIXME could be removed using in-place r2c and c2r ?
 complex(mytype), allocatable, dimension(:, :, :) :: wk13
@@ -130,8 +130,31 @@ subroutine fft_init_general(pencil, nx, ny, nz)
       call decomp_info_init(nx, ny, nz/2 + 1, sp)
    end if
 
+   !
+   ! Allocate the workspace for intermediate y-pencil data
+   ! The largest memory block needed is the one for c2c transforms
+   !
    allocate (wk2_c2c(ph%ysz(1), ph%ysz(2), ph%ysz(3)), STAT=status)
+   if (status /= 0) then
+      errorcode = 3
+      call decomp_2d_abort(__FILE__, __LINE__, errorcode, &
+                           'Out of memory when initialising FFT')
+   end if
+   !
+   ! A smaller memory block is needed for r2c and c2r transforms
+   ! wk2_c2c and wk2_r2c start at the same memory location
+   !
+   !    Size of wk2_c2c : ph%ysz(1), ph%ysz(2), ph%ysz(3)
+   !    Size of wk2_r2c : sp%ysz(1), sp%ysz(2), sp%ysz(3)
+   !
    call c_f_pointer(c_loc(wk2_c2c), wk2_r2c, sp%ysz)
+   !
+   ! Allocate the workspace for r2c and c2r transforms
+   !
+   ! wk13 can not be easily fused with wk2_*2c due to statements such as
+   ! transpose_y_to_x(wk2_r2c, wk13, sp)
+   ! transpose_y_to_z(wk2_r2c, wk13, sp)
+   !
    if (format == PHYSICAL_IN_X) then
       allocate (wk13(sp%xsz(1), sp%xsz(2), sp%xsz(3)), STAT=status)
    else if (format == PHYSICAL_IN_Z) then

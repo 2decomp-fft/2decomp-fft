@@ -13,7 +13,7 @@
 
 module decomp_2d_fft
 
-   use iso_c_binding, only : c_f_pointer, c_loc
+   use iso_c_binding, only: c_f_pointer, c_loc
    use decomp_2d_constants
    use decomp_2d  ! 2D decomposition module
    use glassman

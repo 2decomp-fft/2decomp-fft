@@ -37,7 +37,8 @@
     xe = s1 + 2*level_x
     ys = 1
     ye = s2 + 2*level_y
-    zs = 1 + level_z
+    !zs = 1 + level_z
+    zs = 1
 
     ! if (decomp%halos_for_pencil) then
     !   ! don't communicate lower halo (bottom boundary)
@@ -65,7 +66,8 @@
     else
       tag_e = coord(1) + 1
     end if
-    icount = (s2 + 2*level_y) * s3
+    !icount = (s2 + 2*level_y) * s3
+    icount = (s2 + 2*level_y) * (s3 + 2*level_z)
     ilength = level_x
     ijump = s1 + 2*level_x
     call MPI_TYPE_VECTOR(icount, ilength, ijump, &
@@ -114,7 +116,8 @@
     else
       tag_n = coord(2) + 1
     end if
-    icount = s3
+    !icount = s3
+    icount = s3 + (2*level_z)
     ilength = level_y * (s1 + 2*level_x)
     ijump = (s1 + 2*level_x) * (s2 + 2*level_y)
     call MPI_TYPE_VECTOR(icount, ilength, ijump, &

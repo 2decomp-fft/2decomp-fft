@@ -54,7 +54,7 @@ contains
          write (io_unit, *) ''
 #ifdef OVERWRITE
          if (D2D_FFT_BACKEND == D2D_FFT_BACKEND_GENERIC) then
-            call decomp_2d_warning("Selected FFT backend does not support overwrite")
+            call decomp_2d_warning(D2D_FFT_BACKEND, "Selected FFT backend does not support overwrite")
          else if (D2D_FFT_BACKEND == D2D_FFT_BACKEND_FFTW3 .or. &
                   D2D_FFT_BACKEND == D2D_FFT_BACKEND_FFTW3_F03 .or. &
                   D2D_FFT_BACKEND == D2D_FFT_BACKEND_CUFFT .or. &

@@ -224,10 +224,10 @@ contains
       call decomp_info_finalize(sp)
 
       call fftw_free(wk2_c2c_p)
-      call nullify (wk2_c2c)
-      call nullify (wk2_r2c)
+      nullify (wk2_c2c)
+      nullify (wk2_r2c)
       call fftw_free(wk13_p)
-      call nullify (wk13)
+      nullify (wk13)
 
       call finalize_fft_engine
 

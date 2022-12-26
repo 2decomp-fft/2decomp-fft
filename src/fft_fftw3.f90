@@ -268,17 +268,7 @@ module decomp_2d_fft
 
       implicit none
 
-      integer :: iounit
-
-      if ((decomp_log == D2D_LOG_STDOUT .and. nrank == 0) .or. &
-          (decomp_log == D2D_LOG_TOFILE .and. nrank == 0) .or. &
-          (decomp_log == D2D_LOG_TOFILE_FULL)) then
-         iounit = d2d_listing_get_unit()
-         write (iounit, *) ' '
-         write (iounit, *) '***** Using the FFTW (version 3.x) engine *****'
-         write (iounit, *) ' '
-         call d2d_listing_close_unit(iounit)
-      end if
+      call decomp_2d_fft_log("FFTW (version 3.x)")
 
       if (format == PHYSICAL_IN_X) then
 

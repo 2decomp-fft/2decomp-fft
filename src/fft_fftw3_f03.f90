@@ -78,6 +78,12 @@ module decomp_2d_fft
       module procedure fft_3d_c2r
    end interface
 
+   interface
+      module subroutine decomp_2d_fft_log(backend)
+         character(len=*), intent(in) :: backend
+      end subroutine decomp_2d_fft_log
+   end interface
+
 contains
 
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -573,17 +579,7 @@ contains
 
       implicit none
 
-      integer :: iounit
-
-      if ((decomp_log == D2D_LOG_STDOUT .and. nrank == 0) .or. &
-          (decomp_log == D2D_LOG_TOFILE .and. nrank == 0) .or. &
-          (decomp_log == D2D_LOG_TOFILE_FULL)) then
-         iounit = d2d_listing_get_unit()
-         write (iounit, *) ' '
-         write (iounit, *) '***** Using the FFTW (F2003 interface) engine *****'
-         write (iounit, *) ' '
-         call d2d_listing_close_unit(iounit)
-      end if
+      call decomp_2d_fft_log("FFTW (F2003 interface)")
 
       if (format == PHYSICAL_IN_X) then
 

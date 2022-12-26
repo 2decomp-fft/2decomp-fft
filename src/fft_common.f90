@@ -52,6 +52,12 @@ interface decomp_2d_fft_3d
    module procedure fft_3d_c2r
 end interface
 
+interface
+   module subroutine decomp_2d_fft_log(backend)
+      character(len=*), intent(in) :: backend
+   end subroutine decomp_2d_fft_log
+end interface
+
 contains
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!

@@ -53,21 +53,13 @@ contains
          call decomp_info_print(sp, io_unit, "sp")
          write (io_unit, *) ''
 #ifdef OVERWRITE
-         if (D2D_FFT_BACKEND == D2D_FFT_BACKEND_GENERIC .or. &
-             D2D_FFT_BACKEND == D2D_FFT_BACKEND_CUFFT) then
+         if (D2D_FFT_BACKEND == D2D_FFT_BACKEND_GENERIC) then
             call decomp_2d_warning("Selected FFT backend does not support overwrite")
          else if (D2D_FFT_BACKEND == D2D_FFT_BACKEND_FFTW3 .or. &
-                  D2D_FFT_BACKEND == D2D_FFT_BACKEND_FFTW3_F03) then
+                  D2D_FFT_BACKEND == D2D_FFT_BACKEND_FFTW3_F03 .or. &
+                  D2D_FFT_BACKEND == D2D_FFT_BACKEND_CUFFT .or. &
+                  D2D_FFT_BACKEND == D2D_FFT_BACKEND_MKL) then
             write (io_unit, *) 'OVERWRITE support limited to c2C and c2r transforms'
-            write (io_unit, *) ''
-         else if (D2D_FFT_BACKEND == D2D_FFT_BACKEND_MKL) then
-            write (io_unit, *) 'OVERWRITE support limited to c2c and c2r transforms'
-            write (io_unit, *) ''
-         endif
-#else
-         if (D2D_FFT_BACKEND == D2D_FFT_BACKEND_FFTW3 .or. &
-             D2D_FFT_BACKEND == D2D_FFT_BACKEND_FFTW3_F03) then
-            write (io_unit, *) 'Warning : c2c and c2r transforms do not preserve their complex input'
             write (io_unit, *) ''
          endif
 #endif

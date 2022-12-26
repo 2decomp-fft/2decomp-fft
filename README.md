@@ -83,6 +83,13 @@ integer, parameter, public :: D2D_FFT_BACKEND_CUFFT = 4     ! Nvidia cuFFT
 exported by the module `decomp_2d_constants`.
 The external code can use the named variables to check the FFT backend used in a given build.
 
+### OVERWRITE flag
+
+- The generic backend does not support the OVERWRITE flag
+- The FFTW3 and FFTW3_F03 backends support the OVERWRITE flag for c2c and c2r transforms
+- The oneMKL backend supports the OVERWRITE flag for c2c and c2r transforms
+- The cuFFT backend supports the OVERWRITE flag for c2c anc c2r transforms
+
 ## Miscellaneous
 
 ### Print the log to a file or to stdout
@@ -126,7 +133,7 @@ This preprocessor variable is not valid for GPU builds. It leads to padded allto
 
 #### OVERWRITE
 
-This variable leads to overwrite the input array when computing FFT (complex-to-complex and complex-to-real).
+This variable leads to overwrite the input array when computing FFT. The support of this flag is variable, depending on the FFT backend selected, as described above.
 
 #### HALO_DEBUG
 

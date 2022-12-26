@@ -61,7 +61,7 @@ contains
                   D2D_FFT_BACKEND == D2D_FFT_BACKEND_MKL) then
             write (io_unit, *) 'OVERWRITE support limited to c2C and c2r transforms'
             write (io_unit, *) ''
-         endif
+         end if
 #endif
          call d2d_listing_close_unit(io_unit)
       end if

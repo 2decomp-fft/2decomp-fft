@@ -152,7 +152,6 @@ subroutine fft_init_general(pencil, nx, ny, nz)
    !    Size of wk2_c2c : ph%ysz(1), ph%ysz(2), ph%ysz(3)
    !    Size of wk2_r2c : sp%ysz(1), sp%ysz(2), sp%ysz(3)
    !
-   nullify(wk2_r2c)
    call c_f_pointer(c_loc(wk2_c2c), wk2_r2c, sp%ysz)
    !
    ! Allocate the workspace for r2c and c2r transforms

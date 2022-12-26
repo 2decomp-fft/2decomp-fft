@@ -425,7 +425,7 @@ module decomp_2d_fft
 
       implicit none
 
-      real(mytype), dimension(:, :, :), intent(IN)  ::  input
+      real(mytype), dimension(:, :, :), intent(INOUT)  ::  input
       complex(mytype), dimension(:, :, :), intent(OUT) :: output
 
 #ifdef DOUBLE_PREC
@@ -443,7 +443,7 @@ module decomp_2d_fft
 
       implicit none
 
-      real(mytype), dimension(:, :, :), intent(IN)  ::  input
+      real(mytype), dimension(:, :, :), intent(INOUT)  ::  input
       complex(mytype), dimension(:, :, :), intent(OUT) :: output
 
 #ifdef DOUBLE_PREC
@@ -461,7 +461,7 @@ module decomp_2d_fft
 
       implicit none
 
-      complex(mytype), dimension(:, :, :), intent(IN)  ::  input
+      complex(mytype), dimension(:, :, :), intent(INOUT)  ::  input
       real(mytype), dimension(:, :, :), intent(OUT) :: output
 
 #ifdef DOUBLE_PREC
@@ -479,7 +479,7 @@ module decomp_2d_fft
 
       implicit none
 
-      complex(mytype), dimension(:, :, :), intent(IN) :: input
+      complex(mytype), dimension(:, :, :), intent(INOUT) :: input
       real(mytype), dimension(:, :, :), intent(OUT) :: output
 
 #ifdef DOUBLE_PREC
@@ -600,7 +600,7 @@ module decomp_2d_fft
 
       implicit none
 
-      real(mytype), dimension(:, :, :), intent(IN) :: in_r
+      real(mytype), dimension(:, :, :), intent(INOUT) :: in_r
       complex(mytype), dimension(:, :, :), intent(OUT) :: out_c
 
       if (format == PHYSICAL_IN_X) then

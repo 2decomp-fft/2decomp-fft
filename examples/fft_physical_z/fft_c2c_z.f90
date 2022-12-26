@@ -2,6 +2,7 @@ program fft_c2c_z
 
    use decomp_2d
    use decomp_2d_fft
+   use decomp_2d_constants
    use MPI
 #if defined(_GPU)
    use cudafor
@@ -123,7 +124,7 @@ program fft_c2c_z
    end if
 
    deallocate (in, out)
-   nullify(ph)
+   nullify (ph)
    call decomp_2d_fft_finalize
    call decomp_2d_finalize
    call MPI_FINALIZE(ierror)

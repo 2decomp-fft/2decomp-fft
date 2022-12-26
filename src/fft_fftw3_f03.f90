@@ -37,13 +37,6 @@ module decomp_2d_fft
    !     use plan(2,j) for c2r transforms;
    type(C_PTR), save :: plan(-1:2, 3)
 
-   integer, parameter, public :: DECOMP_2D_FFT_FORWARD = -1
-   integer, parameter, public :: DECOMP_2D_FFT_BACKWARD = 1
-
-   ! Physical space data can be stored in either X-pencil or Z-pencil
-   integer, parameter, public :: PHYSICAL_IN_X = 1
-   integer, parameter, public :: PHYSICAL_IN_Z = 3
-
    integer, parameter, public :: D2D_FFT_BACKEND = D2D_FFT_BACKEND_FFTW3_F03
 
    integer, save :: format                 ! input X-pencil or Z-pencil

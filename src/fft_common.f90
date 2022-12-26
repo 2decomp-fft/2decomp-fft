@@ -11,13 +11,6 @@
 
 ! This file contains common code shared by all FFT engines
 
-integer, parameter, public :: DECOMP_2D_FFT_FORWARD = -1
-integer, parameter, public :: DECOMP_2D_FFT_BACKWARD = 1
-
-! Physical space data can be stored in either X-pencil or Z-pencil
-integer, parameter, public :: PHYSICAL_IN_X = 1
-integer, parameter, public :: PHYSICAL_IN_Z = 3
-
 integer, save :: format                 ! input X-pencil or Z-pencil
 
 ! The libary can only be initialised once

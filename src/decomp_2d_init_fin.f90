@@ -59,6 +59,9 @@
                                                 __LINE__, &
                                                 MPI_SUCCESS, &
                                                 "MPI error check is broken")
+     if (nx <= 0) call decomp_2d_abort(__FILE__, __LINE__, nx, "Invalid value for nx")
+     if (ny <= 0) call decomp_2d_abort(__FILE__, __LINE__, ny, "Invalid value for ny")
+     if (nz <= 0) call decomp_2d_abort(__FILE__, __LINE__, nz, "Invalid value for nz")
 
      ! If the external code has not set nrank and nproc
      if (nrank == -1) then
@@ -94,7 +97,7 @@
         periodic_z = .false.
      end if
 
-     if (p_row == 0 .and. p_col == 0) then
+     if (p_row <= 0 .or. p_col <= 0) then
         ! determine the best 2D processor grid
         call best_2d_grid(nproc, row, col)
         p_row = row

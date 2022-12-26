@@ -98,11 +98,15 @@ subroutine fft_init_general(pencil, nx, ny, nz)
    if (decomp_profiler_fft) call decomp_profiler_start("fft_init")
 #endif
 
+   ! Safety checks
    if (initialised) then
       errorcode = 4
       call decomp_2d_abort(__FILE__, __LINE__, errorcode, &
                            'FFT library should only be initialised once')
    end if
+   if (nx <= 0) call decomp_2d_abort(__FILE__, __LINE__, nx, "Invalid value for nx")
+   if (ny <= 0) call decomp_2d_abort(__FILE__, __LINE__, ny, "Invalid value for ny")
+   if (nz <= 0) call decomp_2d_abort(__FILE__, __LINE__, nz, "Invalid value for nz")
 
    format = pencil
    nx_fft = nx
@@ -128,6 +132,8 @@ subroutine fft_init_general(pencil, nx, ny, nz)
       call decomp_info_init(nx/2 + 1, ny, nz, sp)
    else if (format == PHYSICAL_IN_Z) then
       call decomp_info_init(nx, ny, nz/2 + 1, sp)
+   else
+      call decomp_2d_abort(__FILE__, __LINE__, format, "Invalid value for format")
    end if
 
    !

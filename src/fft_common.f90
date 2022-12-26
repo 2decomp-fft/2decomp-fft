@@ -29,7 +29,7 @@ TYPE(DECOMP_INFO), target, save :: sp  ! spectral space
 
 ! Workspace to store the intermediate Y-pencil data
 complex(mytype), allocatable, target, dimension(:, :, :) :: wk2_c2c
-complex(mytype), contiguous, pointer, dimension(:, :, :) :: wk2_r2c => null()
+complex(mytype), contiguous, pointer, dimension(:, :, :) :: wk2_r2c
 ! Workspace for r2c and c2r transforms
 ! FIXME could be removed using in-place r2c and c2r ?
 complex(mytype), allocatable, dimension(:, :, :) :: wk13
@@ -152,6 +152,7 @@ subroutine fft_init_general(pencil, nx, ny, nz)
    !    Size of wk2_c2c : ph%ysz(1), ph%ysz(2), ph%ysz(3)
    !    Size of wk2_r2c : sp%ysz(1), sp%ysz(2), sp%ysz(3)
    !
+   nullify(wk2_r2c)
    call c_f_pointer(c_loc(wk2_c2c), wk2_r2c, sp%ysz)
    !
    ! Allocate the workspace for r2c and c2r transforms

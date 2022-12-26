@@ -57,8 +57,8 @@ module decomp_2d_fft
 
    ! Workspace to store the intermediate Y-pencil data
    ! *** TODO: investigate how to use only one workspace array
-   complex(mytype), pointer :: wk2_c2c(:, :, :), wk2_r2c(:, :, :), wk13(:, :, :)
-   type(C_PTR) :: wk2_c2c_p, wk2_r2c_p, wk13_p
+   complex(mytype), contiguous, pointer :: wk2_c2c(:, :, :), wk2_r2c(:, :, :), wk13(:, :, :)
+   type(C_PTR) :: wk2_c2c_p, wk13_p
 
    public :: decomp_2d_fft_init, decomp_2d_fft_3d, &
              decomp_2d_fft_finalize, &
@@ -162,14 +162,28 @@ contains
          call decomp_2d_abort(__FILE__, __LINE__, format, "Invalid value for format")
       end if
 
+      !
+      ! Allocate the workspace fo intermediate y-pencil data
+      ! The largest memory block needed is the one for c2c transforms
+      !
       sz = ph%ysz(1)*ph%ysz(2)*ph%ysz(3)
       wk2_c2c_p = fftw_alloc_complex(sz)
       call c_f_pointer(wk2_c2c_p, wk2_c2c, [ph%ysz(1), ph%ysz(2), ph%ysz(3)])
-
-      sz = sp%ysz(1)*sp%ysz(2)*sp%ysz(3)
-      wk2_r2c_p = fftw_alloc_complex(sz)
-      call c_f_pointer(wk2_r2c_p, wk2_r2c, [sp%ysz(1), sp%ysz(2), sp%ysz(3)])
-
+      !
+      ! A smaller memory block is needed for r2c and c2r transforms
+      ! wk2_c2c and wk2_r2c start at the same location
+      !
+      !    Size of wk2_c2c : ph%ysz(1), ph%ysz(2), ph%ysz(3)
+      !    Size of wk2_r2c : sp%ysz(1), sp%ysz(2), sp%ysz(3)
+      !
+      call c_f_pointer(wk2_c2c_p, wk2_r2c, [sp%ysz(1), sp%ysz(2), sp%ysz(3)])
+      !
+      ! Allocate the workspace for r2c and c2r transforms
+      !
+      ! wk13 can not be easily fused with wk2_*2c due to statements such as
+      ! transpose_y_to_x(wk2_r2c, wk13, sp)
+      ! transpose_y_to_z(wk2_r2c, wk13, sp)
+      !
       if (format == PHYSICAL_IN_X) then
          sz = sp%xsz(1)*sp%xsz(2)*sp%xsz(3)
          wk13_p = fftw_alloc_complex(sz)
@@ -210,8 +224,10 @@ contains
       call decomp_info_finalize(sp)
 
       call fftw_free(wk2_c2c_p)
-      call fftw_free(wk2_r2c_p)
+      call nullify (wk2_c2c)
+      call nullify (wk2_r2c)
       call fftw_free(wk13_p)
+      call nullify (wk13)
 
       call finalize_fft_engine
 

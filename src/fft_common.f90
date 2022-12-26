@@ -35,7 +35,7 @@ complex(mytype), contiguous, pointer, dimension(:, :, :) :: wk2_r2c => null()
 complex(mytype), allocatable, dimension(:, :, :) :: wk13
 
 public :: decomp_2d_fft_init, decomp_2d_fft_3d, &
-          decomp_2d_fft_finalize, decomp_2d_fft_get_size, &
+          decomp_2d_fft_finalize, &
           decomp_2d_fft_get_ph, decomp_2d_fft_get_sp
 
 ! Declare generic interfaces to handle different inputs
@@ -214,29 +214,6 @@ subroutine decomp_2d_fft_finalize
 
    return
 end subroutine decomp_2d_fft_finalize
-
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-! Return the size, starting/ending index of the distributed array
-!  whose global size is (nx/2+1)*ny*nz, for defining data structures
-!  in r2c and c2r interfaces
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-subroutine decomp_2d_fft_get_size(istart, iend, isize)
-
-   implicit none
-   integer, dimension(3), intent(OUT) :: istart, iend, isize
-
-   if (format == PHYSICAL_IN_X) then
-      istart = sp%zst
-      iend = sp%zen
-      isize = sp%zsz
-   else if (format == PHYSICAL_IN_Z) then
-      istart = sp%xst
-      iend = sp%xen
-      isize = sp%xsz
-   end if
-
-   return
-end subroutine decomp_2d_fft_get_size
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 ! Return a pointer to the decomp_info object ph

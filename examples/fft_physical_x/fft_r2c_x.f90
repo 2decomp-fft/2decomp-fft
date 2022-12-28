@@ -22,7 +22,12 @@ program fft_r2c_x
 
    type(decomp_info), pointer :: ph => null(), sp => null()
    complex(mytype), allocatable, dimension(:, :, :) :: out
+#ifdef OVERWRITE
+   real(mytype), allocatable, target, dimension(:) :: mem_blk
+   real(mytype), pointer, contiguous, dimension(:, :, :) :: in_r
+#else
    real(mytype), allocatable, dimension(:, :, :) :: in_r
+#endif
 
    real(mytype) :: dr, error, err_all
    integer :: ierror, i, j, k, m
@@ -47,7 +52,12 @@ program fft_r2c_x
    sp => decomp_2d_fft_get_sp()
    !  input is X-pencil data
    ! output is Z-pencil data
+#ifdef OVERWRITE
+   allocate (mem_blk(max(product(ph%xsz), 2*product(sp%xsz))))
+   in_r(xstart(1):xend(1), xstart(2):xend(2), xstart(3):xend(3)) => mem_blk
+#else
    call alloc_x(in_r, ph, .true.)
+#endif
    call alloc_z(out, sp, .true.)
 
    ! initilise input
@@ -111,7 +121,13 @@ program fft_r2c_x
       write (*, *) 'time (sec): ', t1, t3
    end if
 
-   deallocate (in_r, out)
+   deallocate (out)
+#ifdef OVERWRITE
+   deallocate (mem_blk)
+   nullify (in_r)
+#else
+   deallocate (in_r)
+#endif
    nullify (ph)
    nullify (sp)
    call decomp_2d_fft_finalize

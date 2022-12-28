@@ -23,7 +23,12 @@ program fft_r2c_z
 
    type(decomp_info), pointer :: ph => null(), sp => null()
    complex(mytype), allocatable, dimension(:, :, :) :: out
+#ifdef OVERWRITE
+   real(mytype), allocatable, target, dimension(:) :: mem_blk
+   real(mytype), pointer, contiguous, dimension(:, :, :) :: in_r
+#else
    real(mytype), allocatable, dimension(:, :, :) :: in_r
+#endif
 
    real(mytype) :: dr, error, err_all
    integer :: ierror, i, j, k, m
@@ -48,7 +53,12 @@ program fft_r2c_z
    sp => decomp_2d_fft_get_sp()
    !  input is Z-pencil data
    ! output is X-pencil data
+#ifdef OVERWRITE
+   allocate (mem_blk(max(product(ph%zsz), 2*product(sp%zsz))))
+   in_r(zstart(1):zend(1), zstart(2):zend(2), zstart(3):zend(3)) => mem_blk
+#else
    call alloc_z(in_r, ph, .true.)
+#endif
    call alloc_x(out, sp, .true.)
 
    ! initilise input
@@ -114,9 +124,15 @@ program fft_r2c_z
       write (*, *) 'time (sec): ', t1, t3
    end if
 
-   deallocate (in_r, out)
-   nullify(ph)
-   nullify(sp)
+   deallocate (out)
+#ifdef OVERWRITE
+   deallocate (mem_blk)
+   nullify (in_r)
+#else
+   deallocate (in_r)
+#endif
+   nullify (ph)
+   nullify (sp)
    call decomp_2d_fft_finalize
    call decomp_2d_finalize
    call MPI_FINALIZE(ierror)

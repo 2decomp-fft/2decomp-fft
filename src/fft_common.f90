@@ -31,8 +31,11 @@ TYPE(DECOMP_INFO), target, save :: sp  ! spectral space
 complex(mytype), allocatable, target, dimension(:, :, :) :: wk2_c2c
 complex(mytype), contiguous, pointer, dimension(:, :, :) :: wk2_r2c
 ! Workspace for r2c and c2r transforms
-! FIXME could be removed using in-place r2c and c2r ?
+#ifdef OVERWRITE
+complex(mytype), contiguous, pointer, dimension(:, :, :) :: wk13
+#else
 complex(mytype), allocatable, dimension(:, :, :) :: wk13
+#endif
 
 public :: decomp_2d_fft_init, decomp_2d_fft_3d, &
           decomp_2d_fft_finalize, decomp_2d_fft_get_size, &
@@ -160,6 +163,21 @@ subroutine fft_init_general(pencil, nx, ny, nz)
    ! transpose_y_to_x(wk2_r2c, wk13, sp)
    ! transpose_y_to_z(wk2_r2c, wk13, sp)
    !
+#ifdef OVERWRITE
+   ! Only FFTW3 supports in-place r2c / c2r
+   if (D2D_FFT_BACKEND /= D2D_FFT_BACKEND_FFTW3) then
+      if (format == PHYSICAL_IN_X) then
+         allocate (wk13(sp%xsz(1), sp%xsz(2), sp%xsz(3)), STAT=status)
+      else if (format == PHYSICAL_IN_Z) then
+         allocate (wk13(sp%zsz(1), sp%zsz(2), sp%zsz(3)), STAT=status)
+      end if
+      if (status /= 0) then
+         errorcode = 3
+         call decomp_2d_abort(__FILE__, __LINE__, errorcode, &
+                              'Out of memory when initialising FFT')
+      end if
+   end if
+#else
    if (format == PHYSICAL_IN_X) then
       allocate (wk13(sp%xsz(1), sp%xsz(2), sp%xsz(3)), STAT=status)
    else if (format == PHYSICAL_IN_Z) then
@@ -170,6 +188,7 @@ subroutine fft_init_general(pencil, nx, ny, nz)
       call decomp_2d_abort(__FILE__, __LINE__, errorcode, &
                            'Out of memory when initialising FFT')
    end if
+#endif
 
    call init_fft_engine
 
@@ -202,7 +221,14 @@ subroutine decomp_2d_fft_finalize
 
    if (allocated(wk2_c2c)) deallocate (wk2_c2c)
    if (associated(wk2_r2c)) nullify (wk2_r2c)
+#ifdef OVERWRITE
+   if (D2D_FFT_BACKEND /= D2D_FFT_BACKEND_FFTW3) then
+      if (associated(wk13)) deallocate (wk13)
+   end if
+   if (associated(wk13)) nullify (wk13)
+#else
    if (allocated(wk13)) deallocate (wk13)
+#endif
 
    call finalize_fft_engine
 

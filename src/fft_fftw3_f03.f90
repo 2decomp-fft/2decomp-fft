@@ -56,9 +56,11 @@ module decomp_2d_fft
    TYPE(DECOMP_INFO), target, save :: sp  ! spectral space
 
    ! Workspace to store the intermediate Y-pencil data
-   ! *** TODO: investigate how to use only one workspace array
    complex(mytype), contiguous, pointer :: wk2_c2c(:, :, :), wk2_r2c(:, :, :), wk13(:, :, :)
-   type(C_PTR) :: wk2_c2c_p, wk13_p
+   type(C_PTR) :: wk2_c2c_p
+#ifndef OVERWRITE
+   type(C_PTR) :: wk13_p
+#endif
 
    public :: decomp_2d_fft_init, decomp_2d_fft_3d, &
              decomp_2d_fft_finalize, decomp_2d_fft_get_size, &
@@ -166,9 +168,9 @@ contains
       ! Allocate the workspace fo intermediate y-pencil data
       ! The largest memory block needed is the one for c2c transforms
       !
-      sz = ph%ysz(1)*ph%ysz(2)*ph%ysz(3)
+      sz = product(ph%ysz)
       wk2_c2c_p = fftw_alloc_complex(sz)
-      call c_f_pointer(wk2_c2c_p, wk2_c2c, [ph%ysz(1), ph%ysz(2), ph%ysz(3)])
+      call c_f_pointer(wk2_c2c_p, wk2_c2c, ph%ysz)
       !
       ! A smaller memory block is needed for r2c and c2r transforms
       ! wk2_c2c and wk2_r2c start at the same location
@@ -176,23 +178,25 @@ contains
       !    Size of wk2_c2c : ph%ysz(1), ph%ysz(2), ph%ysz(3)
       !    Size of wk2_r2c : sp%ysz(1), sp%ysz(2), sp%ysz(3)
       !
-      call c_f_pointer(wk2_c2c_p, wk2_r2c, [sp%ysz(1), sp%ysz(2), sp%ysz(3)])
+      call c_f_pointer(wk2_c2c_p, wk2_r2c, sp%ysz)
       !
-      ! Allocate the workspace for r2c and c2r transforms
+      ! Allocate the workspace for r2c and c2r transforms if needed
       !
       ! wk13 can not be easily fused with wk2_*2c due to statements such as
       ! transpose_y_to_x(wk2_r2c, wk13, sp)
       ! transpose_y_to_z(wk2_r2c, wk13, sp)
       !
+#ifndef OVERWRITE
       if (format == PHYSICAL_IN_X) then
-         sz = sp%xsz(1)*sp%xsz(2)*sp%xsz(3)
+         sz = product(sp%xsz)
          wk13_p = fftw_alloc_complex(sz)
-         call c_f_pointer(wk13_p, wk13, [sp%xsz(1), sp%xsz(2), sp%xsz(3)])
+         call c_f_pointer(wk13_p, wk13, sp%xsz)
       else if (format == PHYSICAL_IN_Z) then
-         sz = sp%zsz(1)*sp%zsz(2)*sp%zsz(3)
+         sz = product(sp%zsz)
          wk13_p = fftw_alloc_complex(sz)
-         call c_f_pointer(wk13_p, wk13, [sp%zsz(1), sp%zsz(2), sp%zsz(3)])
+         call c_f_pointer(wk13_p, wk13, sp%zsz)
       end if
+#endif
 
       call init_fft_engine
 
@@ -225,9 +229,11 @@ contains
 
       call fftw_free(wk2_c2c_p)
       nullify (wk2_c2c)
-      nullify (wk2_r2c)
+      if (associated(wk2_r2c)) nullify (wk2_r2c)
+#ifndef OVERWRITE
       call fftw_free(wk13_p)
-      nullify (wk13)
+#endif
+      if (associated(wk13)) nullify (wk13)
 
       call finalize_fft_engine
 
@@ -320,10 +326,10 @@ contains
       type(C_PTR) :: a1_p
       integer(C_SIZE_T) :: sz
 
-      sz = decomp%xsz(1)*decomp%xsz(2)*decomp%xsz(3)
+      sz = product(decomp%xsz)
       a1_p = fftw_alloc_complex(sz)
-      call c_f_pointer(a1_p, a1, [decomp%xsz(1), decomp%xsz(2), decomp%xsz(3)])
-      call c_f_pointer(a1_p, a1o, [decomp%xsz(1), decomp%xsz(2), decomp%xsz(3)])
+      call c_f_pointer(a1_p, a1, decomp%xsz)
+      call c_f_pointer(a1_p, a1o, decomp%xsz)
 
 #ifdef DOUBLE_PREC
       plan1 = fftw_plan_many_dft(1, decomp%xsz(1), &
@@ -338,6 +344,8 @@ contains
 #endif
 
       call fftw_free(a1_p)
+      nullify (a1)
+      nullify (a1o)
 
       return
    end subroutine c2c_1m_x_plan
@@ -379,6 +387,8 @@ contains
 #endif
 
       call fftw_free(a1_p)
+      nullify (a1)
+      nullify (a1o)
 
       return
    end subroutine c2c_1m_y_plan
@@ -402,10 +412,10 @@ contains
       type(C_PTR) :: a1_p
       integer(C_SIZE_T) :: sz
 
-      sz = decomp%zsz(1)*decomp%zsz(2)*decomp%zsz(3)
+      sz = product(decomp%zsz)
       a1_p = fftw_alloc_complex(sz)
-      call c_f_pointer(a1_p, a1, [decomp%zsz(1), decomp%zsz(2), decomp%zsz(3)])
-      call c_f_pointer(a1_p, a1o, [decomp%zsz(1), decomp%zsz(2), decomp%zsz(3)])
+      call c_f_pointer(a1_p, a1, decomp%zsz)
+      call c_f_pointer(a1_p, a1o, decomp%zsz)
 
 #ifdef DOUBLE_PREC
       plan1 = fftw_plan_many_dft(1, decomp%zsz(3), &
@@ -420,6 +430,8 @@ contains
 #endif
 
       call fftw_free(a1_p)
+      nullify (a1)
+      nullify (a1o)
 
       return
    end subroutine c2c_1m_z_plan
@@ -435,17 +447,27 @@ contains
 
       real(mytype), pointer :: a1(:, :, :)
       complex(mytype), pointer :: a2(:, :, :)
-      type(C_PTR) :: a1_p, a2_p
+      type(C_PTR) :: a1_p
+#ifndef OVERWRITE
+      type(C_PTR) :: a2_p
+#endif
       integer(C_SIZE_T) :: sz
 
-      sz = decomp_ph%xsz(1)*decomp_ph%xsz(2)*decomp_ph%xsz(3)
+#ifdef OVERWRITE
+      ! Same memory block for a1 and a2
+      sz = max(product(decomp_ph%xsz), 2*product(decomp_sp%xsz))
+#else
+      sz = product(decomp_ph%xsz)
+#endif
       a1_p = fftw_alloc_real(sz)
-      call c_f_pointer(a1_p, a1, &
-                       [decomp_ph%xsz(1), decomp_ph%xsz(2), decomp_ph%xsz(3)])
-      sz = decomp_sp%xsz(1)*decomp_sp%xsz(2)*decomp_sp%xsz(3)
+      call c_f_pointer(a1_p, a1, decomp_ph%xsz)
+#ifdef OVERWRITE
+      call c_f_pointer(a1_p, a2, decomp_sp%xsz)
+#else
+      sz = product(decomp_sp%xsz)
       a2_p = fftw_alloc_complex(sz)
-      call c_f_pointer(a2_p, a2, &
-                       [decomp_sp%xsz(1), decomp_sp%xsz(2), decomp_sp%xsz(3)])
+      call c_f_pointer(a2_p, a2, decomp_sp%xsz)
+#endif
 
 #ifdef DOUBLE_PREC
       plan1 = fftw_plan_many_dft_r2c(1, decomp_ph%xsz(1), &
@@ -459,8 +481,12 @@ contains
                                       plan_type)
 #endif
 
-      call fftw_free(a1_p)
-      call fftw_free(a2_p)
+      call fftw_free (a1_p)
+#ifndef OVERWRITE
+      call fftw_free (a2_p)
+#endif
+      nullify (a1)
+      nullify (a2)
 
       return
    end subroutine r2c_1m_x_plan
@@ -476,17 +502,27 @@ contains
 
       complex(mytype), pointer :: a1(:, :, :)
       real(mytype), pointer :: a2(:, :, :)
-      type(C_PTR) :: a1_p, a2_p
+#ifndef OVERWRITE
+      type(C_PTR) :: a1_p
+#endif
+      type(C_PTR) :: a2_p
       integer(C_SIZE_T) :: sz
 
-      sz = decomp_sp%xsz(1)*decomp_sp%xsz(2)*decomp_sp%xsz(3)
-      a1_p = fftw_alloc_complex(sz)
-      call c_f_pointer(a1_p, a1, &
-                       [decomp_sp%xsz(1), decomp_sp%xsz(2), decomp_sp%xsz(3)])
-      sz = decomp_ph%xsz(1)*decomp_ph%xsz(2)*decomp_ph%xsz(3)
+#ifdef OVERWRITE
+      ! Same memory block for a1 and a2
+      sz = max(2*product(decomp_sp%xsz), product(decomp_ph%xsz))
+#else
+      sz = product(decomp_ph%xsz)
+#endif
       a2_p = fftw_alloc_real(sz)
-      call c_f_pointer(a2_p, a2, &
-                       [decomp_ph%xsz(1), decomp_ph%xsz(2), decomp_ph%xsz(3)])
+      call c_f_pointer(a2_p, a2, decomp_ph%xsz)
+#ifdef OVERWRITE
+      call c_f_pointer(a2_p, a1, decomp_sp%xsz)
+#else
+      sz = product(decomp_sp%xsz)
+      a1_p = fftw_alloc_complex(sz)
+      call c_f_pointer(a1_p, a1, decomp_sp%xsz)
+#endif
 
 #ifdef DOUBLE_PREC
       plan1 = fftw_plan_many_dft_c2r(1, decomp_ph%xsz(1), &
@@ -500,8 +536,12 @@ contains
                                       plan_type)
 #endif
 
+#ifndef OVERWRITE
       call fftw_free(a1_p)
+#endif
       call fftw_free(a2_p)
+      nullify (a1)
+      nullify (a2)
 
       return
    end subroutine c2r_1m_x_plan
@@ -517,17 +557,27 @@ contains
 
       real(mytype), pointer :: a1(:, :, :)
       complex(mytype), pointer :: a2(:, :, :)
-      type(C_PTR) :: a1_p, a2_p
+      type(C_PTR) :: a1_p
+#ifndef OVERWRITE
+      type(C_PTR) :: a2_p
+#endif
       integer(C_SIZE_T) :: sz
 
-      sz = decomp_ph%zsz(1)*decomp_ph%zsz(2)*decomp_ph%zsz(3)
+#ifdef OVERWRITE
+      ! Same memory block for a1 and a2
+      sz = max(product(decomp_ph%zsz), 2*product(decomp_sp%zsz))
+#else
+      sz = product(decomp_ph%zsz)
+#endif
       a1_p = fftw_alloc_real(sz)
-      call c_f_pointer(a1_p, a1, &
-                       [decomp_ph%zsz(1), decomp_ph%zsz(2), decomp_ph%zsz(3)])
-      sz = decomp_sp%zsz(1)*decomp_sp%zsz(2)*decomp_sp%zsz(3)
+      call c_f_pointer(a1_p, a1, decomp_ph%zsz)
+#ifdef OVERWRITE
+      call c_f_pointer(a1_p, a2, decomp_sp%zsz)
+#else
+      sz = product(decomp_sp%zsz)
       a2_p = fftw_alloc_complex(sz)
-      call c_f_pointer(a2_p, a2, &
-                       [decomp_sp%zsz(1), decomp_sp%zsz(2), decomp_sp%zsz(3)])
+      call c_f_pointer(a2_p, a2, decomp_sp%zsz)
+#endif
 
 #ifdef DOUBLE_PREC
       plan1 = fftw_plan_many_dft_r2c(1, decomp_ph%zsz(3), &
@@ -542,7 +592,11 @@ contains
 #endif
 
       call fftw_free(a1_p)
+#ifndef OVERWRITE
       call fftw_free(a2_p)
+#endif
+      nullify (a1)
+      nullify (a2)
 
       return
    end subroutine r2c_1m_z_plan
@@ -558,17 +612,27 @@ contains
 
       complex(mytype), pointer :: a1(:, :, :)
       real(mytype), pointer :: a2(:, :, :)
-      type(C_PTR) :: a1_p, a2_p
+#ifndef OVERWRITE
+      type(C_PTR) :: a1_p
+#endif
+      type(C_PTR) :: a2_p
       integer(C_SIZE_T) :: sz
 
-      sz = decomp_sp%zsz(1)*decomp_sp%zsz(2)*decomp_sp%zsz(3)
-      a1_p = fftw_alloc_complex(sz)
-      call c_f_pointer(a1_p, a1, &
-                       [decomp_sp%zsz(1), decomp_sp%zsz(2), decomp_sp%zsz(3)])
-      sz = decomp_ph%zsz(1)*decomp_ph%zsz(2)*decomp_ph%zsz(3)
+#ifdef OVERWRITE
+      ! Same memory block for a1 and a2
+      sz = max(product(decomp_ph%zsz), 2*product(decomp_sp%zsz))
+#else
+      sz = product(decomp_ph%zsz)
+#endif
       a2_p = fftw_alloc_real(sz)
-      call c_f_pointer(a2_p, a2, &
-                       [decomp_ph%zsz(1), decomp_ph%zsz(2), decomp_ph%zsz(3)])
+      call c_f_pointer(a2_p, a2, decomp_ph%zsz)
+#ifdef OVERWRITE
+      call c_f_pointer(a2_p, a1, decomp_sp%zsz)
+#else
+      sz = product(decomp_sp%zsz)
+      a1_p = fftw_alloc_complex(sz)
+      call c_f_pointer(a1_p, a1, decomp_sp%zsz)
+#endif
 
 #ifdef DOUBLE_PREC
       plan1 = fftw_plan_many_dft_c2r(1, decomp_ph%zsz(3), &
@@ -582,8 +646,12 @@ contains
                                       decomp_ph%zsz(1)*decomp_ph%zsz(2), 1, plan_type)
 #endif
 
+#ifndef OVERWRITE
       call fftw_free(a1_p)
+#endif
       call fftw_free(a2_p)
+      nullify (a1)
+      nullify (a2)
 
       return
    end subroutine c2r_1m_z_plan
@@ -824,9 +892,9 @@ contains
 #ifdef OVERWRITE
          call c2c_1m_x(in, plan(isign, 1))
 #else
-         sz = ph%xsz(1)*ph%xsz(2)*ph%xsz(3)
+         sz = product(ph%xsz)
          wk1_p = fftw_alloc_complex(sz)
-         call c_f_pointer(wk1_p, wk1, [ph%xsz(1), ph%xsz(2), ph%xsz(3)])
+         call c_f_pointer(wk1_p, wk1, ph%xsz)
          wk1 = in
          call c2c_1m_x(wk1, plan(isign, 1))
 #endif
@@ -868,9 +936,9 @@ contains
 #ifdef OVERWRITE
          call c2c_1m_z(in, plan(isign, 3))
 #else
-         sz = ph%zsz(1)*ph%zsz(2)*ph%zsz(3)
+         sz = product(ph%zsz)
          wk1_p = fftw_alloc_complex(sz)
-         call c_f_pointer(wk1_p, wk1, [ph%zsz(1), ph%zsz(2), ph%zsz(3)])
+         call c_f_pointer(wk1_p, wk1, ph%zsz)
          wk1 = in
          call c2c_1m_z(wk1, plan(isign, 3))
 #endif
@@ -919,7 +987,11 @@ contains
 
       implicit none
 
+#ifdef OVERWRITE
+      real(mytype), target, contiguous, dimension(:, :, :), intent(inout) :: in_r
+#else
       real(mytype), dimension(:, :, :), intent(INOUT) :: in_r
+#endif
       complex(mytype), dimension(:, :, :), intent(OUT) :: out_c
 
 #ifdef PROFILER
@@ -928,44 +1000,62 @@ contains
 
       if (format == PHYSICAL_IN_X) then
 
+#ifdef OVERWRITE
+         ! in-place r2c
+         call c_f_pointer(c_loc(in_r), wk13, sp%xsz)
+#endif
+
          ! ===== 1D FFTs in X =====
          call r2c_1m_x(in_r, wk13)
 
-         ! ===== Swap X --> Y; 1D FFTs in Y =====
          if (dims(1) > 1) then
+            ! ===== Swap X --> Y; 1D FFTs in Y =====
             call transpose_x_to_y(wk13, wk2_r2c, sp)
             call c2c_1m_y(wk2_r2c, plan(0, 2))
-         else
-            call c2c_1m_y(wk13, plan(0, 2))
-         end if
-
-         ! ===== Swap Y --> Z; 1D FFTs in Z =====
-         if (dims(1) > 1) then
+            ! ===== Swap Y --> Z =====
             call transpose_y_to_z(wk2_r2c, out_c, sp)
          else
+            ! ===== No Swap X --> Y; 1D FFTs in Y =====
+            call c2c_1m_y(wk13, plan(0, 2))
+            ! ===== Swap Y --> Z =====
             call transpose_y_to_z(wk13, out_c, sp)
          end if
+
+         ! ===== 1D FFTs in Z =====
          call c2c_1m_z(out_c, plan(0, 3))
+
+#ifdef OVERWRITE
+         nullify (wk13)
+#endif
 
       else if (format == PHYSICAL_IN_Z) then
 
+#ifdef OVERWRITE
+         ! in-place r2c
+         call c_f_pointer(c_loc(in_r), wk13, sp%zsz)
+#endif
          ! ===== 1D FFTs in Z =====
          call r2c_1m_z(in_r, wk13)
 
-         ! ===== Swap Z --> Y; 1D FFTs in Y =====
          if (dims(1) > 1) then
+            ! ===== Swap Z --> Y; 1D FFTs in Y =====
             call transpose_z_to_y(wk13, wk2_r2c, sp)
             call c2c_1m_y(wk2_r2c, plan(0, 2))
-         else  ! out_c==wk2_r2c if 1D decomposition
+            ! ===== Swap Y --> X =====
+            call transpose_y_to_x(wk2_r2c, out_c, sp)
+         else
+            ! ===== Swap Z --> Y; 1D FFTs in Y =====
             call transpose_z_to_y(wk13, out_c, sp)
             call c2c_1m_y(out_c, plan(0, 2))
+            ! ===== No Swap Y --> X =====
          end if
 
-         ! ===== Swap Y --> X; 1D FFTs in X =====
-         if (dims(1) > 1) then
-            call transpose_y_to_x(wk2_r2c, out_c, sp)
-         end if
+         ! ===== 1D FFTs in X =====
          call c2c_1m_x(out_c, plan(0, 1))
+
+#ifdef OVERWRITE
+         nullify (wk13)
+#endif
 
       end if
 
@@ -984,7 +1074,11 @@ contains
       implicit none
 
       complex(mytype), dimension(:, :, :), intent(INOUT) :: in_c
+#ifdef OVERWRITE
+      real(mytype), target, contiguous, dimension(:, :, :), intent(out) :: out_r
+#else
       real(mytype), dimension(:, :, :), intent(OUT) :: out_r
+#endif
 
 #ifndef OVERWRITE
       complex(mytype), pointer :: wk1(:, :, :)
@@ -1000,80 +1094,114 @@ contains
 
       if (format == PHYSICAL_IN_X) then
 
+#ifdef OVERWRITE
+         ! In-place c2r
+         call c_f_pointer(c_loc(out_r), wk13, sp%xsz)
+
          ! ===== 1D FFTs in Z =====
-#ifdef OVERWRITE
          call c2c_1m_z(in_c, plan(2, 3))
-#else
-         sz = sp%zsz(1)*sp%zsz(2)*sp%zsz(3)
-         wk1_p = fftw_alloc_complex(sz)
-         call c_f_pointer(wk1_p, wk1, [sp%zsz(1), sp%zsz(2), sp%zsz(3)])
-         wk1 = in_c
-         call c2c_1m_z(wk1, plan(2, 3))
-#endif
-
-         ! ===== Swap Z --> Y; 1D FFTs in Y =====
-#ifdef OVERWRITE
-         call transpose_z_to_y(in_c, wk2_r2c, sp)
-#else
-         call transpose_z_to_y(wk1, wk2_r2c, sp)
-#endif
-         call c2c_1m_y(wk2_r2c, plan(2, 2))
-
-         ! ===== Swap Y --> X; 1D FFTs in X =====
          if (dims(1) > 1) then
+            ! ===== Swap Z --> Y =====
+            call transpose_z_to_y(in_c, wk2_r2c, sp)
+         else
+            ! ===== Swap Z --> Y =====
+            call transpose_z_to_y(in_c, wk13, sp)
+         end if
+#else
+         ! Protect input
+         sz = product(sp%zsz)
+         wk1_p = fftw_alloc_complex(sz)
+         call c_f_pointer(wk1_p, wk1, sp%zsz)
+         wk1 = in_c
+
+         ! ===== 1D FFTs in Z =====
+         call c2c_1m_z(wk1, plan(2, 3))
+         if (dims(1) > 1) then
+            ! ===== Swap Z --> Y =====
+            call transpose_z_to_y(wk1, wk2_r2c, sp)
+         else
+            ! ===== Swap Z --> Y =====
+            call transpose_z_to_y(wk1, wk13, sp)
+         end if
+#endif
+
+         if (dims(1) > 1) then
+            ! ===== 1D FFTs in Y =====
+            call c2c_1m_y(wk2_r2c, plan(2, 2))
+            ! ===== Swap Y --> X; 1D FFTs in X =====
             call transpose_y_to_x(wk2_r2c, wk13, sp)
             call c2r_1m_x(wk13, out_r)
          else
-            call c2r_1m_x(wk2_r2c, out_r)
+            ! ===== 1D FFTs in Y =====
+            call c2c_1m_y(wk13, plan(2, 2))
+            ! ===== No Swap Y --> X; 1D FFTs in X =====
+            call c2r_1m_x(wk13, out_r)
          end if
+
+#ifdef OVERWRITE
+         nullify (wk13)
+#else
+         call fftw_free(wk1_p)
+         nullify (wk1)
+#endif
 
       else if (format == PHYSICAL_IN_Z) then
 
-         ! ===== 1D FFTs in X =====
 #ifdef OVERWRITE
-         call c2c_1m_x(in_c, plan(2, 1))
-#else
-         sz = sp%xsz(1)*sp%xsz(2)*sp%xsz(3)
-         wk1_p = fftw_alloc_complex(sz)
-         call c_f_pointer(wk1_p, wk1, [sp%xsz(1), sp%xsz(2), sp%xsz(3)])
-         wk1 = in_c
-         call c2c_1m_x(wk1, plan(2, 1))
-#endif
+         ! In-place c2r
+         call c_f_pointer(c_loc(out_r), wk13, sp%zsz)
 
-         ! ===== Swap X --> Y; 1D FFTs in Y =====
+         ! ===== 1D FFTs in X =====
+         call c2c_1m_x(in_c, plan(2, 1))
+
          if (dims(1) > 1) then
-#ifdef OVERWRITE
+            ! ===== Swap X --> Y; 1D FFTs in Y =====
             call transpose_x_to_y(in_c, wk2_r2c, sp)
-#else
-            call transpose_x_to_y(wk1, wk2_r2c, sp)
-#endif
             call c2c_1m_y(wk2_r2c, plan(2, 2))
-         else  ! in_c==wk2_r2c if 1D decomposition
-#ifdef OVERWRITE
+         else
+            ! ===== No Swap X --> Y; 1D FFTs in Y =====
             call c2c_1m_y(in_c, plan(2, 2))
-#else
-            call c2c_1m_y(wk1, plan(2, 2))
-#endif
          end if
 
          ! ===== Swap Y --> Z; 1D FFTs in Z =====
          if (dims(1) > 1) then
             call transpose_y_to_z(wk2_r2c, wk13, sp)
          else
-#ifdef OVERWRITE
             call transpose_y_to_z(in_c, wk13, sp)
-#else
-            call transpose_y_to_z(wk1, wk13, sp)
-#endif
          end if
          call c2r_1m_z(wk13, out_r)
+         nullify (wk13)
+#else
+         ! Protect input
+         sz = product(sp%xsz)
+         wk1_p = fftw_alloc_complex(sz)
+         call c_f_pointer(wk1_p, wk1, sp%xsz)
+         wk1 = in_c
+
+         ! ===== 1D FFTs in X =====
+         call c2c_1m_x(wk1, plan(2, 1))
+
+         if (dims(1) > 1) then
+            ! ===== Swap X --> Y; 1D FFTs in Y =====
+            call transpose_x_to_y(wk1, wk2_r2c, sp)
+            call c2c_1m_y(wk2_r2c, plan(2, 2))
+         else
+            ! ===== No Swap X --> Y; 1D FFTs in Y =====
+            call c2c_1m_y(wk1, plan(2, 2))
+         end if
+
+         ! ===== Swap Y --> Z; 1D FFTs in Z =====
+         if (dims(1) > 1) then
+            call transpose_y_to_z(wk2_r2c, wk13, sp)
+         else
+            call transpose_y_to_z(wk1, wk13, sp)
+         end if
+         call c2r_1m_z(wk13, out_r)
+         call fftw_free(wk1_p)
+         nullify (wk1)
+#endif
 
       end if
-
-#ifndef OVERWRITE
-      call fftw_free(wk1_p)
-      nullify (wk1)
-#endif
 
 #ifdef PROFILER
       if (decomp_profiler_fft) call decomp_profiler_end("fft_c2r")

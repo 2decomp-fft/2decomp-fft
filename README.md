@@ -85,10 +85,10 @@ The external code can use the named variables to check the FFT backend used in a
 
 ### OVERWRITE flag
 
-- The generic backend does not support the OVERWRITE flag
-- The FFTW3 and FFTW3_F03 backends support the OVERWRITE flag for c2c and c2r transforms
-- The oneMKL backend supports the OVERWRITE flag for c2c and c2r transforms
-- The cuFFT backend supports the OVERWRITE flag for c2c anc c2r transforms
+- The generic backend supports the OVERWRITE flag but it can not perform in-place transforms
+- The FFTW3 and FFTW3_F03 backends support the OVERWRITE flag and can perform in-place complex 1D fft
+- The oneMKL backend supports the OVERWRITE flag and can perform in-place complex 1D fft
+- The cuFFT backend supports the OVERWRITE flag but it can not perform in-place transforms
 
 ## Miscellaneous
 
@@ -133,7 +133,7 @@ This preprocessor variable is not valid for GPU builds. It leads to padded allto
 
 #### OVERWRITE
 
-This variable leads to overwrite the input array when computing FFT. The support of this flag is variable, depending on the FFT backend selected, as described above.
+This variable leads to overwrite the input array when computing FFT. The support of this flag does not always correspond to in-place transforms, depending on the FFT backend selected, as described above.
 
 #### HALO_DEBUG
 

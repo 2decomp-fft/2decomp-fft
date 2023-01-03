@@ -59,7 +59,6 @@ contains
             write (io_unit, *) ''
          else if (D2D_FFT_BACKEND == D2D_FFT_BACKEND_FFTW3 .or. &
                   D2D_FFT_BACKEND == D2D_FFT_BACKEND_FFTW3_F03 .or. &
-                  D2D_FFT_BACKEND == D2D_FFT_BACKEND_CUFFT .or. &
                   D2D_FFT_BACKEND == D2D_FFT_BACKEND_MKL) then
             write (io_unit, *) 'OVERWRITE is supported but in-place transforms is limited to complex transforms'
             write (io_unit, *) ''

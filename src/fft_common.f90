@@ -11,13 +11,6 @@
 
 ! This file contains common code shared by all FFT engines
 
-integer, parameter, public :: DECOMP_2D_FFT_FORWARD = -1
-integer, parameter, public :: DECOMP_2D_FFT_BACKWARD = 1
-
-! Physical space data can be stored in either X-pencil or Z-pencil
-integer, parameter, public :: PHYSICAL_IN_X = 1
-integer, parameter, public :: PHYSICAL_IN_Z = 3
-
 integer, save :: format                 ! input X-pencil or Z-pencil
 
 ! The libary can only be initialised once
@@ -36,7 +29,7 @@ TYPE(DECOMP_INFO), target, save :: sp  ! spectral space
 
 ! Workspace to store the intermediate Y-pencil data
 complex(mytype), allocatable, target, dimension(:, :, :) :: wk2_c2c
-complex(mytype), contiguous, pointer, dimension(:, :, :) :: wk2_r2c => null()
+complex(mytype), contiguous, pointer, dimension(:, :, :) :: wk2_r2c
 ! Workspace for r2c and c2r transforms
 ! FIXME could be removed using in-place r2c and c2r ?
 complex(mytype), allocatable, dimension(:, :, :) :: wk13
@@ -57,6 +50,12 @@ interface decomp_2d_fft_3d
    module procedure fft_3d_c2c
    module procedure fft_3d_r2c
    module procedure fft_3d_c2r
+end interface
+
+interface
+   module subroutine decomp_2d_fft_log(backend)
+      character(len=*), intent(in) :: backend
+   end subroutine decomp_2d_fft_log
 end interface
 
 contains
@@ -98,11 +97,15 @@ subroutine fft_init_general(pencil, nx, ny, nz)
    if (decomp_profiler_fft) call decomp_profiler_start("fft_init")
 #endif
 
+   ! Safety checks
    if (initialised) then
       errorcode = 4
       call decomp_2d_abort(__FILE__, __LINE__, errorcode, &
                            'FFT library should only be initialised once')
    end if
+   if (nx <= 0) call decomp_2d_abort(__FILE__, __LINE__, nx, "Invalid value for nx")
+   if (ny <= 0) call decomp_2d_abort(__FILE__, __LINE__, ny, "Invalid value for ny")
+   if (nz <= 0) call decomp_2d_abort(__FILE__, __LINE__, nz, "Invalid value for nz")
 
    format = pencil
    nx_fft = nx
@@ -128,6 +131,8 @@ subroutine fft_init_general(pencil, nx, ny, nz)
       call decomp_info_init(nx/2 + 1, ny, nz, sp)
    else if (format == PHYSICAL_IN_Z) then
       call decomp_info_init(nx, ny, nz/2 + 1, sp)
+   else
+      call decomp_2d_abort(__FILE__, __LINE__, format, "Invalid value for format")
    end if
 
    !

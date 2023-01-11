@@ -69,5 +69,17 @@ module decomp_2d_constants
    integer, parameter, public :: D2D_FFT_BACKEND_MKL = 3
    integer, parameter, public :: D2D_FFT_BACKEND_CUFFT = 4
 
+   !
+   ! Complex-to-complex FFT can be forward or backward
+   !
+   integer, parameter, public :: DECOMP_2D_FFT_FORWARD = -1
+   integer, parameter, public :: DECOMP_2D_FFT_BACKWARD = 1
+
+   !
+   ! Input / output of the FFT are distributed along different pencils
+   !
+   integer, parameter, public :: PHYSICAL_IN_X = 1 ! Forward is input in X, output in Z
+   integer, parameter, public :: PHYSICAL_IN_Z = 3 ! Forward is input in Z, output in X
+
 end module decomp_2d_constants
 

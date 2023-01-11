@@ -38,17 +38,9 @@ module decomp_2d_fft
 
       implicit none
 
-      integer :: cbuf_size, iounit
+      integer :: cbuf_size
 
-      if ((decomp_log == D2D_LOG_STDOUT .and. nrank == 0) .or. &
-          (decomp_log == D2D_LOG_TOFILE .and. nrank == 0) .or. &
-          (decomp_log == D2D_LOG_TOFILE_FULL)) then
-         iounit = d2d_listing_get_unit()
-         write (iounit, *) ' '
-         write (iounit, *) '***** Using the generic FFT engine *****'
-         write (iounit, *) ' '
-         call d2d_listing_close_unit(iounit)
-      end if
+      call decomp_2d_fft_log("generic")
 
       cbuf_size = max(ph%xsz(1), ph%ysz(2))
       cbuf_size = max(cbuf_size, ph%zsz(3))

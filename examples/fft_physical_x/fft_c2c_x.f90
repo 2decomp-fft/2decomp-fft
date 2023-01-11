@@ -2,6 +2,7 @@ program fft_c2c_x
 
    use decomp_2d
    use decomp_2d_fft
+   use decomp_2d_constants
    use MPI
 #if defined(_GPU)
    use cudafor

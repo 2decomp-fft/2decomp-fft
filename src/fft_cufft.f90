@@ -240,17 +240,9 @@ module decomp_2d_fft
 
       !integer*4 :: cufft_ws, ws
       integer(int_ptr_kind()) :: cufft_ws, ws
-      integer :: i, j, istat, iounit
+      integer :: i, j, istat
 
-      if ((decomp_log == D2D_LOG_STDOUT .and. nrank == 0) .or. &
-          (decomp_log == D2D_LOG_TOFILE .and. nrank == 0) .or. &
-          (decomp_log == D2D_LOG_TOFILE_FULL)) then
-         iounit = d2d_listing_get_unit()
-         write (iounit, *) ' '
-         write (iounit, *) '***** Using the New cuFFT engine *****'
-         write (iounit, *) ' '
-         call d2d_listing_close_unit(iounit)
-      end if
+      call decomp_2d_fft_log("cuFFT")
 
       cufft_ws = 0
 #ifdef DOUBLE_PREC

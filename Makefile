@@ -99,7 +99,7 @@ SRCDIR = src
 DECOMPINC = mod
 FFLAGS += $(MODFLAG)$(DECOMPINC) -I$(DECOMPINC)
 
-SRCDECOMP := $(SRCDECOMP) fft_$(FFT).f90
+SRCDECOMP := $(SRCDECOMP) fft_$(FFT).f90 fft_log.f90
 SRCDECOMP_ = $(patsubst %.f90,$(SRCDIR)/%.f90,$(filter-out %/mkl_dfti.f90,$(SRCDECOMP)))
 SRCDECOMP_ += $(filter %/mkl_dfti.f90,$(SRCDECOMP))
 OBJDECOMP_MKL_ = $(patsubst $(MKLROOT)/include/%.f90,$(OBJDIR)/%.f90,$(filter %/mkl_dfti.f90,$(SRCDECOMP_)))

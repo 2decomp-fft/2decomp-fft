@@ -37,13 +37,6 @@ module decomp_2d_fft
    !     use plan(2,j) for c2r transforms;
    type(C_PTR), save :: plan(-1:2, 3)
 
-   integer, parameter, public :: DECOMP_2D_FFT_FORWARD = -1
-   integer, parameter, public :: DECOMP_2D_FFT_BACKWARD = 1
-
-   ! Physical space data can be stored in either X-pencil or Z-pencil
-   integer, parameter, public :: PHYSICAL_IN_X = 1
-   integer, parameter, public :: PHYSICAL_IN_Z = 3
-
    integer, parameter, public :: D2D_FFT_BACKEND = D2D_FFT_BACKEND_FFTW3_F03
 
    integer, save :: format                 ! input X-pencil or Z-pencil
@@ -64,8 +57,8 @@ module decomp_2d_fft
 
    ! Workspace to store the intermediate Y-pencil data
    ! *** TODO: investigate how to use only one workspace array
-   complex(mytype), pointer :: wk2_c2c(:, :, :), wk2_r2c(:, :, :), wk13(:, :, :)
-   type(C_PTR) :: wk2_c2c_p, wk2_r2c_p, wk13_p
+   complex(mytype), contiguous, pointer :: wk2_c2c(:, :, :), wk2_r2c(:, :, :), wk13(:, :, :)
+   type(C_PTR) :: wk2_c2c_p, wk13_p
 
    public :: decomp_2d_fft_init, decomp_2d_fft_3d, &
              decomp_2d_fft_finalize, decomp_2d_fft_get_size, &
@@ -83,6 +76,12 @@ module decomp_2d_fft
       module procedure fft_3d_c2c
       module procedure fft_3d_r2c
       module procedure fft_3d_c2r
+   end interface
+
+   interface
+      module subroutine decomp_2d_fft_log(backend)
+         character(len=*), intent(in) :: backend
+      end subroutine decomp_2d_fft_log
    end interface
 
 contains
@@ -125,11 +124,15 @@ contains
       if (decomp_profiler_fft) call decomp_profiler_start("fft_init")
 #endif
 
+      ! Safety checks
       if (initialised) then
          errorcode = 4
          call decomp_2d_abort(errorcode, &
                               'FFT library should only be initialised once')
       end if
+      if (nx <= 0) call decomp_2d_abort(__FILE__, __LINE__, nx, "Invalid value for nx")
+      if (ny <= 0) call decomp_2d_abort(__FILE__, __LINE__, ny, "Invalid value for ny")
+      if (nz <= 0) call decomp_2d_abort(__FILE__, __LINE__, nz, "Invalid value for nz")
 
       format = pencil
       nx_fft = nx
@@ -155,16 +158,32 @@ contains
          call decomp_info_init(nx/2 + 1, ny, nz, sp)
       else if (format == PHYSICAL_IN_Z) then
          call decomp_info_init(nx, ny, nz/2 + 1, sp)
+      else
+         call decomp_2d_abort(__FILE__, __LINE__, format, "Invalid value for format")
       end if
 
+      !
+      ! Allocate the workspace fo intermediate y-pencil data
+      ! The largest memory block needed is the one for c2c transforms
+      !
       sz = ph%ysz(1)*ph%ysz(2)*ph%ysz(3)
       wk2_c2c_p = fftw_alloc_complex(sz)
       call c_f_pointer(wk2_c2c_p, wk2_c2c, [ph%ysz(1), ph%ysz(2), ph%ysz(3)])
-
-      sz = sp%ysz(1)*sp%ysz(2)*sp%ysz(3)
-      wk2_r2c_p = fftw_alloc_complex(sz)
-      call c_f_pointer(wk2_r2c_p, wk2_r2c, [sp%ysz(1), sp%ysz(2), sp%ysz(3)])
-
+      !
+      ! A smaller memory block is needed for r2c and c2r transforms
+      ! wk2_c2c and wk2_r2c start at the same location
+      !
+      !    Size of wk2_c2c : ph%ysz(1), ph%ysz(2), ph%ysz(3)
+      !    Size of wk2_r2c : sp%ysz(1), sp%ysz(2), sp%ysz(3)
+      !
+      call c_f_pointer(wk2_c2c_p, wk2_r2c, [sp%ysz(1), sp%ysz(2), sp%ysz(3)])
+      !
+      ! Allocate the workspace for r2c and c2r transforms
+      !
+      ! wk13 can not be easily fused with wk2_*2c due to statements such as
+      ! transpose_y_to_x(wk2_r2c, wk13, sp)
+      ! transpose_y_to_z(wk2_r2c, wk13, sp)
+      !
       if (format == PHYSICAL_IN_X) then
          sz = sp%xsz(1)*sp%xsz(2)*sp%xsz(3)
          wk13_p = fftw_alloc_complex(sz)
@@ -205,8 +224,10 @@ contains
       call decomp_info_finalize(sp)
 
       call fftw_free(wk2_c2c_p)
-      call fftw_free(wk2_r2c_p)
+      nullify (wk2_c2c)
+      nullify (wk2_r2c)
       call fftw_free(wk13_p)
+      nullify (wk13)
 
       call finalize_fft_engine
 
@@ -574,17 +595,7 @@ contains
 
       implicit none
 
-      integer :: iounit
-
-      if ((decomp_log == D2D_LOG_STDOUT .and. nrank == 0) .or. &
-          (decomp_log == D2D_LOG_TOFILE .and. nrank == 0) .or. &
-          (decomp_log == D2D_LOG_TOFILE_FULL)) then
-         iounit = d2d_listing_get_unit()
-         write (iounit, *) ' '
-         write (iounit, *) '***** Using the FFTW (F2003 interface) engine *****'
-         write (iounit, *) ' '
-         call d2d_listing_close_unit(iounit)
-      end if
+      call decomp_2d_fft_log("FFTW (F2003 interface)")
 
       if (format == PHYSICAL_IN_X) then
 
@@ -655,17 +666,12 @@ contains
    ! the basis of three-dimensional FFTs.
 
    ! c2c transform, multiple 1D FFTs in x direction
-   subroutine c2c_1m_x(inout, isign, plan1)
+   subroutine c2c_1m_x(inout, plan1)
 
       implicit none
 
       complex(mytype), dimension(:, :, :), intent(INOUT) :: inout
-      integer, intent(IN) :: isign
       type(C_PTR) :: plan1
-
-      integer :: foo
-
-      foo = isign ! Silence unused dummy argument
 
 #ifdef DOUBLE_PREC
       call fftw_execute_dft(plan1, inout, inout)
@@ -677,19 +683,14 @@ contains
    end subroutine c2c_1m_x
 
    ! c2c transform, multiple 1D FFTs in y direction
-   subroutine c2c_1m_y(inout, isign, plan1)
+   subroutine c2c_1m_y(inout, plan1)
 
       implicit none
 
       complex(mytype), dimension(:, :, :), intent(INOUT) :: inout
-      integer, intent(IN) :: isign
       type(C_PTR) :: plan1
 
       integer :: k, s3
-
-      integer :: foo
-
-      foo = isign ! Silence unused dummy argument
 
       s3 = size(inout, 3)
 
@@ -705,17 +706,12 @@ contains
    end subroutine c2c_1m_y
 
    ! c2c transform, multiple 1D FFTs in z direction
-   subroutine c2c_1m_z(inout, isign, plan1)
+   subroutine c2c_1m_z(inout, plan1)
 
       implicit none
 
       complex(mytype), dimension(:, :, :), intent(INOUT) :: inout
-      integer, intent(IN) :: isign
       type(C_PTR) :: plan1
-
-      integer :: foo
-
-      foo = isign ! Silence unused dummy argument
 
 #ifdef DOUBLE_PREC
       call fftw_execute_dft(plan1, inout, inout)
@@ -826,13 +822,13 @@ contains
 
          ! ===== 1D FFTs in X =====
 #ifdef OVERWRITE
-         call c2c_1m_x(in, isign, plan(isign, 1))
+         call c2c_1m_x(in, plan(isign, 1))
 #else
          sz = ph%xsz(1)*ph%xsz(2)*ph%xsz(3)
          wk1_p = fftw_alloc_complex(sz)
          call c_f_pointer(wk1_p, wk1, [ph%xsz(1), ph%xsz(2), ph%xsz(3)])
          wk1 = in
-         call c2c_1m_x(wk1, isign, plan(isign, 1))
+         call c2c_1m_x(wk1, plan(isign, 1))
 #endif
 
          ! ===== Swap X --> Y; 1D FFTs in Y =====
@@ -843,12 +839,12 @@ contains
 #else
             call transpose_x_to_y(wk1, wk2_c2c, ph)
 #endif
-            call c2c_1m_y(wk2_c2c, isign, plan(isign, 2))
+            call c2c_1m_y(wk2_c2c, plan(isign, 2))
          else
 #ifdef OVERWRITE
-            call c2c_1m_y(in, isign, plan(isign, 2))
+            call c2c_1m_y(in, plan(isign, 2))
 #else
-            call c2c_1m_y(wk1, isign, plan(isign, 2))
+            call c2c_1m_y(wk1, plan(isign, 2))
 #endif
          end if
 
@@ -862,7 +858,7 @@ contains
             call transpose_y_to_z(wk1, out, ph)
 #endif
          end if
-         call c2c_1m_z(out, isign, plan(isign, 3))
+         call c2c_1m_z(out, plan(isign, 3))
 
       else if (format == PHYSICAL_IN_X .AND. isign == DECOMP_2D_FFT_BACKWARD &
                .OR. &
@@ -870,13 +866,13 @@ contains
 
          ! ===== 1D FFTs in Z =====
 #ifdef OVERWRITE
-         call c2c_1m_z(in, isign, plan(isign, 3))
+         call c2c_1m_z(in, plan(isign, 3))
 #else
          sz = ph%zsz(1)*ph%zsz(2)*ph%zsz(3)
          wk1_p = fftw_alloc_complex(sz)
          call c_f_pointer(wk1_p, wk1, [ph%zsz(1), ph%zsz(2), ph%zsz(3)])
          wk1 = in
-         call c2c_1m_z(wk1, isign, plan(isign, 3))
+         call c2c_1m_z(wk1, plan(isign, 3))
 #endif
 
          ! ===== Swap Z --> Y; 1D FFTs in Y =====
@@ -886,26 +882,27 @@ contains
 #else
             call transpose_z_to_y(wk1, wk2_c2c, ph)
 #endif
-            call c2c_1m_y(wk2_c2c, isign, plan(isign, 2))
+            call c2c_1m_y(wk2_c2c, plan(isign, 2))
          else  ! out==wk2_c2c if 1D decomposition
 #ifdef OVERWRITE
             call transpose_z_to_y(in, out, ph)
 #else
             call transpose_z_to_y(wk1, out, ph)
 #endif
-            call c2c_1m_y(out, isign, plan(isign, 2))
+            call c2c_1m_y(out, plan(isign, 2))
          end if
 
          ! ===== Swap Y --> X; 1D FFTs in X =====
          if (dims(1) > 1) then
             call transpose_y_to_x(wk2_c2c, out, ph)
          end if
-         call c2c_1m_x(out, isign, plan(isign, 1))
+         call c2c_1m_x(out, plan(isign, 1))
 
       end if
 
 #ifndef OVERWRITE
       call fftw_free(wk1_p)
+      nullify (wk1)
 #endif
 
 #ifdef PROFILER
@@ -937,9 +934,9 @@ contains
          ! ===== Swap X --> Y; 1D FFTs in Y =====
          if (dims(1) > 1) then
             call transpose_x_to_y(wk13, wk2_r2c, sp)
-            call c2c_1m_y(wk2_r2c, -1, plan(0, 2))
+            call c2c_1m_y(wk2_r2c, plan(0, 2))
          else
-            call c2c_1m_y(wk13, -1, plan(0, 2))
+            call c2c_1m_y(wk13, plan(0, 2))
          end if
 
          ! ===== Swap Y --> Z; 1D FFTs in Z =====
@@ -948,7 +945,7 @@ contains
          else
             call transpose_y_to_z(wk13, out_c, sp)
          end if
-         call c2c_1m_z(out_c, -1, plan(0, 3))
+         call c2c_1m_z(out_c, plan(0, 3))
 
       else if (format == PHYSICAL_IN_Z) then
 
@@ -958,17 +955,17 @@ contains
          ! ===== Swap Z --> Y; 1D FFTs in Y =====
          if (dims(1) > 1) then
             call transpose_z_to_y(wk13, wk2_r2c, sp)
-            call c2c_1m_y(wk2_r2c, -1, plan(0, 2))
+            call c2c_1m_y(wk2_r2c, plan(0, 2))
          else  ! out_c==wk2_r2c if 1D decomposition
             call transpose_z_to_y(wk13, out_c, sp)
-            call c2c_1m_y(out_c, -1, plan(0, 2))
+            call c2c_1m_y(out_c, plan(0, 2))
          end if
 
          ! ===== Swap Y --> X; 1D FFTs in X =====
          if (dims(1) > 1) then
             call transpose_y_to_x(wk2_r2c, out_c, sp)
          end if
-         call c2c_1m_x(out_c, -1, plan(0, 1))
+         call c2c_1m_x(out_c, plan(0, 1))
 
       end if
 
@@ -1005,13 +1002,13 @@ contains
 
          ! ===== 1D FFTs in Z =====
 #ifdef OVERWRITE
-         call c2c_1m_z(in_c, 1, plan(2, 3))
+         call c2c_1m_z(in_c, plan(2, 3))
 #else
          sz = sp%zsz(1)*sp%zsz(2)*sp%zsz(3)
          wk1_p = fftw_alloc_complex(sz)
          call c_f_pointer(wk1_p, wk1, [sp%zsz(1), sp%zsz(2), sp%zsz(3)])
          wk1 = in_c
-         call c2c_1m_z(wk1, 1, plan(2, 3))
+         call c2c_1m_z(wk1, plan(2, 3))
 #endif
 
          ! ===== Swap Z --> Y; 1D FFTs in Y =====
@@ -1020,7 +1017,7 @@ contains
 #else
          call transpose_z_to_y(wk1, wk2_r2c, sp)
 #endif
-         call c2c_1m_y(wk2_r2c, 1, plan(2, 2))
+         call c2c_1m_y(wk2_r2c, plan(2, 2))
 
          ! ===== Swap Y --> X; 1D FFTs in X =====
          if (dims(1) > 1) then
@@ -1034,13 +1031,13 @@ contains
 
          ! ===== 1D FFTs in X =====
 #ifdef OVERWRITE
-         call c2c_1m_x(in_c, 1, plan(2, 1))
+         call c2c_1m_x(in_c, plan(2, 1))
 #else
          sz = sp%xsz(1)*sp%xsz(2)*sp%xsz(3)
          wk1_p = fftw_alloc_complex(sz)
          call c_f_pointer(wk1_p, wk1, [sp%xsz(1), sp%xsz(2), sp%xsz(3)])
          wk1 = in_c
-         call c2c_1m_x(wk1, 1, plan(2, 1))
+         call c2c_1m_x(wk1, plan(2, 1))
 #endif
 
          ! ===== Swap X --> Y; 1D FFTs in Y =====
@@ -1050,12 +1047,12 @@ contains
 #else
             call transpose_x_to_y(wk1, wk2_r2c, sp)
 #endif
-            call c2c_1m_y(wk2_r2c, 1, plan(2, 2))
+            call c2c_1m_y(wk2_r2c, plan(2, 2))
          else  ! in_c==wk2_r2c if 1D decomposition
 #ifdef OVERWRITE
-            call c2c_1m_y(in_c, 1, plan(2, 2))
+            call c2c_1m_y(in_c, plan(2, 2))
 #else
-            call c2c_1m_y(wk1, 1, plan(2, 2))
+            call c2c_1m_y(wk1, plan(2, 2))
 #endif
          end if
 
@@ -1075,6 +1072,7 @@ contains
 
 #ifndef OVERWRITE
       call fftw_free(wk1_p)
+      nullify (wk1)
 #endif
 
 #ifdef PROFILER

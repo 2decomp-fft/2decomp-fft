@@ -84,12 +84,18 @@ else ifeq ($(CMP),nvhpc)
      LFLAGS += -acc -lnvhpcwrapnvtx
   else ifeq ($(PARAMOD),gpu)
      CCXY=80
-     NCCL=no     
+     MANAGED=yes
+     ifeq ($(MANAGED),yes)
+       GPUOPT=-gpu=cc${CCXY},managed,lineinfo
+     else
+       GPUOPT=-gpu=cc${CCXY},lineinfo
+     endif
      FFLAGS += -D_GPU
+     NCCL=no     
      ifeq ($(NCCL),yes)
        FFLAGS += -D_NCCL
      endif
-     FFLAGS += -Mfree -Kieee -Minfo=accel,stdpar -stdpar=gpu -gpu=cc${CCXY},managed,lineinfo -acc -target=gpu -traceback -O3 -DUSE_CUDA -cuda 
+     FFLAGS += -Mfree -Kieee -Minfo=accel,stdpar ${GPUOPT} -acc -target=gpu -traceback -O3 -DUSE_CUDA -cuda 
      ifeq ($(NCCL),yes)
        FFLAGS += -cudalib=cufft,nccl
      else

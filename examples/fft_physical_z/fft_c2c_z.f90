@@ -38,9 +38,9 @@ program fft_c2c_z
    nz = nz_base*resize_domain
    call decomp_2d_init(nx, ny, nz, p_row, p_col)
 
-  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
    ! Test the c2c interface
-  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
    call decomp_2d_fft_init(PHYSICAL_IN_Z) ! non-default Z-pencil input
 
    ph => decomp_2d_fft_get_ph()
@@ -63,6 +63,7 @@ program fft_c2c_z
 
    t2 = 0._mytype
    t4 = 0._mytype
+   !$acc data copyin(in,zstart,zend) copy(out)
    do m = 1, ntest
 
       ! forward FFT
@@ -94,6 +95,7 @@ program fft_c2c_z
 
    ! checking accuracy
    error = 0._mytype
+   !$acc parallel loop default(present) reduction(+:error)
    do k = zstart(3), zend(3)
       do j = zstart(2), zend(2)
          do i = zstart(1), zend(1)
@@ -106,6 +108,7 @@ program fft_c2c_z
          end do
       end do
    end do
+  !$acc end loop
    call MPI_ALLREDUCE(error, err_all, 1, real_type, MPI_SUM, MPI_COMM_WORLD, ierror)
    err_all = err_all/real(nx, mytype)/real(ny, mytype)/real(nz, mytype)
 
@@ -122,6 +125,7 @@ program fft_c2c_z
       flops = 2._mytype*flops/((t1 + t3)/real(NTEST, mytype))
       write (*, *) 'GFLOPS : ', flops/1000._mytype**3
    end if
+   !$acc end data
 
    deallocate (in, out)
    nullify (ph)

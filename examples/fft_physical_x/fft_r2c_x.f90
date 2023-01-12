@@ -62,6 +62,7 @@ program fft_r2c_x
 
    t2 = 0._mytype
    t4 = 0._mytype
+   !$acc data copyin(in_r,xstart,xend) copy(out)
    do m = 1, ntest
 
       ! 3D r2c FFT
@@ -93,6 +94,7 @@ program fft_r2c_x
 
    ! checking accuracy
    error = 0._mytype
+   !$acc parallel loop default(present) reduction(+:error)
    do k = xstart(3), xend(3)
       do j = xstart(2), xend(2)
          do i = xstart(1), xend(1)
@@ -102,6 +104,7 @@ program fft_r2c_x
          end do
       end do
    end do
+   !$acc end loop
    call MPI_ALLREDUCE(error, err_all, 1, real_type, MPI_SUM, MPI_COMM_WORLD, ierror)
    err_all = err_all/real(nx, mytype)/real(ny, mytype)/real(nz, mytype)
 
@@ -110,6 +113,7 @@ program fft_r2c_x
       write (*, *) 'error / mesh point: ', err_all
       write (*, *) 'time (sec): ', t1, t3
    end if
+   !$acc end data
 
    deallocate (in_r, out)
    nullify (ph)

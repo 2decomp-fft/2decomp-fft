@@ -61,6 +61,7 @@ program fft_c2c_x
 
    t2 = 0._mytype
    t4 = 0._mytype
+  !$acc data copyin(in,xstart,xend) copy(out)
    do m = 1, ntest
 
       ! forward FFT
@@ -92,6 +93,7 @@ program fft_c2c_x
 
    ! checking accuracy
    error = 0._mytype
+   !$acc parallel loop default(present) reduction(+:error)
    do k = xstart(3), xend(3)
       do j = xstart(2), xend(2)
          do i = xstart(1), xend(1)
@@ -104,6 +106,7 @@ program fft_c2c_x
          end do
       end do
    end do
+   !$acc end loop
    call MPI_ALLREDUCE(error, err_all, 1, real_type, MPI_SUM, MPI_COMM_WORLD, ierror)
    err_all = err_all/real(nx, mytype)/real(ny, mytype)/real(nz, mytype)
 
@@ -120,6 +123,7 @@ program fft_c2c_x
       flops = 2._mytype*flops/((t1 + t3)/real(NTEST, mytype))
       write (*, *) 'GFLOPS : ', flops/1000._mytype**3
    end if
+  !$acc end data
 
    deallocate (in, out)
    nullify (ph)

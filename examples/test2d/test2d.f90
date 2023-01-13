@@ -61,6 +61,7 @@ program test2d
 
 #ifdef DEBUG
    if (nrank == 0) then
+      !$acc update self(u1)  
       write (*, *) 'Numbers held on Rank 0'
       write (*, *) ' '
       write (*, *) 'X-pencil'

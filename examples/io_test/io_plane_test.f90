@@ -1,9 +1,15 @@
+!! NB in case of GPU only the writing in the aligned pencil (i.e. X for a 1 array) is performed. 
+!! IO subrotines needs update for non managed GPU case
 program io_plane_test
 
    use mpi
 
    use decomp_2d
    use decomp_2d_io
+#if defined(_GPU)
+   use cudafor
+   use openacc
+#endif
 
    implicit none
 
@@ -37,7 +43,12 @@ program io_plane_test
    call alloc_y(u2, .true.)
    call alloc_z(u3, .true.)
 
+   ! For GPU we port the global data create the different pencil arrays 
+   ! Move back to host the arrays for writing on disk
+
+   !$acc data copyin(data1,xstart,xend) copy(u1,u2,u3) 
    ! original X-pensil based data
+   !$acc parallel loop default(present) 
    do k = xstart(3), xend(3)
       do j = xstart(2), xend(2)
          do i = xstart(1), xend(1)
@@ -45,22 +56,34 @@ program io_plane_test
          end do
       end do
    end do
+   !$acc end loop
+   write(*,*) 'End Loop'
+   call transpose_x_to_y(u1, u2)
+   call transpose_y_to_z(u2, u3)
+   !$acc update self(u1)  
+   !$acc update self(u2)  
+   !$acc update self(u3)  
+   !$acc end data
+   call decomp_2d_write_one(1, u1, '.', 'u1.dat', 0, 'test')
+ 
    call decomp_2d_write_plane(1, u1, 1, nx/2, '.', 'x_pencil-x_plane.dat', 'test')
+#if !defined(_GPU)
    call decomp_2d_write_plane(1, u1, 2, ny/2, '.', 'x_pencil-y_plane.dat', 'test')
    call decomp_2d_write_plane(1, u1, 3, nz/2, '.', 'x_pencil-z_plane.dat', 'test')
-
+#endif
    ! Y-pencil data
-   call transpose_x_to_y(u1, u2)
-   call decomp_2d_write_plane(2, u2, 1, nx/2, '.', 'y_pencil-x_plane.dat', 'test')
    call decomp_2d_write_plane(2, u2, 2, ny/2, '.', 'y_pencil-y_plane.dat', 'test')
+#if !defined(_GPU)
+   call decomp_2d_write_plane(2, u2, 1, nx/2, '.', 'y_pencil-x_plane.dat', 'test')
    call decomp_2d_write_plane(2, u2, 3, nz/2, '.', 'y_pencil-z_plane.dat', 'test')
+#endif
 
    ! Z-pencil data
-   call transpose_y_to_z(u2, u3)
+#if !defined(_GPU)
    call decomp_2d_write_plane(3, u3, 1, nx/2, '.', 'z_pencil-x_plane.dat', 'test')
    call decomp_2d_write_plane(3, u3, 2, ny/2, '.', 'z_pencil-y_plane.dat', 'test')
+#endif
    call decomp_2d_write_plane(3, u3, 3, nz/2, '.', 'z_pencil-z_plane.dat', 'test')
-
    ! Attemp to read the files
    if (nrank == 0) then
       inquire (iolength=iol) data1(1, 1, 1)
@@ -84,6 +107,7 @@ program io_plane_test
       write (*, *) 'passed self test x-plane'
 
       ! Y-plane
+#if !defined(_GPU)
       allocate (work(nx, 1, nz))
       open (10, FILE='x_pencil-y_plane.dat', FORM='unformatted', &
             ACCESS='DIRECT', RECL=iol)
@@ -118,6 +142,7 @@ program io_plane_test
       deallocate (work)
 
       write (*, *) 'passed self test z-plane'
+#endif
 
    end if
 

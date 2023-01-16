@@ -57,15 +57,20 @@ program io_plane_test
       end do
    end do
    !$acc end loop
-   write(*,*) 'End Loop'
    call transpose_x_to_y(u1, u2)
    call transpose_y_to_z(u2, u3)
    !$acc update self(u1)  
    !$acc update self(u2)  
    !$acc update self(u3)  
    !$acc end data
-   call decomp_2d_write_one(1, u1, '.', 'u1.dat', 0, 'test')
  
+#if defined(_GPU)
+   write (*, *) 'WARNING for GPU IO: write of a plane is supported only in the aligned pencil'
+   write (*, *) '                    i.e. x_plane-x_pencil'
+   write (*, *) '                    i.e. y_plane-y_pencil'
+   write (*, *) '                    i.e. z_plane-z_pencil'
+#endif
+
    call decomp_2d_write_plane(1, u1, 1, nx/2, '.', 'x_pencil-x_plane.dat', 'test')
 #if !defined(_GPU)
    call decomp_2d_write_plane(1, u1, 2, ny/2, '.', 'x_pencil-y_plane.dat', 'test')

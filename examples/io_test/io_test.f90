@@ -86,7 +86,7 @@ program io_test
    do k = xstart(3), xend(3)
       do j = xstart(2), xend(2)
          do i = xstart(1), xend(1)
-            if (abs((u2(i, j, k) - u2b(i, j, k))) > eps) stop 1
+            if (abs((u1(i, j, k) - u1b(i, j, k))) > eps) stop 1
          end do
       end do
    end do

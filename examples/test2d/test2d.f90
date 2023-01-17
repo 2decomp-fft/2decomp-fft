@@ -40,6 +40,18 @@ program test2d
       end do
    end do
 
+   ! Fill the local index
+   xst1 = xstart(1); xen1 = xend(1)
+   xst2 = xstart(2); xen2 = xend(2)
+   xst3 = xstart(3); xen3 = xend(3)
+   yst1 = ystart(1); yen1 = yend(1)
+   yst2 = ystart(2); yen2 = yend(2)
+   yst3 = ystart(3); yen3 = yend(3)
+   zst1 = zstart(1); zen1 = zend(1)
+   zst2 = zstart(2); zen2 = zend(2)
+   zst3 = zstart(3); zen3 = zend(3)
+   
+
    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
    ! Testing the swap routines
    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -151,7 +163,7 @@ program test2d
    if (ierror /= 0) call decomp_2d_abort(ierror, "MPI_ALLREDUCE")
    if (error_flag) call decomp_2d_abort(3, "error swaping z->y")
 
-  !!!!!!!!!!!!!!!!!!!!!!!
+   !!!!!!!!!!!!!!!!!!!!!!!
    ! y-pensil ==> x-pensil
    call transpose_y_to_x(u2, u1)
    ! call decomp_2d_write_one(1,u1,'u1b.dat')

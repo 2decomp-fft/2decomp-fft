@@ -64,30 +64,16 @@ program io_plane_test
    !$acc update self(u3)  
    !$acc end data
  
-#if defined(_GPU)
-   write (*, *) 'WARNING for GPU IO: write of a plane is supported only in the aligned pencil'
-   write (*, *) '                    i.e. x_plane-x_pencil'
-   write (*, *) '                    i.e. y_plane-y_pencil'
-   write (*, *) '                    i.e. z_plane-z_pencil'
-#endif
-
    call decomp_2d_write_plane(1, u1, 1, nx/2, '.', 'x_pencil-x_plane.dat', 'test')
-#if !defined(_GPU)
    call decomp_2d_write_plane(1, u1, 2, ny/2, '.', 'x_pencil-y_plane.dat', 'test')
    call decomp_2d_write_plane(1, u1, 3, nz/2, '.', 'x_pencil-z_plane.dat', 'test')
-#endif
    ! Y-pencil data
    call decomp_2d_write_plane(2, u2, 2, ny/2, '.', 'y_pencil-y_plane.dat', 'test')
-#if !defined(_GPU)
    call decomp_2d_write_plane(2, u2, 1, nx/2, '.', 'y_pencil-x_plane.dat', 'test')
    call decomp_2d_write_plane(2, u2, 3, nz/2, '.', 'y_pencil-z_plane.dat', 'test')
-#endif
-
    ! Z-pencil data
-#if !defined(_GPU)
    call decomp_2d_write_plane(3, u3, 1, nx/2, '.', 'z_pencil-x_plane.dat', 'test')
    call decomp_2d_write_plane(3, u3, 2, ny/2, '.', 'z_pencil-y_plane.dat', 'test')
-#endif
    call decomp_2d_write_plane(3, u3, 3, nz/2, '.', 'z_pencil-z_plane.dat', 'test')
    ! Attemp to read the files
    if (nrank == 0) then

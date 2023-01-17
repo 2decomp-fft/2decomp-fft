@@ -116,11 +116,11 @@ program fft_r2c_z
       write (*, *) 'error / mesh point: ', err_all
       write (*, *) 'time (sec): ', t1, t3
    end if
-  !$acc end data
+   !$acc end data
 
    deallocate (in_r, out)
-   nullify(ph)
-   nullify(sp)
+   nullify (ph)
+   nullify (sp)
    call decomp_2d_fft_finalize
    call decomp_2d_finalize
    call MPI_FINALIZE(ierror)

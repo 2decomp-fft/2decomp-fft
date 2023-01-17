@@ -61,7 +61,7 @@ program fft_c2c_x
 
    t2 = 0._mytype
    t4 = 0._mytype
-  !$acc data copyin(in,xstart,xend) copy(out)
+   !$acc data copyin(in,xstart,xend) copy(out)
    do m = 1, ntest
 
       ! forward FFT
@@ -123,7 +123,7 @@ program fft_c2c_x
       flops = 2._mytype*flops/((t1 + t3)/real(NTEST, mytype))
       write (*, *) 'GFLOPS : ', flops/1000._mytype**3
    end if
-  !$acc end data
+   !$acc end data
 
    deallocate (in, out)
    nullify (ph)

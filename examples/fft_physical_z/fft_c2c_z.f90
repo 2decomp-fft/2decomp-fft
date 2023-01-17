@@ -108,7 +108,7 @@ program fft_c2c_z
          end do
       end do
    end do
-  !$acc end loop
+   !$acc end loop
    call MPI_ALLREDUCE(error, err_all, 1, real_type, MPI_SUM, MPI_COMM_WORLD, ierror)
    err_all = err_all/real(nx, mytype)/real(ny, mytype)/real(nz, mytype)
 

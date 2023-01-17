@@ -45,9 +45,9 @@ program test2d
    call alloc_y(u2, opt_global=.true.)
    call alloc_z(u3, opt_global=.true.)
 
-   !$acc data copyin(data1,xstart,xend,ystart,yend,zstart,zend) copy(u1,u2,u3) 
+   !$acc data copyin(data1,xstart,xend,ystart,yend,zstart,zend) copy(u1,u2,u3)
    ! original x-pensil based data
-   !$acc parallel loop default(present) 
+   !$acc parallel loop default(present)
    do k = xstart(3), xend(3)
       do j = xstart(2), xend(2)
          do i = xstart(1), xend(1)
@@ -61,7 +61,7 @@ program test2d
 
 #ifdef DEBUG
    if (nrank == 0) then
-      !$acc update self(u1)  
+      !$acc update self(u1)
       write (*, *) 'Numbers held on Rank 0'
       write (*, *) ' '
       write (*, *) 'X-pencil'
@@ -77,7 +77,7 @@ program test2d
 
 #ifdef DEBUG
    if (nrank == 0) then
-      !$acc update self(u2)  
+      !$acc update self(u2)
       write (*, *) ' '
       write (*, *) 'Y-pencil'
       write (*, 10) int(u2)
@@ -88,7 +88,7 @@ program test2d
    ! 'u1.dat' and 'u2.dat' should be identical byte-by-byte
 
    ! also check the transposition this way
-   !$acc parallel loop default(present) 
+   !$acc parallel loop default(present)
    do k = ystart(3), yend(3)
       do j = ystart(2), yend(2)
          do i = ystart(1), yend(1)
@@ -107,7 +107,7 @@ program test2d
 
 #ifdef DEBUG
    if (nrank == 0) then
-      !$acc update self(u3)  
+      !$acc update self(u3)
       write (*, *) ' '
       write (*, *) 'Z-pencil'
       write (*, 10) int(u3)
@@ -117,7 +117,7 @@ program test2d
    ! call decomp_2d_write_one(3,u3,'u3.dat')
    ! 'u1.dat','u2.dat' and 'u3.dat' should be identical
 
-   !$acc parallel loop default(present) 
+   !$acc parallel loop default(present)
    do k = zstart(3), zend(3)
       do j = zstart(2), zend(2)
          do i = zstart(1), zend(1)
@@ -135,7 +135,7 @@ program test2d
    call transpose_z_to_y(u3, u2)
    ! call decomp_2d_write_one(2,u2,'u2b.dat')
 
-   !$acc parallel loop default(present) 
+   !$acc parallel loop default(present)
    do k = ystart(3), yend(3)
       do j = ystart(2), yend(2)
          do i = ystart(1), yend(1)
@@ -153,7 +153,7 @@ program test2d
    call transpose_y_to_x(u2, u1)
    ! call decomp_2d_write_one(1,u1,'u1b.dat')
 
-   !$acc parallel loop default(present) 
+   !$acc parallel loop default(present)
    do k = xstart(3), xend(3)
       do j = xstart(2), xend(2)
          do i = xstart(1), xend(1)

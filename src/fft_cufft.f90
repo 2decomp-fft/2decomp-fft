@@ -368,7 +368,7 @@ module decomp_2d_fft
 
       end if
 #endif
-      cufft_ws = cufft_ws / sizeof(1._mytype)
+      cufft_ws = cufft_ws/sizeof(1._mytype)
       allocate (cufft_workspace(cufft_ws))
       do j = 1, 3
          do i = -1, 2
@@ -413,11 +413,11 @@ module decomp_2d_fft
 
 #ifdef DOUBLE_PREC
       !$acc host_data use_device(inout)
-      istat = cufftExecZ2Z(plan1, inout, inout,isign)
+      istat = cufftExecZ2Z(plan1, inout, inout, isign)
       !$acc end host_data
 #else
       !$acc host_data use_device(inout)
-      istat = cufftExecC2C(plan1, inout, inout,isign)
+      istat = cufftExecC2C(plan1, inout, inout, isign)
       !$acc end host_data
 #endif
       if (istat /= 0) call decomp_2d_abort(__FILE__, __LINE__, istat, "cufftExecC2C/Z2Z")
@@ -439,13 +439,13 @@ module decomp_2d_fft
       s3 = size(inout, 3)
       do k = 1, s3
 #ifdef DOUBLE_PREC
-        !$acc host_data use_device(inout)
-        istat = cufftExecZ2Z(plan1, inout(:,:,k), inout(:,:,k),isign)
-        !$acc end host_data
+         !$acc host_data use_device(inout)
+         istat = cufftExecZ2Z(plan1, inout(:, :, k), inout(:, :, k), isign)
+         !$acc end host_data
 #else
-        !$acc host_data use_device(inout)
-        istat = cufftExecC2C(plan1, inout(:,:,k), inout(:,:,k),isign)
-        !$acc end host_data
+         !$acc host_data use_device(inout)
+         istat = cufftExecC2C(plan1, inout(:, :, k), inout(:, :, k), isign)
+         !$acc end host_data
 #endif
          if (istat /= 0) call decomp_2d_abort(__FILE__, __LINE__, istat, "cufftExecC2C/Z2Z")
       end do
@@ -463,14 +463,13 @@ module decomp_2d_fft
 
       integer :: istat
 
-
 #ifdef DOUBLE_PREC
       !$acc host_data use_device(inout)
-      istat = cufftExecZ2Z(plan1, inout, inout,isign)
+      istat = cufftExecZ2Z(plan1, inout, inout, isign)
       !$acc end host_data
 #else
       !$acc host_data use_device(inout)
-      istat = cufftExecC2C(plan1, inout, inout,isign)
+      istat = cufftExecC2C(plan1, inout, inout, isign)
       !$acc end host_data
 #endif
       if (istat /= 0) call decomp_2d_abort(__FILE__, __LINE__, istat, "cufftExecC2C/Z2Z")
@@ -677,7 +676,7 @@ module decomp_2d_fft
 
 #ifndef OVERWRITE
       !$acc exit data delete(wk1) async
-      !$acc wait 
+      !$acc wait
       deallocate (wk1)
 #endif
       !$acc end data

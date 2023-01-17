@@ -53,7 +53,7 @@ program io_test
    call alloc_z(u3b, .true.)
 
    ! original x-pencil based data
-   !$acc data copyin(data1,xstart,xend) copy(u1,u2,u3) 
+   !$acc data copyin(data1,xstart,xend) copy(u1,u2,u3)
    !$acc parallel loop default(present)
    do k = xstart(3), xend(3)
       do j = xstart(2), xend(2)
@@ -67,10 +67,10 @@ program io_test
    ! transpose
    call transpose_x_to_y(u1, u2)
    call transpose_y_to_z(u2, u3)
-   !$acc update self(u1)  
-   !$acc update self(u2)  
+   !$acc update self(u1)
+   !$acc update self(u2)
    !$acc update self(u3)
-   !$acc end data  
+   !$acc end data
 
    ! write to disk
    call decomp_2d_write_one(1, u1, '.', 'u1.dat', 0, 'test')

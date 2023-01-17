@@ -112,7 +112,7 @@ program io_var_test
    call alloc_z(u3l_b, large, .true.)
 
    ! distribute the data
-   !$acc data copyin(data1,cdata1,data1_large,xstart,xend,large%xst,large%xen) copy(u1,u2,u3,u1l,u2l,u3l,cu1,cu2,cu3) 
+   !$acc data copyin(data1,cdata1,data1_large,xstart,xend,large%xst,large%xen) copy(u1,u2,u3,u1l,u2l,u3l,cu1,cu2,cu3)
    !$acc parallel loop default(present)
    do k = xstart(3), xend(3)
       do j = xstart(2), xend(2)

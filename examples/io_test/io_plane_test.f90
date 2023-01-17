@@ -1,7 +1,7 @@
 !!
 !! FIXME The issue below is specific to GPU and should be discussed in a dedicated github issue
 !!
-!! NB in case of GPU only the writing in the aligned pencil (i.e. X for a 1 array) is performed. 
+!! NB in case of GPU only the writing in the aligned pencil (i.e. X for a 1 array) is performed.
 !! IO subrotines needs update for non managed GPU case
 !!
 program io_plane_test
@@ -48,12 +48,12 @@ program io_plane_test
    call alloc_y(u2, .true.)
    call alloc_z(u3, .true.)
 
-   ! For GPU we port the global data create the different pencil arrays 
+   ! For GPU we port the global data create the different pencil arrays
    ! Move back to host the arrays for writing on disk
 
-   !$acc data copyin(data1,xstart,xend) copy(u1,u2,u3) 
+   !$acc data copyin(data1,xstart,xend) copy(u1,u2,u3)
    ! original X-pensil based data
-   !$acc parallel loop default(present) 
+   !$acc parallel loop default(present)
    do k = xstart(3), xend(3)
       do j = xstart(2), xend(2)
          do i = xstart(1), xend(1)
@@ -64,11 +64,11 @@ program io_plane_test
    !$acc end loop
    call transpose_x_to_y(u1, u2)
    call transpose_y_to_z(u2, u3)
-   !$acc update self(u1)  
-   !$acc update self(u2)  
-   !$acc update self(u3)  
+   !$acc update self(u1)
+   !$acc update self(u2)
+   !$acc update self(u3)
    !$acc end data
- 
+
    call decomp_2d_write_plane(1, u1, 1, nx/2, '.', 'x_pencil-x_plane.dat', 'test')
    call decomp_2d_write_plane(1, u1, 2, ny/2, '.', 'x_pencil-y_plane.dat', 'test')
    call decomp_2d_write_plane(1, u1, 3, nz/2, '.', 'x_pencil-z_plane.dat', 'test')
@@ -105,8 +105,7 @@ program io_plane_test
          write (*, *) 'passed self test x-plane'
       else
          write (*, *) "Warning : x_pencil-x_plane.dat is missing"
-      endif
-
+      end if
 
       ! Y-plane
       inquire (file='x_pencil-y_plane.dat', exist=found)
@@ -128,7 +127,7 @@ program io_plane_test
          write (*, *) 'passed self test y-plane'
       else
          write (*, *) 'Warning : x_pencil-y_plane.dat is missing'
-      endif
+      end if
 
       ! Z-plane
       inquire (file='x_pencil-z_plane.dat', exist=found)
@@ -150,7 +149,7 @@ program io_plane_test
          write (*, *) 'passed self test z-plane'
       else
          write (*, *) 'Warning : x_pencil-z_plane.dat is missing'
-      endif
+      end if
 
    end if
 

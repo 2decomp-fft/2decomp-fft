@@ -39,9 +39,9 @@ program fft_physical_x
    nz = nz_base*resize_domain
    call decomp_2d_init(nx + 1, ny + 1, nz + 1, p_row, p_col)
 
-  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
    ! Test the c2c interface
-  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
    call decomp_2d_fft_init(PHYSICAL_IN_X, nx, ny, nz) ! force the default x pencil
    ph => decomp_2d_fft_get_ph()
@@ -51,13 +51,13 @@ program fft_physical_x
    call alloc_z(out, ph, .true.)
    ! Convert pointers to loops start/end to scalar
    ! This is define loop on GPUs
-   xst1 = ph%xst(1); xen1=ph%xen(1);
-   xst2 = ph%xst(2); xen2=ph%xen(2);
-   xst3 = ph%xst(3); xen3=ph%xen(3);
+   xst1 = ph%xst(1); xen1 = ph%xen(1); 
+   xst2 = ph%xst(2); xen2 = ph%xen(2); 
+   xst3 = ph%xst(3); xen3 = ph%xen(3); 
    ! initilise input
-   do k=xst3,xen3
-      do j=xst2,xen2
-         do i=xst1,xen1
+   do k = xst3, xen3
+      do j = xst2, xen2
+         do i = xst1, xen1
             dr = real(i, mytype)/real(nx, mytype)*real(j, mytype) &
                  /real(ny, mytype)*real(k, mytype)/real(nz, mytype)
             di = dr
@@ -100,10 +100,10 @@ program fft_physical_x
 
    ! checking accuracy
    error = 0._mytype
-  !$acc parallel loop default(present) reduction(+:error)
-   do k=xst3,xen3
-      do j=xst2,xen2
-         do i=xst1,xen1
+   !$acc parallel loop default(present) reduction(+:error)
+   do k = xst3, xen3
+      do j = xst2, xen2
+         do i = xst1, xen1
             dr = real(i, mytype)/real(nx, mytype)*real(j, mytype) &
                  /real(ny, mytype)*real(k, mytype)/real(nz, mytype)
             di = dr
@@ -130,7 +130,7 @@ program fft_physical_x
       flops = 2._mytype*flops/((t1 + t3)/real(NTEST, mytype))
       write (*, *) 'GFLOPS : ', flops/1000._mytype**3
    end if
-  !$acc end data
+   !$acc end data
 
    deallocate (in, out)
    nullify (ph)

@@ -1,5 +1,9 @@
-!! NB in case of GPU only the writing in the aligned pencil (i.e. X for a 1 array) is performed. 
+!!
+!! FIXME The issue below is specific to GPU and should be discussed in a dedicated github issue
+!!
+!! NB in case of GPU only the writing in the aligned pencil (i.e. X for a 1 array) is performed.
 !! IO subrotines needs update for non managed GPU case
+!!
 program io_plane_test
 
    use mpi
@@ -22,6 +26,9 @@ program io_plane_test
    real(mytype), allocatable, dimension(:, :, :) :: work
 
    integer :: i, j, k, m, ierror, iol
+   integer :: xst1, xst2, xst3
+   integer :: xen1, xen2, xen3
+   logical :: found
 
    call MPI_INIT(ierror)
    call MPI_COMM_SIZE(MPI_COMM_WORLD, nproc, ierror)
@@ -43,15 +50,18 @@ program io_plane_test
    call alloc_y(u2, .true.)
    call alloc_z(u3, .true.)
 
-   ! For GPU we port the global data create the different pencil arrays 
+   ! For GPU we port the global data create the different pencil arrays
    ! Move back to host the arrays for writing on disk
+   xst1 = xstart(1); xen1 = xend(1)
+   xst2 = xstart(2); xen2 = xend(2)
+   xst3 = xstart(3); xen3 = xend(3)
 
-   !$acc data copyin(data1,xstart,xend) copy(u1,u2,u3) 
+   !$acc data copyin(data1) copy(u1,u2,u3)
    ! original X-pensil based data
-   !$acc parallel loop default(present) 
-   do k = xstart(3), xend(3)
-      do j = xstart(2), xend(2)
-         do i = xstart(1), xend(1)
+   !$acc parallel loop default(present)
+   do k = xst3, xen3
+      do j = xst2, xen2
+         do i = xst1, xen1
             u1(i, j, k) = data1(i, j, k)
          end do
       end do
@@ -59,11 +69,11 @@ program io_plane_test
    !$acc end loop
    call transpose_x_to_y(u1, u2)
    call transpose_y_to_z(u2, u3)
-   !$acc update self(u1)  
-   !$acc update self(u2)  
-   !$acc update self(u3)  
+   !$acc update self(u1)
+   !$acc update self(u2)
+   !$acc update self(u3)
    !$acc end data
- 
+   ! X-pencil data
    call decomp_2d_write_plane(1, u1, 1, nx/2, '.', 'x_pencil-x_plane.dat', 'test')
    call decomp_2d_write_plane(1, u1, 2, ny/2, '.', 'x_pencil-y_plane.dat', 'test')
    call decomp_2d_write_plane(1, u1, 3, nz/2, '.', 'x_pencil-z_plane.dat', 'test')
@@ -80,60 +90,70 @@ program io_plane_test
       inquire (iolength=iol) data1(1, 1, 1)
 
       ! X-plane
-      allocate (work(1, ny, nz))
-      open (10, FILE='x_pencil-x_plane.dat', FORM='unformatted', &
-            ACCESS='DIRECT', RECL=iol)
-      m = 1
-      do k = 1, nz
-         do j = 1, ny
-            read (10, rec=m) work(1, j, k)
-            m = m + 1
+      inquire (file='x_pencil-x_plane.dat', exist=found)
+      if (found) then
+         allocate (work(1, ny, nz))
+         open (10, FILE='x_pencil-x_plane.dat', FORM='unformatted', &
+               ACCESS='DIRECT', RECL=iol)
+         m = 1
+         do k = 1, nz
+            do j = 1, ny
+               read (10, rec=m) work(1, j, k)
+               m = m + 1
+            end do
          end do
-      end do
-!     write(*,*) ' '
-!     write(*,'(15I5)') int(work)
-      close (10)
-      deallocate (work)
-
-      write (*, *) 'passed self test x-plane'
+!        write(*,*) ' '
+!        write(*,'(15I5)') int(work)
+         close (10)
+         deallocate (work)
+         write (*, *) 'passed self test x-plane'
+      else
+         write (*, *) "Warning : x_pencil-x_plane.dat is missing"
+      end if
 
       ! Y-plane
-#if !defined(_GPU)
-      allocate (work(nx, 1, nz))
-      open (10, FILE='x_pencil-y_plane.dat', FORM='unformatted', &
-            ACCESS='DIRECT', RECL=iol)
-      m = 1
-      do k = 1, nz
-         do i = 1, nx
-            read (10, rec=m) work(i, 1, k)
-            m = m + 1
+      inquire (file='x_pencil-y_plane.dat', exist=found)
+      if (found) then
+         allocate (work(nx, 1, nz))
+         open (10, FILE='x_pencil-y_plane.dat', FORM='unformatted', &
+               ACCESS='DIRECT', RECL=iol)
+         m = 1
+         do k = 1, nz
+            do i = 1, nx
+               read (10, rec=m) work(i, 1, k)
+               m = m + 1
+            end do
          end do
-      end do
-!     write(*,*) ' '
-!     write(*,'(15I5)') int(work)
-      close (10)
-      deallocate (work)
-
-      write (*, *) 'passed self test y-plane'
+!        write(*,*) ' '
+!        write(*,'(15I5)') int(work)
+         close (10)
+         deallocate (work)
+         write (*, *) 'passed self test y-plane'
+      else
+         write (*, *) 'Warning : x_pencil-y_plane.dat is missing'
+      end if
 
       ! Z-plane
-      allocate (work(nx, ny, 1))
-      open (10, FILE='x_pencil-z_plane.dat', FORM='unformatted', &
-            ACCESS='DIRECT', RECL=iol)
-      m = 1
-      do j = 1, ny
-         do i = 1, nx
-            read (10, rec=m) work(i, j, 1)
-            m = m + 1
+      inquire (file='x_pencil-z_plane.dat', exist=found)
+      if (found) then
+         allocate (work(nx, ny, 1))
+         open (10, FILE='x_pencil-z_plane.dat', FORM='unformatted', &
+               ACCESS='DIRECT', RECL=iol)
+         m = 1
+         do j = 1, ny
+            do i = 1, nx
+               read (10, rec=m) work(i, j, 1)
+               m = m + 1
+            end do
          end do
-      end do
-!     write(*,*) ' '
-!     write(*,'(15I5)') int(work)
-      close (10)
-      deallocate (work)
-
-      write (*, *) 'passed self test z-plane'
-#endif
+!        write(*,*) ' '
+!        write(*,'(15I5)') int(work)
+         close (10)
+         deallocate (work)
+         write (*, *) 'passed self test z-plane'
+      else
+         write (*, *) 'Warning : x_pencil-z_plane.dat is missing'
+      end if
 
    end if
 

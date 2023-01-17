@@ -22,6 +22,17 @@ else
    call get_decomp_info(decomp)
 end if
 
+! The current GPU build will not perform transpose operations when writing planes
+#if defined(_GPU)
+if (ipencil /= iplane) then
+   call decomp_2d_warning(__FILE__, &
+                          __LINE__, &
+                          ipencil, &
+                          "GPU build does not allow transpose operations when writing planes")
+   return
+endif
+#endif
+
 opened_new = .false.
 
 if (iplane == 1) then

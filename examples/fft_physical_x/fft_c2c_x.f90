@@ -25,6 +25,8 @@ program fft_c2c_x
 
    real(mytype) :: dr, di, error, err_all, n1, flops
    integer :: ierror, i, j, k, m
+   integer :: xst1, xst2, xst3
+   integer :: xen1, xen2, xen3
    real(mytype) :: t1, t2, t3, t4
 
    call MPI_INIT(ierror)
@@ -37,9 +39,9 @@ program fft_c2c_x
    nz = nz_base*resize_domain
    call decomp_2d_init(nx, ny, nz, p_row, p_col)
 
-  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
    ! Test the c2c interface
-  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
    call decomp_2d_fft_init(PHYSICAL_IN_X) ! force the default x pencil
    ph => decomp_2d_fft_get_ph()
@@ -47,10 +49,13 @@ program fft_c2c_x
    ! output is Z-pencil data
    call alloc_x(in, ph, .true.)
    call alloc_z(out, ph, .true.)
+   xst1 = xstart(1); xen1 = xend(1)
+   xst2 = xstart(2); xen2 = xend(2)
+   xst3 = xstart(3); xen3 = xend(3)
    ! initilise input
-   do k = xstart(3), xend(3)
-      do j = xstart(2), xend(2)
-         do i = xstart(1), xend(1)
+   do k = xst3, xen3
+      do j = xst2, xen2
+         do i = xst1, xen1
             dr = real(i, mytype)/real(nx, mytype)*real(j, mytype) &
                  /real(ny, mytype)*real(k, mytype)/real(nz, mytype)
             di = dr
@@ -61,7 +66,7 @@ program fft_c2c_x
 
    t2 = 0._mytype
    t4 = 0._mytype
-  !$acc data copyin(in,xstart,xend) copy(out)
+   !$acc data copyin(in) copy(out)
    do m = 1, ntest
 
       ! forward FFT
@@ -94,9 +99,9 @@ program fft_c2c_x
    ! checking accuracy
    error = 0._mytype
    !$acc parallel loop default(present) reduction(+:error)
-   do k = xstart(3), xend(3)
-      do j = xstart(2), xend(2)
-         do i = xstart(1), xend(1)
+   do k = xst3, xen3
+      do j = xst2, xen2
+         do i = xst1, xen1
             dr = real(i, mytype)/real(nx, mytype)*real(j, mytype) &
                  /real(ny, mytype)*real(k, mytype)/real(nz, mytype)
             di = dr
@@ -123,7 +128,7 @@ program fft_c2c_x
       flops = 2._mytype*flops/((t1 + t3)/real(NTEST, mytype))
       write (*, *) 'GFLOPS : ', flops/1000._mytype**3
    end if
-  !$acc end data
+   !$acc end data
 
    deallocate (in, out)
    nullify (ph)

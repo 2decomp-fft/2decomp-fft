@@ -25,6 +25,8 @@ program io_test
    real(mytype), parameter :: eps = 1.0E-7_mytype
 
    integer :: i, j, k, m, ierror
+   integer :: xst1, xst2, xst3
+   integer :: xen1, xen2, xen3
 
    call MPI_INIT(ierror)
    call decomp_2d_init(nx, ny, nz, p_row, p_col)
@@ -52,12 +54,15 @@ program io_test
    call alloc_y(u2b, .true.)
    call alloc_z(u3b, .true.)
 
+   xst1 = xstart(1); xen1 = xend(1)
+   xst2 = xstart(2); xen2 = xend(2)
+   xst3 = xstart(3); xen3 = xend(3)
    ! original x-pencil based data
-   !$acc data copyin(data1,xstart,xend) copy(u1,u2,u3) 
+   !$acc data copyin(data1) copy(u1,u2,u3)
    !$acc parallel loop default(present)
-   do k = xstart(3), xend(3)
-      do j = xstart(2), xend(2)
-         do i = xstart(1), xend(1)
+   do k = xst3, xen3
+      do j = xst2, xen2
+         do i = xst1, xen1
             u1(i, j, k) = data1(i, j, k)
          end do
       end do
@@ -67,10 +72,10 @@ program io_test
    ! transpose
    call transpose_x_to_y(u1, u2)
    call transpose_y_to_z(u2, u3)
-   !$acc update self(u1)  
-   !$acc update self(u2)  
+   !$acc update self(u1)
+   !$acc update self(u2)
    !$acc update self(u3)
-   !$acc end data  
+   !$acc end data
 
    ! write to disk
    call decomp_2d_write_one(1, u1, '.', 'u1.dat', 0, 'test')

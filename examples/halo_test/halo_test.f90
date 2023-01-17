@@ -410,7 +410,7 @@ contains
       call check_err(div4, "Z")
 
       deallocate (uh, vh, wk2, wk3)
-      end subroutine test_div_haloZ
+   end subroutine test_div_haloZ
 
    subroutine check_err(divh, pencil)
 

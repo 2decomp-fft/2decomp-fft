@@ -14,19 +14,19 @@ program init_test
   integer, parameter :: nx = 5
   integer, parameter :: ny = 6
   integer, parameter :: nz = 7
-  integer, parameter :: nexpect = nx * ny * nz
+  integer, parameter :: nexpect = nx*ny*nz
 
   integer :: p_row, p_col
 
   integer :: ierr
 
   call MPI_Init(ierr)
-  
+
   p_row = 0; p_col = 0
   call run(p_row, p_col)
 
   call MPI_Finalize(ierr)
-  
+
 contains
 
   subroutine run(p_row, p_col)

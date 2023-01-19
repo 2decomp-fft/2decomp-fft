@@ -1,4 +1,4 @@
-program fft_physical_x
+program fft_r2c_x
 
    use decomp_2d
    use decomp_2d_fft
@@ -20,10 +20,11 @@ program fft_physical_x
 
    integer, parameter :: ntest = 10  ! repeat test this times
 
-   type(decomp_info), pointer :: ph => null()
-   complex(mytype), allocatable, dimension(:, :, :) :: in, out
+   type(decomp_info), pointer :: ph => null(), sp => null()
+   complex(mytype), allocatable, dimension(:, :, :) :: out
+   real(mytype), allocatable, dimension(:, :, :) :: in_r
 
-   real(mytype) :: dr, di, error, err_all, n1, flops
+   real(mytype) :: dr, error, err_all
    integer :: ierror, i, j, k, m
    real(mytype) :: t1, t2, t3, t4
 
@@ -35,26 +36,26 @@ program fft_physical_x
    nx = nx_base*resize_domain
    ny = ny_base*resize_domain
    nz = nz_base*resize_domain
-   call decomp_2d_init(nx + 1, ny + 1, nz + 1, p_row, p_col)
+   call decomp_2d_init(nx, ny, nz, p_row, p_col)
 
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-   ! Test the c2c interface
+   ! Test the r2c/c2r interface
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+   call decomp_2d_fft_init(PHYSICAL_IN_X)
 
-   call decomp_2d_fft_init(PHYSICAL_IN_X, nx, ny, nz) ! force the default x pencil
    ph => decomp_2d_fft_get_ph()
+   sp => decomp_2d_fft_get_sp()
    !  input is X-pencil data
    ! output is Z-pencil data
-   call alloc_x(in, ph, .true.)
-   call alloc_z(out, ph, .true.)
+   call alloc_x(in_r, ph, .true.)
+   call alloc_z(out, sp, .true.)
+
    ! initilise input
-   do k = ph%xst(3), ph%xen(3)
-      do j = ph%xst(2), ph%xen(2)
-         do i = ph%xst(1), ph%xen(1)
-            dr = real(i, mytype)/real(nx, mytype)*real(j, mytype) &
-                 /real(ny, mytype)*real(k, mytype)/real(nz, mytype)
-            di = dr
-            in(i, j, k) = cmplx(dr, di, mytype)
+   do k = xstart(3), xend(3)
+      do j = xstart(2), xend(2)
+         do i = xstart(1), xend(1)
+            in_r(i, j, k) = real(i, mytype)/real(nx, mytype)*real(j, mytype) &
+                            /real(ny, mytype)*real(k, mytype)/real(nz, mytype)
          end do
       end do
    end do
@@ -63,19 +64,19 @@ program fft_physical_x
    t4 = 0._mytype
    do m = 1, ntest
 
-      ! forward FFT
+      ! 3D r2c FFT
       t1 = MPI_WTIME()
-      call decomp_2d_fft_3d(in, out, DECOMP_2D_FFT_FORWARD)
+      call decomp_2d_fft_3d(in_r, out)
       t2 = t2 + MPI_WTIME() - t1
 
-      ! inverse FFT
+      ! 3D inverse FFT
       t3 = MPI_WTIME()
-      call decomp_2d_fft_3d(out, in, DECOMP_2D_FFT_BACKWARD)
+      call decomp_2d_fft_3d(out, in_r)
       t4 = t4 + MPI_WTIME() - t3
 
       ! normalisation - note 2DECOMP&FFT doesn't normalise
       !$acc kernels
-      in = in/real(nx, mytype)/real(ny, mytype)/real(nz, mytype)
+      in_r = in_r/(real(nx, mytype)*real(ny, mytype)*real(nz, mytype))
       !$acc end kernels
 
    end do
@@ -92,15 +93,12 @@ program fft_physical_x
 
    ! checking accuracy
    error = 0._mytype
-   do k = ph%xst(3), ph%xen(3)
-      do j = ph%xst(2), ph%xen(2)
-         do i = ph%xst(1), ph%xen(1)
+   do k = xstart(3), xend(3)
+      do j = xstart(2), xend(2)
+         do i = xstart(1), xend(1)
             dr = real(i, mytype)/real(nx, mytype)*real(j, mytype) &
                  /real(ny, mytype)*real(k, mytype)/real(nz, mytype)
-            di = dr
-            dr = dr - real(in(i, j, k), mytype)
-            di = di - aimag(in(i, j, k))
-            error = error + sqrt(dr*dr + di*di)
+            error = error + abs(in_r(i, j, k) - dr)
          end do
       end do
    end do
@@ -108,24 +106,17 @@ program fft_physical_x
    err_all = err_all/real(nx, mytype)/real(ny, mytype)/real(nz, mytype)
 
    if (nrank == 0) then
-      write (*, *) '===== c2c interface ====='
+      write (*, *) '===== r2c/c2r interface ====='
       write (*, *) 'error / mesh point: ', err_all
       write (*, *) 'time (sec): ', t1, t3
-      n1 = real(nx, mytype)*real(ny, mytype)*real(nz, mytype)
-      n1 = n1**(1._mytype/3._mytype)
-      ! 5n*log(n) flops per 1D FFT of size n using Cooley-Tukey algorithm
-      flops = 5._mytype*n1*log(n1)/log(2.0_mytype)
-      ! 3 sets of 1D FFTs for 3 directions, each having n^2 1D FFTs
-      flops = flops*3._mytype*n1**2
-      flops = 2._mytype*flops/((t1 + t3)/real(NTEST, mytype))
-      write (*, *) 'GFLOPS : ', flops/1000._mytype**3
    end if
 
-   deallocate (in, out)
+   deallocate (in_r, out)
    nullify (ph)
+   nullify (sp)
    call decomp_2d_fft_finalize
    call decomp_2d_finalize
    call MPI_FINALIZE(ierror)
 
-end program fft_physical_x
+end program fft_r2c_x
 

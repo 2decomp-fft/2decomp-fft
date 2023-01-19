@@ -1,4 +1,4 @@
-program fft_physical_x
+program fft_c2c_x
 
    use decomp_2d
    use decomp_2d_fft
@@ -35,22 +35,22 @@ program fft_physical_x
    nx = nx_base*resize_domain
    ny = ny_base*resize_domain
    nz = nz_base*resize_domain
-   call decomp_2d_init(nx + 1, ny + 1, nz + 1, p_row, p_col)
+   call decomp_2d_init(nx, ny, nz, p_row, p_col)
 
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
    ! Test the c2c interface
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-   call decomp_2d_fft_init(PHYSICAL_IN_X, nx, ny, nz) ! force the default x pencil
+   call decomp_2d_fft_init(PHYSICAL_IN_X) ! force the default x pencil
    ph => decomp_2d_fft_get_ph()
    !  input is X-pencil data
    ! output is Z-pencil data
    call alloc_x(in, ph, .true.)
    call alloc_z(out, ph, .true.)
    ! initilise input
-   do k = ph%xst(3), ph%xen(3)
-      do j = ph%xst(2), ph%xen(2)
-         do i = ph%xst(1), ph%xen(1)
+   do k = xstart(3), xend(3)
+      do j = xstart(2), xend(2)
+         do i = xstart(1), xend(1)
             dr = real(i, mytype)/real(nx, mytype)*real(j, mytype) &
                  /real(ny, mytype)*real(k, mytype)/real(nz, mytype)
             di = dr
@@ -92,9 +92,9 @@ program fft_physical_x
 
    ! checking accuracy
    error = 0._mytype
-   do k = ph%xst(3), ph%xen(3)
-      do j = ph%xst(2), ph%xen(2)
-         do i = ph%xst(1), ph%xen(1)
+   do k = xstart(3), xend(3)
+      do j = xstart(2), xend(2)
+         do i = xstart(1), xend(1)
             dr = real(i, mytype)/real(nx, mytype)*real(j, mytype) &
                  /real(ny, mytype)*real(k, mytype)/real(nz, mytype)
             di = dr
@@ -127,5 +127,5 @@ program fft_physical_x
    call decomp_2d_finalize
    call MPI_FINALIZE(ierror)
 
-end program fft_physical_x
+end program fft_c2c_x
 

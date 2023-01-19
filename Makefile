@@ -5,6 +5,7 @@
 #   -DDOUBLE_PREC - use double-precision
 #   -DSAVE_SINGLE - Save 3D data in single-precision
 #   -DDEBG        - debugging
+#   -DOVERWIR     - Enable overwriting optimisation in MKL FFT
 # generate a Git version string
 GIT_VERSION := $(shell git describe --tag --long --always)
 
@@ -33,7 +34,7 @@ CMPINC = Makefile.compilers
 include $(CMPINC)
 
 ### List of files for the main code
-SRCDECOMP = factor.f90 decomp_2d.f90 log.f90 io.f90
+SRCDECOMP = decomp_2d_constants.f90 factor.f90 decomp_2d.f90 log.f90 io.f90
 
 #######FFT settings##########
 ifeq ($(FFT),fftw3)
@@ -98,7 +99,7 @@ SRCDIR = src
 DECOMPINC = mod
 FFLAGS += $(MODFLAG)$(DECOMPINC) -I$(DECOMPINC)
 
-SRCDECOMP := $(SRCDECOMP) fft_$(FFT).f90
+SRCDECOMP := $(SRCDECOMP) fft_$(FFT).f90 fft_log.f90
 SRCDECOMP_ = $(patsubst %.f90,$(SRCDIR)/%.f90,$(filter-out %/mkl_dfti.f90,$(SRCDECOMP)))
 SRCDECOMP_ += $(filter %/mkl_dfti.f90,$(SRCDECOMP))
 OBJDECOMP_MKL_ = $(patsubst $(MKLROOT)/include/%.f90,$(OBJDIR)/%.f90,$(filter %/mkl_dfti.f90,$(SRCDECOMP_)))

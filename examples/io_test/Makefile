@@ -48,8 +48,6 @@ endif
 
 clean:
 	rm -f *.o io_test io_read io_var_test io_plane_test io_bench
-
-realclean: clean
 	rm -f *.dat io_var_data.* *.log
 
 %.o : %.f90

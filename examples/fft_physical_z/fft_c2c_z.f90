@@ -26,6 +26,8 @@ program fft_c2c_z
 
    real(mytype) :: dr, di, error, err_all, n1, flops
    integer :: ierror, i, j, k, m
+   integer :: zst1, zst2, zst3
+   integer :: zen1, zen2, zen3
    real(mytype) :: t1, t2, t3, t4
 
    call MPI_INIT(ierror)
@@ -38,9 +40,9 @@ program fft_c2c_z
    nz = nz_base*resize_domain
    call decomp_2d_init(nx, ny, nz, p_row, p_col)
 
-  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
    ! Test the c2c interface
-  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
    call decomp_2d_fft_init(PHYSICAL_IN_Z) ! non-default Z-pencil input
 
    ph => decomp_2d_fft_get_ph()
@@ -48,11 +50,14 @@ program fft_c2c_z
    ! output is X-pencil data
    call alloc_z(in, ph, .true.)
    call alloc_x(out, ph, .true.)
+   zst1 = zstart(1); zen1 = zend(1)
+   zst2 = zstart(2); zen2 = zend(2)
+   zst3 = zstart(3); zen3 = zend(3)
 
    ! initilise input
-   do k = zstart(3), zend(3)
-      do j = zstart(2), zend(2)
-         do i = zstart(1), zend(1)
+   do k = zst3, zen3
+      do j = zst2, zen2
+         do i = zst1, zen1
             dr = real(i, mytype)/real(nx, mytype)*real(j, mytype) &
                  /real(ny, mytype)*real(k, mytype)/real(nz, mytype)
             di = dr
@@ -63,6 +68,7 @@ program fft_c2c_z
 
    t2 = 0._mytype
    t4 = 0._mytype
+   !$acc data copyin(in) copy(out)
    do m = 1, ntest
 
       ! forward FFT
@@ -94,9 +100,10 @@ program fft_c2c_z
 
    ! checking accuracy
    error = 0._mytype
-   do k = zstart(3), zend(3)
-      do j = zstart(2), zend(2)
-         do i = zstart(1), zend(1)
+   !$acc parallel loop default(present) reduction(+:error)
+   do k = zst3, zen3
+      do j = zst2, zen2
+         do i = zst1, zen1
             dr = real(i, mytype)/real(nx, mytype)*real(j, mytype) &
                  /real(ny, mytype)*real(k, mytype)/real(nz, mytype)
             di = dr
@@ -106,6 +113,7 @@ program fft_c2c_z
          end do
       end do
    end do
+   !$acc end loop
    call MPI_ALLREDUCE(error, err_all, 1, real_type, MPI_SUM, MPI_COMM_WORLD, ierror)
    err_all = err_all/real(nx, mytype)/real(ny, mytype)/real(nz, mytype)
 
@@ -122,6 +130,7 @@ program fft_c2c_z
       flops = 2._mytype*flops/((t1 + t3)/real(NTEST, mytype))
       write (*, *) 'GFLOPS : ', flops/1000._mytype**3
    end if
+   !$acc end data
 
    deallocate (in, out)
    nullify (ph)

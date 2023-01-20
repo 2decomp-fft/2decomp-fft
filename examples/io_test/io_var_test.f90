@@ -33,6 +33,9 @@ program io_var_test
    complex(mytype), allocatable, dimension(:) :: ctmp
    integer, allocatable, dimension(:) :: itmp
 
+   integer :: xst1, xst2, xst3
+   integer :: xen1, xen2, xen3
+
    TYPE(DECOMP_INFO) :: large
 
    integer :: i, j, k, m, ierror, fh
@@ -112,21 +115,32 @@ program io_var_test
    call alloc_z(u3l_b, large, .true.)
 
    ! distribute the data
-   do k = xstart(3), xend(3)
-      do j = xstart(2), xend(2)
-         do i = xstart(1), xend(1)
+   !$acc data copyin(data1,cdata1,data1_large) copy(u1,u2,u3,u1l,u2l,u3l,cu1,cu2,cu3)
+   xst1 = xstart(1); xen1=xend(1)
+   xst2 = xstart(2); xen2=xend(2)
+   xst3 = xstart(3); xen3=xend(3)
+   !$acc parallel loop default(present)
+   do k = xst3, xen3
+      do j = xst2, xen2
+         do i = xst1, xen1
             u1(i, j, k) = data1(i, j, k)
             cu1(i, j, k) = cdata1(i, j, k)
          end do
       end do
    end do
-   do k = large%xst(3), large%xen(3)
-      do j = large%xst(2), large%xen(2)
-         do i = large%xst(1), large%xen(1)
+   !$acc end loop
+   xst1 = large%xst(1); xen1=large%xen(1)
+   xst2 = large%xst(2); xen2=large%xen(2)
+   xst3 = large%xst(3); xen3=large%xen(3)
+   !$acc parallel loop default(present)
+   do k = xst3, xen3
+      do j = xst2, xen2
+         do i = xst1, xen1
             u1l(i, j, k) = data1_large(i, j, k)
          end do
       end do
    end do
+   !$acc end loop
 
    ! transpose
    call transpose_x_to_y(u1, u2)
@@ -135,6 +149,16 @@ program io_var_test
    call transpose_y_to_z(u2l, u3l, large)
    call transpose_x_to_y(cu1, cu2)
    call transpose_y_to_z(cu2, cu3)
+   !$acc update self (u1)
+   !$acc update self (u2)
+   !$acc update self (u3)
+   !$acc update self (u1l)
+   !$acc update self (u2l)
+   !$acc update self (u3l)
+   !$acc update self (cu1)
+   !$acc update self (cu2)
+   !$acc update self (cu3)
+   !$acc end data
 
    ! open file for IO
    write (filename, '(A,I3.3)') 'io_var_data.', nproc

@@ -26,6 +26,8 @@ program fft_r2c_x
 
    real(mytype) :: dr, error, err_all
    integer :: ierror, i, j, k, m
+   integer :: xst1, xst2, xst3
+   integer :: xen1, xen2, xen3
    real(mytype) :: t1, t2, t3, t4
 
    call MPI_INIT(ierror)
@@ -49,11 +51,13 @@ program fft_r2c_x
    ! output is Z-pencil data
    call alloc_x(in_r, ph, .true.)
    call alloc_z(out, sp, .true.)
-
+   xst1 = xstart(1); xen1 = xend(1)
+   xst2 = xstart(2); xen2 = xend(2)
+   xst3 = xstart(3); xen3 = xend(3)
    ! initilise input
-   do k = xstart(3), xend(3)
-      do j = xstart(2), xend(2)
-         do i = xstart(1), xend(1)
+   do k = xst3, xen3
+      do j = xst2, xen2
+         do i = xst1, xen1
             in_r(i, j, k) = real(i, mytype)/real(nx, mytype)*real(j, mytype) &
                             /real(ny, mytype)*real(k, mytype)/real(nz, mytype)
          end do
@@ -62,6 +66,7 @@ program fft_r2c_x
 
    t2 = 0._mytype
    t4 = 0._mytype
+   !$acc data copyin(in_r) copy(out)
    do m = 1, ntest
 
       ! 3D r2c FFT
@@ -93,15 +98,17 @@ program fft_r2c_x
 
    ! checking accuracy
    error = 0._mytype
-   do k = xstart(3), xend(3)
-      do j = xstart(2), xend(2)
-         do i = xstart(1), xend(1)
+   !$acc parallel loop default(present) reduction(+:error)
+   do k = xst3, xen3
+      do j = xst2, xen2
+         do i = xst1, xen1
             dr = real(i, mytype)/real(nx, mytype)*real(j, mytype) &
                  /real(ny, mytype)*real(k, mytype)/real(nz, mytype)
             error = error + abs(in_r(i, j, k) - dr)
          end do
       end do
    end do
+   !$acc end loop
    call MPI_ALLREDUCE(error, err_all, 1, real_type, MPI_SUM, MPI_COMM_WORLD, ierror)
    err_all = err_all/real(nx, mytype)/real(ny, mytype)/real(nz, mytype)
 
@@ -110,6 +117,7 @@ program fft_r2c_x
       write (*, *) 'error / mesh point: ', err_all
       write (*, *) 'time (sec): ', t1, t3
    end if
+   !$acc end data
 
    deallocate (in_r, out)
    nullify (ph)

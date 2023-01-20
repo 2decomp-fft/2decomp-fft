@@ -33,8 +33,14 @@ program halo_test
 
    logical :: passing, all_pass
 
+#if defined(_GPU)
+   write(*,*) 'Halo is not currently support on GPU. This test is not performed'
+   return
+#endif
+
    call MPI_INIT(ierror)
    call decomp_2d_init(nx, ny, nz, p_row, p_col)
+
 
    xlast = xsize(1) - 1
    if (xend(2) == ny) then
@@ -110,25 +116,25 @@ contains
 #else
       logical, parameter :: global = .false.
 #endif
-      integer :: i1, in ! I loop start/end
-      integer :: j1, jn ! J loop start/end
-      integer :: k1, kn ! K loop start/end
+      integer :: ifirst, ilast ! I loop start/end
+      integer :: jfirst, jlast ! J loop start/end
+      integer :: kfirst, klast ! K loop start/end
 
       ! du/dx calculated on X-pencil
       call alloc_x(div1, global)
 #ifdef HALO_GLOBAL
-      k1 = xstart(3); kn = xend(3)
-      j1 = xstart(2); jn = xend(2)
+      kfirst = xstart(3); klast = xend(3)
+      jfirst = xstart(2); jlast = xend(2)
 #else
-      k1 = 1; kn = xsize(3)
-      j1 = 1; jn = xsize(2)
+      kfirst = 1; klast = xsize(3)
+      jfirst = 1; jlast = xsize(2)
 #endif
-      i1 = 2; in = xsize(1) - 1
+      ifirst = 2; ilast = xsize(1) - 1
 
       div1 = 0.0_mytype
-      do k = k1, kn
-         do j = j1, jn
-            do i = i1, in
+      do k = kfirst, klast
+         do j = jfirst, jlast
+            do i = ifirst, ilast
                div1(i, j, k) = u1(i + 1, j, k) - u1(i - 1, j, k)
             end do
          end do
@@ -138,20 +144,20 @@ contains
       call alloc_y(v2, global)
       call alloc_y(wk2, global)
 #ifdef HALO_GLOBAL
-      k1 = ystart(3); kn = yend(3)
-      i1 = ystart(1); in = yend(1)
+      kfirst = ystart(3); klast = yend(3)
+      ifirst = ystart(1); ilast = yend(1)
 #else
-      k1 = 1; kn = ysize(3)
-      i1 = 1; in = ysize(1)
+      kfirst = 1; klast = ysize(3)
+      ifirst = 1; ilast = ysize(1)
 #endif
-      j1 = 2; jn = ysize(2) - 1
+      jfirst = 2; jlast = ysize(2) - 1
 
       call transpose_x_to_y(v1, v2)
       call transpose_x_to_y(div1, wk2)
 
-      do k = k1, kn
-         do j = j1, jn
-            do i = i1, in
+      do k = kfirst, klast
+         do j = jfirst, jlast
+            do i = ifirst, ilast
                wk2(i, j, k) = wk2(i, j, k) + v2(i, j + 1, k) - v2(i, j - 1, k)
             end do
          end do
@@ -162,21 +168,21 @@ contains
       call alloc_z(w3, global)
       call alloc_z(wk3, global)
 #ifdef HALO_GLOBAL
-      j1 = zstart(2); jn = zend(2)
-      i1 = zstart(1); in = zend(1)
+      jfirst = zstart(2); jlast = zend(2)
+      ifirst = zstart(1); ilast = zend(1)
 #else
-      j1 = 1; jn = zsize(2)
-      i1 = 1; in = zsize(1)
+      jfirst = 1; jlast = zsize(2)
+      ifirst = 1; ilast = zsize(1)
 #endif
-      k1 = 2; kn = zsize(3) - 1
+      kfirst = 2; klast = zsize(3) - 1
 
       call transpose_x_to_y(w1, w2)
       call transpose_y_to_z(w2, w3)
       call transpose_y_to_z(wk2, wk3)
 
-      do k = k1, kn
-         do j = j1, jn
-            do i = i1, in
+      do k = kfirst, klast
+         do j = jfirst, jlast
+            do i = ifirst, ilast
                wk3(i, j, k) = wk3(i, j, k) + w3(i, j, k + 1) - w3(i, j, k - 1)
             end do
          end do
@@ -209,9 +215,9 @@ contains
 #else
       logical, parameter :: global = .false.
 #endif
-      integer :: i1, in ! I loop start/end
-      integer :: j1, jn ! J loop start/end
-      integer :: k1, kn ! K loop start/end
+      integer :: ifirst, ilast ! I loop start/end
+      integer :: jfirst, jlast ! J loop start/end
+      integer :: kfirst, klast ! K loop start/end
 
       ! Expected sizes
       nx_expected = nx
@@ -223,24 +229,24 @@ contains
       call update_halo(v1, vh, 1, opt_global=.true., opt_pencil=1)
       call update_halo(w1, wh, 1, opt_global=.true., opt_pencil=1)
 
-      k1 = xstart(3); kn = xend(3)
-      j1 = xstart(2); jn = xend(2)
+      kfirst = xstart(3); klast = xend(3)
+      jfirst = xstart(2); jlast = xend(2)
 #else
       call update_halo(v1, vh, 1, opt_pencil=1)
       call update_halo(w1, wh, 1, opt_pencil=1)
 
-      k1 = 1; kn = xsize(3)
-      j1 = 1; jn = xsize(2)
+      kfirst = 1; klast = xsize(3)
+      jfirst = 1; jlast = xsize(2)
 #endif
-      i1 = 2; in = xsize(1) - 1
+      ifirst = 2; ilast = xsize(1) - 1
 
       call test_halo_size(vh, nx_expected, ny_expected, nz_expected, "X:v")
       call test_halo_size(wh, nx_expected, ny_expected, nz_expected, "X:w")
 
       div2 = 0.0_mytype
-      do k = k1, kn
-         do j = j1, jn
-            do i = i1, in
+      do k = kfirst, klast
+         do j = jfirst, jlast
+            do i = ifirst, ilast
                div2(i, j, k) = (u1(i + 1, j, k) - u1(i - 1, j, k)) &
                                + (vh(i, j + 1, k) - vh(i, j - 1, k)) &
                                + (wh(i, j, k + 1) - wh(i, j, k - 1))
@@ -267,9 +273,9 @@ contains
 #else
       logical, parameter :: global = .false.
 #endif
-      integer :: i1, in ! I loop start/end
-      integer :: j1, jn ! J loop start/end
-      integer :: k1, kn ! K loop start/end
+      integer :: ifirst, ilast ! I loop start/end
+      integer :: jfirst, jlast ! J loop start/end
+      integer :: kfirst, klast ! K loop start/end
 
       ! Expected sizes
       nx_expected = ysize(1) + 2
@@ -290,22 +296,22 @@ contains
 #ifdef HALO_GLOBAL
       call update_halo(u2, uh, 1, opt_global=.true., opt_pencil=2)
       call update_halo(w2, wh, 1, opt_global=.true., opt_pencil=2)
-      k1 = ystart(3); kn = yend(3)
-      i1 = ystart(1); in = yend(1)
+      kfirst = ystart(3); klast = yend(3)
+      ifirst = ystart(1); ilast = yend(1)
 #else
       call update_halo(u2, uh, 1, opt_pencil=2)
       call update_halo(w2, wh, 1, opt_pencil=2)
-      k1 = 1; kn = ysize(3)
-      i1 = 1; in = ysize(1)
+      kfirst = 1; klast = ysize(3)
+      ifirst = 1; ilast = ysize(1)
 #endif
-      j1 = 2; jn = ysize(2) - 1
+      jfirst = 2; jlast = ysize(2) - 1
 
       call test_halo_size(uh, nx_expected, ny_expected, nz_expected, "Y:u")
       call test_halo_size(wh, nx_expected, ny_expected, nz_expected, "Y:w")
 
-      do k = k1, kn
-         do j = j1, jn
-            do i = i1, in
+      do k = kfirst, klast
+         do j = jfirst, jlast
+            do i = ifirst, ilast
                wk2(i, j, k) = (uh(i + 1, j, k) - uh(i - 1, j, k)) &
                               + (v2(i, j + 1, k) - v2(i, j - 1, k)) &
                               + (wh(i, j, k + 1) - wh(i, j, k - 1))
@@ -334,6 +340,9 @@ contains
 #else
       logical, parameter :: global = .false.
 #endif
+      integer :: ifirst, ilast ! I loop start/end
+      integer :: jfirst, jlast ! J loop start/end
+      integer :: kfirst, klast ! K loop start/end
 
       ! Expected sizes
       nx_expected = zsize(1) + 2
@@ -355,152 +364,142 @@ contains
       ! du/dx
 #ifdef HALO_GLOBAL
       call update_halo(u3, uh, 1, opt_global=.true., opt_pencil=3)
+      ifirst = zstart(1); ilast = zend(1)
+      jfirst = zstart(2); jlast = zend(2)
 #else
       call update_halo(u3, uh, 1, opt_pencil=3)
+      ifirst = 1; ilast = zsize(1)
+      jfirst = 1; jlast = zsize(2)
 #endif
+      kfirst = 2; klast = zsize(3) - 1
 
       call test_halo_size(uh, nx_expected, ny_expected, nz_expected, "Z:u")
 
-#ifdef HALO_GLOBAL
-      do j = zstart(2), zend(2)
-         do i = zstart(1), zend(1)
-#else
-            do j = 1, zsize(2)
-               do i = 1, zsize(1)
-#endif
-                  do k = 2, zsize(3) - 1
-                     wk3(i, j, k) = uh(i + 1, j, k) - uh(i - 1, j, k)
-                  end do
-               end do
+      do j = jfirst, jlast
+         do i = ifirst, ilast
+            do k = kfirst, klast
+               wk3(i, j, k) = uh(i + 1, j, k) - uh(i - 1, j, k)
             end do
+         end do
+      end do
 
-            ! dv/dy
+      ! dv/dy
 #ifdef HALO_GLOBAL
-            call update_halo(v3, vh, 1, opt_global=.true., opt_pencil=3)
+      call update_halo(v3, vh, 1, opt_global=.true., opt_pencil=3)
 #else
-            call update_halo(v3, vh, 1, opt_pencil=3)
+      call update_halo(v3, vh, 1, opt_pencil=3)
 #endif
 
-            call test_halo_size(vh, nx_expected, ny_expected, nz_expected, "Z:v")
+      call test_halo_size(vh, nx_expected, ny_expected, nz_expected, "Z:v")
 
-#ifdef HALO_GLOBAL
-            do j = zstart(2), zend(2)
-               do i = zstart(1), zend(1)
-#else
-                  do j = 1, zsize(2)
-                     do i = 1, zsize(1)
-#endif
-                        do k = 2, zsize(3) - 1
-                           wk3(i, j, k) = wk3(i, j, k) + vh(i, j + 1, k) - vh(i, j - 1, k)
-                        end do
-                     end do
-                  end do
+      do j = jfirst, jlast
+         do i = ifirst, ilast
+            do k = kfirst, klast
+               wk3(i, j, k) = wk3(i, j, k) + vh(i, j + 1, k) - vh(i, j - 1, k)
+            end do
+         end do
+      end do
 
-                  ! dw/dz
-#ifdef HALO_GLOBAL
-                  do j = zstart(2), zend(2)
-                     do i = zstart(1), zend(1)
-#else
-                        do j = 1, zsize(2)
-                           do i = 1, zsize(1)
-#endif
-                              do k = 2, zsize(3) - 1
-                                 wk3(i, j, k) = wk3(i, j, k) + w3(i, j, k + 1) - w3(i, j, k - 1)
-                              end do
-                           end do
-                        end do
+      ! dw/dz
+      do j = jfirst, jlast
+         do i = ifirst, ilast
+            do k = kfirst, klast
+               wk3(i, j, k) = wk3(i, j, k) + w3(i, j, k + 1) - w3(i, j, k - 1)
+            end do
+         end do
+      end do
 
-                        call transpose_z_to_y(wk3, wk2)
-                        call transpose_y_to_x(wk2, div4)
+      call transpose_z_to_y(wk3, wk2)
+      call transpose_y_to_x(wk2, div4)
 
-                        ! Compute error
-                        call check_err(div4, "Z")
+      ! Compute error
+      call check_err(div4, "Z")
 
-                        deallocate (uh, vh, wk2, wk3)
-                        end subroutine test_div_haloZ
+      deallocate (uh, vh, wk2, wk3)
+   end subroutine test_div_haloZ
 
-                        subroutine check_err(divh, pencil)
+   subroutine check_err(divh, pencil)
 
-                           real(mytype), dimension(:, :, :), intent(in) :: divh
-                           character(len=*), intent(in) :: pencil
+      real(mytype), dimension(:, :, :), intent(in) :: divh
+      character(len=*), intent(in) :: pencil
 
-                           real(mytype), dimension(:, :, :), allocatable :: tmp
+      real(mytype), dimension(:, :, :), allocatable :: tmp
 
-                           real(mytype) :: divmag
+      real(mytype) :: divmag
 
-                           ! XXX: The Intel compiler SEGFAULTs if the array difference is computed inplace
-                           !      i.e. mag(divh(2:xlast,2:ylast,2:zlast) - div1(2:xlast,2:ylast,2:zlast))
-                           !      causes a SEGFAULT. Explicitly computing the difference in a temporary
-                           !      array seems to be OK.
-                           allocate (tmp(size(divh, 1), size(divh, 2), size(divh, 3)))
-                           tmp(2:xlast, 2:ylast, 2:zlast) = divh(2:xlast, 2:ylast, 2:zlast) - div1(2:xlast, 2:ylast, 2:zlast)
-                           err = mag(tmp(2:xlast, 2:ylast, 2:zlast))
-                           deallocate (tmp)
-                           divmag = mag(div1(2:xlast, 2:ylast, 2:zlast))
-                           if (err < epsilon(divmag)*divmag) then
-                              passing = .true.
-                           else
-                              passing = .false.
-                           end if
-                           all_pass = all_pass .and. passing
+      ! XXX: The Intel compiler SEGFAULTs if the array difference is computed inplace
+      !      i.e. mag(divh(2:xlast,2:ylast,2:zlast) - div1(2:xlast,2:ylast,2:zlast))
+      !      causes a SEGFAULT. Explicitly computing the difference in a temporary
+      !      array seems to be OK.
+      allocate (tmp(size(divh, 1), size(divh, 2), size(divh, 3)))
+      tmp(2:xlast, 2:ylast, 2:zlast) = divh(2:xlast, 2:ylast, 2:zlast) - div1(2:xlast, 2:ylast, 2:zlast)
+      err = mag(tmp(2:xlast, 2:ylast, 2:zlast))
+      deallocate (tmp)
+      divmag = mag(div1(2:xlast, 2:ylast, 2:zlast))
+      if (err < epsilon(divmag)*divmag) then
+         passing = .true.
+      else
+         passing = .false.
+      end if
+      all_pass = all_pass .and. passing
 
-                           if (nrank == 0) then
-                              write (*, *) '-----------------------------------------------'
-                              write (*, *) 'Calculated via halo exchange (data in '//pencil//'-pencil)'
+      if (nrank == 0) then
+         write (*, *) '-----------------------------------------------'
+         write (*, *) 'Calculated via halo exchange (data in '//pencil//'-pencil)'
 #ifdef DEBUG
-                              write (*, *) (divh(i, i, i), i=2, 13)
+         write (*, *) (divh(i, i, i), i=2, 13)
 #endif
-                              write (*, *) 'Error: ', err, '; Relative: ', err/divmag
-                              write (*, *) 'Pass: ', passing
-                           end if
+         write (*, *) 'Error: ', err, '; Relative: ', err/divmag
+         write (*, *) 'Pass: ', passing
+      end if
 
-                        end subroutine check_err
+   end subroutine check_err
 
-                        real(mytype) function mag(a)
+   real(mytype) function mag(a)
 
-                           real(mytype), dimension(:, :, :), intent(in) :: a
+      real(mytype), dimension(:, :, :), intent(in) :: a
 
-                           real(mytype) :: lmag, gmag
+      real(mytype) :: lmag, gmag
 
-                           lmag = sum(a(:, :, :)**2)
-                           call MPI_Allreduce(lmag, gmag, 1, real_type, MPI_SUM, MPI_COMM_WORLD, ierror)
-                           if (ierror /= 0) then
-                              call decomp_2d_abort(__FILE__, __LINE__, ierror, &
-                                                   "halo_test::mag::MPI_Allreduce")
-                           end if
+      lmag = sum(a(:, :, :)**2)
+      call MPI_Allreduce(lmag, gmag, 1, real_type, MPI_SUM, MPI_COMM_WORLD, ierror)
+      if (ierror /= 0) then
+         call decomp_2d_abort(__FILE__, __LINE__, ierror, &
+                              "halo_test::mag::MPI_Allreduce")
+      end if
 
-                           mag = sqrt(gmag/(nx - 2)/(ny - 2)/(nz - 2))
+      mag = sqrt(gmag/(nx - 2)/(ny - 2)/(nz - 2))
 
-                        end function mag
+   end function mag
 
-                        subroutine test_halo_size(arrh, nx_expected, ny_expected, nz_expected, tag)
+   subroutine test_halo_size(arrh, nx_expected, ny_expected, nz_expected, tag)
 
-                           real(mytype), dimension(:, :, :), intent(in) :: arrh
-                           integer, intent(in) :: nx_expected, ny_expected, nz_expected
-                           character(len=*), intent(in) :: tag
+      real(mytype), dimension(:, :, :), intent(in) :: arrh
+      integer, intent(in) :: nx_expected, ny_expected, nz_expected
+      character(len=*), intent(in) :: tag
 
-                           integer :: nx, ny, nz
+      integer :: nx, ny, nz
 
-                           character(len=128) :: rank_lbl
+      character(len=128) :: rank_lbl
 
-                           nx = size(arrh, 1)
-                           ny = size(arrh, 2)
-                           nz = size(arrh, 3)
+      nx = size(arrh, 1)
+      ny = size(arrh, 2)
+      nz = size(arrh, 3)
 
-                           write (rank_lbl, "(A,I0,A)") "Rank", nrank, ":"
+      write (rank_lbl, "(A,I0,A)") "Rank", nrank, ":"
 
-                           if ((nx /= nx_expected) .or. &
-                               (ny /= ny_expected) .or. &
-                               (nz /= nz_expected)) then
-                              write (*, *) trim(rank_lbl), " ", tag, ":ERROR: halo size"
-                              write (*, *) trim(rank_lbl), " ", "+ Expected: ", nx_expected, " ", ny_expected, " ", nz_expected, " "
-                              write (*, *) trim(rank_lbl), " ", "+ Got:      ", nx, " ", ny, " ", nz, " "
+      if ((nx /= nx_expected) .or. &
+          (ny /= ny_expected) .or. &
+          (nz /= nz_expected)) then
+         write (*, *) trim(rank_lbl), " ", tag, ":ERROR: halo size"
+         write (*, *) trim(rank_lbl), " ", "+ Expected: ", nx_expected, " ", ny_expected, " ", nz_expected, " "
+         write (*, *) trim(rank_lbl), " ", "+ Got:      ", nx, " ", ny, " ", nz, " "
 
-                              all_pass = .false.
-                           else
-                              write (*, *) trim(rank_lbl), " ", tag, ":PASS"
-                           end if
+         all_pass = .false.
+      else
+         write (*, *) trim(rank_lbl), " ", tag, ":PASS"
+      end if
 
-                        end subroutine test_halo_size
+   end subroutine test_halo_size
 
-                        end program halo_test
+end program halo_test

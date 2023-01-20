@@ -27,6 +27,8 @@ program fft_r2c_z
 
    real(mytype) :: dr, error, err_all
    integer :: ierror, i, j, k, m
+   integer :: zst1, zst2, zst3
+   integer :: zen1, zen2, zen3
    real(mytype) :: t1, t2, t3, t4
 
    call MPI_INIT(ierror)
@@ -39,9 +41,9 @@ program fft_r2c_z
    nz = nz_base*resize_domain
    call decomp_2d_init(nx, ny, nz, p_row, p_col)
 
-  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
    ! Test the r2c/c2r interface
-  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
    call decomp_2d_fft_init(PHYSICAL_IN_Z) ! non-default Z-pencil input
 
    ph => decomp_2d_fft_get_ph()
@@ -50,11 +52,14 @@ program fft_r2c_z
    ! output is X-pencil data
    call alloc_z(in_r, ph, .true.)
    call alloc_x(out, sp, .true.)
+   zst1 = zstart(1); zen1 = zend(1)
+   zst2 = zstart(2); zen2 = zend(2)
+   zst3 = zstart(3); zen3 = zend(3)
 
    ! initilise input
-   do k = zstart(3), zend(3)
-      do j = zstart(2), zend(2)
-         do i = zstart(1), zend(1)
+   do k = zst3, zen3
+      do j = zst2, zen2
+         do i = zst1, zen1
             in_r(i, j, k) = real(i, mytype)/real(nx, mytype)*real(j, mytype) &
                             /real(ny, mytype)*real(k, mytype)/real(nz, mytype)
          end do
@@ -63,6 +68,7 @@ program fft_r2c_z
 
    t2 = 0._mytype
    t4 = 0._mytype
+   !$acc data copyin(in_r) copy(out)
    do m = 1, ntest
 
       ! 3D r2c FFT
@@ -93,9 +99,10 @@ program fft_r2c_z
 
    ! checking accuracy
    error = 0._mytype
-   do k = zstart(3), zend(3)
-      do j = zstart(2), zend(2)
-         do i = zstart(1), zend(1)
+   !$acc parallel loop default(present) reduction(+:error)
+   do k = zst3, zen3
+      do j = zst2, zen2
+         do i = zst1, zen1
             dr = real(i, mytype)/real(nx, mytype)*real(j, mytype) &
                  /real(ny, mytype)*real(k, mytype)/real(nz, mytype)
             error = error + abs(in_r(i, j, k) - dr)
@@ -103,6 +110,7 @@ program fft_r2c_z
          end do
       end do
    end do
+   !$acc end loop
 !10 format('in_r final ', I2,1x,I2,1x,I2,1x,I2,1x,F12.6,1x,F12.6)
 
    call MPI_ALLREDUCE(error, err_all, 1, real_type, MPI_SUM, MPI_COMM_WORLD, ierror)
@@ -113,10 +121,11 @@ program fft_r2c_z
       write (*, *) 'error / mesh point: ', err_all
       write (*, *) 'time (sec): ', t1, t3
    end if
+   !$acc end data
 
    deallocate (in_r, out)
-   nullify(ph)
-   nullify(sp)
+   nullify (ph)
+   nullify (sp)
    call decomp_2d_fft_finalize
    call decomp_2d_finalize
    call MPI_FINALIZE(ierror)

@@ -88,7 +88,7 @@ The external code can use the named variables to check the FFT backend used in a
 - The generic backend supports the OVERWRITE flag but it can not perform in-place transforms
 - The FFTW3 and FFTW3_F03 backends support the OVERWRITE flag and can perform in-place complex 1D fft
 - The oneMKL backend supports the OVERWRITE flag and can perform in-place complex 1D fft
-- The cuFFT backend supports the OVERWRITE flag but it can not perform in-place transforms
+- The cuFFT backend supports the OVERWRITE flag and can perform in-place complex 1D fft
 
 ## Miscellaneous
 

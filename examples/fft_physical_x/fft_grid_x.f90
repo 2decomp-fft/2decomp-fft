@@ -25,6 +25,8 @@ program fft_physical_x
 
    real(mytype) :: dr, di, error, err_all, n1, flops
    integer :: ierror, i, j, k, m
+   integer :: xst1, xst2, xst3
+   integer :: xen1, xen2, xen3
    real(mytype) :: t1, t2, t3, t4
 
    call MPI_INIT(ierror)
@@ -37,9 +39,9 @@ program fft_physical_x
    nz = nz_base*resize_domain
    call decomp_2d_init(nx + 1, ny + 1, nz + 1, p_row, p_col)
 
-  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
    ! Test the c2c interface
-  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
    call decomp_2d_fft_init(PHYSICAL_IN_X, nx, ny, nz) ! force the default x pencil
    ph => decomp_2d_fft_get_ph()
@@ -47,10 +49,15 @@ program fft_physical_x
    ! output is Z-pencil data
    call alloc_x(in, ph, .true.)
    call alloc_z(out, ph, .true.)
+   ! Convert pointers to loops start/end to scalar
+   ! This is define loop on GPUs
+   xst1 = ph%xst(1); xen1 = ph%xen(1); 
+   xst2 = ph%xst(2); xen2 = ph%xen(2); 
+   xst3 = ph%xst(3); xen3 = ph%xen(3); 
    ! initilise input
-   do k = ph%xst(3), ph%xen(3)
-      do j = ph%xst(2), ph%xen(2)
-         do i = ph%xst(1), ph%xen(1)
+   do k = xst3, xen3
+      do j = xst2, xen2
+         do i = xst1, xen1
             dr = real(i, mytype)/real(nx, mytype)*real(j, mytype) &
                  /real(ny, mytype)*real(k, mytype)/real(nz, mytype)
             di = dr
@@ -61,6 +68,7 @@ program fft_physical_x
 
    t2 = 0._mytype
    t4 = 0._mytype
+   !$acc data copyin(in) copy(out)
    do m = 1, ntest
 
       ! forward FFT
@@ -92,9 +100,10 @@ program fft_physical_x
 
    ! checking accuracy
    error = 0._mytype
-   do k = ph%xst(3), ph%xen(3)
-      do j = ph%xst(2), ph%xen(2)
-         do i = ph%xst(1), ph%xen(1)
+   !$acc parallel loop default(present) reduction(+:error)
+   do k = xst3, xen3
+      do j = xst2, xen2
+         do i = xst1, xen1
             dr = real(i, mytype)/real(nx, mytype)*real(j, mytype) &
                  /real(ny, mytype)*real(k, mytype)/real(nz, mytype)
             di = dr
@@ -104,6 +113,7 @@ program fft_physical_x
          end do
       end do
    end do
+   !$acc end loop
    call MPI_ALLREDUCE(error, err_all, 1, real_type, MPI_SUM, MPI_COMM_WORLD, ierror)
    err_all = err_all/real(nx, mytype)/real(ny, mytype)/real(nz, mytype)
 
@@ -120,6 +130,7 @@ program fft_physical_x
       flops = 2._mytype*flops/((t1 + t3)/real(NTEST, mytype))
       write (*, *) 'GFLOPS : ', flops/1000._mytype**3
    end if
+   !$acc end data
 
    deallocate (in, out)
    nullify (ph)

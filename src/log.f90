@@ -177,9 +177,6 @@ contains
 #ifdef PROFILER
       write (io_unit, *) 'Compile flag PROFILER detected'
 #endif
-#ifdef SHM
-      write (io_unit, *) 'Compile flag SHM detected'
-#endif
 #ifdef EVEN
       write (io_unit, *) 'Compile flag EVEN detected'
 #endif
@@ -191,9 +188,6 @@ contains
 #endif
 #ifdef HALO_DEBUG
       write (io_unit, *) 'Compile flag HALO_DEBUG detected'
-#endif
-#ifdef SHM_DEBUG
-      write (io_unit, *) 'Compile flag SHM_DEBUG detected'
 #endif
 #ifdef _GPU
       write (io_unit, *) 'Compile flag _GPU detected'
@@ -218,10 +212,6 @@ contains
       call decomp_info_print(ph2, io_unit, "ph2")
       call decomp_info_print(ph3, io_unit, "ph3")
       call decomp_info_print(ph4, io_unit, "ph4")
-#ifdef SHM_DEBUG
-      write (io_unit, *) '==========================================================='
-      call print_smp(io_unit)
-#endif
       write (io_unit, *) '==========================================================='
       write (io_unit, *) '==========================================================='
 
@@ -302,93 +292,8 @@ contains
       write (io_unit, *) '   y2count : ', d2d%y2count
       write (io_unit, *) '   z2count : ', d2d%z2count
       write (io_unit, *) '   even : ', d2d%even
-#ifdef SHM
-      write (io_unit, *) '   listing of the SHM part is not yet implemented'
-#endif
 #endif
 
    end subroutine decomp_info_print
-
-#ifdef SHM_DEBUG
-
-   ! For debugging, print the shared-memory structure
-   module subroutine print_smp(io_unit)
-
-      implicit none
-
-      ! Argument
-      integer, intent(in) :: io_unit
-
-      ! print out shared-memory information
-      write (io_unit, *) 'I am mpi rank ', nrank, 'Total ranks ', nproc
-      write (io_unit, *) ' '
-      write (io_unit, *) 'Global data size:'
-      write (io_unit, *) 'nx*ny*nz', nx, ny, nz
-      write (io_unit, *) ' '
-      write (io_unit, *) '2D processor grid:'
-      write (io_unit, *) 'p_row*p_col:', dims(1), dims(2)
-      write (io_unit, *) ' '
-      write (io_unit, *) 'Portion of global data held locally:'
-      write (io_unit, *) 'xsize:', xsize
-      write (io_unit, *) 'ysize:', ysize
-      write (io_unit, *) 'zsize:', zsize
-      write (io_unit, *) ' '
-      write (io_unit, *) 'How pensils are to be divided and sent in alltoallv:'
-      write (io_unit, *) 'x1dist:', decomp_main%x1dist
-      write (io_unit, *) 'y1dist:', decomp_main%y1dist
-      write (io_unit, *) 'y2dist:', decomp_main%y2dist
-      write (io_unit, *) 'z2dist:', decomp_main%z2dist
-      write (io_unit, *) ' '
-      write (io_unit, *) '######Shared buffer set up after this point######'
-      write (io_unit, *) ' '
-      write (io_unit, *) 'col communicator detais:'
-      call print_smp_info(decomp_main%COL_INFO, io_unit)
-      write (io_unit, *) ' '
-      write (io_unit, *) 'row communicator detais:'
-      call print_smp_info(decomp_main%ROW_INFO; io_unit)
-      write (io_unit, *) ' '
-      write (io_unit, *) 'Buffer count and displacement of per-core buffers'
-      write (io_unit, *) 'x1cnts:', decomp_main%x1cnts
-      write (io_unit, *) 'y1cnts:', decomp_main%y1cnts
-      write (io_unit, *) 'y2cnts:', decomp_main%y2cnts
-      write (io_unit, *) 'z2cnts:', decomp_main%z2cnts
-      write (io_unit, *) 'x1disp:', decomp_main%x1disp
-      write (io_unit, *) 'y1disp:', decomp_main%y1disp
-      write (io_unit, *) 'y2disp:', decomp_main%y2disp
-      write (io_unit, *) 'z2disp:', decomp_main%z2disp
-      write (io_unit, *) ' '
-      write (io_unit, *) 'Buffer count and displacement of shared buffers'
-      write (io_unit, *) 'x1cnts:', decomp_main%x1cnts_s
-      write (io_unit, *) 'y1cnts:', decomp_main%y1cnts_s
-      write (io_unit, *) 'y2cnts:', decomp_main%y2cnts_s
-      write (io_unit, *) 'z2cnts:', decomp_main%z2cnts_s
-      write (io_unit, *) 'x1disp:', decomp_main%x1disp_s
-      write (io_unit, *) 'y1disp:', decomp_main%y1disp_s
-      write (io_unit, *) 'y2disp:', decomp_main%y2disp_s
-      write (io_unit, *) 'z2disp:', decomp_main%z2disp_s
-
-   end subroutine print_smp
-
-   ! For debugging, print the shared-memory structure
-   module subroutine print_smp_info(s, io_unit)
-
-      implicit none
-
-      ! Argument
-      TYPE(SMP_INFO), intent(in) :: s
-      integer, intent(in) :: io_unit
-
-      write (io_unit, *) 'size of current communicator:', s%NCPU
-      write (io_unit, *) 'rank in current communicator:', s%NODE_ME
-      write (io_unit, *) 'number of SMP-nodes in this communicator:', s%NSMP
-      write (io_unit, *) 'SMP-node id (1 ~ NSMP):', s%SMP_ME
-      write (io_unit, *) 'NCORE - number of cores on this SMP-node', s%NCORE
-      write (io_unit, *) 'core id (1 ~ NCORE):', s%CORE_ME
-      write (io_unit, *) 'maximum no. cores on any SMP-node:', s%MAXCORE
-      write (io_unit, *) 'size of SMP shared memory SND buffer:', s%N_SND
-      write (io_unit, *) 'size of SMP shared memory RCV buffer:', s%N_RCV
-
-   end subroutine print_smp_info
-#endif
 
 end submodule d2d_log

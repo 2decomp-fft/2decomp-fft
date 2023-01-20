@@ -38,11 +38,6 @@
      integer :: istat
 #endif
 
-#ifdef SHM
-     real(mytype) :: work1(*), work2(*)
-     POINTER(work1_p, work1), (work2_p, work2)  ! Cray pointers
-#endif
-
      integer :: s1, s2, s3, d1, d2, d3
      integer :: ierror
 
@@ -58,12 +53,6 @@
      d3 = SIZE(dst, 3)
 
      ! rearrange source array as send buffer
-#ifdef SHM
-     work1_p = decomp%ROW_INFO%SND_P
-     call mem_split_yz_real(src, s1, s2, s3, work1, dims(2), &
-                            decomp%y2dist, decomp)
-#else
-
 #if defined(_GPU)
      call mem_split_yz_real(src, s1, s2, s3, work1_r_d, dims(2), &
                             decomp%y2dist, decomp)
@@ -72,23 +61,7 @@
                             decomp%y2dist, decomp)
 #endif
 
-#endif
-
      ! define receive buffer
-#ifdef SHM
-     work2_p = decomp%ROW_INFO%RCV_P
-     call MPI_BARRIER(decomp%ROW_INFO%CORE_COMM, ierror)
-     if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_BARRIER")
-#endif
-
-#ifdef SHM
-     if (decomp%ROW_INFO%CORE_ME == 1) THEN
-        call MPI_ALLTOALLV(work1, decomp%y2cnts_s, decomp%y2disp_s, &
-                           real_type, work2, decomp%z2cnts_s, decomp%z2disp_s, &
-                           real_type, decomp%ROW_INFO%SMP_COMM, ierror)
-        if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_ALLTOALLV")
-     end if
-#else
 #ifdef EVEN
      if (decomp%even) then
         call MPI_ALLTOALL(work1_r, decomp%y2count, &
@@ -133,15 +106,8 @@
 #endif
 
 #endif
-#endif
 
      ! rearrange receive buffer
-#ifdef SHM
-     call MPI_BARRIER(decomp%ROW_INFO%CORE_COMM, ierror)
-     if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_BARRIER")
-     call mem_merge_yz_real(work2, d1, d2, d3, dst, dims(2), &
-                            decomp%z2dist, decomp)
-#else
 #ifdef EVEN
      if (.not. decomp%even) then
         call mem_merge_yz_real(work2_r, d1, d2, d3, dst, dims(2), &
@@ -159,7 +125,6 @@
      if (istat /= 0) call decomp_2d_abort(__FILE__, __LINE__, istat, "cudaMemcpy2D")
 #endif
 
-#endif
 #endif
 
 #ifdef PROFILER
@@ -192,11 +157,6 @@
      integer :: istat
 #endif
 
-#ifdef SHM
-     complex(mytype) :: work1(*), work2(*)
-     POINTER(work1_p, work1), (work2_p, work2)  ! Cray pointers
-#endif
-
      integer :: s1, s2, s3, d1, d2, d3
      integer :: ierror
 
@@ -212,12 +172,6 @@
      d3 = SIZE(dst, 3)
 
      ! rearrange source array as send buffer
-#ifdef SHM
-     work1_p = decomp%ROW_INFO%SND_P_c
-     call mem_split_yz_complex(src, s1, s2, s3, work1, dims(2), &
-                               decomp%y2dist, decomp)
-#else
-
 #if defined(_GPU)
      call mem_split_yz_complex(src, s1, s2, s3, work1_c_d, dims(2), &
                                decomp%y2dist, decomp)
@@ -226,23 +180,7 @@
                                decomp%y2dist, decomp)
 #endif
 
-#endif
-
      ! define receive buffer
-#ifdef SHM
-     work2_p = decomp%ROW_INFO%RCV_P_c
-     call MPI_BARRIER(decomp%ROW_INFO%CORE_COMM, ierror)
-     if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_BARRIER")
-#endif
-
-#ifdef SHM
-     if (decomp%ROW_INFO%CORE_ME == 1) THEN
-        call MPI_ALLTOALLV(work1, decomp%y2cnts_s, decomp%y2disp_s, &
-                           complex_type, work2, decomp%z2cnts_s, decomp%z2disp_s, &
-                           complex_type, decomp%ROW_INFO%SMP_COMM, ierror)
-        if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_ALLTOALLV")
-     end if
-#else
 #ifdef EVEN
      if (decomp%even) then
         call MPI_ALLTOALL(work1_c, decomp%y2count, &
@@ -269,15 +207,8 @@
 #endif
 
 #endif
-#endif
 
      ! rearrange receive buffer
-#ifdef SHM
-     call MPI_BARRIER(decomp%ROW_INFO%CORE_COMM, ierror)
-     if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_BARRIER")
-     call mem_merge_yz_complex(work2, d1, d2, d3, dst, dims(2), &
-                               decomp%z2dist, decomp)
-#else
 #ifdef EVEN
      if (.not. decomp%even) then
         call mem_merge_yz_complex(work2_c, d1, d2, d3, dst, dims(2), &
@@ -294,7 +225,6 @@
      if (istat /= 0) call decomp_2d_abort(__FILE__, __LINE__, istat, "cudaMemcpy2D")
 #endif
 
-#endif
 #endif
 
 #ifdef PROFILER
@@ -330,14 +260,10 @@
            i2 = i1 + dist(m) - 1
         end if
 
-#ifdef SHM
-        pos = decomp%y2disp_o(m) + 1
-#else
 #ifdef EVEN
         pos = m*decomp%y2count + 1
 #else
         pos = decomp%y2disp(m) + 1
-#endif
 #endif
 
 #if defined(_GPU)
@@ -386,14 +312,10 @@
            i2 = i1 + dist(m) - 1
         end if
 
-#ifdef SHM
-        pos = decomp%y2disp_o(m) + 1
-#else
 #ifdef EVEN
         pos = m*decomp%y2count + 1
 #else
         pos = decomp%y2disp(m) + 1
-#endif
 #endif
 
 #if defined(_GPU)
@@ -438,14 +360,10 @@
            i2 = i1 + dist(m) - 1
         end if
 
-#ifdef SHM
-        pos = decomp%z2disp_o(m) + 1
-#else
 #ifdef EVEN
         pos = m*decomp%z2count + 1
 #else
         pos = decomp%z2disp(m) + 1
-#endif
 #endif
 
         do k = i1, i2
@@ -483,14 +401,10 @@
            i2 = i1 + dist(m) - 1
         end if
 
-#ifdef SHM
-        pos = decomp%z2disp_o(m) + 1
-#else
 #ifdef EVEN
         pos = m*decomp%z2count + 1
 #else
         pos = decomp%z2disp(m) + 1
-#endif
 #endif
 
         do k = i1, i2

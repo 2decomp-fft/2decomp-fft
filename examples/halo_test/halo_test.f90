@@ -33,8 +33,14 @@ program halo_test
 
    logical :: passing, all_pass
 
+#if defined(_GPU)
+   write(*,*) 'Halo is not currently support on GPU. This test is not performed'
+   return
+#endif
+
    call MPI_INIT(ierror)
    call decomp_2d_init(nx, ny, nz, p_row, p_col)
+
 
    xlast = xsize(1) - 1
    if (xend(2) == ny) then

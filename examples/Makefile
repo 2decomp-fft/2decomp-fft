@@ -1,7 +1,7 @@
-.PHONY: init_test test2d fft_physical_x fft_physical_z io_test 
+.PHONY: init_test test2d fft_physical_x fft_physical_z io_test halo_test
 
 # Just build the examples
-examples: init_test test2d fft_physical_x fft_physical_z io_test
+examples: init_test test2d fft_physical_x fft_physical_z io_test halo_test
 	@echo "Built the examples"
 
 init_test:
@@ -14,6 +14,8 @@ fft_physical_z:
 	$(MAKE) -C $@ all
 io_test:
 	$(MAKE) -C $@ all
+halo_test:
+	$(MAKE) -C $@ all
 
 check:
 	cd init_test; $(MAKE) $@
@@ -21,6 +23,7 @@ check:
 	cd fft_physical_x; $(MAKE) $@
 	cd fft_physical_z; $(MAKE) $@
 	cd io_test; $(MAKE) $@
+	cd halo_test; $(MAKE) $@
 
 clean:
 	cd init_test; $(MAKE) $@
@@ -28,5 +31,6 @@ clean:
 	cd fft_physical_x; $(MAKE) $@
 	cd fft_physical_z; $(MAKE) $@
 	cd io_test; $(MAKE) $@
+	cd halo_test; $(MAKE) $@
 
 export

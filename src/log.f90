@@ -180,9 +180,6 @@ contains
 #ifdef EVEN
       write (io_unit, *) 'Compile flag EVEN detected'
 #endif
-#ifdef OCC
-      write (io_unit, *) 'Compile flag OCC detected'
-#endif
 #ifdef OVERWRITE
       write (io_unit, *) 'Compile flag OVERWRITE detected'
 #endif

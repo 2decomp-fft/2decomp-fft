@@ -135,7 +135,7 @@ elseif (Fortran_COMPILER_NAME MATCHES "NVHPC")
     set(CMAKE_Fortran_FLAGS "-cpp -Mfree -Kieee -Minfo=accel -g")
   endif()
   set (CMAKE_Fortran_FLAGS_RELEASE "-fast -O3")
-  set (CMAKE_Fortran_FLAGS_DEBUG   "-O0 -g -DDEBG")
+  set (CMAKE_Fortran_FLAGS_DEBUG   "-O0 -g -DDEBUG")
 elseif (Fortran_COMPILER_NAME MATCHES "Fujitsu")
   message(STATUS "Setting Fujitsu fortran flags")
   set (CMAKE_Fortran_FLAGS "-Cpp")
@@ -150,7 +150,7 @@ else (Fortran_COMPILER_NAME MATCHES "GNU")
 endif (Fortran_COMPILER_NAME MATCHES "GNU")
 
 if (CMAKE_BUILD_TYPE MATCHES "DEBUG")
-  add_definitions("-DDEBG")
+  add_definitions("-DDEBUG")
 endif (CMAKE_BUILD_TYPE MATCHES "DEBUG")
 
 

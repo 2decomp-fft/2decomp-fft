@@ -35,7 +35,7 @@ INCLUDE(CMakeParseArguments)
 # make sure that the default is a RELEASE
 if (NOT CMAKE_BUILD_TYPE)
   set (CMAKE_BUILD_TYPE RELEASE CACHE STRING
-      "Choose the type of build, options are: None Debug Release."
+      "Choose the type of build, options are: None Dev Debug Release."
       FORCE)
 endif (NOT CMAKE_BUILD_TYPE)
 
@@ -81,13 +81,14 @@ message(STATUS "Fortran compiler version ${CMAKE_Fortran_COMPILER_VERSION}")
 if (Fortran_COMPILER_NAME MATCHES "GNU")
   # gfortran
   message(STATUS "Setting gfortran flags")
-  set(CMAKE_Fortran_FLAGS "-cpp -funroll-loops -floop-optimize -g -Warray-bounds -fcray-pointer -fbacktrace -ffree-line-length-none")
+  set(CMAKE_Fortran_FLAGS "-cpp -std=f2008 -ffree-line-length-none")
   if (CMAKE_Fortran_COMPILER_VERSION GREATER_EQUAL "10")
     message(STATUS "Set New Fortran basic flags")
-    set(CMAKE_Fortran_FLAGS "-cpp -funroll-loops -floop-optimize -g -Warray-bounds -fcray-pointer -fbacktrace -ffree-line-length-none -fallow-argument-mismatch")
+    set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -fallow-argument-mismatch")
   endif (CMAKE_Fortran_COMPILER_VERSION GREATER_EQUAL "10")
-  set(CMAKE_Fortran_FLAGS_RELEASE "-funroll-all-loops -fno-f2c -O3")
-  set(CMAKE_Fortran_FLAGS_DEBUG   "-DDEBG -O0 -g")
+  set(CMAKE_Fortran_FLAGS_RELEASE "-O3 -march=native")
+  set(CMAKE_Fortran_FLAGS_DEBUG   "-DDEBUG -g3 -Og -ffpe-trap=invalid,zero -fcheck=all -fimplicit-none")
+  set(CMAKE_Fortran_FLAGS_DEV     "${CMAKE_Fortran_FLAGS_DEBUG} -Wall -Wpedantic -Wno-unused-function -Werror -Wno-integer-division")
 elseif (Fortran_COMPILER_NAME MATCHES "Intel")
   message(STATUS "Setting ifort flags")
   set(CMAKE_Fortran_FLAGS "-fpp -xHost -heaparrays -safe-cray-ptr -g -traceback")

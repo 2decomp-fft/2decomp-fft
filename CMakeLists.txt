@@ -81,20 +81,38 @@ message(STATUS "Fortran compiler version ${CMAKE_Fortran_COMPILER_VERSION}")
 if (Fortran_COMPILER_NAME MATCHES "GNU")
   # gfortran
   message(STATUS "Setting gfortran flags")
-  set(CMAKE_Fortran_FLAGS "-cpp -std=f2008 -ffree-line-length-none")
+  set(CMAKE_Fortran_FLAGS "-cpp -std=f2008 -ffree-line-length-none" CACHE STRING
+	  "Baseline FFLAGS"
+	  FORCE)
   if (CMAKE_Fortran_COMPILER_VERSION GREATER_EQUAL "10")
     message(STATUS "Set New Fortran basic flags")
-    set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -fallow-argument-mismatch")
+    set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -fallow-argument-mismatch" CACHE STRING
+	    "Baseline FFLAGS"
+	    FORCE)
   endif (CMAKE_Fortran_COMPILER_VERSION GREATER_EQUAL "10")
-  set(CMAKE_Fortran_FLAGS_RELEASE "-O3 -march=native")
-  set(CMAKE_Fortran_FLAGS_DEBUG   "-DDEBUG -g3 -Og -ffpe-trap=invalid,zero -fcheck=all -fimplicit-none")
-  set(CMAKE_Fortran_FLAGS_DEV     "${CMAKE_Fortran_FLAGS_DEBUG} -Wall -Wpedantic -Wno-unused-function -Werror -Wno-integer-division")
+  set(CMAKE_Fortran_FLAGS_RELEASE "-O3 -march=native" CACHE STRING
+	  "Release (optimised) FFLAGS"
+	  FORCE)
+  set(CMAKE_Fortran_FLAGS_DEBUG   "-DDEBUG -g3 -Og -ffpe-trap=invalid,zero -fcheck=all -fimplicit-none" CACHE STRING
+	  "Debugging FFLAGS - don't optimise, and print additional information"
+	  FORCE)
+  set(CMAKE_Fortran_FLAGS_DEV     "${CMAKE_Fortran_FLAGS_DEBUG} -Wall -Wpedantic -Wno-unused-function -Werror -Wno-integer-division"
+	  CACHE STRING
+	  "Development build FFLAGS - in addition to debugging build, try and catch coding errors"
+	  FORCE)
 elseif (Fortran_COMPILER_NAME MATCHES "Intel")
   message(STATUS "Setting ifort flags")
-  set(CMAKE_Fortran_FLAGS "-fpp -std08 -xHost -heaparrays -safe-cray-ptr -g -traceback")
-  set(CMAKE_Fortran_FLAGS_RELEASE "-O3 -ipo")
-  set(CMAKE_Fortran_FLAGS_DEBUG   "-g -O0 -debug extended -traceback -DDEBUG")
-  set(CMAKE_Fortran_FLAGS_DEV     "${CMAKE_Fortran_FLAGS_DEBUG} -warn all,noexternal")
+  set(CMAKE_Fortran_FLAGS "-fpp -std08 -xHost -heaparrays -safe-cray-ptr -g -traceback" CACHE STRING
+	  "Baseline FFLAGS"
+	  FORCE)
+  set(CMAKE_Fortran_FLAGS_RELEASE "-O3 -ipo" CACHE STRING
+	  "Release (Optimised) FFLAGS"
+	  FORCE)
+  set(CMAKE_Fortran_FLAGS_DEBUG   "-g -O0 -debug extended -traceback -DDEBUG" CACHE STRING
+	  "Debugging build FFLAGS - don't optimise, and print additional information"
+	  FORCE)
+  set(CMAKE_Fortran_FLAGS_DEV     "${CMAKE_Fortran_FLAGS_DEBUG} -warn all,noexternal" CACHE STRING
+	  "Development build FFLAGS - in addition to debugging build, try and catch coding errors")
   #set(CMAKE_Fortran_FLAGS "-cpp xSSE4.2 -axAVX,CORE-AVX-I,CORE-AVX2 -ipo -fp-model fast=2 -mcmodel=large -safe-cray-ptr")
 elseif (Fortran_COMPILER_NAME MATCHES "NAG")
   message(STATUS "Setting nagfor flags")

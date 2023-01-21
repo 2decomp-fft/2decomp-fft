@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 3.12)
 cmake_policy(SET CMP0074 NEW)
 
 project(2decomp LANGUAGES Fortran)
+enable_testing()
 
 option(ENABLE_OPENACC "Allow user to activate/deactivate OpenACC support" OFF)
 option(ENABLE_CUDA "Allow user to activate/deactivate CUDA support" OFF)
@@ -223,6 +224,9 @@ endif(${FFT_Choice} MATCHES "fftw")
 
 # Create a static library for the fft
 add_subdirectory(src)
+
+# Add tests
+add_subdirectory(examples)
 
 # # Create an example dir with all input.i3d example files
 # option(BUILD_TESTING "Build with tests" ON)

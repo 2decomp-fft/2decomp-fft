@@ -1,0 +1,25 @@
+file(GLOB files_test io_test.f90)
+file(GLOB files_read io_read.f90)
+file(GLOB files_var_test io_var_test.f90)
+file(GLOB files_plane_test io_plane_test.f90)
+file(GLOB files_bench io_bench.f90)
+
+include_directories(${CMAKE_SOURCE_DIR}/src)
+
+add_executable(io_test ${files_test})
+add_executable(io_read ${files_read})
+add_executable(io_var_test ${files_var_test})
+add_executable(io_plane_test ${files_plane_test})
+add_executable(io_bench ${files_bench})
+
+target_link_libraries(io_test PRIVATE decomp2d)
+target_link_libraries(io_read PRIVATE decomp2d)
+target_link_libraries(io_var_test PRIVATE decomp2d)
+target_link_libraries(io_plane_test PRIVATE decomp2d)
+target_link_libraries(io_bench PRIVATE decomp2d)
+
+add_test(NAME io_test COMMAND io_test)
+add_test(NAME io_read COMMAND io_read)
+add_test(NAME io_var_test COMMAND io_var_test 0 0)
+add_test(NAME io_plane_test COMMAND io_plane_test)
+add_test(NAME io_bench COMMAND io_bench)

@@ -4,6 +4,7 @@ file(GLOB files_decomp factor.f90
 		       log.f90
 		       io.f90)
 include_directories(${CMAKE_SOURCE_DIR}/src)
+include_directories(${CMAKE_SOURCE_DIR}/mod)
 
 #if(${FFT_Choice} MATCHES "generic")
 #  file(GLOB files_fft fft_generic.f90)

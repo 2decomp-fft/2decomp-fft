@@ -28,4 +28,6 @@ if(${FFT_Choice} MATCHES "fftw")
 
   #add_definitions("-lfftw3 -lfftw3f")
 
+elseif(${FFT_Choice} MATCHES "mkl")
+  find_package(MKL CONFIG REQUIRED)
 endif(${FFT_Choice} MATCHES "fftw")

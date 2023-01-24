@@ -48,7 +48,7 @@ include(${CMAKE_SOURCE_DIR}/cmake/mpi.cmake)
 # FFT options
 set(FFT_Choice "generic" CACHE STRING "FFT for XCompact3d project (generic is the default)")
 set_property(CACHE FFT_Choice PROPERTY STRINGS generic fftw mkl)
-include(${CMAKE_SOURCE_DIR}/cmake/fft.cmake)
+include(${CMAKE_SOURCE_DIR}/cmake/fft/fft.cmake)
 
 # Create a static library for the fft
 add_subdirectory(src)

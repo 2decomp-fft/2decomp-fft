@@ -2,7 +2,7 @@
 
 # Look for fftw if required
 if(${FFT_Choice} MATCHES "fftw")
-  configure_file(cmake/downloadFindFFTW.cmake.in findFFTW-download/CMakeLists.txt)
+	configure_file(${CMAKE_SOURCE_DIR}/cmake/fft/downloadFindFFTW.cmake.in findFFTW-download/CMakeLists.txt)
   execute_process(COMMAND ${CMAKE_COMMAND} -G "${CMAKE_GENERATOR}" .
           RESULT_VARIABLE result
           WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/findFFTW-download )

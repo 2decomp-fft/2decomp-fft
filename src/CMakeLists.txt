@@ -36,7 +36,6 @@ if(FFTW_FOUND)
 elseif(MKL_FOUND)
   target_compile_options(decomp2d PUBLIC $<TARGET_PROPERTY:MKL::MKL,INTERFACE_COMPILE_OPTIONS>)
   target_include_directories(decomp2d PUBLIC $<TARGET_PROPERTY:MKL::MKL,INTERFACE_INCLUDE_DIRECTORIES>)
-  target_link_libraries(decomp2d PUBLIC $<LINK_ONLY:MKL::MKL>)
 endif(FFTW_FOUND)
 
 install(TARGETS decomp2d

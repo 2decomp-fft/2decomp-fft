@@ -1231,21 +1231,6 @@ contains
       return
    end subroutine prepare_buffer
 
-#ifdef OCC
-   ! For non-blocking communication code, progress the comminication stack
-   subroutine transpose_test(handle)
-
-      implicit none
-
-      integer :: handle, ierror
-
-      call NBC_TEST(handle, ierror)
-      if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "NBC_TEST")
-
-      return
-   end subroutine transpose_test
-#endif
-
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
    ! Transposition routines
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!

@@ -2,32 +2,50 @@
 
 ## Building
 
-Different compilers can be set by specifying `CMP`, e.g. `make CMP=intel`
-to build with Intel compilers, see `Makefile` for options.
-
-By default an optimised library will be built, debugging versions of the
-library can be built with `make BUILD=debug`, a development version which 
-additionally sets compile time flags to catch coding errors can be built 
-with `make BUILD=dev` (GNU compilers only currently). The behavior of debug
-and development versions of the library can be changed before the initialization
-using the variable ``decomp_debug`` or the environment variable ``DECOMP_2D_DEBUG``.
+The build system is driven by `cmake`, to generate a build system run
+```
+cmake -B build .
+```
+from the `2decomp&fft` root directory.
+It may be necessary to override the Fortran compiler if the wrong one is picked up (due to, e.g.
+`PATH` ordering), for example to specify the `MPICH` compiler on Ubuntu
+```
+FC=mpif90.mpich cmake -B build .
+```
+This should generate a directory `build/` containing the build system, this can be further
+configured using the `ccmake` utility
+```
+ccmake build/
+```
+and editing as desired, variables that are likely of interest are: `CMAKE_BUILD_TYPE` and `FFT_Choice`;
+additional variables can be shown by entering "advanced mode" by pressing `t`.
+By default a `RELEASE` build will built, other options for `CMAKE_BUILD_TYPE` are `DEBUG` and `DEV` which
+turn on debugging flags and additionally try to catch coding errors at compile time, respectively.
+The behavior of debug and development versions of the library can be changed before the
+initialization using the variable ``decomp_debug`` or the environment variable ``DECOMP_2D_DEBUG``.
 The value provided with the environment variable must be a positive integer below 9999.
 
-On each build of the library (`make`, `make all`) a temporary file `Makefile.settings` with
-all current options (`FFLAGS`, `DEFS`, etc.) will be created, and included
-on subsequent invocations, the user therefore does not need to keep
-specifying options between builds.
+Once the build system has been configured, build `2decomp&fft` by running
+```
+make -j <nproc> -C build
+```
+appending ```VERBOSE=1``` will display additional information about the build, such as compiler flags.
+After building the library can be tested by running
+```
+make -C build test
+```
+which uses the `ctest` utility.
+Finally, install the library by running
+```
+make -C build install
+```
+which will install the library under `build/opt` by default, this location can be configured using
+`ccmake` as described above and setting the variable `CMAKE_INSTALL_PREFIX`.
 
-To perform a clean build run `make clean` first, this will delete all
-output files, including `Makefile.settings`.
-
-On each build of the library (`make`, `make all`) a temporary file `Makefile.settings` with
-all current options (`FFLAGS`, `DEFS`, etc.) will be created, and included
-on subsequent invocations, the user therefore does not need to keep
-specifying options between builds.
-
-To perform a clean build run `make clean` first, this will delete all
-output files, including `Makefile.settings`.
+Occasionally a clean build is required, this can be performed by running
+```
+make -C build clean
+```
 
 ## Testing and examples
 

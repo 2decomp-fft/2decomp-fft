@@ -16,8 +16,6 @@ halo_test:
 	$(MAKE) -C $@ $@
 io_test:
 	$(MAKE) -C $@ all
-halo_test:
-	$(MAKE) -C $@ all
 
 check:
 	cd init_test; $(MAKE) $@

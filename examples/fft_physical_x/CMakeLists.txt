@@ -24,6 +24,8 @@ elseif (MKL_FOUND)
   target_link_libraries(fft_grid_x PUBLIC $<LINK_ONLY:MKL::MKL>)
 endif (FFTW_FOUND)
 
-add_test(NAME fft_c2c_x COMMAND fft_c2c_x)
-add_test(NAME fft_r2c_x COMMAND fft_r2c_x)
-add_test(NAME fft_grid_x COMMAND fft_grid_x)
+set(fft_c2c_exec ${MPIEXEC_EXECUTABLE} fft_c2c_x)
+
+add_test(NAME fft_c2c_x COMMAND ${MPIEXEC_EXECUTABLE} $<TARGET_FILE:fft_c2c_x>)
+add_test(NAME fft_r2c_x COMMAND ${MPIEXEC_EXECUTABLE} $<TARGET_FILE:fft_r2c_x>)
+add_test(NAME fft_grid_x COMMAND ${MPIEXEC_EXECUTABLE} $<TARGET_FILE:fft_grid_x>)

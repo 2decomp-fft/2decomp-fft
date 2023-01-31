@@ -171,7 +171,7 @@
           end do
        end do
        !$acc end kernels
-       !istat = cudaMemcpy(out,in,s1*s2*s3,cudaMemcpyDeviceToDevice)
+       !!! istat = cudaMemcpy(out,in,s1*s2*s3,cudaMemcpyDeviceToDevice)
     end if
 
     ! If needed, define MPI derived data type to pack halo data,

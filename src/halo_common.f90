@@ -114,40 +114,55 @@
                             'Invalid data passed to update_halo')
     end if
     allocate (out(xs:xe, ys:ye, zs:ze))
-!    out = -1.0_mytype ! fill the halo for debugging
 
+    !    out = -1.0_mytype ! fill the halo for debugging
+
+    !$acc enter data create(requests,neighbour)
     ! copy input data to output
     if (global) then
        ! using global coordinate
        ! note the input array passed in always has index starting from 1
        ! need to work out the corresponding global index
        if (ipencil == 1) then
-          do k = decomp%xst(3), decomp%xen(3)
-             do j = decomp%xst(2), decomp%xen(2)
+          kst=decomp%xst(3); ken=decomp%xen(3)
+          jst=decomp%xst(2); jen=decomp%xen(2)
+          !$acc kernels default(present)
+          do k = kst, ken
+             do j = jst, jen
                 do i = 1, s1  ! x all local
                    out(i, j, k) = in(i, j - decomp%xst(2) + 1, k - decomp%xst(3) + 1)
                 end do
              end do
           end do
+          !$acc end kernels
        else if (ipencil == 2) then
-          do k = decomp%yst(3), decomp%yen(3)
+          kst=decomp%yst(3); ken=decomp%yen(3)
+          ist=decomp%yst(1); ien=decomp%yen(1)
+          !$acc kernels default(present)
+          do k = kst, ken
              do j = 1, s2  ! y all local
-                do i = decomp%yst(1), decomp%yen(1)
+                do i = ist, ien
                    out(i, j, k) = in(i - decomp%yst(1) + 1, j, k - decomp%yst(3) + 1)
                 end do
              end do
           end do
+          !$acc end kernels
        else if (ipencil == 3) then
+          jst=decomp%zst(2); jen=decomp%zen(2)
+          ist=decomp%xst(1); ien=decomp%xen(1)
+          !$acc kernels default(present)
           do k = 1, s3  ! z all local
-             do j = decomp%zst(2), decomp%zen(2)
-                do i = decomp%zst(1), decomp%zen(1)
+             do j = jst, jen
+                do i = ist, ien
                    out(i, j, k) = in(i - decomp%zst(1) + 1, j - decomp%zst(2) + 1, k)
                 end do
              end do
           end do
+          !$acc end kernels
        end if
     else
        ! not using global coordinate
+       !$acc kernels default(present)
        do k = 1, s3
           do j = 1, s2
              do i = 1, s1
@@ -155,6 +170,8 @@
              end do
           end do
        end do
+       !$acc end kernels
+       !!! istat = cudaMemcpy(out,in,s1*s2*s3,cudaMemcpyDeviceToDevice)
     end if
 
     ! If needed, define MPI derived data type to pack halo data,
@@ -488,6 +505,7 @@
           end do
        end if
 #endif
+       !$acc exit data delete(neighbour,requests)
 
        ! *** top/bottom ***
        ! all data in local memory already, no halo exchange

@@ -18,3 +18,11 @@ else (MPI_FOUND)
     message(STATUS "Using a CMake vers > 3.10 should solve the problem")
     message(STATUS "Alternatively use ccmake to manually set the include if available")
 endif (MPI_FOUND)
+
+# PROW/PCOL options
+# Tests that accept PROW/PCOL as arguments will use these values.
+# To simplify out of the box testing, default to 0.
+set(PROW 0 CACHE STRING
+  "Number of processor rows - PROWxPCOL=NP must be satisfied, 0 for autotuning")
+set(PCOL 0 CACHE STRING
+  "Number of processor rows - PROWxPCOL=NP must be satisfied, 0 for autotuning")

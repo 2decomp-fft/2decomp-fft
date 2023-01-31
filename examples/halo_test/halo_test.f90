@@ -448,7 +448,10 @@ contains
 #if defined(_GPU)
       attributes(device) :: tmp
 #endif
-
+      ! XXX: The Intel compiler SEGFAULTs if the array difference is computed inplace
+      !      i.e. mag(divh(2:xlast,2:ylast,2:zlast) - div1(2:xlast,2:ylast,2:zlast))
+      !      causes a SEGFAULT. Explicitly computing the difference in a temporary
+      !      array seems to be OK
       allocate (tmp(size(divh, 1), size(divh, 2), size(divh, 3)))
 
       !$acc kernels default(present)

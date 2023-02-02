@@ -82,17 +82,13 @@ else (Fortran_COMPILER_NAME MATCHES "GNU")
 endif (Fortran_COMPILER_NAME MATCHES "GNU")
 
 set(CMAKE_Fortran_FLAGS ${D2D_FFLAGS} CACHE STRING
-  "Baseline compiler FFLAGS"
-  FORCE)
+  "Baseline compiler FFLAGS")
 set(CMAKE_Fortran_FLAGS_RELEASE ${D2D_FFLAGS_RELEASE} CACHE STRING
-  "Additional FFLAGS for Release (optimised) build"
-  FORCE)
+  "Additional FFLAGS for Release (optimised) build")
 set(CMAKE_Fortran_FLAGS_DEBUG ${D2D_FFLAGS_DEBUG} CACHE STRING
-  "Additional FFLAGS for Debug build"
-  FORCE)
+  "Additional FFLAGS for Debug build")
 set(CMAKE_Fortran_FLAGS_DEV ${D2D_FFLAGS_DEV} CACHE STRING
-  "Additional FFLAGS for Dev build"
-  FORCE)
+  "Additional FFLAGS for Dev build")
 
 if (CMAKE_BUILD_TYPE MATCHES "DEBUG")
   add_definitions("-DDEBUG")

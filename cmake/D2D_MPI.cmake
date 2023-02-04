@@ -24,6 +24,17 @@ if (MPI_FOUND)
     message(STATUS "MPI FOUND: ${MPI_FOUND}")
     include_directories(SYSTEM ${MPI_INCLUDE_PATH})
     message(STATUS "MPI INCL ALSO FOUND: ${MPI_INCLUDE_PATH}")
+    if (NOT MPI_NUMPROCS_SET)
+      message(STATUS "Reset the number of ranks to 1")
+      set(MPIEXEC_MAX_NUMPROCS "1" CACHE STRING
+          "Set the initial value to 1 rank" FORCE)
+      set(MPI_NUMPROCS_SET 1 CACHE INTERNAL "MPI Ranks set")
+      # Force the mpirun to be coherent with the mpifortran
+      string(REPLACE "mpif90" "mpirun" PATH_TO_MPIRUN "${MPI_Fortran_COMPILER}")
+      message(STATUS "Path to mpirun ${PATH_TO_MPIRUN}")
+      set(MPIEXEC_EXECUTABLE "${PATH_TO_MPIRUN}" CACHE STRING
+          "Force MPIRUN to be consistent with MPI_Fortran_COMPILER" FORCE)
+    endif()
 else (MPI_FOUND)
     message(STATUS "NO MPI include have been found. The executable won't be targeted with MPI include")
     message(STATUS "Code will compile but performaces can be compromised")

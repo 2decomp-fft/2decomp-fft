@@ -4,12 +4,25 @@ cmake_policy(SET CMP0074 NEW)
 project(2decomp LANGUAGES Fortran)
 enable_testing()
 
-option(ENABLE_OPENACC "Allow user to activate/deactivate OpenACC support" OFF)
-option(ENABLE_CUDA "Allow user to activate/deactivate CUDA support" OFF)
 
-if (ENABLE_CUDA)
-  enable_language(CUDA)
-endif()
+set(BUILD_TARGET "mpi" CACHE STRING "Target for acceleration (mpi (default) or gpu)")
+set_property(CACHE BUILD_TARGET PROPERTY STRINGS mpi gpu)
+
+if (BUILD_TARGET MATCHES "gpu")
+  option(ENABLE_OPENACC "Allow user to activate/deactivate OpenACC support" ON)
+  option(ENABLE_CUDA "Allow user to activate/deactivate CUDA support" ON)
+  option(ENABLE_MANAGED "Allow user to activate/deactivate automatic memory managment from NVHPC" OFF)
+  option(ENABLE_NCCL "Allow user to activate/deactivate Collective Comunication NCCL" ON)
+
+  if (ENABLE_CUDA)
+    message(STATUS "Before enable CUDA")
+    enable_language(CUDA)
+    message(STATUS "After enable CUDA")
+  endif()
+
+endif(BUILD_TARGET MATCHES "gpu")
+
+option(ENABLE_PROFILER "Activate the profiler" OFF)
 
 set(AUTHOR "Stefano Rolfo;Charles Moulinec;Paul Bartholomew")
 set(AUTHOR_DETAILS "stefano.rolfo@stfc.ac.uk;charles.moulinec@stfc.ac.uk;p.bartholomew@epcc.ed.ac.uk")
@@ -29,9 +42,6 @@ endif()
 INCLUDE(CMakeDependentOption)
 INCLUDE(CMakeParseArguments)
 
-# Find the modules included with Xcompact
-#SET(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake ${CMAKE_MODULE_PATH})
-
 # make sure that the default is a RELEASE
 if (NOT CMAKE_BUILD_TYPE)
   set (CMAKE_BUILD_TYPE RELEASE CACHE STRING
@@ -39,16 +49,24 @@ if (NOT CMAKE_BUILD_TYPE)
       FORCE)
 endif (NOT CMAKE_BUILD_TYPE)
 
-include(${CMAKE_SOURCE_DIR}/cmake/gpu.cmake)
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake" "${CMAKE_SOURCE_DIR}/cmake/compilers" "${CMAKE_SOURCE_DIR}/cmake/fft")
 
-include(${CMAKE_SOURCE_DIR}/cmake/compilers.cmake)
+if (BUILD_TARGET MATCHES "gpu")
+  include(D2D_GPU)
+endif (BUILD_TARGET MATCHES "gpu")
 
-include(${CMAKE_SOURCE_DIR}/cmake/mpi.cmake)
+include(D2D_MPI)
+
+include(D2D_Compilers)
 
 # FFT options
-set(FFT_Choice "generic" CACHE STRING "FFT for XCompact3d project (generic is the default)")
-set_property(CACHE FFT_Choice PROPERTY STRINGS generic fftw mkl)
-include(${CMAKE_SOURCE_DIR}/cmake/fft/fft.cmake)
+if (BUILD_TARGET MATCHES "gpu")
+  set(FFT_Choice "cufft" CACHE STRING "FFT for XCompact3d project (with GPU cufft is the default)")
+else ()
+  set(FFT_Choice "generic" CACHE STRING "FFT for XCompact3d project (generic is the default)")
+endif (BUILD_TARGET MATCHES "gpu")
+set_property(CACHE FFT_Choice PROPERTY STRINGS generic fftw mkl cufft)
+include(fft)
 
 # Create a static library for the fft
 add_subdirectory(src)

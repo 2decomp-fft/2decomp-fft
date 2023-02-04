@@ -31,8 +31,9 @@
 # CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+message(STATUS "SET UP FFT")
 if(${FFT_Choice} MATCHES "fftw")
-	configure_file(${CMAKE_SOURCE_DIR}/cmake/fft/downloadFindFFTW.cmake.in findFFTW-download/CMakeLists.txt)
+  configure_file(${CMAKE_SOURCE_DIR}/cmake/fft/downloadFindFFTW.cmake.in findFFTW-download/CMakeLists.txt)
   execute_process(COMMAND ${CMAKE_COMMAND} -G "${CMAKE_GENERATOR}" .
           RESULT_VARIABLE result
           WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/findFFTW-download )
@@ -60,4 +61,9 @@ if(${FFT_Choice} MATCHES "fftw")
 
 elseif(${FFT_Choice} MATCHES "mkl")
   find_package(MKL CONFIG REQUIRED)
+elseif(${FFT_Choice} MATCHES "cufft")
+  message(STATUS "Enable cuFFT")
+  if (ENABLE_CUDA)
+    set(CUFFT_FOUND TRUE)
+  endif()
 endif(${FFT_Choice} MATCHES "fftw")

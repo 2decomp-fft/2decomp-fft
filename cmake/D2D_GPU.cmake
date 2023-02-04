@@ -1,4 +1,5 @@
 # GPU CMakeLists
+message(STATUS "Check GPU")
 
 if (ENABLE_OPENACC)
   include(FindOpenACC)
@@ -7,11 +8,9 @@ if (ENABLE_OPENACC)
   else()
     message(ERROR_CRITICAL "No OpenACC support detected")
   endif()
-  set(OPENACC_TARGET "gpu" CACHE STRING "Target for acceleration (gpu (default) or multicore)")
-  set_property(CACHE OPENACC_TARGET PROPERTY STRINGS gpu multicore)
 endif()
 
-if (OPENACC_TARGET MATCHES "gpu")
+if (ENABLE_CUDA)
   find_package(CUDAToolkit REQUIRED)
   if(${CMAKE_VERSION} VERSION_LESS_EQUAL "3.13.4")
     cuda_select_nvcc_arch_flags(ARCH_FLAGS "Auto") # optional argument for arch to add
@@ -34,4 +33,3 @@ if (OPENACC_TARGET MATCHES "gpu")
   message(STATUS "CUDA_LIBRARIES ${CUDA_LIBRARIES}")
 endif()
 
-set(NVIDIA_PROFILER "Use the NVidia profiles" ON)

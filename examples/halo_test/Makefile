@@ -17,8 +17,7 @@ halo_test: $(OBJ)
 
 ifeq ($(PARAMOD),gpu)
 check:
-	$(info Halo test temporarily disabled for GPU)
-#	$(MPIRUN) -n $(NP) ./bind.sh ./halo_test
+	$(MPIRUN) -n $(NP) ./bind.sh ./halo_test
 else
 check:
 	$(MPIRUN) -n $(NP) ./halo_test

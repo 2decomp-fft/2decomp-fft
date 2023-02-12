@@ -60,6 +60,8 @@ if(${FFT_Choice} MATCHES "fftw")
   #add_definitions("-lfftw3 -lfftw3f")
 
 elseif(${FFT_Choice} MATCHES "mkl")
+  set(MKL_INTERFACE "lp64")
+  set(MKL_THREADING "sequential")
   find_package(MKL CONFIG REQUIRED)
 elseif(${FFT_Choice} MATCHES "cufft")
   message(STATUS "Enable cuFFT")

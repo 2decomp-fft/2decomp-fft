@@ -562,8 +562,6 @@ contains
       ! Tag the writer
       writer%is_active = .false.
 
-      ! FIXME
-      ! Currently only one engine per writer
       if (writer%engine%valid) then
          call adios2_end_step(writer%engine, ierror)
          if (ierror /= 0) then

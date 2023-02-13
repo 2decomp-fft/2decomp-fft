@@ -11,11 +11,11 @@
 !=======================================================================
 
 !
-! This is the IO submodule for writers
-!    => Initialize / finalize a writer
+! This is the IO submodule for writers and families of writers
+!    => Initialize / finalize a family of writers
+!    => Register a variable in a family of writers
 !    => Open / close a writer
 !    => Start / end a writer
-!    => Register a variable in a writer
 !
 
 !

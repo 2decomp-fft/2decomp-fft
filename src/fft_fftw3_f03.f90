@@ -274,10 +274,9 @@ contains
 
       type(decomp_info), pointer :: decomp_2d_fft_get_ph
 
-      if (.not. associated(ph)) call decomp_2d_abort(__FILE__, &
-                                                     __LINE__, &
-                                                     -1, &
-                                                     'FFT library must be initialised first')
+      if (.not. associated(ph)) then
+         call decomp_2d_abort(__FILE__, __LINE__, -1, 'FFT library must be initialised first')
+      end if
       decomp_2d_fft_get_ph => ph
 
    end function decomp_2d_fft_get_ph
@@ -293,10 +292,9 @@ contains
 
       type(decomp_info), pointer :: decomp_2d_fft_get_sp
 
-      if (.not. associated(ph)) call decomp_2d_abort(__FILE__, &
-                                                     __LINE__, &
-                                                     -1, &
-                                                     'FFT library must be initialised first')
+      if (.not. associated(ph)) then
+         call decomp_2d_abort(__FILE__, __LINE__, -1, 'FFT library must be initialised first')
+      end if
       decomp_2d_fft_get_sp => sp
 
    end function decomp_2d_fft_get_sp

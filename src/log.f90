@@ -228,10 +228,9 @@ contains
             call execute_command_line("env", wait=.true.)
          else
             inquire (unit=io_unit, name=fname, iostat=ierror)
-            if (ierror /= 0) call decomp_2d_abort(__FILE__, &
-                                                  __LINE__, &
-                                                  ierror, &
-                                                  "No name for the log file")
+            if (ierror /= 0) then
+               call decomp_2d_abort(__FILE__, __LINE__, ierror, "No name for the log file")
+            end if
             ! Close the IO unit to print the environment variables
             call d2d_listing_close_unit(io_unit)
             call execute_command_line("env >> "//trim(fname), wait=.true.)

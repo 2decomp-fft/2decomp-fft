@@ -81,5 +81,12 @@ module decomp_2d_constants
    integer, parameter, public :: PHYSICAL_IN_X = 1 ! Forward is input in X, output in Z
    integer, parameter, public :: PHYSICAL_IN_Z = 3 ! Forward is input in Z, output in X
 
+   !
+   ! Family of writers
+   !
+   integer, parameter, public :: DECOMP_2D_WRITER_NONE = 0
+   integer, parameter, public :: DECOMP_2D_WRITER_MPI = 1
+   integer, parameter, public :: DECOMP_2D_WRITER_ADIOS2 = 2
+
 end module decomp_2d_constants
 

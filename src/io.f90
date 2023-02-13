@@ -15,6 +15,7 @@
 
 module decomp_2d_io
 
+   use decomp_2d_constants
    use decomp_2d
    use MPI
 
@@ -35,11 +36,47 @@ module decomp_2d_io
    character(len=1024), dimension(MAX_IOH), target, save :: fh_names
    integer(kind=MPI_OFFSET_KIND), dimension(MAX_IOH), save :: fh_disp
 #else
-   type(adios2_adios) :: adios
+   type(adios2_adios), target :: adios
    character(len=1024), dimension(MAX_IOH), target, save :: engine_names
    logical, dimension(MAX_IOH), target, save :: engine_live
    type(adios2_engine), dimension(MAX_IOH), save :: engine_registry
 #endif
+
+   ! derived type to store info for a family of writers
+   type, public :: d2d_writer_family
+      integer :: type = decomp_2d_writer_none  ! Type of the writer
+      character(:), allocatable :: label       ! Label of the writer
+#ifdef ADIOS2
+      type(adios2_adios), pointer :: adios     ! adios2 only
+      type(adios2_io) :: io                    ! adios2 only
+#endif
+   contains
+      procedure :: init => d2d_writer_family_init                 ! ADIOS2 writer if possible, MPI otherwise
+      procedure :: mpi_init => d2d_writer_family_mpi_init         ! Force MPI writer
+      procedure :: adios2_init => d2d_writer_family_adios2_init   ! Force ADIOS2 writer
+      procedure :: fin => d2d_writer_family_fin                   ! Clear the writer
+      procedure :: register_var => d2d_writer_family_register_var ! Register a variable
+   end type d2d_writer_family
+
+   ! derived type to store info for a writer
+   type, public :: d2d_writer
+      type(d2d_writer_family), pointer :: family  ! Associated family
+      character(:), allocatable :: label          ! Label of the writer
+      logical :: is_open = .false.                ! True if the writer is open
+#ifdef ADIOS2
+      logical :: is_active = .false.              ! True if the writer is active (adios2 only)
+      type(adios2_engine) :: engine               ! adios2 only (only one engine / writer currently)
+#endif
+      integer :: fh                               ! File handle (mpi only)
+      integer(kind=MPI_OFFSET_KIND) :: disp       ! Displacement offset (mpi only)
+   contains
+      procedure :: open => d2d_writer_open                 ! Open the IO
+      procedure :: start => d2d_writer_start               ! Start the IO
+      procedure :: open_start => d2d_writer_open_start     ! Open and start the IO
+      procedure :: end => d2d_writer_end                   ! End the IO
+      procedure :: close => d2d_writer_close               ! Close the IO
+      procedure :: end_close => d2d_writer_end_close       ! End and close the IO
+   end type d2d_writer
 
    private        ! Make everything private unless declared public
 
@@ -55,6 +92,71 @@ module decomp_2d_io
              decomp_2d_open_io, decomp_2d_close_io, &
              decomp_2d_start_io, decomp_2d_end_io, &
              gen_iodir_name
+
+   ! Interface for the writers
+
+   interface
+
+      module subroutine d2d_writer_family_init(family, label)
+         class(d2d_writer_family), intent(inout) :: family
+         character(len=*), intent(in) :: label
+      end subroutine d2d_writer_family_init
+
+      module subroutine d2d_writer_family_mpi_init(family, label)
+         class(d2d_writer_family), intent(inout) :: family
+         character(len=*), intent(in) :: label
+      end subroutine d2d_writer_family_mpi_init
+
+      module subroutine d2d_writer_family_adios2_init(family, label)
+         class(d2d_writer_family), intent(inout) :: family
+         character(len=*), intent(in) :: label
+      end subroutine d2d_writer_family_adios2_init
+
+      module subroutine d2d_writer_family_fin(family)
+         class(d2d_writer_family), intent(inout) :: family
+      end subroutine d2d_writer_family_fin
+
+      module subroutine d2d_writer_family_register_var(family, varname, ipencil, iplane, type, opt_decomp, opt_nplanes)
+         class(d2d_writer_family), intent(inout) :: family
+         character(len=*), intent(in) :: varname
+         integer, intent(in) :: ipencil
+         integer, intent(in) :: iplane
+         integer, intent(in) :: type
+         type(decomp_info), intent(in), optional :: opt_decomp
+         integer, intent(in), optional :: opt_nplanes
+      end subroutine d2d_writer_family_register_var
+
+      module subroutine d2d_writer_open(writer, family, io_dir, mode)
+         class(d2d_writer), intent(inout) :: writer
+         type(d2d_writer_family), target, intent(in) :: family
+         character(len=*), intent(in) :: io_dir
+         integer, intent(in) :: mode
+      end subroutine d2d_writer_open
+
+      module subroutine d2d_writer_start(writer)
+         class(d2d_writer), intent(inout) :: writer
+      end subroutine d2d_writer_start
+
+      module subroutine d2d_writer_open_start(writer, family, io_dir, mode)
+         class(d2d_writer), intent(inout) :: writer
+         type(d2d_writer_family), target, intent(in) :: family
+         character(len=*), intent(in) :: io_dir
+         integer, intent(in) :: mode
+      end subroutine d2d_writer_open_start
+
+      module subroutine d2d_writer_end(writer)
+         class(d2d_writer), intent(inout) :: writer
+      end subroutine d2d_writer_end
+
+      module subroutine d2d_writer_close(writer)
+         class(d2d_writer), intent(inout) :: writer
+      end subroutine d2d_writer_close
+
+      module subroutine d2d_writer_end_close(writer)
+         class(d2d_writer), intent(inout) :: writer
+      end subroutine d2d_writer_end_close
+
+   end interface
 
    ! Generic interface to handle multiple data types
 

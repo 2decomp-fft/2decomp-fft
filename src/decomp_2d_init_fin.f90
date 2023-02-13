@@ -55,10 +55,9 @@
      end if
 
      ! Safety check
-     if (MPI_SUCCESS /= 0) call decomp_2d_abort(__FILE__, &
-                                                __LINE__, &
-                                                MPI_SUCCESS, &
-                                                "MPI error check is broken")
+     if (MPI_SUCCESS /= 0) then
+        call decomp_2d_abort(__FILE__, __LINE__, MPI_SUCCESS, "MPI error check is broken")
+     end if
      if (nx <= 0) call decomp_2d_abort(__FILE__, __LINE__, nx, "Invalid value for nx")
      if (ny <= 0) call decomp_2d_abort(__FILE__, __LINE__, ny, "Invalid value for ny")
      if (nz <= 0) call decomp_2d_abort(__FILE__, __LINE__, nz, "Invalid value for nz")
@@ -66,17 +65,15 @@
      ! If the external code has not set nrank and nproc
      if (nrank == -1) then
         call MPI_COMM_RANK(decomp_2d_comm, nrank, ierror)
-        if (ierror /= 0) call decomp_2d_abort(__FILE__, &
-                                              __LINE__, &
-                                              ierror, &
-                                              "MPI_COMM_RANK")
+        if (ierror /= 0) then
+           call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_COMM_RANK")
+        end if
      end if
      if (nproc == -1) then
         call MPI_COMM_SIZE(decomp_2d_comm, nproc, ierror)
-        if (ierror /= 0) call decomp_2d_abort(__FILE__, &
-                                              __LINE__, &
-                                              ierror, &
-                                              "MPI_COMM_SIZE")
+        if (ierror /= 0) then
+           call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_COMM_SIZE")
+        end if
      end if
 #ifdef DEBUG
      ! Check if a modification of the debug level is needed
@@ -304,10 +301,10 @@
 
      ! Conversion to integer if possible
      read (val, '(i4)', iostat=ierror) decomp_debug
-     if (ierror /= 0) call decomp_2d_warning(__FILE__, &
-                                             __LINE__, &
-                                             ierror, &
-                                             "Error when reading DECOMP_2D_DEBUG : "//val)
+     if (ierror /= 0) then
+        call decomp_2d_warning(__FILE__, __LINE__, ierror, &
+             "Error when reading DECOMP_2D_DEBUG : "//val)
+     end if
 
   end subroutine decomp_2d_debug
 #endif

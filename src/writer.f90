@@ -256,8 +256,6 @@ contains
    !    1 <= ipencil <= 3
    !    0 <= iplane <= 3
    !
-   !    Warning, iplane > 0 is not compatible with icoarse > 0
-   !
    module subroutine d2d_writer_family_register_var(family, varname, ipencil, iplane, &
                                                     type, opt_decomp, opt_nplanes)
 

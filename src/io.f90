@@ -136,9 +136,10 @@ contains
       adios2_debug_mode = .true.
 
       call adios2_init(adios, trim(config_file), decomp_2d_comm, adios2_debug_mode, ierror)
-      if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, &
-                                            "Error initialising ADIOS2 - is "//trim(config_file)//" present and valid?")
-
+      if (ierror /= 0) then
+         call decomp_2d_abort(__FILE__, __LINE__, ierror, &
+              "Error initialising ADIOS2 - is "//trim(config_file)//" present and valid?")
+      end if
       engine_live(:) = .false.
 
 #ifdef PROFILER
@@ -164,8 +165,9 @@ contains
       if (decomp_profiler_io) call decomp_profiler_start("io_fin")
 #endif
       call adios2_finalize(adios, ierror)
-      if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, &
-                                            "adios2_finalize")
+      if (ierror /= 0) then
+         call decomp_2d_abort(__FILE__, __LINE__, ierror, "adios2_finalize")
+      end if
 #ifdef PROFILER
       if (decomp_profiler_io) call decomp_profiler_end("io_fin")
 #endif
@@ -442,8 +444,10 @@ contains
       if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "adios2_at_io "//trim(io_name))
       call adios2_inquire_variable(var_handle, io_handle, varname, ierror)
       if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "adios2_inquire_variable "//trim(varname))
-      if (.not. var_handle%valid) call decomp_2d_abort(__FILE__, __LINE__, -1, &
-                                                       "ERROR: trying to read variable without registering first! "//trim(varname))
+      if (.not. var_handle%valid) then
+         call decomp_2d_abort(__FILE__, __LINE__, -1, &
+              "ERROR: trying to read variable without registering first! "//trim(varname))
+      end if
 
       call adios2_variable_steps(nsteps, var_handle, ierror)
       if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "adios2_variable_steps")
@@ -1342,11 +1346,15 @@ contains
       if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "adios2_at_io "//trim(io_name))
       call adios2_inquire_variable(var_handle, io_handle, varname, ierror)
       if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "adios2_inquire_variable "//trim(varname))
-      if (.not. var_handle%valid) call decomp_2d_abort(__FILE__, __LINE__, -1, &
-                                                       "ERROR: trying to write variable before registering! "//trim(varname))
+      if (.not. var_handle%valid) then
+         call decomp_2d_abort(__FILE__, __LINE__, -1, &
+              "ERROR: trying to write variable before registering! "//trim(varname))
+      end if
 
-      if (idx < 1) call decomp_2d_abort(__FILE__, __LINE__, idx, &
-                                        "You haven't opened "//trim(io_name)//":"//trim(dirname))
+      if (idx < 1) then
+         call decomp_2d_abort(__FILE__, __LINE__, idx, &
+              "You haven't opened "//trim(io_name)//":"//trim(dirname))
+      end if
 
       if (deferred_writes) then
          write_mode = adios2_mode_deferred
@@ -1442,8 +1450,10 @@ contains
             call adios2_define_variable(var_handle, io_handle, varname, data_type, &
                                         ndims, int(sizes, kind=8), int(starts, kind=8), int(subsizes, kind=8), &
                                         adios2_constant_dims, ierror)
-            if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, &
-                                                  "adios2_define_variable, ERROR registering variable "//trim(varname))
+            if (ierror /= 0) then
+               call decomp_2d_abort(__FILE__, __LINE__, ierror, &
+                    "adios2_define_variable, ERROR registering variable "//trim(varname))
+            end if
          end if
       else
          call decomp_2d_abort(__FILE__, __LINE__, -1, "trying to register variable with invalid IO!")

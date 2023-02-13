@@ -357,7 +357,7 @@ contains
          end if
       end if
 #else
-      associate (fm => family, vr => varname, pc => ipencil, cr => icoarse, &
+      associate (fm => family, vr => varname, pc => ipencil, &
                  pl => iplane, tp => type, od => opt_decomp, on => opt_nplanes)
       end associate
 #endif

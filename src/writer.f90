@@ -422,7 +422,8 @@ contains
 #endif
       else
          ! Safety check
-         call decomp_2d_abort(__FILE__, __LINE__, family%type, "Invalid family")
+         call decomp_2d_abort(__FILE__, __LINE__, family%type, &
+                              "Invalid family "//family%label)
       end if
 
       ! Open IO

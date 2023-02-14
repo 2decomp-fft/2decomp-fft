@@ -131,6 +131,7 @@ Profiling can be activated in the Makefile. Set the variable `PROFILER` to one o
 
 Profiling can be activated via `cmake` builds, the recommended approach is to run the initial configuration as follows:
 ```
+export caliper_DIR=/path/to/caliper/install/share/cmake/caliper
 FC=mpif90 CXX=mpicxx cmake -DENABLE_PROFILER=caliper -B build
 ```
 where `ENABLE_PROFILER` is set to the profiling tool desired, currently supported values are: `caliper`.

@@ -23,6 +23,7 @@ if (BUILD_TARGET MATCHES "gpu")
 endif(BUILD_TARGET MATCHES "gpu")
 
 option(ENABLE_PROFILER "Activate the profiler" OFF)
+option(HALO_DEBUG "Enable halo debugging options" OFF)
 
 set(AUTHOR "Stefano Rolfo;Charles Moulinec;Paul Bartholomew")
 set(AUTHOR_DETAILS "stefano.rolfo@stfc.ac.uk;charles.moulinec@stfc.ac.uk;p.bartholomew@epcc.ed.ac.uk")

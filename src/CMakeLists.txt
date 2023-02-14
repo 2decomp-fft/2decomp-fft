@@ -41,6 +41,10 @@ elseif(MKL_FOUND)
   target_include_directories(decomp2d PUBLIC $<TARGET_PROPERTY:MKL::MKL,INTERFACE_INCLUDE_DIRECTORIES>)
 endif(FFTW_FOUND)
 
+if (HALO_DEBUG)
+  target_compile_definitions(decomp2d PUBLIC -DHALO_DEBUG)
+endif()
+
 install(TARGETS decomp2d
         RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
         LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}

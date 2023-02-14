@@ -182,7 +182,7 @@
     if (ipencil == 1) then
 
 #ifdef HALO_DEBUG
-       if (nrank == 4) then
+       if (nrank == 0) then
           write (*, *) 'X-pencil input'
           write (*, *) '=============='
           write (*, *) 'Data on a y-z plane is shown'
@@ -236,7 +236,7 @@
        call MPI_TYPE_FREE(halo12, ierror)
        if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_TYPE_FREE")
 #ifdef HALO_DEBUG
-       if (nrank == 4) then
+       if (nrank == 0) then
           write (*, *) 'After exchange in Y'
           do j = ye, ys, -1
              write (*, '(10F4.0)') (out(1, j, k), k=zs, ze)
@@ -278,7 +278,7 @@
        call MPI_WAITALL(4, requests, status, ierror)
        if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_WAITALL")
 #ifdef HALO_DEBUG
-       if (nrank == 4) then
+       if (nrank == 0) then
           write (*, *) 'After exchange in Z'
           do j = ye, ys, -1
              write (*, '(10F4.0)') (out(1, j, k), k=zs, ze)
@@ -291,7 +291,7 @@
     else if (ipencil == 2) then
 
 #ifdef HALO_DEBUG
-       if (nrank == 4) then
+       if (nrank == 0) then
           write (*, *) 'Y-pencil input'
           write (*, *) '=============='
           write (*, *) 'Data on a x-z plane is shown'
@@ -342,7 +342,7 @@
        call MPI_TYPE_FREE(halo21, ierror)
        if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_TYPE_FREE")
 #ifdef HALO_DEBUG
-       if (nrank == 4) then
+       if (nrank == 0) then
           write (*, *) 'After exchange in X'
           do i = xe, xs, -1
              write (*, '(10F4.0)') (out(i, 1, k), k=zs, ze)
@@ -387,7 +387,7 @@
        call MPI_WAITALL(4, requests, status, ierror)
        if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_WAITALL")
 #ifdef HALO_DEBUG
-       if (nrank == 4) then
+       if (nrank == 0) then
           write (*, *) 'After exchange in Z'
           do i = xe, xs, -1
              write (*, '(10F4.0)') (out(i, 1, k), k=zs, ze)
@@ -400,7 +400,7 @@
     else if (ipencil == 3) then
 
 #ifdef HALO_DEBUG
-       if (nrank == 4) then
+       if (nrank == 0) then
           write (*, *) 'Z-pencil input'
           write (*, *) '=============='
           write (*, *) 'Data on a x-y plane is shown'
@@ -450,7 +450,7 @@
        call MPI_TYPE_FREE(halo31, ierror)
        if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_TYPE_FREE")
 #ifdef HALO_DEBUG
-       if (nrank == 4) then
+       if (nrank == 0) then
           write (*, *) 'After exchange in X'
           do i = xe, xs, -1
              write (*, '(10F4.0)') (out(i, j, 1), j=ys, ye)
@@ -498,7 +498,7 @@
        call MPI_TYPE_FREE(halo32, ierror)
        if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_TYPE_FREE")
 #ifdef HALO_DEBUG
-       if (nrank == 4) then
+       if (nrank == 0) then
           write (*, *) 'After exchange in Y'
           do i = xe, xs, -1
              write (*, '(10F4.0)') (out(i, j, 1), j=ys, ye)

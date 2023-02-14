@@ -22,7 +22,8 @@ if (BUILD_TARGET MATCHES "gpu")
 
 endif(BUILD_TARGET MATCHES "gpu")
 
-option(ENABLE_PROFILER "Activate the profiler" OFF)
+set (ENABLE_PROFILER "OFF" CACHE STRING "Activate/select the profiler")
+set_property(CACHE ENABLE_PROFILER PROPERTY STRINGS OFF caliper)
 
 set(AUTHOR "Stefano Rolfo;Charles Moulinec;Paul Bartholomew")
 set(AUTHOR_DETAILS "stefano.rolfo@stfc.ac.uk;charles.moulinec@stfc.ac.uk;p.bartholomew@epcc.ed.ac.uk")
@@ -58,6 +59,7 @@ endif (BUILD_TARGET MATCHES "gpu")
 include(D2D_MPI)
 
 include(D2D_Compilers)
+include(D2D_Profilers)
 
 # FFT options
 if (BUILD_TARGET MATCHES "gpu")

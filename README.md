@@ -129,6 +129,13 @@ Profiling can be activated in the Makefile. Set the variable `PROFILER` to one o
 3. Profile FFT operations (default : true)
 4. Profile decomp_2d init / fin subroutines (default : true)
 
+Profiling can be activated via `cmake` builds, the recommended approach is to run the initial configuration as follows:
+```
+FC=mpif90 CXX=mpicxx cmake -DENABLE_PROFILER=caliper -B build
+```
+where `ENABLE_PROFILER` is set to the profiling tool desired, currently supported values are: `caliper`.
+Note that when using `caliper` a C++ compiler is required as indicated in the above command line.
+
 ## FFT backends
 
 The library provides a built-in FFT engine and supports various FFT backends : FFTW, Intel oneMKL, Nvidia cuFFT. The FFT engine selected during compilation is available through the variable `D2D_FFT_BACKEND` defined in the module `decomp_2d_fft`. The expected value is defined by the integer constants

@@ -25,7 +25,11 @@ else(FFTW_FOUND)
 endif(FFTW_FOUND)
 list(APPEND files_fft fft_log.f90)
 
-set(SRCFILES ${files_decomp} ${files_fft})
+if (ENABLE_PROFILER)
+  file(GLOB prof_files profiler_${ENABLE_PROFILER}.f90)
+endif()
+
+set(SRCFILES ${files_decomp} ${files_fft} ${prof_files})
 
 add_library(decomp2d STATIC ${SRCFILES})
 if (MPI_FOUND)
@@ -40,6 +44,15 @@ elseif(MKL_FOUND)
   target_compile_options(decomp2d PUBLIC $<TARGET_PROPERTY:MKL::MKL,INTERFACE_COMPILE_OPTIONS>)
   target_include_directories(decomp2d PUBLIC $<TARGET_PROPERTY:MKL::MKL,INTERFACE_INCLUDE_DIRECTORIES>)
 endif(FFTW_FOUND)
+
+if (ENABLE_PROFILER)
+  target_compile_definitions(decomp2d PUBLIC -DPROFILER)
+
+  if (caliper_FOUND)
+    target_include_directories(decomp2d PUBLIC ${caliper_INCLUDE_DIR}/caliper/fortran)
+    target_link_libraries(decomp2d PRIVATE caliper)
+  endif()
+endif()
 
 install(TARGETS decomp2d
         RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}

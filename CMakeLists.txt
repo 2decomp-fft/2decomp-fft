@@ -12,7 +12,7 @@ if (BUILD_TARGET MATCHES "gpu")
   option(ENABLE_OPENACC "Allow user to activate/deactivate OpenACC support" ON)
   option(ENABLE_CUDA "Allow user to activate/deactivate CUDA support" ON)
   option(ENABLE_MANAGED "Allow user to activate/deactivate automatic memory managment from NVHPC" OFF)
-  option(ENABLE_NCCL "Allow user to activate/deactivate Collective Comunication NCCL" ON)
+  option(ENABLE_NCCL "Allow user to activate/deactivate Collective Comunication NCCL" OFF)
 
   if (ENABLE_CUDA)
     message(STATUS "Before enable CUDA")

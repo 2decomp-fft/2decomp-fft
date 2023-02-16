@@ -3,21 +3,30 @@
 
 program io_var_test
 
+   use mpi
    use decomp_2d
    use decomp_2d_io
-   use MPI
+#if defined(_GPU)
+   use cudafor
+   use openacc
+#endif
 
    implicit none
 
-   integer, parameter :: nx = 17, ny = 13, nz = 11
-   integer :: p_row, p_col
+   integer, parameter :: nx_base = 17, ny_base = 13, nz_base = 11
+   integer :: nx, ny, nz
+   integer :: p_row = 0, p_col = 0
+   integer :: resize_domain
+   integer :: nranks_tot
+   integer :: nargin, arg, FNLength, status, DecInd
+   character(len=80) :: InputFN
 
    real(mytype), parameter :: eps = 1.0E-7
 
    ! for global data
-   real(mytype), dimension(nx, ny, nz) :: data1
+   real(mytype), allocatable, dimension(:, :, :) :: data1
    real(mytype), allocatable, dimension(:, :, :) :: data1_large
-   complex(mytype), dimension(nx, ny, nz) :: cdata1
+   complex(mytype), allocatable, dimension(:, :, :) :: cdata1
 
    ! for distributed data
    real(mytype), allocatable, dimension(:, :, :) :: u1, u2, u3
@@ -39,38 +48,65 @@ program io_var_test
    TYPE(DECOMP_INFO) :: large
 
    integer :: i, j, k, m, ierror, fh
-   character(len=15) :: filename, arg
+   character(len=15) :: filename
    integer(kind=MPI_OFFSET_KIND) :: filesize, disp
 
-   allocate (data1_large(nx*2, ny*2, nz*2))
 
    call MPI_INIT(ierror)
-   call MPI_COMM_SIZE(MPI_COMM_WORLD, nproc, ierror)
-   call MPI_COMM_RANK(MPI_COMM_WORLD, nrank, ierror)
-
-   ! Defaults
-   p_row = 0
-   p_col = 0
-
-   ! Read commandline input
-   i = command_argument_count()
-   if (i /= 2) then
-      call MPI_ABORT(MPI_COMM_WORLD, 1, ierror)
+   ! To resize the domain we need to know global number of ranks
+   ! This operation is also done as part of decomp_2d_init
+   call MPI_COMM_SIZE(MPI_COMM_WORLD, nranks_tot, ierror)
+   resize_domain = int(nranks_tot/4) + 1
+   nx = nx_base*resize_domain
+   ny = ny_base*resize_domain
+   nz = nz_base*resize_domain
+   ! Now we can check if user put some inputs
+   ! Handle input file like a boss -- GD
+   nargin=command_argument_count()
+   if ((nargin==0).or.(nargin==2).or.(nargin==5)) then
+      do arg = 1, nargin
+         call get_command_argument(arg, InputFN, FNLength, status)
+         read(InputFN, *, iostat=status) DecInd
+         if (arg.eq.1) then
+            p_row = DecInd
+         elseif (arg.eq.2) then
+            p_col = DecInd
+         elseif (arg.eq.3) then
+            nx = DecInd
+         elseif (arg.eq.4) then
+            ny = DecInd
+         elseif (arg.eq.5) then
+            nz = DecInd
+         endif
+      enddo
    else
-      call get_command_argument(1, arg)
-      read (arg, '(I10)') i
-      p_row = i
-      call get_command_argument(2, arg)
-      read (arg, '(I10)') i
-      p_col = i
-   end if
-
+      ! nrank not yet computed we need to avoid write
+      ! for every rank
+      call MPI_COMM_RANK(MPI_COMM_WORLD, nrank, ierror)
+      if (nrank==0) then
+         print *, "This Test takes no inputs or 2 inputs as"
+         print *, "  1) p_row (default=0)"
+         print *, "  2) p_col (default=0)"
+         print *, "or 5 inputs as"
+         print *, "  1) p_row (default=0)"
+         print *, "  2) p_col (default=0)"
+         print *, "  3) nx "
+         print *, "  4) ny "
+         print *, "  5) nz "
+         print *, "Number of inputs is not correct and the defult settings"
+         print *, "will be used"
+      endif
+   endif
+   
    call decomp_2d_init(nx, ny, nz, p_row, p_col)
 
    ! also create a data set over a large domain
    call decomp_info_init(nx*2, ny*2, nz*2, large)
 
    ! initialise global data
+   allocate (data1(nx, ny, nz))
+   allocate (cdata1(nx, ny, nz))
+   allocate (data1_large(nx*2, ny*2, nz*2))
    m = 1
    do k = 1, nz
       do j = 1, ny
@@ -295,9 +331,9 @@ program io_var_test
    deallocate (u1_b, u2_b, u3_b)
    deallocate (u1l_b, u2l_b, u3l_b)
    deallocate (cu1_b, cu2_b, cu3_b)
+   deallocate (data1, cdata1, data1_large)
    call decomp_info_finalize(large)
    call decomp_2d_finalize
    call MPI_FINALIZE(ierror)
-   deallocate (data1_large)
 
 end program io_var_test

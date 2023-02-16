@@ -62,10 +62,8 @@ cmake --build $path_to_build_directory -j <nproc>
 ```
 appending `-v` will display additional information about the build, such as compiler flags.
 
-After building the library can be tested by running
-```
-ctest --test-dir $path_to_build_directory
-```
+After building the library can be tested. Please see section [Testting and examples](#testing-and-examples)
+
 Options can be added to change the level of verbosity. Finally, the build library can be installed by running 
 ```
 cmake --install $path_to_build_directory

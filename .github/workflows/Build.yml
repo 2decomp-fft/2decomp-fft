@@ -30,10 +30,10 @@ jobs:
     - name: Compile
       run: |
         FC=mpif90 cmake -B build -DCMAKE_BUILD_TYPE=dev
-	make -C build
+        make -C build
 
     - name: Examples
       run: |
         FC=mpif90 cmake -B build -DCMAKD_BUILD_TYPE=dev
-	make -C build
-	make -C build test
+        make -C build
+        make -C build test

@@ -41,7 +41,7 @@ To generate the build system run
 ```
 cmake -S $path_to_sources -B $path_to_build_directory -DOPTION1 -DOPTION2 ...
 ```
-If the directory do no exist it will be generated and it will contain the configuration files. The configuration can be further
+If the directory does not exist it will be generated and it will contain the configuration files. The configuration can be further
 edited by using the `ccmake` utility as
 ```
 ccmake $path_to_build_directory
@@ -54,7 +54,7 @@ The behaviour of debug and development versions of the library can be changed be
 initialization using the variable ``decomp_debug`` or the environment variable ``DECOMP_2D_DEBUG``.
 The value provided with the environment variable must be a positive integer below 9999.
 
-Two `BUILD_TARGETS` are available namely `mpi` and `gpu`.  For `mpi` target no additional options should be required. whereas for `gpu` extra options are necessary at the configure stage. Please see section [GPU Compilation](#gpu-compilation)
+Two `BUILD_TARGETS` are available namely `mpi` and `gpu`.  For the `mpi` target no additional options should be required. whereas for `gpu` extra options are necessary at the configure stage. Please see section [GPU Compilation](#gpu-compilation)
 
 Once the build system has been configured, you can build `2decomp&fft` by running
 ```
@@ -122,7 +122,7 @@ To properly configure for GPU build the following needs to be used
 ```
 cmake -S $path_to_sources -B $path_to_build_directory -DBUILD_TARGET=gpu
 ```
-By default CUDA aware MPI will be used together with `cuFFT` for the FFT library. The configure will automatically look for the GPU architecture available on the system. If you are building on a HPC system please use a computing node for the installation. Useful variable to be added are 
+By default CUDA aware MPI will be used together with `cuFFT` for the FFT library. The configure will automatically look for the GPU architecture available on the system. If you are building on a HPC system please use a computing node for the installation. Useful variables to be added are 
 
  - `-DENABLE_NCCL=yes` to activate the NCCL collectives
  - `-DENABLE_MANAGED=yes` to activate the automatic memory management form the NVHPC compiler
@@ -149,7 +149,8 @@ Profiling can be activated in the Makefile. Set the variable `PROFILER` to one o
 Profiling can be activated via `cmake` builds, the recommended approach is to run the initial configuration as follows:
 ```
 export caliper_DIR=/path/to/caliper/install/share/cmake/caliper
-FC=mpif90 CXX=mpicxx cmake -DENABLE_PROFILER=caliper -B build
+export CXX=mpicxx
+cmake -S $path_to_sources -B $path_to_build_directory -DENABLE_PROFILER=caliper
 ```
 where `ENABLE_PROFILER` is set to the profiling tool desired, currently supported values are: `caliper`.
 Note that when using `caliper` a C++ compiler is required as indicated in the above command line.
@@ -230,14 +231,6 @@ This variable is automatically added in GPU builds.
 #### _NCCL
 
 This variable is valid only for GPU builds. The NVIDIA Collective Communication Library (NCCL) implements multi-GPU and multi-node communication primitives optimized for NVIDIA GPUs and Networking.
-
-#### SHM
-
-This variable is not supported.
-
-#### SHM_DEBUG
-
-This variable is not supported
 
 ## Optional dependencies
 

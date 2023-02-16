@@ -24,7 +24,7 @@ endif(BUILD_TARGET MATCHES "gpu")
 
 set (ENABLE_PROFILER "OFF" CACHE STRING "Activate/select the profiler")
 set_property(CACHE ENABLE_PROFILER PROPERTY STRINGS OFF caliper)
-option(ENABLE_INPLACE "Activate the profiler" OFF)
+option(ENABLE_INPLACE "Enable in-place operation of FFT" OFF)
 option(HALO_DEBUG "Enable halo debugging options" OFF)
 
 set(AUTHOR "Stefano Rolfo;Charles Moulinec;Paul Bartholomew")

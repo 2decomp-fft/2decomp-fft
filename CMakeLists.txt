@@ -22,7 +22,8 @@ if (BUILD_TARGET MATCHES "gpu")
 
 endif(BUILD_TARGET MATCHES "gpu")
 
-option(ENABLE_PROFILER "Activate the profiler" OFF)
+set (ENABLE_PROFILER "OFF" CACHE STRING "Activate/select the profiler")
+set_property(CACHE ENABLE_PROFILER PROPERTY STRINGS OFF caliper)
 option(ENABLE_INPLACE "Activate the profiler" OFF)
 option(HALO_DEBUG "Enable halo debugging options" OFF)
 
@@ -60,6 +61,7 @@ endif (BUILD_TARGET MATCHES "gpu")
 include(D2D_MPI)
 
 include(D2D_Compilers)
+include(D2D_Profilers)
 
 # FFT options
 if (BUILD_TARGET MATCHES "gpu")

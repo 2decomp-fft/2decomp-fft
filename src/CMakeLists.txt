@@ -4,7 +4,6 @@ file(GLOB files_decomp factor.f90
 		       log.f90
 		       io.f90)
 include_directories(${CMAKE_SOURCE_DIR}/src)
-include_directories(${CMAKE_SOURCE_DIR}/mod)
 
 #if(${FFT_Choice} MATCHES "generic")
 #  file(GLOB files_fft fft_generic.f90)
@@ -32,6 +31,9 @@ endif()
 set(SRCFILES ${files_decomp} ${files_fft} ${prof_files})
 
 add_library(decomp2d STATIC ${SRCFILES})
+target_include_directories(decomp2d PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_Fortran_MODULE_DIRECTORY}>
+  $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>)
 if (MPI_FOUND)
   target_link_libraries(decomp2d PRIVATE MPI::MPI_Fortran)
 endif (MPI_FOUND)
@@ -57,8 +59,13 @@ if (HALO_DEBUG)
   target_compile_definitions(decomp2d PUBLIC -DHALO_DEBUG)
 endif()
 
+file(GLOB decomp_mods
+  ${CMAKE_Fortran_MODULE_DIRECTORY}/*.mod
+  ${CMAKE_Fortran_MODULE_DIRECTORY}/*.smod)
+
 install(TARGETS decomp2d
         RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
         LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-        ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR} 
-)
+        ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR})
+install(FILES ${decomp_mods} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+      

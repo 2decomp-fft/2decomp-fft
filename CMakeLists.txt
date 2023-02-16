@@ -26,6 +26,7 @@ set (ENABLE_PROFILER "OFF" CACHE STRING "Activate/select the profiler")
 set_property(CACHE ENABLE_PROFILER PROPERTY STRINGS OFF caliper)
 option(ENABLE_INPLACE "Enable in-place operation of FFT" OFF)
 option(HALO_DEBUG "Enable halo debugging options" OFF)
+option(BUILD_SHARED_LIBS "Set ON to build a shared library" OFF)
 
 set(AUTHOR "Stefano Rolfo;Charles Moulinec;Paul Bartholomew")
 set(AUTHOR_DETAILS "stefano.rolfo@stfc.ac.uk;charles.moulinec@stfc.ac.uk;p.bartholomew@epcc.ed.ac.uk")

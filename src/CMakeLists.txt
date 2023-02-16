@@ -30,7 +30,7 @@ endif()
 
 set(SRCFILES ${files_decomp} ${files_fft} ${prof_files})
 
-add_library(decomp2d STATIC ${SRCFILES})
+add_library(decomp2d ${SRCFILES})
 target_include_directories(decomp2d PUBLIC
   $<BUILD_INTERFACE:${CMAKE_Fortran_MODULE_DIRECTORY}>
   $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>)

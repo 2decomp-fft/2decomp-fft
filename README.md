@@ -223,10 +223,6 @@ This variable is automatically added in GPU builds.
 
 This variable is valid only for GPU builds. The NVIDIA Collective Communication Library (NCCL) implements multi-GPU and multi-node communication primitives optimized for NVIDIA GPUs and Networking.
 
-#### OCC
-
-This variable is not supported
-
 #### SHM
 
 This variable is not supported.

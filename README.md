@@ -2,13 +2,15 @@
 
 ## Building
 
+### Makefile
+
 Different compilers can be set by specifying `CMP`, e.g. `make CMP=intel`
 to build with Intel compilers, see `Makefile` for options.
 
 By default an optimised library will be built, debugging versions of the
 library can be built with `make BUILD=debug`, a development version which 
 additionally sets compile time flags to catch coding errors can be built 
-with `make BUILD=dev` (GNU compilers only currently). The behavior of debug
+with `make BUILD=dev` (GNU compilers only currently). The behaviour of debug
 and development versions of the library can be changed before the initialization
 using the variable ``decomp_debug`` or the environment variable ``DECOMP_2D_DEBUG``.
 The value provided with the environment variable must be a positive integer below 9999.
@@ -29,7 +31,53 @@ specifying options between builds.
 To perform a clean build run `make clean` first, this will delete all
 output files, including `Makefile.settings`.
 
+### CMake
+
+The new experimental build system is driven by `cmake`. It is good practice to directly point to the MPI Fortran wrapper that you would like to use to guarantee consistency between Fortran compiler and MPI. This can be done by setting the default Fortran environmental variable 
+```
+export FC=my_mpif90
+```
+To generate the build system run
+```
+cmake -S $path_to_sources -B $path_to_build_directory -DOPTION1 -DOPTION2 ...
+```
+If the directory does not exist it will be generated and it will contain the configuration files. The configuration can be further
+edited by using the `ccmake` utility as
+```
+ccmake $path_to_build_directory
+```
+and editing as desired, variables that are likely of interest are: `CMAKE_BUILD_TYPE` and `FFT_Choice`;
+additional variables can be shown by entering "advanced mode" by pressing `t`.
+By default a `RELEASE` build will built, other options for `CMAKE_BUILD_TYPE` are `DEBUG` and `DEV` which
+turn on debugging flags and additionally try to catch coding errors at compile time, respectively.
+The behaviour of debug and development versions of the library can be changed before the
+initialization using the variable ``decomp_debug`` or the environment variable ``DECOMP_2D_DEBUG``.
+The value provided with the environment variable must be a positive integer below 9999.
+
+Two `BUILD_TARGETS` are available namely `mpi` and `gpu`.  For the `mpi` target no additional options should be required. whereas for `gpu` extra options are necessary at the configure stage. Please see section [GPU Compilation](#gpu-compilation)
+
+Once the build system has been configured, you can build `2decomp&fft` by running
+```
+cmake --build $path_to_build_directory -j <nproc>
+```
+appending `-v` will display additional information about the build, such as compiler flags.
+
+After building the library can be tested. Please see section [Testing and examples](#testing-and-examples)
+
+Options can be added to change the level of verbosity. Finally, the build library can be installed by running 
+```
+cmake --install $path_to_build_directory
+```
+The default location for `libdecomp2d.a` is `$path_to_build_directory/opt/lib`or  `$path_to_build_directory/opt/lib64` unless the variable `CMAKE_INSTALL_PREFIX` is modified
+
+Occasionally a clean build is required, this can be performed by running
+```
+cmake --build $path_to_build_directory --target clean
+```
+
 ## Testing and examples
+
+### Makefile
 
 Various example code to exercise 2decomp functionality can be found under ``examples/``
 and can be built from the top-level directory by executing
@@ -46,11 +94,20 @@ setting ``MPIRUN``, for example to run tests on 4 ranks using an ``mpiexec`` lau
 make NP=4 MPIRUN=${HOME}/bin/mpiexec check
 ```
 
+### CMake
+
+After building the library can be tested by running
+```
+ctest --test-dir $path_to_build_directory
+```
+which uses the `ctest` utility. By default tests are performed in serial, but more than 1 rank can be used by setting `MPIEXEC_MAX_NUMPROCS`.  For the GPU implementation please be aware that it is based on a single MPI rank per GPU. Therefore to test multiple GPUs, please use the maximum number of available GPUs and not the maximum number of MPI tasks that are available in the system/node. 
+
 ## GPU compilation
 
 The library can perform multi GPU offoloading using the NVHPC compiler suite for NVIDIA hardware. 
 The implementation is based on CUDA-aware MPI and NVIDIA Collective Communication Library (NCCL).
 The FFT is based on cuFFT. 
+### Makefile
 To compile the library for GPU it is possible to execute the following
 ```
 make CMP=nvhpc FFT=cufft PARAMOD=gpu CUFFT_PATH=PATH_TO_NVHPC/Vers/Linux_x86_64/Vers/compilers/ 
@@ -60,7 +117,26 @@ NCCL is not activated by default. If NCCL is installed/required use `NCCL=yes`.
 The current implementation relays also on opeanACC
 and on automatic optimization of `do concurrent` loops.
 By default the compute architecture for the GPU is 80 (i.e. Ampere), to change it use `CCXY=XY` 
+### CMake
+To properly configure for GPU build the following needs to be used 
+```
+cmake -S $path_to_sources -B $path_to_build_directory -DBUILD_TARGET=gpu
+```
+By default CUDA aware MPI will be used together with `cuFFT` for the FFT library. The configure will automatically look for the GPU architecture available on the system. If you are building on a HPC system please use a computing node for the installation. Useful variables to be added are 
+
+ - `-DENABLE_NCCL=yes` to activate the NCCL collectives
+ - `-DENABLE_MANAGED=yes` to activate the automatic memory management form the NVHPC compiler
+If you are getting the following error
+```
+-- The CUDA compiler identification is unknown  
+CMake Error at /usr/share/cmake/Modules/CMakeDetermineCUDACompiler.cmake:633 (message):  
+Failed to detect a default CUDA architecture. 
+```
+It is possible that your default C compiler is too recent and not supported by `nvcc` . You might be able to solve the issue by adding 
+ - `-DCMAKE_CUDA_HOST_COMPILER=$supported_gcc`
  
+ At the moment the supported CUDA host compilers are `gcc11` and earlier. 
+
 ## Profiling
 
 Profiling can be activated in the Makefile. Set the variable `PROFILER` to one of the supported profilers (only `caliper` currently). If using `caliper`, provide the installation path in the variable `CALIPER_PATH`. When the profiling is active, one can tune it before calling `decomp_2d_init` using the subroutine `decomp_profiler_prep`. The input argument for this subroutine is a logical array of size 4. Each input allow activation / deactivation of the profiling as follows :
@@ -69,6 +145,15 @@ Profiling can be activated in the Makefile. Set the variable `PROFILER` to one o
 2. Profile IO operations (default : true)
 3. Profile FFT operations (default : true)
 4. Profile decomp_2d init / fin subroutines (default : true)
+
+Profiling can be activated via `cmake` builds, the recommended approach is to run the initial configuration as follows:
+```
+export caliper_DIR=/path/to/caliper/install/share/cmake/caliper
+export CXX=mpicxx
+cmake -S $path_to_sources -B $path_to_build_directory -DENABLE_PROFILER=caliper
+```
+where `ENABLE_PROFILER` is set to the profiling tool desired, currently supported values are: `caliper`.
+Note that when using `caliper` a C++ compiler is required as indicated in the above command line.
 
 ## FFT backends
 
@@ -147,18 +232,6 @@ This variable is automatically added in GPU builds.
 
 This variable is valid only for GPU builds. The NVIDIA Collective Communication Library (NCCL) implements multi-GPU and multi-node communication primitives optimized for NVIDIA GPUs and Networking.
 
-#### OCC
-
-This variable is not supported
-
-#### SHM
-
-This variable is not supported.
-
-#### SHM_DEBUG
-
-This variable is not supported
-
 ## Optional dependencies
 
 ### FFTW
@@ -189,3 +262,4 @@ make -j
 make test
 make install
 ```
+

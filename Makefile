@@ -16,6 +16,7 @@ CMP = gcc# intel,gcc,nagfor,cray,nvhpc
 FFT ?= generic# fftw3,fftw3_f03,generic,mkl,cufft
 PARAMOD = mpi # multicore,gpu
 PROFILER ?= none# none, caliper
+INPLACE = no 
 
 BUILD ?= # debug can be used with gcc
 FCFLAGS ?= # user can set default compiler flags
@@ -28,6 +29,10 @@ LIBDECOMP = decomp2d
 
 AR = ar
 LIBOPT = rcs
+
+ifeq ($(INPLACE),yes)
+  DEFS += -DOVERWRITE
+endif
 
 #######CMP settings###########
 CMPINC = Makefile.compilers

@@ -12,7 +12,7 @@ if (BUILD_TARGET MATCHES "gpu")
   option(ENABLE_OPENACC "Allow user to activate/deactivate OpenACC support" ON)
   option(ENABLE_CUDA "Allow user to activate/deactivate CUDA support" ON)
   option(ENABLE_MANAGED "Allow user to activate/deactivate automatic memory managment from NVHPC" OFF)
-  option(ENABLE_NCCL "Allow user to activate/deactivate Collective Comunication NCCL" ON)
+  option(ENABLE_NCCL "Allow user to activate/deactivate Collective Comunication NCCL" OFF)
 
   if (ENABLE_CUDA)
     message(STATUS "Before enable CUDA")
@@ -24,6 +24,8 @@ endif(BUILD_TARGET MATCHES "gpu")
 
 set (ENABLE_PROFILER "OFF" CACHE STRING "Activate/select the profiler")
 set_property(CACHE ENABLE_PROFILER PROPERTY STRINGS OFF caliper)
+option(ENABLE_INPLACE "Activate the profiler" OFF)
+option(HALO_DEBUG "Enable halo debugging options" OFF)
 
 set(AUTHOR "Stefano Rolfo;Charles Moulinec;Paul Bartholomew")
 set(AUTHOR_DETAILS "stefano.rolfo@stfc.ac.uk;charles.moulinec@stfc.ac.uk;p.bartholomew@epcc.ed.ac.uk")

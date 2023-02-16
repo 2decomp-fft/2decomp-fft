@@ -53,6 +53,9 @@ if (ENABLE_PROFILER)
     target_link_libraries(decomp2d PRIVATE caliper)
   endif()
 endif()
+if (HALO_DEBUG)
+  target_compile_definitions(decomp2d PUBLIC -DHALO_DEBUG)
+endif()
 
 install(TARGETS decomp2d
         RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}

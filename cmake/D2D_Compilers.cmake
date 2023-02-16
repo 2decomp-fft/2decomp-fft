@@ -69,6 +69,10 @@ if (CMAKE_BUILD_TYPE MATCHES "DEBUG")
   add_definitions("-DDEBUG")
 endif (CMAKE_BUILD_TYPE MATCHES "DEBUG")
 
+if (ENABLE_INPLACE)
+  add_definitions("-DOVERWRITE")
+endif ()
+
 execute_process(
   COMMAND git describe --tag --long --always
   WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}

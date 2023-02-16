@@ -37,10 +37,12 @@ program init_test
    ! Now we can check if user put some inputs
    ! Handle input file like a boss -- GD
    nargin=command_argument_count()
+   write(*,*) 'nargin ', nargin
    if ((nargin==0).or.(nargin==2).or.(nargin==5)) then
       do arg = 1, nargin
          call get_command_argument(arg, InputFN, FNLength, status)
          read(InputFN, *, iostat=status) DecInd
+         write(*,*) 'DecInd ', DecInd
          if (arg.eq.1) then
             p_row = DecInd
          elseif (arg.eq.2) then

@@ -24,11 +24,13 @@ jobs:
     - name: Install requirements
       run: |
         sudo apt-get update
-        sudo apt-get install -y gfortran openmpi-bin libopenmpi-dev
+        sudo apt-get install -y gfortran openmpi-bin libopenmpi-dev cmake
 
     # Runs a set of commands using the runners shell
     - name: Compile
-      run: make BUILD=dev && make examples
+      run: |
+        FC=mpif90 cmake -B build -DCMAKE_BUILD_TYPE=dev
+        make -C build decomp2d
 
   bld_gnu_mpich:
     # The type of runner that the job will run on
@@ -43,11 +45,13 @@ jobs:
     - name: Install requirements
       run: |
         sudo apt-get update
-        sudo apt-get install -y gfortran mpich libmpich-dev
+        sudo apt-get install -y gfortran mpich libmpich-dev cmake
 
     # Runs a set of commands using the runners shell
     - name: Compile
-      run: make BUILD=debug && make examples
+      run: |
+        FC=mpif90 cmake -B build -DCMAKE_BUILD_TYPE=dev
+        make -C build decomp2d
 
   bld_nvidia:
     # The type of runner that the job will run on
@@ -99,15 +103,21 @@ jobs:
     - name: install
       run: |
         sudo apt-get update
-        sudo apt-get install -y intel-oneapi-common-vars intel-oneapi-compiler-fortran intel-oneapi-mkl intel-oneapi-mkl-devel intel-oneapi-mpi intel-oneapi-mpi-devel
+        sudo apt-get install -y intel-oneapi-common-vars intel-oneapi-compiler-fortran intel-oneapi-mkl intel-oneapi-mkl-devel intel-oneapi-mpi intel-oneapi-mpi-devel cmake
 
     # Runs a set of commands using the runners shell
     - name: Compile
-      run: source /opt/intel/oneapi/setvars.sh && make CMP=intel BUILD=debug && make examples
+      run: |
+        source /opt/intel/oneapi/setvars.sh
+        FC=mpiifort cmake -B build -DCMAKE_BUILD_TYPE=debug
+        make -C build decomp2d
 
     # Runs a set of commands using the runners shell
     - name: Compile
-      run: source /opt/intel/oneapi/setvars.sh && make clean && make CMP=intel FFT=mkl BUILD=debug && make examples
+      run: |
+        source /opt/intel/oneapi/setvars.sh
+        FC=mpiifort cmake -B build -DCMAKE_BUILD_TYPE=debug -DFFT_Choice=mkl
+        make -C build decomp2d
 
   bld_fftw3:
     # The type of runner that the job will run on

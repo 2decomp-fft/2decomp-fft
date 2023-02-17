@@ -38,7 +38,7 @@
 !       Restore it later
 !          Avoid memory allocation inside 2decomp during IO
 !          Avoid transpose operations inside 2decomp during IO
-!    d2d_writer_family_register_var
+!    d2d_io_family_register_var
 !       The interface can be improved
 !    MPI
 !       Write a generic subroutine to update the displacement offset
@@ -104,11 +104,11 @@ contains
    !
    ! Initialize a new family of writers (default type)
    !
-   subroutine d2d_writer_family_init(family, label)
+   subroutine d2d_io_family_init(family, label)
 
       implicit none
 
-      class(d2d_writer_family), intent(inout) :: family
+      class(d2d_io_family), intent(inout) :: family
       character(len=*), intent(in) :: label
 
 #ifdef ADIOS2
@@ -117,20 +117,20 @@ contains
       call family%mpi_init(label)
 #endif
 
-   end subroutine d2d_writer_family_init
+   end subroutine d2d_io_family_init
 
    !
    ! Initialize a new family of MPI writers
    !
-   subroutine d2d_writer_family_mpi_init(family, label)
+   subroutine d2d_io_family_mpi_init(family, label)
 
       implicit none
 
-      class(d2d_writer_family), intent(inout) :: family
+      class(d2d_io_family), intent(inout) :: family
       character(len=*), intent(in) :: label
 
 #ifdef PROFILER
-      if (decomp_profiler_io) call decomp_profiler_start("d2d_writer_family_mpi_init")
+      if (decomp_profiler_io) call decomp_profiler_start("d2d_io_family_mpi_init")
 #endif
 
       ! Safety check
@@ -142,19 +142,19 @@ contains
       family%label = label
 
 #ifdef PROFILER
-      if (decomp_profiler_io) call decomp_profiler_end("d2d_writer_family_mpi_init")
+      if (decomp_profiler_io) call decomp_profiler_end("d2d_io_family_mpi_init")
 #endif
 
-   end subroutine d2d_writer_family_mpi_init
+   end subroutine d2d_io_family_mpi_init
 
    !
    ! Initialize a new family of ADIOS2 writers
    !
-   subroutine d2d_writer_family_adios2_init(family, label)
+   subroutine d2d_io_family_adios2_init(family, label)
 
       implicit none
 
-      class(d2d_writer_family), intent(inout) :: family
+      class(d2d_io_family), intent(inout) :: family
       character(len=*), intent(in) :: label
 
 #ifdef ADIOS2
@@ -162,7 +162,7 @@ contains
 #endif
 
 #ifdef PROFILER
-      if (decomp_profiler_io) call decomp_profiler_start("d2d_writer_family_adios2_init")
+      if (decomp_profiler_io) call decomp_profiler_start("d2d_io_family_adios2_init")
 #endif
 
       ! Safety check
@@ -193,26 +193,26 @@ contains
 #endif
 
 #ifdef PROFILER
-      if (decomp_profiler_io) call decomp_profiler_end("d2d_writer_family_adios2_init")
+      if (decomp_profiler_io) call decomp_profiler_end("d2d_io_family_adios2_init")
 #endif
 
-   end subroutine d2d_writer_family_adios2_init
+   end subroutine d2d_io_family_adios2_init
 
    !
    ! Clear the given writer
    !
-   subroutine d2d_writer_family_fin(family)
+   subroutine d2d_io_family_fin(family)
 
       implicit none
 
-      class(d2d_writer_family), intent(inout) :: family
+      class(d2d_io_family), intent(inout) :: family
 
 #ifdef ADIOS2
       integer :: ierror
 #endif
 
 #ifdef PROFILER
-      if (decomp_profiler_io) call decomp_profiler_start("d2d_writer_family_fin")
+      if (decomp_profiler_io) call decomp_profiler_start("d2d_io_family_fin")
 #endif
 
       ! Safety check
@@ -246,22 +246,22 @@ contains
       deallocate (family%label)
 
 #ifdef PROFILER
-      if (decomp_profiler_io) call decomp_profiler_end("d2d_writer_family_fin")
+      if (decomp_profiler_io) call decomp_profiler_end("d2d_io_family_fin")
 #endif
 
-   end subroutine d2d_writer_family_fin
+   end subroutine d2d_io_family_fin
 
    !
    ! Register one variable for the given family of writers
    !    1 <= ipencil <= 3
    !    0 <= iplane <= 3
    !
-   module subroutine d2d_writer_family_register_var(family, varname, ipencil, iplane, &
-                                                    type, opt_decomp, opt_nplanes)
+   module subroutine d2d_io_family_register_var(family, varname, ipencil, iplane, &
+                                                type, opt_decomp, opt_nplanes)
 
       implicit none
 
-      class(d2d_writer_family), intent(inout) :: family
+      class(d2d_io_family), intent(inout) :: family
       character(len=*), intent(in) :: varname
       integer, intent(in) :: ipencil ! (x-pencil=1; y-pencil=2; z-pencil=3)
       integer, intent(in) :: iplane
@@ -281,7 +281,7 @@ contains
 #endif
 
 #ifdef PROFILER
-      if (decomp_profiler_io) call decomp_profiler_start("d2d_writer_family_register_var")
+      if (decomp_profiler_io) call decomp_profiler_start("d2d_io_family_register_var")
 #endif
 
 #ifdef ADIOS2
@@ -361,27 +361,27 @@ contains
 #endif
 
 #ifdef PROFILER
-      if (decomp_profiler_io) call decomp_profiler_end("d2d_writer_family_register_var")
+      if (decomp_profiler_io) call decomp_profiler_end("d2d_io_family_register_var")
 #endif
 
-   end subroutine d2d_writer_family_register_var
+   end subroutine d2d_io_family_register_var
 
    !
    ! Open the given writer
    !
-   module subroutine d2d_writer_open(writer, family, io_dir, mode)
+   module subroutine d2d_io_open(writer, family, io_dir, mode)
 
       implicit none
 
       class(d2d_writer), intent(inout) :: writer
-      type(d2d_writer_family), target, intent(in) :: family
+      type(d2d_io_family), target, intent(in) :: family
       character(len=*), intent(in) :: io_dir
       integer, intent(in) :: mode
 
       integer :: access_mode, ierror
 
 #ifdef PROFILER
-      if (decomp_profiler_io) call decomp_profiler_start("d2d_writer_open")
+      if (decomp_profiler_io) call decomp_profiler_start("d2d_io_open")
 #endif
 
       ! Safety check
@@ -460,15 +460,15 @@ contains
       end if
 
 #ifdef PROFILER
-      if (decomp_profiler_io) call decomp_profiler_end("d2d_writer_open")
+      if (decomp_profiler_io) call decomp_profiler_end("d2d_io_open")
 #endif
 
-   end subroutine d2d_writer_open
+   end subroutine d2d_io_open
 
    !
    ! Start IO for the given writer
    !
-   module subroutine d2d_writer_start(writer)
+   module subroutine d2d_io_start(writer)
 
       implicit none
 
@@ -479,7 +479,7 @@ contains
 #endif
 
 #ifdef PROFILER
-      if (decomp_profiler_io) call decomp_profiler_start("d2d_writer_start")
+      if (decomp_profiler_io) call decomp_profiler_start("d2d_io_start")
 #endif
 
       ! Safety check
@@ -512,32 +512,32 @@ contains
 #endif
 
 #ifdef PROFILER
-      if (decomp_profiler_io) call decomp_profiler_end("d2d_writer_start")
+      if (decomp_profiler_io) call decomp_profiler_end("d2d_io_start")
 #endif
 
-   end subroutine d2d_writer_start
+   end subroutine d2d_io_start
 
    !
    ! Open the given writer and start IO
    !
-   module subroutine d2d_writer_open_start(writer, family, io_dir, mode)
+   module subroutine d2d_io_open_start(writer, family, io_dir, mode)
 
       implicit none
 
       class(d2d_writer), intent(inout) :: writer
-      type(d2d_writer_family), target, intent(in) :: family
+      type(d2d_io_family), target, intent(in) :: family
       character(len=*), intent(in) :: io_dir
       integer, intent(in) :: mode
 
       call writer%open(family, io_dir, mode)
       call writer%start()
 
-   end subroutine d2d_writer_open_start
+   end subroutine d2d_io_open_start
 
    !
    ! End IO for the given writer
    !
-   module subroutine d2d_writer_end(writer)
+   module subroutine d2d_io_end(writer)
 
       implicit none
 
@@ -548,7 +548,7 @@ contains
 #endif
 
 #ifdef PROFILER
-      if (decomp_profiler_io) call decomp_profiler_start("d2d_writer_end")
+      if (decomp_profiler_io) call decomp_profiler_start("d2d_io_end")
 #endif
 
 #ifdef ADIOS2
@@ -578,15 +578,15 @@ contains
 #endif
 
 #ifdef PROFILER
-      if (decomp_profiler_io) call decomp_profiler_end("d2d_writer_end")
+      if (decomp_profiler_io) call decomp_profiler_end("d2d_io_end")
 #endif
 
-   end subroutine d2d_writer_end
+   end subroutine d2d_io_end
 
    !
    ! Close the given writer
    !
-   module subroutine d2d_writer_close(writer)
+   module subroutine d2d_io_close(writer)
 
       implicit none
 
@@ -595,7 +595,7 @@ contains
       integer :: ierror
 
 #ifdef PROFILER
-      if (decomp_profiler_io) call decomp_profiler_start("d2d_writer_close")
+      if (decomp_profiler_io) call decomp_profiler_start("d2d_io_close")
 #endif
 
       ! Safety check
@@ -626,15 +626,15 @@ contains
       writer%is_open = .false.
 
 #ifdef PROFILER
-      if (decomp_profiler_io) call decomp_profiler_end("d2d_writer_close")
+      if (decomp_profiler_io) call decomp_profiler_end("d2d_io_close")
 #endif
 
-   end subroutine d2d_writer_close
+   end subroutine d2d_io_close
 
    !
    ! End IO and close the given writer
    !
-   module subroutine d2d_writer_end_close(writer)
+   module subroutine d2d_io_end_close(writer)
 
       implicit none
 
@@ -643,6 +643,6 @@ contains
       call writer%end()
       call writer%close()
 
-   end subroutine d2d_writer_end_close
+   end subroutine d2d_io_end_close
 
 end submodule decomp_2d_writer

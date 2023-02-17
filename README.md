@@ -131,6 +131,37 @@ The external code can use the named variables to check the FFT backend used in a
 - The oneMKL backend supports the OVERWRITE flag and can perform in-place complex 1D fft
 - The cuFFT backend supports the OVERWRITE flag and can perform in-place complex 1D fft
 
+## Linking from external codes
+
+### Codes using Makefiles
+
+When building a code that links 2decomp-fft using a Makefile you will need to add the include and link paths as appropriate (`inlude/` and `link/` under the installation directory, respectively).
+It is also possible to drive the build and installation of 2decomp-fft from a Makefile such as in the following example code
+```
+FC = mpif90
+BUILD = Release
+
+DECOMP_ROOT = /path/to/2decomp-fft
+DECOMP_BUILD_DIR = $(DECOMP_ROOT)/build
+DECOMP_INSTALL_DIR ?= $(DECOMP_BUILD_DIR)/opt # Use default unless set by user
+
+INC += -I$(DECOMP_INSTALL_DIR)/include
+
+# Users build/link targets
+LFLAGS += -L$(DECOMP_INSTALL_DIR)/lib -ldecomp.a
+
+# Building libdecomp.a
+$(DECOMP_INSTALL_DIR)/lib/libdecomp.a:
+	FC=$(FC) cmake -S $(DECOMP_ROOT) -B $(DECOMP_BUILD_DIR) -DCMAKE_BUILD_TYPE=$(BUILD) -DCMAKE_INSTALL_PREFIX=$(DECOMP_INSTALL_DIR)
+	cmake --build $(DECOMP_BUILD_DIR) --target decomp2d
+	cmake --build $(DECOMP_BUILD_DIR) --target install
+
+# Clean libdecomp.a
+clean-decomp:
+	cmake --build $(DECOMP_BUILD_DIR) --target clean
+	rm -f $(DECOMP_INSTALL_DIR)/lib/libdecomp.a
+```
+
 ## Miscellaneous
 
 ### Print the log to a file or to stdout

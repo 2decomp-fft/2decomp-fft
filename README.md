@@ -108,7 +108,12 @@ After building the library can be tested by running
 ```
 ctest --test-dir $path_to_build_directory
 ```
-which uses the `ctest` utility. By default tests are performed in serial, but more than 1 rank can be used by setting `MPIEXEC_MAX_NUMPROCS`.  For the GPU implementation please be aware that it is based on a single MPI rank per GPU. Therefore to test multiple GPUs, please use the maximum number of available GPUs and not the maximum number of MPI tasks that are available in the system/node. 
+which uses the `ctest` utility. By default tests are performed in serial, but more than 1 rank can be used by setting `MPIEXEC_MAX_NUMPROCS` under `ccamke` utility.  
+It is also possible to specify the decomposition by setting `PROW` and `PCOL` parameters at the configure stage or using `ccmake`. 
+The configure is consequently forcing the number of MPI tasks `MPIEXEC_MAX_NUMPROCS` to be equal to the product of PROW times PCOL. 
+Mesh resolution can also be imposed using the parameters `NX`, `NY` and `NZ`. 
+
+For the GPU implementation please be aware that it is based on a single MPI rank per GPU. Therefore to test multiple GPUs use the maximum number of available GPUs and not the maximum number of MPI tasks that are available in the system/node. 
 
 ## GPU compilation
 

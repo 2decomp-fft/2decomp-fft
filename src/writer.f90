@@ -36,8 +36,8 @@
 !          Combined with a small interpolation module allowing downsampling ?
 !    Remove the reduced precision
 !       Restore it later
-!          Avoid memory allocation inside 2decomp during IO
-!          Avoid transpose operations inside 2decomp during IO
+!          Avoid memory allocation inside 2decomp during IO ?
+!          Avoid transpose operations inside 2decomp during IO ?
 !    d2d_io_family_register_var
 !       The interface can be improved
 !    MPI

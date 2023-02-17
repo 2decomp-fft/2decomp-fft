@@ -29,8 +29,9 @@ jobs:
     # Runs a set of commands using the runners shell
     - name: Compile
       run: |
-        FC=mpif90 cmake -B build -DCMAKE_BUILD_TYPE=dev
-        make -C build decomp2d
+        export FC=mpif90
+        cmake -S . -B build -DCMAKE_BUILD_TYPE=dev
+        cmake --build build --target decomp2d
 
   bld_gnu_mpich:
     # The type of runner that the job will run on
@@ -50,8 +51,9 @@ jobs:
     # Runs a set of commands using the runners shell
     - name: Compile
       run: |
-        FC=mpif90 cmake -B build -DCMAKE_BUILD_TYPE=dev
-        make -C build decomp2d
+        export FC=mpif90
+        cmake -S . -B build -DCMAKE_BUILD_TYPE=dev
+        cmake --build build --target decomp2d
 
   bld_nvidia:
     # The type of runner that the job will run on
@@ -109,15 +111,17 @@ jobs:
     - name: Compile
       run: |
         source /opt/intel/oneapi/setvars.sh
-        FC=mpiifort cmake -B build -DCMAKE_BUILD_TYPE=debug
-        make -C build decomp2d
+        export FC=mpiifort
+        cmake -S . -B build -DCMAKE_BUILD_TYPE=debug
+        cmake --build build --target decomp2d
 
     # Runs a set of commands using the runners shell
     - name: Compile
       run: |
         source /opt/intel/oneapi/setvars.sh
-        FC=mpiifort cmake -B build -DCMAKE_BUILD_TYPE=debug -DFFT_Choice=mkl
-        make -C build decomp2d
+        export FC=mpiifort
+        cmake -S . -B build -DCMAKE_BUILD_TYPE=debug -DFFT_Choice=mkl
+        cmake --build build --target decomp2d
 
   bld_fftw3:
     # The type of runner that the job will run on

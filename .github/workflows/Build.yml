@@ -29,10 +29,12 @@ jobs:
     # Runs a set of commands using the runners shell
     - name: Compile
       run: |
-        FC=mpif90 cmake -B build -DCMAKE_BUILD_TYPE=dev
-        make -C build decomp2d
+        export FC=mpif90
+        cmake -S . -B build -DCMAKE_BUILD_TYPE=dev
+        cmake --build build --target decomp2d
 
     - name: Examples
       run: |
-        FC=mpif90 cmake -B build -DCMAKD_BUILD_TYPE=dev
-        make -C build
+        export FC=mpif90
+        cmake -S . -B build -DCMAKE_BUILD_TYPE=dev
+        cmake --build build

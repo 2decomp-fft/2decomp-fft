@@ -11,21 +11,21 @@
 !=======================================================================
 
 !
-! This is the IO submodule for writers and families of writers
-!    => Initialize / finalize a family of writers
-!    => Register a variable in a family of writers
-!    => Open / close a writer
-!    => Start / end a writer
+! This is the IO submodule for reader / writer and families of readers / writers
+!    => Initialize / finalize a family of readers / writers
+!    => Register a variable in a family of readers / writers
+!    => Open / close a reader / writer
+!    => Start / end a reader / writer
 !
 
 !
 ! TODO
 !
 ! Development
-!    Add a log subroutine for the derived type family of writers ?
-!    Have a default family of writers ? (just like decomp_main for the derived type decomp_info)
-!    Add a log subroutine for the derived type writer ?
-!    Have a default writer ? (just like decomp_main for the derived type decomp_info)
+!    Add a log subroutine for the derived type family of readers / writers ?
+!    Have a default family of readers / writers ? (just like decomp_main for the derived type decomp_info)
+!    Add a log subroutine for the derived type reader / writer ?
+!    Have a default reader / writer ? (just like decomp_main for the derived type decomp_info)
 !    Keep type-bound procedures or avoid them ?
 !    Move the subroutines gen_iodir_name, coarse_extents and plane_extents inside writer.f90 to hide them
 !
@@ -38,6 +38,7 @@
 !       Restore it later
 !          Avoid memory allocation inside 2decomp during IO ?
 !          Avoid transpose operations inside 2decomp during IO ?
+!          Reduced precision should be specified at the d2d_io_family level when registering the variable
 !    d2d_io_family_register_var
 !       The interface can be improved
 !    MPI
@@ -89,7 +90,7 @@
 !       should allow reduced precision operations easily
 !
 
-submodule(decomp_2d_io) decomp_2d_writer
+submodule(decomp_2d_io) decomp_2d_io_objects
 
    use decomp_2d_constants
 #ifdef ADIOS2
@@ -102,7 +103,7 @@ submodule(decomp_2d_io) decomp_2d_writer
 contains
 
    !
-   ! Initialize a new family of writers (default type)
+   ! Initialize a new family of readers / writers (default type)
    !
    subroutine d2d_io_family_init(family, label)
 
@@ -120,7 +121,7 @@ contains
    end subroutine d2d_io_family_init
 
    !
-   ! Initialize a new family of MPI writers
+   ! Initialize a new family of MPI readers / writers
    !
    subroutine d2d_io_family_mpi_init(family, label)
 
@@ -134,11 +135,11 @@ contains
 #endif
 
       ! Safety check
-      if (family%type /= decomp_2d_writer_none) then
+      if (family%type /= decomp_2d_io_none) then
          call decomp_2d_abort(__FILE__, __LINE__, -1, "Family was not cleared "//label)
       end if
 
-      family%type = decomp_2d_writer_mpi
+      family%type = decomp_2d_io_mpi
       family%label = label
 
 #ifdef PROFILER
@@ -148,7 +149,7 @@ contains
    end subroutine d2d_io_family_mpi_init
 
    !
-   ! Initialize a new family of ADIOS2 writers
+   ! Initialize a new family of ADIOS2 readers / writers
    !
    subroutine d2d_io_family_adios2_init(family, label)
 
@@ -166,14 +167,14 @@ contains
 #endif
 
       ! Safety check
-      if (family%type /= decomp_2d_writer_none) then
+      if (family%type /= decomp_2d_io_none) then
          call decomp_2d_abort(__FILE__, __LINE__, -1, "Family was not cleared "//label)
       end if
 
 #ifndef ADIOS2
       call decomp_2d_abort(__FILE__, __LINE__, -1, "ADIOS2 is not available")
 #else
-      family%type = decomp_2d_writer_adios2
+      family%type = decomp_2d_io_adios2
       family%label = label
 
       ! Advanced API
@@ -199,7 +200,7 @@ contains
    end subroutine d2d_io_family_adios2_init
 
    !
-   ! Clear the given writer
+   ! Clear the given family of readers / writers
    !
    subroutine d2d_io_family_fin(family)
 
@@ -216,13 +217,13 @@ contains
 #endif
 
       ! Safety check
-      if (family%type == decomp_2d_writer_none) then
+      if (family%type == decomp_2d_io_none) then
          call decomp_2d_warning(__FILE__, __LINE__, -1, "Family was already cleared.")
          return
       end if
 
 #ifdef ADIOS2
-      if (family%type == decomp_2d_writer_adios2) then
+      if (family%type == decomp_2d_io_adios2) then
          call adios2_flush_all_engines(family%io, ierror)
          if (ierror /= 0) then
             call decomp_2d_abort(__FILE__, __LINE__, ierror, &
@@ -242,7 +243,7 @@ contains
       end if
 #endif
 
-      family%type = decomp_2d_writer_none
+      family%type = decomp_2d_io_none
       deallocate (family%label)
 
 #ifdef PROFILER
@@ -252,7 +253,7 @@ contains
    end subroutine d2d_io_family_fin
 
    !
-   ! Register one variable for the given family of writers
+   ! Register one variable for the given family of readers / writers
    !    1 <= ipencil <= 3
    !    0 <= iplane <= 3
    !
@@ -285,7 +286,7 @@ contains
 #endif
 
 #ifdef ADIOS2
-      if (family%type == decomp_2d_writer_adios2) then
+      if (family%type == decomp_2d_io_adios2) then
 
          ! Prepare to register
          if (iplane == 0) then
@@ -367,13 +368,13 @@ contains
    end subroutine d2d_io_family_register_var
 
    !
-   ! Open the given writer
+   ! Open the given reader / writer
    !
    module subroutine d2d_io_open(writer, family, io_dir, mode)
 
       implicit none
 
-      class(d2d_writer), intent(inout) :: writer
+      class(d2d_io), intent(inout) :: writer
       type(d2d_io_family), target, intent(in) :: family
       character(len=*), intent(in) :: io_dir
       integer, intent(in) :: mode
@@ -396,7 +397,7 @@ contains
       writer%label = io_dir
 
       ! Prepare to open
-      if (family%type == decomp_2d_writer_mpi) then
+      if (family%type == decomp_2d_io_mpi) then
          ! MPI writer, set initial displacement and access mode
          writer%disp = 0_MPI_OFFSET_KIND
          if (mode == decomp_2d_write_mode .or. mode == decomp_2d_append_mode) then
@@ -407,7 +408,7 @@ contains
             call decomp_2d_abort(__FILE__, __LINE__, mode, "Invalid value for mode")
          end if
 
-      else if (family%type == decomp_2d_writer_adios2) then
+      else if (family%type == decomp_2d_io_adios2) then
 #ifdef ADIOS2
          ! ADIOS2 writer, set access mode
          if (mode == decomp_2d_write_mode) then
@@ -427,7 +428,7 @@ contains
       end if
 
       ! Open IO
-      if (family%type == decomp_2d_writer_mpi) then
+      if (family%type == decomp_2d_io_mpi) then
          call MPI_FILE_OPEN(decomp_2d_comm, io_dir, &
                             access_mode, MPI_INFO_NULL, &
                             writer%fh, ierror)
@@ -442,7 +443,7 @@ contains
             end if
          end if
 
-      else if (family%type == decomp_2d_writer_adios2) then
+      else if (family%type == decomp_2d_io_adios2) then
 #ifdef ADIOS2
          if (family%io%valid) then
             call adios2_open(writer%engine, family%io, &
@@ -466,13 +467,13 @@ contains
    end subroutine d2d_io_open
 
    !
-   ! Start IO for the given writer
+   ! Start IO for the given reader / writer
    !
    module subroutine d2d_io_start(writer)
 
       implicit none
 
-      class(d2d_writer), intent(inout) :: writer
+      class(d2d_io), intent(inout) :: writer
 
 #ifdef ADIOS2
       integer :: ierror
@@ -518,13 +519,13 @@ contains
    end subroutine d2d_io_start
 
    !
-   ! Open the given writer and start IO
+   ! Open the given reader / writer and start IO
    !
    module subroutine d2d_io_open_start(writer, family, io_dir, mode)
 
       implicit none
 
-      class(d2d_writer), intent(inout) :: writer
+      class(d2d_io), intent(inout) :: writer
       type(d2d_io_family), target, intent(in) :: family
       character(len=*), intent(in) :: io_dir
       integer, intent(in) :: mode
@@ -535,13 +536,13 @@ contains
    end subroutine d2d_io_open_start
 
    !
-   ! End IO for the given writer
+   ! End IO for the given reader / writer
    !
    module subroutine d2d_io_end(writer)
 
       implicit none
 
-      class(d2d_writer), intent(inout) :: writer
+      class(d2d_io), intent(inout) :: writer
 
 #ifdef ADIOS2
       integer :: ierror
@@ -584,13 +585,13 @@ contains
    end subroutine d2d_io_end
 
    !
-   ! Close the given writer
+   ! Close the given reader / writer
    !
    module subroutine d2d_io_close(writer)
 
       implicit none
 
-      class(d2d_writer), intent(inout) :: writer
+      class(d2d_io), intent(inout) :: writer
 
       integer :: ierror
 
@@ -606,12 +607,12 @@ contains
       end if
 
       ! Close the writer (type was checked at open stage)
-      if (writer%family%type == decomp_2d_writer_mpi) then
+      if (writer%family%type == decomp_2d_io_mpi) then
          call MPI_FILE_CLOSE(writer%fh, ierror)
          if (ierror /= 0) then
             call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_FILE_CLOSE")
          end if
-      else if (writer%family%type == decomp_2d_writer_adios2) then
+      else if (writer%family%type == decomp_2d_io_adios2) then
 #ifdef ADIOS2
          call adios2_close(writer%engine, ierror)
          if (ierror /= 0) then
@@ -632,17 +633,17 @@ contains
    end subroutine d2d_io_close
 
    !
-   ! End IO and close the given writer
+   ! End IO and close the given reader / writer
    !
    module subroutine d2d_io_end_close(writer)
 
       implicit none
 
-      class(d2d_writer), intent(inout) :: writer
+      class(d2d_io), intent(inout) :: writer
 
       call writer%end()
       call writer%close()
 
    end subroutine d2d_io_end_close
 
-end submodule decomp_2d_writer
+end submodule decomp_2d_io_objects

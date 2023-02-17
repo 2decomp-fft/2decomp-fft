@@ -42,13 +42,13 @@ module decomp_2d_io
    type(adios2_engine), dimension(MAX_IOH), save :: engine_registry
 #endif
 
-   ! derived type to store info for a family of writers
+   ! derived type to store info for a family of readers / writers
    type, public :: d2d_io_family
-      integer :: type = decomp_2d_writer_none  ! Type of the writer
-      character(:), allocatable :: label       ! Label of the writer
+      integer :: type = decomp_2d_io_none                     ! Type of the writer
+      character(:), allocatable :: label                      ! Label of the writer
 #ifdef ADIOS2
-      type(adios2_adios), pointer :: adios     ! adios2 only
-      type(adios2_io) :: io                    ! adios2 only
+      type(adios2_adios), pointer :: adios                    ! adios2 only
+      type(adios2_io) :: io                                   ! adios2 only
 #endif
    contains
       procedure :: init => d2d_io_family_init                 ! ADIOS2 writer if possible, MPI otherwise
@@ -58,25 +58,25 @@ module decomp_2d_io
       procedure :: register_var => d2d_io_family_register_var ! Register a variable
    end type d2d_io_family
 
-   ! derived type to store info for a writer
-   type, public :: d2d_writer
-      type(d2d_io_family), pointer :: family  ! Associated family
-      character(:), allocatable :: label          ! Label of the writer
-      logical :: is_open = .false.                ! True if the writer is open
+   ! derived type to store info for a reader / writer
+   type, public :: d2d_io
+      type(d2d_io_family), pointer :: family        ! Associated family
+      character(:), allocatable :: label            ! Label of the writer
+      logical :: is_open = .false.                  ! True if the writer is open
 #ifdef ADIOS2
-      logical :: is_active = .false.              ! True if the writer is active (adios2 only)
-      type(adios2_engine) :: engine               ! adios2 only (only one engine / writer currently)
+      logical :: is_active = .false.                ! True if the writer is active (adios2 only)
+      type(adios2_engine) :: engine                 ! adios2 only (only one engine / writer currently)
 #endif
-      integer :: fh                               ! File handle (mpi only)
-      integer(kind=MPI_OFFSET_KIND) :: disp       ! Displacement offset (mpi only)
+      integer :: fh                                 ! File handle (mpi only)
+      integer(kind=MPI_OFFSET_KIND) :: disp         ! Displacement offset (mpi only)
    contains
-      procedure :: open => d2d_io_open                 ! Open the IO
-      procedure :: start => d2d_io_start               ! Start the IO
-      procedure :: open_start => d2d_io_open_start     ! Open and start the IO
-      procedure :: end => d2d_io_end                   ! End the IO
-      procedure :: close => d2d_io_close               ! Close the IO
-      procedure :: end_close => d2d_io_end_close       ! End and close the IO
-   end type d2d_writer
+      procedure :: open => d2d_io_open              ! Open the IO
+      procedure :: start => d2d_io_start            ! Start the IO
+      procedure :: open_start => d2d_io_open_start  ! Open and start the IO
+      procedure :: end => d2d_io_end                ! End the IO
+      procedure :: close => d2d_io_close            ! Close the IO
+      procedure :: end_close => d2d_io_end_close    ! End and close the IO
+   end type d2d_io
 
    private        ! Make everything private unless declared public
 
@@ -127,33 +127,33 @@ module decomp_2d_io
       end subroutine d2d_io_family_register_var
 
       module subroutine d2d_io_open(writer, family, io_dir, mode)
-         class(d2d_writer), intent(inout) :: writer
+         class(d2d_io), intent(inout) :: writer
          type(d2d_io_family), target, intent(in) :: family
          character(len=*), intent(in) :: io_dir
          integer, intent(in) :: mode
       end subroutine d2d_io_open
 
       module subroutine d2d_io_start(writer)
-         class(d2d_writer), intent(inout) :: writer
+         class(d2d_io), intent(inout) :: writer
       end subroutine d2d_io_start
 
       module subroutine d2d_io_open_start(writer, family, io_dir, mode)
-         class(d2d_writer), intent(inout) :: writer
+         class(d2d_io), intent(inout) :: writer
          type(d2d_io_family), target, intent(in) :: family
          character(len=*), intent(in) :: io_dir
          integer, intent(in) :: mode
       end subroutine d2d_io_open_start
 
       module subroutine d2d_io_end(writer)
-         class(d2d_writer), intent(inout) :: writer
+         class(d2d_io), intent(inout) :: writer
       end subroutine d2d_io_end
 
       module subroutine d2d_io_close(writer)
-         class(d2d_writer), intent(inout) :: writer
+         class(d2d_io), intent(inout) :: writer
       end subroutine d2d_io_close
 
       module subroutine d2d_io_end_close(writer)
-         class(d2d_writer), intent(inout) :: writer
+         class(d2d_io), intent(inout) :: writer
       end subroutine d2d_io_end_close
 
    end interface

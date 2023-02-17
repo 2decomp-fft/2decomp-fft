@@ -4,7 +4,6 @@ file(GLOB files_decomp factor.f90
 		       log.f90
 		       io.f90)
 include_directories(${CMAKE_SOURCE_DIR}/src)
-include_directories(${CMAKE_SOURCE_DIR}/mod)
 
 #if(${FFT_Choice} MATCHES "generic")
 #  file(GLOB files_fft fft_generic.f90)
@@ -25,9 +24,16 @@ else(FFTW_FOUND)
 endif(FFTW_FOUND)
 list(APPEND files_fft fft_log.f90)
 
-set(SRCFILES ${files_decomp} ${files_fft})
+if (ENABLE_PROFILER)
+  file(GLOB prof_files profiler_${ENABLE_PROFILER}.f90)
+endif()
 
-add_library(decomp2d STATIC ${SRCFILES})
+set(SRCFILES ${files_decomp} ${files_fft} ${prof_files})
+
+add_library(decomp2d ${SRCFILES})
+target_include_directories(decomp2d PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_Fortran_MODULE_DIRECTORY}>
+  $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>)
 if (MPI_FOUND)
   target_link_libraries(decomp2d PRIVATE MPI::MPI_Fortran)
 endif (MPI_FOUND)
@@ -41,12 +47,25 @@ elseif(MKL_FOUND)
   target_include_directories(decomp2d PUBLIC $<TARGET_PROPERTY:MKL::MKL,INTERFACE_INCLUDE_DIRECTORIES>)
 endif(FFTW_FOUND)
 
+if (ENABLE_PROFILER)
+  target_compile_definitions(decomp2d PUBLIC -DPROFILER)
+
+  if (caliper_FOUND)
+    target_include_directories(decomp2d PUBLIC ${caliper_INCLUDE_DIR}/caliper/fortran)
+    target_link_libraries(decomp2d PRIVATE caliper)
+  endif()
+endif()
 if (HALO_DEBUG)
   target_compile_definitions(decomp2d PUBLIC -DHALO_DEBUG)
 endif()
 
 install(TARGETS decomp2d
-        RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
-        LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-        ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR} 
-)
+  RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+  LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+  ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR})
+
+install(DIRECTORY ${CMAKE_Fortran_MODULE_DIRECTORY}/ DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+  FILES_MATCHING PATTERN "*.mod")
+install(DIRECTORY ${CMAKE_Fortran_MODULE_DIRECTORY}/ DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+  FILES_MATCHING PATTERN "*.smod")
+      

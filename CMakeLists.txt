@@ -22,9 +22,11 @@ if (BUILD_TARGET MATCHES "gpu")
 
 endif(BUILD_TARGET MATCHES "gpu")
 
-option(ENABLE_PROFILER "Activate the profiler" OFF)
-option(ENABLE_INPLACE "Activate the profiler" OFF)
+set (ENABLE_PROFILER "OFF" CACHE STRING "Activate/select the profiler")
+set_property(CACHE ENABLE_PROFILER PROPERTY STRINGS OFF caliper)
+option(ENABLE_INPLACE "Enable in-place operation of FFT" OFF)
 option(HALO_DEBUG "Enable halo debugging options" OFF)
+option(BUILD_SHARED_LIBS "Set ON to build a shared library" OFF)
 
 set(AUTHOR "Stefano Rolfo;Charles Moulinec;Paul Bartholomew")
 set(AUTHOR_DETAILS "stefano.rolfo@stfc.ac.uk;charles.moulinec@stfc.ac.uk;p.bartholomew@epcc.ed.ac.uk")
@@ -35,7 +37,7 @@ message(STATUS "building ${PROJECT_NAME}")
 include(GNUInstallDirs)
 set(LIBRARY_OUTPUT_PATH ${PROJECT_BINARY_DIR}/${CMAKE_INSTALL_LIBDIR})
 set(EXECUTABLE_OUTPUT_PATH ${PROJECT_BINARY_DIR}/${CMAKE_INSTALL_BINDIR})
-set(CMAKE_Fortran_MODULE_DIRECTORY ${CMAKE_SOURCE_DIR}/mod)
+set(CMAKE_Fortran_MODULE_DIRECTORY ${PROJECT_BINARY_DIR}/${CMAKE_INSTALL_INCLUDEDIR})
 if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
   set(CMAKE_INSTALL_PREFIX "${PROJECT_BINARY_DIR}/opt" CACHE PATH "..." FORCE)
 endif()
@@ -60,6 +62,7 @@ endif (BUILD_TARGET MATCHES "gpu")
 include(D2D_MPI)
 
 include(D2D_Compilers)
+include(D2D_Profilers)
 
 # FFT options
 if (BUILD_TARGET MATCHES "gpu")

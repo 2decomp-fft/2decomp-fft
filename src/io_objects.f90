@@ -27,7 +27,7 @@
 !    Add a log subroutine for the derived type reader / writer ?
 !    Have a default reader / writer ? (just like decomp_main for the derived type decomp_info)
 !    Keep type-bound procedures or avoid them ?
-!    Move the subroutines gen_iodir_name, coarse_extents and plane_extents inside writer.f90 to hide them
+!    Move the subroutines gen_iodir_name, coarse_extents and plane_extents inside io_objects.f90 to hide them
 !
 ! Simplification
 !    Remove icoarse and the special cases icoarse > 0
@@ -36,6 +36,8 @@
 !          Combined with a small interpolation module allowing downsampling ?
 !    Remove the reduced precision
 !       Restore it later
+!          Check adios2_mode_deferred: won't execute until adios2_end_step, adios2_perform_puts or adios2_close
+!                adios2_mode_sync: special case, put data immediately, can be reused after this call
 !          Avoid memory allocation inside 2decomp during IO ?
 !          Avoid transpose operations inside 2decomp during IO ?
 !          Reduced precision should be specified at the d2d_io_family level when registering the variable

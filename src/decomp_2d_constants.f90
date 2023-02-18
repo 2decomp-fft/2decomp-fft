@@ -88,5 +88,10 @@ module decomp_2d_constants
    integer, parameter, public :: DECOMP_2D_IO_MPI = 1
    integer, parameter, public :: DECOMP_2D_IO_ADIOS2 = 2
 
+   !
+   ! Interpolation methods
+   !
+   integer, parameter, public :: DECOMP_2D_INTERP_BASIC = 0
+
 end module decomp_2d_constants
 

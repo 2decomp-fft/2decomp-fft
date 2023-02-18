@@ -1,0 +1,16 @@
+file(GLOB files_test test2d.f90)
+include_directories(${CMAKE_SOURCE_DIR}/src)
+
+add_executable(test2d ${files_test})
+target_link_libraries(test2d PRIVATE decomp2d)
+
+# Run the test(s)
+set(run_dir "${test_dir}/test2d")
+message(STATUS "Example dir ${run_dir}")
+file(MAKE_DIRECTORY ${run_dir})
+if (BUILD_TARGET MATCHES "gpu")
+  file(COPY bind.sh DESTINATION ${run_dir})
+  add_test(NAME test2d COMMAND ${MPIEXEC_EXECUTABLE} ${MPIEXEC_NUMPROC_FLAG} ${MPIEXEC_MAX_NUMPROCS} ./bind.sh $<TARGET_FILE:test2d> WORKING_DIRECTORY ${run_dir})
+else ()
+  add_test(NAME test2d COMMAND ${MPIEXEC_EXECUTABLE} ${MPIEXEC_NUMPROC_FLAG} ${MPIEXEC_MAX_NUMPROCS} $<TARGET_FILE:test2d> WORKING_DIRECTORY ${run_dir})
+endif ()

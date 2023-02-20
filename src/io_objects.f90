@@ -33,16 +33,17 @@
 !    Remove icoarse and the special cases icoarse > 0
 !       Restore later
 !          Using dedicated decomp_info objects ?
-!          Combined with a small interpolation module allowing downsampling ?
+!          Combined with a small interpolation module allowing downsampling ? See interp.f90
 !    Remove the reduced precision
 !       Restore it later
-!          Check adios2_mode_deferred: won't execute until adios2_end_step, adios2_perform_puts or adios2_close
+!          Check adios2_mode_deferred: won't execute until adios2_end_step, adios2_perform_puts / adios2_perform_gets or adios2_close
 !                adios2_mode_sync: special case, put data immediately, can be reused after this call
-!          Avoid memory allocation inside 2decomp during IO ?
-!          Avoid transpose operations inside 2decomp during IO ?
+!          Avoid memory allocation inside 2decomp during IO ? => prevent ADIOS2 deferred IO
+!          Avoid transpose operations inside 2decomp during IO ? => prevent ADIOS2 deferred IO
 !          Reduced precision should be specified at the d2d_io_family level when registering the variable
 !    d2d_io_family_register_var
 !       The interface can be improved
+!       The argument type (kind(0._real32) for instance) could be replaced by the MPI datatype (MPI_REAL for instance)
 !    MPI
 !       Write a generic subroutine to update the displacement offset
 !

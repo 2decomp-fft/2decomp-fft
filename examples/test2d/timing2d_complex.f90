@@ -263,7 +263,7 @@ program timing2d_complex
    call MPI_ALLREDUCE(t8, t7, 1, real_type, MPI_SUM, &
                       MPI_COMM_WORLD, ierror)
    t7 = t3/real(nproc, mytype)
-   t8 = t1+t3+t5+t8
+   t8 = t1+t3+t5+t7
    if (nrank == 0) then
      write(*,*) 'Time X->Y ', t1
      write(*,*) 'Time Y->Z ', t3

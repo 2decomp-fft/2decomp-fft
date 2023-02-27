@@ -148,7 +148,6 @@ program timing2d_real
    t8=0._mytype
    do iter=1,niter
       !!!!!!!!!!!!!!!!!!!!!!!
-      write(*,*) 'ITER ', iter
       ! x-pensil ==> y-pensil
       t1 = MPI_WTIME()
       call transpose_x_to_y(u1, u2)

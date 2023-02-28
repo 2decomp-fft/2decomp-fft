@@ -7,7 +7,7 @@ examples: init_test test2d fft_physical_x fft_physical_z halo_test io_test
 init_test:
 	$(MAKE) -C $@ all
 test2d:
-	$(MAKE) -C $@ $@
+	$(MAKE) -C $@ all
 fft_physical_x:
 	$(MAKE) -C $@ all
 fft_physical_z:

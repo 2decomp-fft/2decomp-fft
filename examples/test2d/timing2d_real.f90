@@ -1,4 +1,4 @@
-program test2d
+program timing2d_real
 
    use mpi
    use decomp_2d
@@ -30,6 +30,9 @@ program test2d
    integer :: zst1, zst2, zst3
    integer :: zen1, zen2, zen3
    logical :: error_flag
+
+   real(mytype) :: t1, t2, t3, t4, t5, t6, t7, t8
+   integer :: iter, niter =10
 
    ! Init
    error_flag = .false.
@@ -139,100 +142,135 @@ program test2d
 
    ! call decomp_2d_write_one(1,u1,'u1.dat')
 
-  !!!!!!!!!!!!!!!!!!!!!!!
-   ! x-pensil ==> y-pensil
-   call transpose_x_to_y(u1, u2)
+   t2=0._mytype
+   t4=0._mytype
+   t6=0._mytype
+   t8=0._mytype
+   do iter=1,niter
+      !!!!!!!!!!!!!!!!!!!!!!!
+      ! x-pensil ==> y-pensil
+      t1 = MPI_WTIME()
+      call transpose_x_to_y(u1, u2)
+      t2 = t2 + MPI_WTIME()-t1
 
 #ifdef DEBUG
-   if (nrank == 0) then
-      !$acc update self(u2)
-      write (*, *) ' '
-      write (*, *) 'Y-pencil'
-      write (*, 10) int(u2)
-   end if
+      if (nrank == 0) then
+         !$acc update self(u2)
+         write (*, *) ' '
+         write (*, *) 'Y-pencil'
+         write (*, 10) int(u2)
+      end if
 #endif
 
-   ! call decomp_2d_write_one(2,u2,'u2.dat')
-   ! 'u1.dat' and 'u2.dat' should be identical byte-by-byte
+      ! call decomp_2d_write_one(2,u2,'u2.dat')
+      ! 'u1.dat' and 'u2.dat' should be identical byte-by-byte
 
-   ! also check the transposition this way
-   !$acc parallel loop default(present)
-   do k = yst3, yen3
-      do j = yst2, yen2
-         do i = yst1, yen1
-            if (abs(u2(i, j, k) - data1(i, j, k)) > 0) error_flag = .true.
+      ! also check the transposition this way
+      !$acc parallel loop default(present)
+      do k = yst3, yen3
+         do j = yst2, yen2
+            do i = yst1, yen1
+               if (abs(u2(i, j, k) - data1(i, j, k)) > 0) error_flag = .true.
+            end do
          end do
       end do
-   end do
-   !$acc end loop
-   call MPI_ALLREDUCE(MPI_IN_PLACE, error_flag, 1, MPI_LOGICAL, MPI_LOR, MPI_COMM_WORLD, ierror)
-   if (ierror /= 0) call decomp_2d_abort(ierror, "MPI_ALLREDUCE")
-   if (error_flag) call decomp_2d_abort(1, "error swaping x->y")
+      !$acc end loop
+      call MPI_ALLREDUCE(MPI_IN_PLACE, error_flag, 1, MPI_LOGICAL, MPI_LOR, MPI_COMM_WORLD, ierror)
+      if (ierror /= 0) call decomp_2d_abort(ierror, "MPI_ALLREDUCE")
+      if (error_flag) call decomp_2d_abort(1, "error swaping x->y")
 
-  !!!!!!!!!!!!!!!!!!!!!!!
-   ! y-pensil ==> z-pensil
-   call transpose_y_to_z(u2, u3)
+      !!!!!!!!!!!!!!!!!!!!!!!
+      ! y-pensil ==> z-pensil
+      t3 = MPI_WTIME()
+      call transpose_y_to_z(u2, u3)
+      t4 = t4 + MPI_WTIME()-t3
 
 #ifdef DEBUG
-   if (nrank == 0) then
-      !$acc update self(u3)
-      write (*, *) ' '
-      write (*, *) 'Z-pencil'
-      write (*, 10) int(u3)
-   end if
+      if (nrank == 0) then
+         !$acc update self(u3)
+         write (*, *) ' '
+         write (*, *) 'Z-pencil'
+         write (*, 10) int(u3)
+      end if
 #endif
 
-   ! call decomp_2d_write_one(3,u3,'u3.dat')
-   ! 'u1.dat','u2.dat' and 'u3.dat' should be identical
+      ! call decomp_2d_write_one(3,u3,'u3.dat')
+      ! 'u1.dat','u2.dat' and 'u3.dat' should be identical
 
-   !$acc parallel loop default(present)
-   do k = zst3, zen3
-      do j = zst2, zen2
-         do i = zst1, zen1
-            if (abs(u3(i, j, k) - data1(i, j, k)) > 0) error_flag = .true.
+      !$acc parallel loop default(present)
+      do k = zst3, zen3
+         do j = zst2, zen2
+            do i = zst1, zen1
+               if (abs(u3(i, j, k) - data1(i, j, k)) > 0) error_flag = .true.
+            end do
          end do
       end do
-   end do
-   !$acc end loop
-   call MPI_ALLREDUCE(MPI_IN_PLACE, error_flag, 1, MPI_LOGICAL, MPI_LOR, MPI_COMM_WORLD, ierror)
-   if (ierror /= 0) call decomp_2d_abort(ierror, "MPI_ALLREDUCE")
-   if (error_flag) call decomp_2d_abort(2, "error swaping y->z")
+      !$acc end loop
+      call MPI_ALLREDUCE(MPI_IN_PLACE, error_flag, 1, MPI_LOGICAL, MPI_LOR, MPI_COMM_WORLD, ierror)
+      if (ierror /= 0) call decomp_2d_abort(ierror, "MPI_ALLREDUCE")
+      if (error_flag) call decomp_2d_abort(2, "error swaping y->z")
 
-  !!!!!!!!!!!!!!!!!!!!!!!
-   ! z-pensil ==> y-pensil
-   call transpose_z_to_y(u3, u2)
-   ! call decomp_2d_write_one(2,u2,'u2b.dat')
+      !!!!!!!!!!!!!!!!!!!!!!!
+      ! z-pensil ==> y-pensil
+      t5 = MPI_WTIME()
+      call transpose_z_to_y(u3, u2)
+      t6 = t6 + MPI_WTIME()-t5
+      ! call decomp_2d_write_one(2,u2,'u2b.dat')
 
-   !$acc parallel loop default(present)
-   do k = yst3, yen3
-      do j = yst2, yen2
-         do i = yst1, yen1
-            if (abs(u2(i, j, k) - data1(i, j, k)) > 0) error_flag = .true.
+      !$acc parallel loop default(present)
+      do k = yst3, yen3
+         do j = yst2, yen2
+            do i = yst1, yen1
+               if (abs(u2(i, j, k) - data1(i, j, k)) > 0) error_flag = .true.
+            end do
          end do
       end do
-   end do
-   !$acc end loop
-   call MPI_ALLREDUCE(MPI_IN_PLACE, error_flag, 1, MPI_LOGICAL, MPI_LOR, MPI_COMM_WORLD, ierror)
-   if (ierror /= 0) call decomp_2d_abort(ierror, "MPI_ALLREDUCE")
-   if (error_flag) call decomp_2d_abort(3, "error swaping z->y")
+      !$acc end loop
+      call MPI_ALLREDUCE(MPI_IN_PLACE, error_flag, 1, MPI_LOGICAL, MPI_LOR, MPI_COMM_WORLD, ierror)
+      if (ierror /= 0) call decomp_2d_abort(ierror, "MPI_ALLREDUCE")
+      if (error_flag) call decomp_2d_abort(3, "error swaping z->y")
 
-   !!!!!!!!!!!!!!!!!!!!!!!
-   ! y-pensil ==> x-pensil
-   call transpose_y_to_x(u2, u1)
-   ! call decomp_2d_write_one(1,u1,'u1b.dat')
+      !!!!!!!!!!!!!!!!!!!!!!!
+      ! y-pensil ==> x-pensil
+      t7 = MPI_WTIME()
+      call transpose_y_to_x(u2, u1)
+      t8 = t8 + MPI_WTIME()-t7
+      ! call decomp_2d_write_one(1,u1,'u1b.dat')
 
-   !$acc parallel loop default(present)
-   do k = xst3, xen3
-      do j = xst2, xen2
-         do i = xst1, xen1
-            if (abs(u1(i, j, k) - data1(i, j, k)) > 0) error_flag = .true.
+      !$acc parallel loop default(present)
+      do k = xst3, xen3
+         do j = xst2, xen2
+            do i = xst1, xen1
+               if (abs(u1(i, j, k) - data1(i, j, k)) > 0) error_flag = .true.
+            end do
          end do
       end do
-   end do
-   !$acc end loop
-   call MPI_ALLREDUCE(MPI_IN_PLACE, error_flag, 1, MPI_LOGICAL, MPI_LOR, MPI_COMM_WORLD, ierror)
-   if (ierror /= 0) call decomp_2d_abort(ierror, "MPI_ALLREDUCE")
-   if (error_flag) call decomp_2d_abort(4, "error swaping y->x")
+      !$acc end loop
+      call MPI_ALLREDUCE(MPI_IN_PLACE, error_flag, 1, MPI_LOGICAL, MPI_LOR, MPI_COMM_WORLD, ierror)
+      if (ierror /= 0) call decomp_2d_abort(ierror, "MPI_ALLREDUCE")
+      if (error_flag) call decomp_2d_abort(4, "error swaping y->x")
+   enddo
+
+   call MPI_ALLREDUCE(t2, t1, 1, real_type, MPI_SUM, &
+                      MPI_COMM_WORLD, ierror)
+   t1 = t1/real(nproc, mytype)
+   call MPI_ALLREDUCE(t4, t3, 1, real_type, MPI_SUM, &
+                      MPI_COMM_WORLD, ierror)
+   t3 = t3/real(nproc, mytype)
+   call MPI_ALLREDUCE(t6, t5, 1, real_type, MPI_SUM, &
+                      MPI_COMM_WORLD, ierror)
+   t5 = t1/real(nproc, mytype)
+   call MPI_ALLREDUCE(t8, t7, 1, real_type, MPI_SUM, &
+                      MPI_COMM_WORLD, ierror)
+   t7 = t3/real(nproc, mytype)
+   t8 = t1+t3+t5+t7
+   if (nrank == 0) then
+     write(*,*) 'Time X->Y ', t1
+     write(*,*) 'Time Y->Z ', t3
+     write(*,*) 'Time Z->Y ', t5
+     write(*,*) 'Time Y->X ', t7
+     write(*,*) 'Time TOT  ', t8
+   endif
 
    if (nrank == 0) then
       write (*, *) " "
@@ -246,5 +284,5 @@ program test2d
    deallocate (u1, u2, u3)
    deallocate (data1)
 
-end program test2d
+end program timing2d_real
 

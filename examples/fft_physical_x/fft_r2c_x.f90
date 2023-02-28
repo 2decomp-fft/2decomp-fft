@@ -17,6 +17,8 @@ program fft_r2c_x
    integer :: p_row = 0, p_col = 0
    integer :: resize_domain
    integer :: nranks_tot
+   integer :: nargin, arg, FNLength, status, DecInd
+   character(len=80) :: InputFN
 
    integer, parameter :: ntest = 10  ! repeat test this times
 
@@ -38,6 +40,44 @@ program fft_r2c_x
    nx = nx_base*resize_domain
    ny = ny_base*resize_domain
    nz = nz_base*resize_domain
+   ! Now we can check if user put some inputs
+   ! Handle input file like a boss -- GD
+   nargin=command_argument_count()
+   if ((nargin==0).or.(nargin==2).or.(nargin==5)) then
+      do arg = 1, nargin
+         call get_command_argument(arg, InputFN, FNLength, status)
+         read(InputFN, *, iostat=status) DecInd
+         if (arg.eq.1) then
+            p_row = DecInd
+         elseif (arg.eq.2) then
+            p_col = DecInd
+         elseif (arg.eq.3) then
+            nx = DecInd
+         elseif (arg.eq.4) then
+            ny = DecInd
+         elseif (arg.eq.5) then
+            nz = DecInd
+         endif
+      enddo
+   else
+      ! nrank not yet computed we need to avoid write
+      ! for every rank
+      call MPI_COMM_RANK(MPI_COMM_WORLD, nrank, ierror)
+      if (nrank==0) then
+         print *, "This Test takes no inputs or 2 inputs as"
+         print *, "  1) p_row (default=0)"
+         print *, "  2) p_col (default=0)"
+         print *, "or 5 inputs as"
+         print *, "  1) p_row (default=0)"
+         print *, "  2) p_col (default=0)"
+         print *, "  3) nx "
+         print *, "  4) ny "
+         print *, "  5) nz "
+         print *, "Number of inputs is not correct and the defult settings"
+         print *, "will be used"
+      endif
+   endif
+
    call decomp_2d_init(nx, ny, nz, p_row, p_col)
 
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!

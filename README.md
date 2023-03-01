@@ -223,7 +223,7 @@ This variable is valid for double precision builds only. When it is present, sna
 
 #### PROFILER
 
-This variable is automatically added when selecting the profiler. It activates the profiling sectionsof the code.
+This variable is automatically added when selecting the profiler. It activates the profiling sections of the code.
 
 #### EVEN
 

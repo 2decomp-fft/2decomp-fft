@@ -18,11 +18,9 @@ program timing2d_real
    integer :: nargin, arg, FNLength, status, DecInd
    character(len=80) :: InputFN
 
-   real(mytype), allocatable, dimension(:, :, :) :: data1
-
    real(mytype), allocatable, dimension(:, :, :) :: u1, u2, u3
 
-   integer :: i, j, k, m, ierror
+   integer :: i, j, k, ierror
    integer :: xst1, xst2, xst3
    integer :: xen1, xen2, xen3
    integer :: yst1, yst2, yst3
@@ -30,6 +28,7 @@ program timing2d_real
    integer :: zst1, zst2, zst3
    integer :: zen1, zen2, zen3
    logical :: error_flag
+   real(mytype) :: m
 
    real(mytype) :: t1, t2, t3, t4, t5, t6, t7, t8
    integer :: iter, niter =10
@@ -84,17 +83,17 @@ program timing2d_real
    endif
    call decomp_2d_init(nx, ny, nz, p_row, p_col)
 
-   ! ***** global data *****
-   allocate(data1(nx,ny,nz))
-   m = 1
-   do k = 1, nz
-      do j = 1, ny
-         do i = 1, nx
-            data1(i, j, k) = float(m)
-            m = m + 1
-         end do
-      end do
-   end do
+   !! ***** global data *****
+   !allocate(data1(nx,ny,nz))
+   !m = 1
+   !do k = 1, nz
+   !   do j = 1, ny
+   !      do i = 1, nx
+   !         data1(i, j, k) = float(m)
+   !         m = m + 1
+   !      end do
+   !   end do
+   !end do
 
    ! Fill the local index
    xst1 = xstart(1); xen1 = xend(1)
@@ -116,13 +115,14 @@ program timing2d_real
    call alloc_y(u2, opt_global=.true.)
    call alloc_z(u3, opt_global=.true.)
 
-   !$acc data copyin(data1) copy(u1,u2,u3)
+   !$acc data copy(u1,u2,u3)
    ! original x-pensil based data
-   !$acc parallel loop default(present)
+   !$acc parallel loop default(present) private(m) 
    do k = xst3, xen3
       do j = xst2, xen2
          do i = xst1, xen1
-            u1(i, j, k) = data1(i, j, k)
+            m = real(i+(j-1)*nx+(k-1)*nx*ny,mytype)
+            u1(i, j, k) = m
          end do
       end do
    end do
@@ -166,11 +166,12 @@ program timing2d_real
       ! 'u1.dat' and 'u2.dat' should be identical byte-by-byte
 
       ! also check the transposition this way
-      !$acc parallel loop default(present)
+      !$acc parallel loop default(present) private(m)
       do k = yst3, yen3
          do j = yst2, yen2
             do i = yst1, yen1
-               if (abs(u2(i, j, k) - data1(i, j, k)) > 0) error_flag = .true.
+               m = real(i+(j-1)*nx+(k-1)*nx*ny,mytype)
+               if (abs(u2(i, j, k) - m) > 0) error_flag = .true.
             end do
          end do
       end do
@@ -197,11 +198,12 @@ program timing2d_real
       ! call decomp_2d_write_one(3,u3,'u3.dat')
       ! 'u1.dat','u2.dat' and 'u3.dat' should be identical
 
-      !$acc parallel loop default(present)
+      !$acc parallel loop default(present) private(m)
       do k = zst3, zen3
          do j = zst2, zen2
             do i = zst1, zen1
-               if (abs(u3(i, j, k) - data1(i, j, k)) > 0) error_flag = .true.
+               m = real(i+(j-1)*nx+(k-1)*nx*ny,mytype)
+               if (abs(u3(i, j, k) - m) > 0) error_flag = .true.
             end do
          end do
       end do
@@ -217,11 +219,12 @@ program timing2d_real
       t6 = t6 + MPI_WTIME()-t5
       ! call decomp_2d_write_one(2,u2,'u2b.dat')
 
-      !$acc parallel loop default(present)
+      !$acc parallel loop default(present) private(m)
       do k = yst3, yen3
          do j = yst2, yen2
             do i = yst1, yen1
-               if (abs(u2(i, j, k) - data1(i, j, k)) > 0) error_flag = .true.
+               m = real(i+(j-1)*nx+(k-1)*nx*ny,mytype)
+               if (abs(u2(i, j, k) - m) > 0) error_flag = .true.
             end do
          end do
       end do
@@ -237,11 +240,12 @@ program timing2d_real
       t8 = t8 + MPI_WTIME()-t7
       ! call decomp_2d_write_one(1,u1,'u1b.dat')
 
-      !$acc parallel loop default(present)
+      !$acc parallel loop default(present) private(m)
       do k = xst3, xen3
          do j = xst2, xen2
             do i = xst1, xen1
-               if (abs(u1(i, j, k) - data1(i, j, k)) > 0) error_flag = .true.
+               m = real(i+(j-1)*nx+(k-1)*nx*ny,mytype)
+               if (abs(u1(i, j, k) - m) > 0) error_flag = .true.
             end do
          end do
       end do
@@ -259,10 +263,10 @@ program timing2d_real
    t3 = t3/real(nproc, mytype)
    call MPI_ALLREDUCE(t6, t5, 1, real_type, MPI_SUM, &
                       MPI_COMM_WORLD, ierror)
-   t5 = t1/real(nproc, mytype)
+   t5 = t5/real(nproc, mytype)
    call MPI_ALLREDUCE(t8, t7, 1, real_type, MPI_SUM, &
                       MPI_COMM_WORLD, ierror)
-   t7 = t3/real(nproc, mytype)
+   t7 = t7/real(nproc, mytype)
    t8 = t1+t3+t5+t7
    if (nrank == 0) then
      write(*,*) 'Time X->Y ', t1
@@ -274,7 +278,7 @@ program timing2d_real
 
    if (nrank == 0) then
       write (*, *) " "
-      write (*, *) "test2d completed"
+      write (*, *) "Real transpose completed"
       write (*, *) " "
    end if
 
@@ -282,7 +286,6 @@ program timing2d_real
    call MPI_FINALIZE(ierror)
    !$acc end data
    deallocate (u1, u2, u3)
-   deallocate (data1)
 
 end program timing2d_real
 

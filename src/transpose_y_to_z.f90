@@ -82,10 +82,10 @@
      if (nccl_stat /= ncclSuccess) call decomp_2d_abort(__FILE__, __LINE__, nccl_stat, "ncclGroupStart")
      do row_rank_id = 0, (row_comm_size - 1)
         nccl_stat = ncclSend(work1_r_d(decomp%y2disp(row_rank_id) + 1), decomp%y2cnts(row_rank_id), &
-                             ncclDouble, local_to_global_row(row_rank_id + 1), nccl_comm_2decomp, cuda_stream_2decomp)
+                             ncclType, local_to_global_row(row_rank_id + 1), nccl_comm_2decomp, cuda_stream_2decomp)
         if (nccl_stat /= ncclSuccess) call decomp_2d_abort(__FILE__, __LINE__, nccl_stat, "ncclSend")
         nccl_stat = ncclRecv(work2_r_d(decomp%z2disp(row_rank_id) + 1), decomp%z2cnts(row_rank_id), &
-                             ncclDouble, local_to_global_row(row_rank_id + 1), nccl_comm_2decomp, cuda_stream_2decomp)
+                             ncclType, local_to_global_row(row_rank_id + 1), nccl_comm_2decomp, cuda_stream_2decomp)
         if (nccl_stat /= ncclSuccess) call decomp_2d_abort(__FILE__, __LINE__, nccl_stat, "ncclRecv")
      end do
      nccl_stat = ncclGroupEnd()

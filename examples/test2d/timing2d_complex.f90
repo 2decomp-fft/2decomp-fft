@@ -18,8 +18,6 @@ program timing2d_complex
    integer :: nargin, arg, FNLength, status, DecInd
    character(len=80) :: InputFN
 
-   complex(mytype), allocatable, dimension(:, :, :) :: data1
-
    complex(mytype), allocatable, dimension(:, :, :) :: u1, u2, u3
 
    integer :: i, j, k, ierror
@@ -125,7 +123,7 @@ program timing2d_complex
       do j = xst2, xen2
          do i = xst1, xen1
             m = real(i+(j-1)*nx+(k-1)*nx*ny,mytype)
-            u1(i, j, k) = cmplx(m,real(m-1,mytype))
+            u1(i, j, k) = cmplx(m,real(m-1,mytype),kind=mytype)
          end do
       end do
    end do
@@ -174,7 +172,7 @@ program timing2d_complex
          do j = yst2, yen2
             do i = yst1, yen1
                m = real(i+(j-1)*nx+(k-1)*nx*ny,mytype)
-               cm = cmplx(m,real(m-1,mytype))
+               cm = cmplx(m,real(m-1,mytype),kind=mytype)
                if (abs(u2(i, j, k) - cm) > 0) error_flag = .true.
             end do
          end do
@@ -207,7 +205,7 @@ program timing2d_complex
          do j = zst2, zen2
             do i = zst1, zen1
                m = real(i+(j-1)*nx+(k-1)*nx*ny,mytype)
-               cm = cmplx(m,real(m-1,mytype))
+               cm = cmplx(m,real(m-1,mytype),kind=mytype)
                if (abs(u3(i, j, k) - cm) > 0) error_flag = .true.
             end do
          end do
@@ -229,7 +227,7 @@ program timing2d_complex
          do j = yst2, yen2
             do i = yst1, yen1
                m = real(i+(j-1)*nx+(k-1)*nx*ny,mytype)
-               cm = cmplx(m,real(m-1,mytype))
+               cm = cmplx(m,real(m-1,mytype),kind=mytype)
                if (abs(u2(i, j, k) - cm) > 0) error_flag = .true.
             end do
          end do
@@ -251,7 +249,7 @@ program timing2d_complex
          do j = xst2, xen2
             do i = xst1, xen1
                m = real(i+(j-1)*nx+(k-1)*nx*ny,mytype)
-               cm = cmplx(m,real(m-1,mytype))
+               cm = cmplx(m,real(m-1,mytype),kind=mytype)
                if (abs(u1(i, j, k) - cm) > 0) error_flag = .true.
             end do
          end do

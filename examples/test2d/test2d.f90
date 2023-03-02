@@ -1,20 +1,26 @@
 program test2d
 
    use mpi
-
    use decomp_2d
-   ! use decomp_2d_io
+   use decomp_2d_constants
+#if defined(_GPU)
+   use cudafor
+   use openacc
+#endif
 
    implicit none
 
-   integer, parameter :: nx = 17, ny = 13, nz = 11
+   integer, parameter :: nx_base = 17, ny_base = 13, nz_base = 11
+   integer :: nx, ny, nz
    integer :: p_row = 0, p_col = 0
-
-   real(mytype), dimension(nx, ny, nz) :: data1
+   integer :: resize_domain
+   integer :: nranks_tot
+   integer :: nargin, arg, FNLength, status, DecInd
+   character(len=80) :: InputFN
 
    real(mytype), allocatable, dimension(:, :, :) :: u1, u2, u3
 
-   integer :: i, j, k, m, ierror
+   integer :: i, j, k, ierror
    integer :: xst1, xst2, xst3
    integer :: xen1, xen2, xen3
    integer :: yst1, yst2, yst3
@@ -22,23 +28,69 @@ program test2d
    integer :: zst1, zst2, zst3
    integer :: zen1, zen2, zen3
    logical :: error_flag
+   real(mytype) :: m
 
    ! Init
    error_flag = .false.
    call MPI_INIT(ierror)
    if (ierror /= 0) call decomp_2d_abort(ierror, "MPI_INIT")
+   ! To resize the domain we need to know global number of ranks
+   ! This operation is also done as part of decomp_2d_init
+   call MPI_COMM_SIZE(MPI_COMM_WORLD, nranks_tot, ierror)
+   resize_domain = int(nranks_tot/4) + 1
+   nx = nx_base*resize_domain
+   ny = ny_base*resize_domain
+   nz = nz_base*resize_domain
+   ! Now we can check if user put some inputs
+   ! Handle input file like a boss -- GD
+   nargin=command_argument_count()
+   if ((nargin==0).or.(nargin==2).or.(nargin==5)) then
+      do arg = 1, nargin
+         call get_command_argument(arg, InputFN, FNLength, status)
+         read(InputFN, *, iostat=status) DecInd
+         if (arg.eq.1) then
+            p_row = DecInd
+         elseif (arg.eq.2) then
+            p_col = DecInd
+         elseif (arg.eq.3) then
+            nx = DecInd
+         elseif (arg.eq.4) then
+            ny = DecInd
+         elseif (arg.eq.5) then
+            nz = DecInd
+         endif
+      enddo
+   else
+      ! nrank not yet computed we need to avoid write
+      ! for every rank
+      call MPI_COMM_RANK(MPI_COMM_WORLD, nrank, ierror)
+      if (nrank==0) then
+         print *, "This Test takes no inputs or 2 inputs as"
+         print *, "  1) p_row (default=0)"
+         print *, "  2) p_col (default=0)"
+         print *, "or 5 inputs as"
+         print *, "  1) p_row (default=0)"
+         print *, "  2) p_col (default=0)"
+         print *, "  3) nx "
+         print *, "  4) ny "
+         print *, "  5) nz "
+         print *, "Number of inputs is not correct and the defult settings"
+         print *, "will be used"
+      endif
+   endif
    call decomp_2d_init(nx, ny, nz, p_row, p_col)
 
-   ! ***** global data *****
-   m = 1
-   do k = 1, nz
-      do j = 1, ny
-         do i = 1, nx
-            data1(i, j, k) = float(m)
-            m = m + 1
-         end do
-      end do
-   end do
+   !! ***** global data *****
+   !allocate(data1(nx,ny,nz))
+   !m = 1
+   !do k = 1, nz
+   !   do j = 1, ny
+   !      do i = 1, nx
+   !         data1(i, j, k) = float(m)
+   !         m = m + 1
+   !      end do
+   !   end do
+   !end do
 
    ! Fill the local index
    xst1 = xstart(1); xen1 = xend(1)
@@ -60,13 +112,14 @@ program test2d
    call alloc_y(u2, opt_global=.true.)
    call alloc_z(u3, opt_global=.true.)
 
-   !$acc data copyin(data1) copy(u1,u2,u3)
+   !$acc data copy(u1,u2,u3)
    ! original x-pensil based data
-   !$acc parallel loop default(present)
+   !$acc parallel loop default(present) private(m) 
    do k = xst3, xen3
       do j = xst2, xen2
          do i = xst1, xen1
-            u1(i, j, k) = data1(i, j, k)
+            m = real(i+(j-1)*nx+(k-1)*nx*ny,mytype)
+            u1(i, j, k) = m
          end do
       end do
    end do
@@ -103,11 +156,12 @@ program test2d
    ! 'u1.dat' and 'u2.dat' should be identical byte-by-byte
 
    ! also check the transposition this way
-   !$acc parallel loop default(present)
+   !$acc parallel loop default(present) private(m)
    do k = yst3, yen3
       do j = yst2, yen2
          do i = yst1, yen1
-            if (abs(u2(i, j, k) - data1(i, j, k)) > 0) error_flag = .true.
+            m = real(i+(j-1)*nx+(k-1)*nx*ny,mytype)
+            if (abs(u2(i, j, k) - m) > 0) error_flag = .true.
          end do
       end do
    end do
@@ -132,11 +186,12 @@ program test2d
    ! call decomp_2d_write_one(3,u3,'u3.dat')
    ! 'u1.dat','u2.dat' and 'u3.dat' should be identical
 
-   !$acc parallel loop default(present)
+   !$acc parallel loop default(present) private(m)
    do k = zst3, zen3
       do j = zst2, zen2
          do i = zst1, zen1
-            if (abs(u3(i, j, k) - data1(i, j, k)) > 0) error_flag = .true.
+            m = real(i+(j-1)*nx+(k-1)*nx*ny,mytype)
+            if (abs(u3(i, j, k) - m) > 0) error_flag = .true.
          end do
       end do
    end do
@@ -150,11 +205,12 @@ program test2d
    call transpose_z_to_y(u3, u2)
    ! call decomp_2d_write_one(2,u2,'u2b.dat')
 
-   !$acc parallel loop default(present)
+   !$acc parallel loop default(present) private(m)
    do k = yst3, yen3
       do j = yst2, yen2
          do i = yst1, yen1
-            if (abs(u2(i, j, k) - data1(i, j, k)) > 0) error_flag = .true.
+            m = real(i+(j-1)*nx+(k-1)*nx*ny,mytype)
+            if (abs(u2(i, j, k) - m) > 0) error_flag = .true.
          end do
       end do
    end do
@@ -168,11 +224,12 @@ program test2d
    call transpose_y_to_x(u2, u1)
    ! call decomp_2d_write_one(1,u1,'u1b.dat')
 
-   !$acc parallel loop default(present)
+   !$acc parallel loop default(present) private(m)
    do k = xst3, xen3
       do j = xst2, xen2
          do i = xst1, xen1
-            if (abs(u1(i, j, k) - data1(i, j, k)) > 0) error_flag = .true.
+            m = real(i+(j-1)*nx+(k-1)*nx*ny,mytype)
+            if (abs(u1(i, j, k) - m) > 0) error_flag = .true.
          end do
       end do
    end do

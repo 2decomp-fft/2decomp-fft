@@ -18,8 +18,6 @@ program timing2d_complex
    integer :: nargin, arg, FNLength, status, DecInd
    character(len=80) :: InputFN
 
-   complex(mytype), allocatable, dimension(:, :, :) :: data1
-
    complex(mytype), allocatable, dimension(:, :, :) :: u1, u2, u3
 
    integer :: i, j, k, ierror

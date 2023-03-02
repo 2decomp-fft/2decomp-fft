@@ -18,8 +18,6 @@ program timing2d_real
    integer :: nargin, arg, FNLength, status, DecInd
    character(len=80) :: InputFN
 
-   real(mytype), allocatable, dimension(:, :, :) :: data1
-
    real(mytype), allocatable, dimension(:, :, :) :: u1, u2, u3
 
    integer :: i, j, k, ierror

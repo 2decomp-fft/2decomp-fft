@@ -1,5 +1,6 @@
 program io_bench
 
+   use decomp_2d_constants
    use decomp_2d
    use decomp_2d_io
    use MPI

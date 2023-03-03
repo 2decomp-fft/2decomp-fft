@@ -5,9 +5,9 @@ file(GLOB files_decomp factor.f90
 		       io.f90)
 include_directories(${CMAKE_SOURCE_DIR}/src)
 
-#if(${FFT_Choice} MATCHES "generic")
-#  file(GLOB files_fft fft_generic.f90)
-#endif(${FFT_Choice} MATCHES "generic")
+if(${BUILD_TARGET} MATCHES "gpu")
+  list(APPEND files_decomp decomp_2d_cumpi.f90)
+endif(${BUILD_TARGET} MATCHES "gpu")
 
 if(FFTW_FOUND)
   message (STATUS "Compiling using FFTW3")

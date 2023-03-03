@@ -1,7 +1,7 @@
 program io_read
 
    use mpi
-
+   use decomp_2d_constants
    use decomp_2d
    use decomp_2d_io
 #if defined(_GPU)

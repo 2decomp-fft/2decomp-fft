@@ -31,10 +31,6 @@
      TYPE(DECOMP_INFO), intent(IN) :: decomp
 
 #if defined(_GPU)
-!#if defined(_NCCL)
-!     type(ncclResult) :: nccl_stat
-!     integer :: row_rank_id, cuda_stat
-!#endif
      integer :: istat
 #endif
 
@@ -78,28 +74,13 @@
 
 #if defined(_GPU)
 #if defined(_NCCL)
-     call decomp_2d_nccl_send_recv_real_row(work2_r_d,     &
-                                            work1_r_d,     &
-                                            decomp%y2disp, &
-                                            decomp%y2cnts, &
-                                            decomp%z2disp, &
-                                            decomp%z2cnts, & 
-                                            dims(2)        )
-                                            
-     !nccl_stat = ncclGroupStart()
-     !if (nccl_stat /= ncclSuccess) call decomp_2d_abort(__FILE__, __LINE__, nccl_stat, "ncclGroupStart")
-     !do row_rank_id = 0, (row_comm_size - 1)
-     !   nccl_stat = ncclSend(work1_r_d(decomp%y2disp(row_rank_id) + 1), decomp%y2cnts(row_rank_id), &
-     !                        ncclType, local_to_global_row(row_rank_id + 1), nccl_comm_2decomp, cuda_stream_2decomp)
-     !   if (nccl_stat /= ncclSuccess) call decomp_2d_abort(__FILE__, __LINE__, nccl_stat, "ncclSend")
-     !   nccl_stat = ncclRecv(work2_r_d(decomp%z2disp(row_rank_id) + 1), decomp%z2cnts(row_rank_id), &
-     !                        ncclType, local_to_global_row(row_rank_id + 1), nccl_comm_2decomp, cuda_stream_2decomp)
-     !   if (nccl_stat /= ncclSuccess) call decomp_2d_abort(__FILE__, __LINE__, nccl_stat, "ncclRecv")
-     !end do
-     !nccl_stat = ncclGroupEnd()
-     !if (nccl_stat /= ncclSuccess) call decomp_2d_abort(__FILE__, __LINE__, nccl_stat, "ncclGroupEnd")
-     !cuda_stat = cudaStreamSynchronize(cuda_stream_2decomp)
-     !if (cuda_stat /= 0) call decomp_2d_abort(__FILE__, __LINE__, cuda_stat, "cudaStreamSynchronize")
+     call decomp_2d_nccl_send_recv_row(work2_r_d,     &
+                                       work1_r_d,     &
+                                       decomp%y2disp, &
+                                       decomp%y2cnts, &
+                                       decomp%z2disp, &
+                                       decomp%z2cnts, & 
+                                       dims(2)        )
 #else
      call MPI_ALLTOALLV(work1_r_d, decomp%y2cnts, decomp%y2disp, &
                         real_type, work2_r_d, decomp%z2cnts, decomp%z2disp, &

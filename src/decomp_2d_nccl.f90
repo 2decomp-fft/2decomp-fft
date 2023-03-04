@@ -39,8 +39,16 @@ module decomp_2d_nccl
              
    public :: decomp_2d_nccl_init, &
              decomp_2d_nccl_fin, &
-             decomp_2d_nccl_send_recv_real_col, &
-             decomp_2d_nccl_send_recv_real_row
+             decomp_2d_nccl_send_recv_col, &
+             decomp_2d_nccl_send_recv_row
+
+   interface decomp_2d_nccl_send_recv_col
+      module procedure decomp_2d_nccl_send_recv_real_col 
+   end interface decomp_2d_nccl_send_recv_col
+
+   interface decomp_2d_nccl_send_recv_row
+      module procedure decomp_2d_nccl_send_recv_real_row
+   end interface decomp_2d_nccl_send_recv_row
 
 contains
    !

@@ -69,20 +69,31 @@
 
 #if defined(_GPU)
 #if defined(_NCCL)
-     nccl_stat = ncclGroupStart()
-     if (nccl_stat /= ncclSuccess) call decomp_2d_abort(__FILE__, __LINE__, nccl_stat, "ncclGroupStart")
-     do col_rank_id = 0, (col_comm_size - 1)
-        nccl_stat = ncclSend(work1_r_d(decomp%x1disp(col_rank_id) + 1), decomp%x1cnts(col_rank_id), &
-                             ncclType, local_to_global_col(col_rank_id + 1), nccl_comm_2decomp, cuda_stream_2decomp)
-        if (nccl_stat /= ncclSuccess) call decomp_2d_abort(__FILE__, __LINE__, nccl_stat, "ncclSend")
-        nccl_stat = ncclRecv(work2_r_d(decomp%y1disp(col_rank_id) + 1), decomp%y1cnts(col_rank_id), &
-                             ncclType, local_to_global_col(col_rank_id + 1), nccl_comm_2decomp, cuda_stream_2decomp)
-        if (nccl_stat /= ncclSuccess) call decomp_2d_abort(__FILE__, __LINE__, nccl_stat, "ncclRecv")
-     end do
-     nccl_stat = ncclGroupEnd()
-     if (nccl_stat /= ncclSuccess) call decomp_2d_abort(__FILE__, __LINE__, nccl_stat, "ncclGroupEnd")
-     cuda_stat = cudaStreamSynchronize(cuda_stream_2decomp)
-     if (cuda_stat /= 0) call decomp_2d_abort(__FILE__, __LINE__, cuda_stat, "cudaStreamSynchronize")
+     call decomp_2d_nccl_send_recv_real_col(work2_r_d,     &
+                                            work1_r_d,     &
+                                            decomp%x1disp, &
+                                            decomp%x1cnts, &
+                                            decomp%y1disp, & 
+                                            decomp%y1cnts, &  
+                                            dims(1)        )
+     !nccl_stat = ncclGroupStart()
+     !if (nccl_stat /= ncclSuccess) call decomp_2d_abort(__FILE__, __LINE__, nccl_stat, "ncclGroupStart")
+     !write(*,*) 'Rank ',nrank,' col_comm_size ',col_comm_size
+     !do col_rank_id = 0, (col_comm_size - 1)
+     !   write(*,*) 'Rank ',nrank, col_rank_id,' x1disp ',decomp%x1disp(col_rank_id)
+     !   write(*,*) 'Rank ',nrank, col_rank_id,' x1cnts ',decomp%x1cnts(col_rank_id)
+     !   write(*,*) 'Rank ',nrank, col_rank_id,' ltgc ',local_to_global_col(col_rank_id + 1)
+     !   nccl_stat = ncclSend(work1_r_d(decomp%x1disp(col_rank_id) + 1), decomp%x1cnts(col_rank_id), &
+     !                        ncclType, local_to_global_col(col_rank_id + 1), nccl_comm_2decomp, cuda_stream_2decomp)
+     !   if (nccl_stat /= ncclSuccess) call decomp_2d_abort(__FILE__, __LINE__, nccl_stat, "ncclSend")
+     !   nccl_stat = ncclRecv(work2_r_d(decomp%y1disp(col_rank_id) + 1), decomp%y1cnts(col_rank_id), &
+     !                        ncclType, local_to_global_col(col_rank_id + 1), nccl_comm_2decomp, cuda_stream_2decomp)
+     !   if (nccl_stat /= ncclSuccess) call decomp_2d_abort(__FILE__, __LINE__, nccl_stat, "ncclRecv")
+     !end do
+     !nccl_stat = ncclGroupEnd()
+     !if (nccl_stat /= ncclSuccess) call decomp_2d_abort(__FILE__, __LINE__, nccl_stat, "ncclGroupEnd")
+     !cuda_stat = cudaStreamSynchronize(cuda_stream_2decomp)
+     !if (cuda_stat /= 0) call decomp_2d_abort(__FILE__, __LINE__, cuda_stat, "cudaStreamSynchronize")
 #else
      call MPI_ALLTOALLV(work1_r_d, decomp%x1cnts, decomp%x1disp, &
                         real_type, work2_r_d, decomp%y1cnts, decomp%y1disp, &

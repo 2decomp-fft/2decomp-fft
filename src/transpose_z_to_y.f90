@@ -191,10 +191,21 @@
 #else
 
 #if defined(_GPU)
+#if defined(_NCCL)
+     call decomp_2d_nccl_send_recv_row(work2_c_d,     &
+                                       work1_c_d,     &
+                                       decomp%z2disp, &
+                                       decomp%z2cnts, &
+                                       decomp%y2disp, &
+                                       decomp%y2cnts, &
+                                       dims(2)      , &
+                                       decomp_buf_size)
+#else
      call MPI_ALLTOALLV(work1_c_d, decomp%z2cnts, decomp%z2disp, &
                         complex_type, work2_c_d, decomp%y2cnts, decomp%y2disp, &
                         complex_type, DECOMP_2D_COMM_ROW, ierror)
      if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_ALLTOALLV")
+#endif
 #else
      call MPI_ALLTOALLV(src, decomp%z2cnts, decomp%z2disp, &
                         complex_type, work2_c, decomp%y2cnts, decomp%y2disp, &

@@ -44,10 +44,12 @@ module decomp_2d_nccl
 
    interface decomp_2d_nccl_send_recv_col
       module procedure decomp_2d_nccl_send_recv_real_col 
+      module procedure decomp_2d_nccl_send_recv_cmplx_col 
    end interface decomp_2d_nccl_send_recv_col
 
    interface decomp_2d_nccl_send_recv_row
       module procedure decomp_2d_nccl_send_recv_real_row
+      module procedure decomp_2d_nccl_send_recv_cmplx_row 
    end interface decomp_2d_nccl_send_recv_row
 
 contains
@@ -148,6 +150,65 @@ contains
   
   end subroutine decomp_2d_nccl_send_recv_real_col
   !
+  ! Send-Recv complex
+  !
+  subroutine decomp_2d_nccl_send_recv_cmplx_col(dst_d,  &
+                                               src_d,  &
+                                               disp_s, &
+                                               cnts_s, &
+                                               disp_r, &
+                                               cnts_r, &
+                                               dime  , &  
+                                               buf_size)
+     
+     implicit none
+
+     integer, intent(in) :: dime,buf_size      
+     complex(mytype), dimension(buf_size), intent(in), device :: src_d
+     complex(mytype), dimension(buf_size), intent(out),device :: dst_d
+     integer, dimension(0:dime-1), intent(in) :: disp_s, cnts_s
+     integer, dimension(0:dime-1), intent(in) :: disp_r, cnts_r
+
+     integer :: ii
+     
+     ! Send-Recv Real part
+     !$acc kernels default(present)
+     do ii = 1, buf_size
+        work1_r_d(ii) = real(src_d(ii),mytype)
+     enddo     
+     !$acc end kernels
+     call decomp_2d_nccl_send_recv_col(work2_r_d, &
+                                       work1_r_d, &
+                                       disp_s, &
+                                       cnts_s, &
+                                       disp_r, &
+                                       cnts_r, &
+                                       dime    )
+     !$acc kernels default(present)
+     do ii = 1, buf_size
+        dst_d(ii) = cmplx(work2_r_d(ii),0._mytype)
+     enddo
+     !$acc end kernels
+     ! Send-Recv Immaginary Part
+     !$acc kernels default(present)
+     do ii = 1, buf_size
+        work1_r_d(ii) = aimag(src_d(ii))
+     enddo
+     !$acc end kernels
+     call decomp_2d_nccl_send_recv_col(work2_r_d, &
+                                       work1_r_d, &
+                                       disp_s, &
+                                       cnts_s, &
+                                       disp_r, &
+                                       cnts_r, &
+                                       dime    )
+     !$acc kernels default(present)
+     do ii = 1, buf_size
+        dst_d(ii) = cmplx(real(dst_d(ii),mytype),work2_r_d(ii))
+     enddo
+     !$acc end kernels
+  end subroutine decomp_2d_nccl_send_recv_cmplx_col
+  !
   ! Send-Recv Real Row
   !
   subroutine decomp_2d_nccl_send_recv_real_row(dst_d,  &
@@ -184,8 +245,65 @@ contains
      if (nccl_stat /= ncclSuccess) call decomp_2d_abort(__FILE__, __LINE__, nccl_stat, "ncclGroupEnd")
   
   end subroutine decomp_2d_nccl_send_recv_real_row
-  
-  
+  !
+  ! Send-Recv complex
+  !
+  subroutine decomp_2d_nccl_send_recv_cmplx_row(dst_d,  &
+                                               src_d,  &
+                                               disp_s, &
+                                               cnts_s, &
+                                               disp_r, &
+                                               cnts_r, &
+                                               dime  , &  
+                                               buf_size)
+     
+     implicit none
 
+     integer, intent(in) :: dime,buf_size      
+     complex(mytype), dimension(buf_size), intent(in), device :: src_d
+     complex(mytype), dimension(buf_size), intent(out),device :: dst_d
+     integer, dimension(0:dime-1), intent(in) :: disp_s, cnts_s
+     integer, dimension(0:dime-1), intent(in) :: disp_r, cnts_r
+
+     integer :: ii
+     
+     ! Send-Recv Real part
+     !$acc kernels default(present)
+     do ii = 1, buf_size
+        work1_r_d(ii) = real(src_d(ii),mytype)
+     enddo     
+     !$acc end kernels
+     call decomp_2d_nccl_send_recv_row(work2_r_d, &
+                                       work1_r_d, &
+                                       disp_s, &
+                                       cnts_s, &
+                                       disp_r, &
+                                       cnts_r, &
+                                       dime    )
+     !$acc kernels default(present)
+     do ii = 1, buf_size
+        dst_d(ii) = cmplx(work2_r_d(ii),0._mytype)
+     enddo
+     !$acc end kernels
+     ! Send-Recv Immaginary Part
+     !$acc kernels default(present)
+     do ii = 1, buf_size
+        work1_r_d(ii) = aimag(src_d(ii))
+     enddo
+     !$acc end kernels
+     call decomp_2d_nccl_send_recv_row(work2_r_d, &
+                                       work1_r_d, &
+                                       disp_s, &
+                                       cnts_s, &
+                                       disp_r, &
+                                       cnts_r, &
+                                       dime    )
+     !$acc kernels default(present)
+     do ii = 1, buf_size
+        dst_d(ii) = cmplx(real(dst_d(ii),mytype),work2_r_d(ii))
+     enddo
+     !$acc end kernels
+  end subroutine decomp_2d_nccl_send_recv_cmplx_row
+  
 end module decomp_2d_nccl
 

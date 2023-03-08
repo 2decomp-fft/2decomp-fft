@@ -22,6 +22,33 @@
 
   end subroutine transpose_z_to_y_real_short
 
+  subroutine transpose_z_to_y_real_long(src, dst, decomp)
+
+     implicit none
+
+     real(mytype), dimension(:, :, :), intent(IN) :: src
+     real(mytype), dimension(:, :, :), intent(OUT) :: dst
+     TYPE(DECOMP_INFO), intent(IN) :: decomp
+#if defined(_GPU)
+     integer :: istat, nsize
+#endif
+
+     if (dims(2) == 1) then
+#if defined(_GPU)
+        nsize =  product(decomp%zsz)
+        !$acc host_data use_device(src,dst)
+        istat = cudaMemcpy(dst, src, nsize, cudaMemcpyDeviceToDevice)
+        !$acc end host_data
+        if (istat /= 0) call decomp_2d_abort(__FILE__, __LINE__, istat, "cudaMemcpy")
+#else
+        dst=src
+#endif       
+     else
+        call transpose_z_to_y_real(src, dst, decomp)
+     endif
+
+  end subroutine transpose_z_to_y_real_long
+ 
   subroutine transpose_z_to_y_real(src, dst, decomp)
 
      implicit none
@@ -130,6 +157,33 @@
      call transpose_z_to_y(src, dst, decomp_main)
 
   end subroutine transpose_z_to_y_complex_short
+
+  subroutine transpose_z_to_y_complex_long(src, dst, decomp)
+
+     implicit none
+
+     complex(mytype), dimension(:, :, :), intent(IN) :: src
+     complex(mytype), dimension(:, :, :), intent(OUT) :: dst
+     TYPE(DECOMP_INFO), intent(IN) :: decomp
+#if defined(_GPU)
+     integer :: istat, nsize
+#endif
+
+     if (dims(2) == 1) then
+#if defined(_GPU)
+        nsize =  product(decomp%zsz)
+        !$acc host_data use_device(src,dst)
+        istat = cudaMemcpy(dst, src, nsize, cudaMemcpyDeviceToDevice)
+        !$acc end host_data
+        if (istat /= 0) call decomp_2d_abort(__FILE__, __LINE__, istat, "cudaMemcpy")
+#else
+        dst=src
+#endif       
+     else
+        call transpose_z_to_y_complex(src, dst, decomp)
+     endif
+
+  end subroutine transpose_z_to_y_complex_long
 
   subroutine transpose_z_to_y_complex(src, dst, decomp)
 

@@ -80,12 +80,6 @@ module decomp_2d
    integer(kind(D2D_DEBUG_LEVEL_OFF)), public, save :: decomp_debug = D2D_DEBUG_LEVEL_OFF
 #endif
 
-!#if defined(_GPU)
-!#if defined(_NCCL)
-!   integer, save :: row_rank, col_rank
-!#endif
-!#endif
-
    ! derived type to store decomposition info for a given global data size
    TYPE, public :: DECOMP_INFO
       ! staring/ending index and size of data held by current processor
@@ -132,16 +126,6 @@ module decomp_2d
    real(mytype), allocatable, dimension(:) :: work1_r, work2_r
    complex(mytype), allocatable, dimension(:) :: work1_c, work2_c
 
-!#if defined(_GPU)
-!
-!#if defined(_NCCL)
-!   integer col_comm_size, row_comm_size
-!   integer, allocatable, dimension(:) :: local_to_global_col, local_to_global_row
-!   type(ncclUniqueId) :: nccl_uid_2decomp
-!   type(ncclComm) :: nccl_comm_2decomp
-!   integer(kind=cuda_stream_kind) :: cuda_stream_2decomp
-!#endif
-!#endif
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
    ! To define smaller arrays using every several mesh points
    integer, save, dimension(3), public :: xszS, yszS, zszS, xstS, ystS, zstS, xenS, yenS, zenS
@@ -209,30 +193,30 @@ module decomp_2d
    end interface decomp_2d_finalize
 
    interface transpose_x_to_y
-      module procedure transpose_x_to_y_real
+      module procedure transpose_x_to_y_real_long
       module procedure transpose_x_to_y_real_short
-      module procedure transpose_x_to_y_complex
+      module procedure transpose_x_to_y_complex_long
       module procedure transpose_x_to_y_complex_short
    end interface transpose_x_to_y
 
    interface transpose_y_to_z
-      module procedure transpose_y_to_z_real
+      module procedure transpose_y_to_z_real_long
       module procedure transpose_y_to_z_real_short
-      module procedure transpose_y_to_z_complex
+      module procedure transpose_y_to_z_complex_long
       module procedure transpose_y_to_z_complex_short
    end interface transpose_y_to_z
 
    interface transpose_z_to_y
-      module procedure transpose_z_to_y_real
+      module procedure transpose_z_to_y_real_long
       module procedure transpose_z_to_y_real_short
-      module procedure transpose_z_to_y_complex
+      module procedure transpose_z_to_y_complex_long
       module procedure transpose_z_to_y_complex_short
    end interface transpose_z_to_y
 
    interface transpose_y_to_x
-      module procedure transpose_y_to_x_real
+      module procedure transpose_y_to_x_real_long
       module procedure transpose_y_to_x_real_short
-      module procedure transpose_y_to_x_complex
+      module procedure transpose_y_to_x_complex_long
       module procedure transpose_y_to_x_complex_short
    end interface transpose_y_to_x
 

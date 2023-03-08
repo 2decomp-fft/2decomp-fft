@@ -22,6 +22,33 @@
 
   end subroutine transpose_y_to_x_real_short
 
+  subroutine transpose_y_to_x_real_long(src, dst, decomp)
+
+     implicit none
+
+     real(mytype), dimension(:, :, :), intent(IN) :: src
+     real(mytype), dimension(:, :, :), intent(OUT) :: dst
+     TYPE(DECOMP_INFO), intent(IN) :: decomp
+#if defined(_GPU)
+     integer :: istat, nsize
+#endif
+
+     if (dims(1) == 1) then
+#if defined(_GPU)
+        nsize =  product(decomp%ysz)
+        !$acc host_data use_device(src,dst)
+        istat = cudaMemcpy(dst, src, nsize, cudaMemcpyDeviceToDevice)
+        !$acc end host_data
+        if (istat /= 0) call decomp_2d_abort(__FILE__, __LINE__, istat, "cudaMemcpy")
+#else
+        dst=src
+#endif       
+     else
+        call transpose_y_to_x_real(src, dst, decomp)
+     endif
+
+  end subroutine transpose_y_to_x_real_long
+
   subroutine transpose_y_to_x_real(src, dst, decomp)
 
      implicit none
@@ -29,11 +56,6 @@
      real(mytype), dimension(:, :, :), intent(IN) :: src
      real(mytype), dimension(:, :, :), intent(OUT) :: dst
      TYPE(DECOMP_INFO), intent(IN) :: decomp
-
-!#if defined(_GPU) && defined(_NCCL)
-!     type(ncclResult) :: nccl_stat
-!     integer :: col_rank_id, cuda_stat
-!#endif
 
      integer :: s1, s2, s3, d1, d2, d3
      integer :: ierror
@@ -117,6 +139,32 @@
      call transpose_y_to_x(src, dst, decomp_main)
 
   end subroutine transpose_y_to_x_complex_short
+
+  subroutine transpose_y_to_x_complex_long(src, dst,decomp)
+
+     implicit none
+
+     complex(mytype), dimension(:, :, :), intent(IN) :: src
+     complex(mytype), dimension(:, :, :), intent(OUT) :: dst
+     TYPE(DECOMP_INFO), intent(IN) :: decomp
+#if defined(_GPU)
+     integer :: istat, nsize
+#endif
+     if (dims(1) == 1) then
+#if defined(_GPU)
+        nsize =  product(decomp%ysz)
+        !$acc host_data use_device(src,dst)
+        istat = cudaMemcpy(dst, src, nsize, cudaMemcpyDeviceToDevice)
+        !$acc end host_data
+        if (istat /= 0) call decomp_2d_abort(__FILE__, __LINE__, istat, "cudaMemcpy")
+#else
+        dst=src
+#endif       
+     else
+        call transpose_y_to_x_complex(src, dst, decomp)
+     endif
+
+  end subroutine transpose_y_to_x_complex_long
 
   subroutine transpose_y_to_x_complex(src, dst, decomp)
 

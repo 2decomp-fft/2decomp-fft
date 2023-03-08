@@ -186,7 +186,7 @@ contains
                                        dime    )
      !$acc kernels default(present)
      do ii = 1, buf_size
-        dst_d(ii) = cmplx(work2_r_d(ii),0._mytype)
+        dst_d(ii) = cmplx(work2_r_d(ii),0._mytype,mytype)
      enddo
      !$acc end kernels
      ! Send-Recv Immaginary Part
@@ -204,7 +204,7 @@ contains
                                        dime    )
      !$acc kernels default(present)
      do ii = 1, buf_size
-        dst_d(ii) = cmplx(real(dst_d(ii),mytype),work2_r_d(ii))
+        dst_d(ii) = cmplx(dst_d(ii),work2_r_d(ii),mytype)
      enddo
      !$acc end kernels
   end subroutine decomp_2d_nccl_send_recv_cmplx_col
@@ -282,7 +282,7 @@ contains
                                        dime    )
      !$acc kernels default(present)
      do ii = 1, buf_size
-        dst_d(ii) = cmplx(work2_r_d(ii),0._mytype)
+        dst_d(ii) = cmplx(work2_r_d(ii),0._mytype,mytype)
      enddo
      !$acc end kernels
      ! Send-Recv Immaginary Part
@@ -300,7 +300,7 @@ contains
                                        dime    )
      !$acc kernels default(present)
      do ii = 1, buf_size
-        dst_d(ii) = cmplx(real(dst_d(ii),mytype),work2_r_d(ii))
+        dst_d(ii) = cmplx(dst_d(ii),work2_r_d(ii),mytype)
      enddo
      !$acc end kernels
   end subroutine decomp_2d_nccl_send_recv_cmplx_row

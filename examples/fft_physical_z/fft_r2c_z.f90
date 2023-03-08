@@ -30,7 +30,7 @@ program fft_r2c_z
    integer :: ierror, i, j, k, m
    integer :: zst1, zst2, zst3
    integer :: zen1, zen2, zen3
-   real(mytype) :: t1, t2, t3, t4
+   double precision :: t1, t2, t3, t4
 
    call MPI_INIT(ierror)
    ! To resize the domain we need to know global number of ranks
@@ -105,8 +105,8 @@ program fft_r2c_z
       end do
    end do
 
-   t2 = 0._mytype
-   t4 = 0._mytype
+   t2 = 0.d0
+   t4 = 0.d0
    !$acc data copyin(in_r) copy(out)
    do m = 1, ntest
 
@@ -129,12 +129,12 @@ program fft_r2c_z
    ierror = cudaDeviceSynchronize()
 #endif
 
-   call MPI_ALLREDUCE(t2, t1, 1, real_type, MPI_SUM, &
+   call MPI_ALLREDUCE(t2, t1, 1, MPI_DOUBLE, MPI_SUM, &
                       MPI_COMM_WORLD, ierror)
-   t1 = t1/real(nproc, mytype)
-   call MPI_ALLREDUCE(t4, t3, 1, real_type, MPI_SUM, &
+   t1 = t1/dble(nproc)
+   call MPI_ALLREDUCE(t4, t3, 1, MPI_DOUBLE, MPI_SUM, &
                       MPI_COMM_WORLD, ierror)
-   t3 = t3/real(nproc, mytype)
+   t3 = t3/dble(nproc)
 
    ! checking accuracy
    error = 0._mytype

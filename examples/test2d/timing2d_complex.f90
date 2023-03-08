@@ -31,7 +31,7 @@ program timing2d_complex
    real(mytype) :: m
    complex(mytype) :: cm
 
-   real(mytype) :: t1, t2, t3, t4, t5, t6, t7, t8
+   double precision :: t1, t2, t3, t4, t5, t6, t7, t8
    integer :: iter, niter =10
 
    ! Init
@@ -143,10 +143,10 @@ program timing2d_complex
 
    ! call decomp_2d_write_one(1,u1,'u1.dat')
 
-   t2=0._mytype
-   t4=0._mytype
-   t6=0._mytype
-   t8=0._mytype
+   t2=0.d0
+   t4=0.d0
+   t6=0.d0
+   t8=0.d0
    do iter=1,niter
       !!!!!!!!!!!!!!!!!!!!!!!
       ! x-pensil ==> y-pensil
@@ -260,18 +260,18 @@ program timing2d_complex
       if (error_flag) call decomp_2d_abort(4, "error swaping y->x")
    enddo
 
-   call MPI_ALLREDUCE(t2, t1, 1, real_type, MPI_SUM, &
+   call MPI_ALLREDUCE(t2, t1, 1, MPI_DOUBLE, MPI_SUM, &
                       MPI_COMM_WORLD, ierror)
-   t1 = t1/real(nproc, mytype)
-   call MPI_ALLREDUCE(t4, t3, 1, real_type, MPI_SUM, &
+   t1 = t1/dble(nproc)
+   call MPI_ALLREDUCE(t4, t3, 1, MPI_DOUBLE, MPI_SUM, &
                       MPI_COMM_WORLD, ierror)
-   t3 = t3/real(nproc, mytype)
-   call MPI_ALLREDUCE(t6, t5, 1, real_type, MPI_SUM, &
+   t3 = t3/dble(nproc)
+   call MPI_ALLREDUCE(t6, t5, 1, MPI_DOUBLE, MPI_SUM, &
                       MPI_COMM_WORLD, ierror)
-   t5 = t5/real(nproc, mytype)
-   call MPI_ALLREDUCE(t8, t7, 1, real_type, MPI_SUM, &
+   t5 = t5/dble(nproc)
+   call MPI_ALLREDUCE(t8, t7, 1, MPI_DOUBLE, MPI_SUM, &
                       MPI_COMM_WORLD, ierror)
-   t7 = t7/real(nproc, mytype)
+   t7 = t7/dble(nproc)
    t8 = t1+t3+t5+t7
    if (nrank == 0) then
      write(*,*) 'Time X->Y ', t1

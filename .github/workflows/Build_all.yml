@@ -30,7 +30,7 @@ jobs:
     - name: Compile
       run: |
         export FC=mpif90
-        cmake -S . -B build -DCMAKE_BUILD_TYPE=dev
+        cmake -S . -B build -DCMAKE_BUILD_TYPE=Dev
         cmake --build build --verbose
 
   bld_gnu_mpich:
@@ -52,7 +52,7 @@ jobs:
     - name: Compile
       run: |
         export FC=mpif90
-        cmake -S . -B build -DCMAKE_BUILD_TYPE=dev
+        cmake -S . -B build -DCMAKE_BUILD_TYPE=Dev
         cmake --build build --verbose
 
   bld_nvidia:
@@ -80,8 +80,8 @@ jobs:
     # Runs a set of commands using the runners shell
     - name: CPU version
       run: |
-        PATH=$TMP:$PATH make CMP=nvhpc BUILD=debug
-        PATH=$TMP:$PATH make examples
+        PATH=$TMP:$PATH FC=mpif90 cmake -S . -B build -DCMAKE_BUILD_TYPE=Dev
+        PATH=$TMP:$PATH cmake --build build --verbose
 
 ###    - name: GPU version
 ###      run: |

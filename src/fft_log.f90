@@ -13,6 +13,7 @@
 submodule(decomp_2d_fft) d2d_fft_log
 
    use decomp_2d_constants
+   use decomp_2d_mpi
    use decomp_2d
 
    implicit none

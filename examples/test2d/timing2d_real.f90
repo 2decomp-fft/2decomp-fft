@@ -3,6 +3,7 @@ program timing2d_real
    use mpi
    use decomp_2d
    use decomp_2d_constants
+   use decomp_2d_mpi
 #if defined(_GPU)
    use cudafor
    use openacc
@@ -266,7 +267,7 @@ program timing2d_real
    t5 = t5/dble(nproc)
    call MPI_ALLREDUCE(t8, t7, 1, MPI_DOUBLE, MPI_SUM, &
                       MPI_COMM_WORLD, ierror)
-   t7 = t7/dble(nproc, mytype)
+   t7 = t7/dble(nproc)
    t8 = t1+t3+t5+t7
    if (nrank == 0) then
      write(*,*) 'Time X->Y ', t1

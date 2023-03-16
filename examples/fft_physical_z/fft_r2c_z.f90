@@ -3,6 +3,7 @@ program fft_r2c_z
    use decomp_2d
    use decomp_2d_fft
    use decomp_2d_constants
+   use decomp_2d_mpi
    use MPI
 #if defined(_GPU)
    use cudafor

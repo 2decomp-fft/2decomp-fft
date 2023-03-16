@@ -15,6 +15,7 @@
 module decomp_2d_cumpi
 
    use decomp_2d_constants  
+   use decomp_2d_mpi 
 
    implicit none
    

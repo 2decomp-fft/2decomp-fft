@@ -17,6 +17,7 @@ module decomp_2d_io
 
    use decomp_2d
    use decomp_2d_constants
+   use decomp_2d_mpi
    use MPI
 
 #ifdef ADIOS2

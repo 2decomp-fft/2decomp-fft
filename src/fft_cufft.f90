@@ -14,6 +14,7 @@
 module decomp_2d_fft
 
    use decomp_2d_constants
+   use decomp_2d_mpi
    use decomp_2d  ! 2D decomposition module
    use iso_c_binding
    use cudafor

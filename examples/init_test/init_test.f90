@@ -7,6 +7,7 @@ program init_test
    use MPI
    use decomp_2d
    use decomp_2d_constants
+   use decomp_2d_mpi
    use MPI
 #if defined(_GPU)
    use cudafor

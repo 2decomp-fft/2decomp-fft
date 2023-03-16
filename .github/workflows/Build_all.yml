@@ -112,17 +112,18 @@ jobs:
       run: |
         source /opt/intel/oneapi/setvars.sh
         export FC=mpiifort
-        cmake -S . -B build -DCMAKE_BUILD_TYPE=debug
-        cmake --build build --target decomp2d
+        cmake -S . -B build -DCMAKE_BUILD_TYPE=Dev
+        cmake --build build
 
     # Runs a set of commands using the runners shell
     - name: Compile
       run: |
         source /opt/intel/oneapi/setvars.sh
         export FC=mpiifort
-        cmake -S . -B build -DCMAKE_BUILD_TYPE=debug -DFFT_Choice=mkl
+        export MKL_DIR=${MKLROOT}/lib/cmake/mkl
+        cmake -S . -B build -DCMAKE_BUILD_TYPE=Dev -DFFT_Choice=mkl
         cmake --build build --target clean
-        cmake --build build --target decomp2d
+        cmake --build build
 
   bld_fftw3:
     # The type of runner that the job will run on

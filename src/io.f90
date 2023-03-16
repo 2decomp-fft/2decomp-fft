@@ -16,6 +16,8 @@
 module decomp_2d_io
 
    use decomp_2d
+   use decomp_2d_constants
+   use decomp_2d_mpi
    use MPI
 
 #ifdef ADIOS2
@@ -1760,7 +1762,7 @@ contains
 
       end if
 
-      call decomp_mpi_comm_free(newcomm)
+      call decomp_2d_mpi_comm_free(newcomm)
 
 #ifdef PROFILER
       if (decomp_profiler_io) call decomp_profiler_end("io_write_subdomain")

@@ -18,8 +18,10 @@ module decomp_2d
    use, intrinsic :: iso_fortran_env, only: real32, real64
    use factor
    use decomp_2d_constants
+   use decomp_2d_mpi
 #if defined(_GPU)
    use cudafor
+   use decomp_2d_cumpi
 #if defined(_NCCL)
    use nccl
 #endif
@@ -29,41 +31,9 @@ module decomp_2d
 
    private        ! Make everything private unless declared public
 
-#ifdef DOUBLE_PREC
-   integer, parameter, public :: mytype = KIND(0._real64)
-   integer, parameter, public :: real_type = MPI_DOUBLE_PRECISION
-   integer, parameter, public :: real2_type = MPI_2DOUBLE_PRECISION
-   integer, parameter, public :: complex_type = MPI_DOUBLE_COMPLEX
-#ifdef SAVE_SINGLE
-   integer, parameter, public :: mytype_single = KIND(0._real32)
-   integer, parameter, public :: real_type_single = MPI_REAL
-#else
-   integer, parameter, public :: mytype_single = KIND(0._real64)
-   integer, parameter, public :: real_type_single = MPI_DOUBLE_PRECISION
-#endif
-#if defined(_GPU) && defined(_NCCL)
-   type(ncclDataType) :: ncclType = ncclDouble
-#endif
-#else
-   integer, parameter, public :: mytype = KIND(0._real32)
-   integer, parameter, public :: real_type = MPI_REAL
-   integer, parameter, public :: real2_type = MPI_2REAL
-   integer, parameter, public :: complex_type = MPI_COMPLEX
-   integer, parameter, public :: mytype_single = KIND(0._real32)
-   integer, parameter, public :: real_type_single = MPI_REAL
-#if defined(_GPU) && defined(_NCCL)
-   type(ncclDataType) :: ncclType = ncclFloat
-#endif
-#endif
-
-   integer, save, public :: mytype_bytes
 
    ! some key global variables
    integer, save, public :: nx_global, ny_global, nz_global  ! global size
-
-   integer, save, public :: nrank = -1 ! local MPI rank
-   integer, save, public :: nproc = -1 ! total number of processors
-   integer, save, public :: decomp_2d_comm = MPI_COMM_NULL ! MPI communicator
 
    ! parameters for 2D Cartesian topology
    integer, save, dimension(2) :: dims, coord
@@ -163,8 +133,6 @@ module decomp_2d
    complex(mytype), allocatable, dimension(:) :: work1_c, work2_c
 
 #if defined(_GPU)
-   real(mytype), allocatable, dimension(:), device :: work1_r_d, work2_r_d
-   complex(mytype), allocatable, dimension(:), device :: work1_c_d, work2_c_d
 
 #if defined(_NCCL)
    integer col_comm_size, row_comm_size
@@ -209,9 +177,9 @@ module decomp_2d
              init_coarser_mesh_statV, fine_to_coarseV, &
              init_coarser_mesh_statP, fine_to_coarseP, &
              alloc_x, alloc_y, alloc_z, &
-             update_halo, decomp_2d_abort, &
-             decomp_2d_warning, get_decomp_info, &
-             decomp_mpi_comm_free, get_decomp_dims, &
+             update_halo, &
+             get_decomp_info, &
+             get_decomp_dims, &
              d2d_listing_get_unit, d2d_listing_close_unit
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -296,19 +264,6 @@ module decomp_2d
       module procedure alloc_z_complex_short
    end interface alloc_z
 
-   interface decomp_2d_abort
-      module procedure decomp_2d_abort_basic
-      module procedure decomp_2d_abort_file_line
-#if defined(_GPU) && defined(_NCCL)
-      module procedure decomp_2d_abort_nccl_basic
-      module procedure decomp_2d_abort_nccl_file_line
-#endif
-   end interface decomp_2d_abort
-
-   interface decomp_2d_warning
-      module procedure decomp_2d_warning_basic
-      module procedure decomp_2d_warning_file_line
-   end interface decomp_2d_warning
 
    interface
 
@@ -376,25 +331,6 @@ contains
 
 #include "decomp_2d_init_fin.f90"
 
-   !
-   ! Small wrapper to free a MPI communicator
-   !
-   subroutine decomp_mpi_comm_free(mpi_comm)
-
-      implicit none
-
-      integer, intent(inout) :: mpi_comm
-      integer :: ierror
-
-      ! Return if no MPI comm to free
-      if (mpi_comm == MPI_COMM_NULL) return
-
-      ! Free the provided MPI communicator
-      call MPI_COMM_FREE(mpi_comm, ierror)
-      if (ierror /= 0) call decomp_2d_warning(__FILE__, __LINE__, ierror, "MPI_COMM_FREE")
-      mpi_comm = MPI_COMM_NULL
-
-   end subroutine decomp_mpi_comm_free
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
    ! Return the default decomposition object
@@ -499,34 +435,7 @@ contains
       if (buf_size > decomp_buf_size) then
          decomp_buf_size = buf_size
 #if defined(_GPU)
-         if (allocated(work1_r_d)) deallocate (work1_r_d)
-         if (allocated(work2_r_d)) deallocate (work2_r_d)
-         if (allocated(work1_c_d)) deallocate (work1_c_d)
-         if (allocated(work2_c_d)) deallocate (work2_c_d)
-         allocate (work1_r_d(buf_size), STAT=status)
-         if (status /= 0) then
-            errorcode = 2
-            call decomp_2d_abort(__FILE__, __LINE__, errorcode, &
-                                 'Out of memory when allocating 2DECOMP workspace')
-         end if
-         allocate (work1_c_d(buf_size), STAT=status)
-         if (status /= 0) then
-            errorcode = 2
-            call decomp_2d_abort(__FILE__, __LINE__, errorcode, &
-                                 'Out of memory when allocating 2DECOMP workspace')
-         end if
-         allocate (work2_r_d(buf_size), STAT=status)
-         if (status /= 0) then
-            errorcode = 2
-            call decomp_2d_abort(__FILE__, __LINE__, errorcode, &
-                                 'Out of memory when allocating 2DECOMP workspace')
-         end if
-         allocate (work2_c_d(buf_size), STAT=status)
-         if (status /= 0) then
-            errorcode = 2
-            call decomp_2d_abort(__FILE__, __LINE__, errorcode, &
-                                 'Out of memory when allocating 2DECOMP workspace')
-         end if
+         call decomp_2d_cumpi_init(buf_size)
 #endif
          if (allocated(work1_r)) deallocate (work1_r)
          if (allocated(work2_r)) deallocate (work2_r)
@@ -1251,169 +1160,8 @@ contains
 #include "halo.f90"
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-   ! Error handling
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-   subroutine decomp_2d_abort_basic(errorcode, msg)
-
-      use iso_fortran_env, only: error_unit
-
-      implicit none
-
-      integer, intent(IN) :: errorcode
-      character(len=*), intent(IN) :: msg
-
-      integer :: ierror
-
-      if (nrank == 0) then
-         write (*, *) '2DECOMP&FFT ERROR - errorcode: ', errorcode
-         write (*, *) 'ERROR MESSAGE: '//msg
-         write (error_unit, *) '2DECOMP&FFT ERROR - errorcode: ', errorcode
-         write (error_unit, *) 'ERROR MESSAGE: '//msg
-      end if
-      call MPI_ABORT(decomp_2d_comm, errorcode, ierror)
-
-   end subroutine decomp_2d_abort_basic
-
-   subroutine decomp_2d_abort_file_line(file, line, errorcode, msg)
-
-      use iso_fortran_env, only: error_unit
-
-      implicit none
-
-      integer, intent(IN) :: errorcode, line
-      character(len=*), intent(IN) :: msg, file
-
-      integer :: ierror
-
-      if (nrank == 0) then
-         write (*, *) '2DECOMP&FFT ERROR'
-         write (*, *) '  errorcode:     ', errorcode
-         write (*, *) '  error in file  '//file
-         write (*, *) '           line  ', line
-         write (*, *) '  error message: '//msg
-         write (error_unit, *) '2DECOMP&FFT ERROR'
-         write (error_unit, *) '  errorcode:     ', errorcode
-         write (error_unit, *) '  error in file  '//file
-         write (error_unit, *) '           line  ', line
-         write (error_unit, *) '  error message: '//msg
-      end if
-      call MPI_ABORT(decomp_2d_comm, errorcode, ierror)
-
-   end subroutine decomp_2d_abort_file_line
-
-#if defined(_GPU) && defined(_NCCL)
-   !
-   ! This is based on the file "nccl.h" in nvhpc 22.1
-   !
-   function _ncclresult_to_integer(errorcode)
-
-      implicit none
-
-      type(ncclresult), intent(IN) :: errorcode
-      integer :: _ncclresult_to_integer
-
-      if (errorcode == ncclSuccess) then
-         _ncclresult_to_integer = 0
-      elseif (errorcode == ncclUnhandledCudaError) then
-         _ncclresult_to_integer = 1
-      elseif (errorcode == ncclSystemError) then
-         _ncclresult_to_integer = 2
-      elseif (errorcode == ncclInternalError) then
-         _ncclresult_to_integer = 3
-      elseif (errorcode == ncclInvalidArgument) then
-         _ncclresult_to_integer = 4
-      elseif (errorcode == ncclInvalidUsage) then
-         _ncclresult_to_integer = 5
-      elseif (errorcode == ncclNumResults) then
-         _ncclresult_to_integer = 6
-      else
-         _ncclresult_to_integer = -1
-         call decomp_2d_warning(__FILE__, __LINE__, _ncclresult_to_integer, &
-                                "NCCL error handling needs some update")
-      end if
-
-   end function _ncclresult_to_integer
-
-   !
-   ! Small wrapper for basic NCCL errors
-   !
-   subroutine decomp_2d_abort_nccl_basic(errorcode, msg)
-
-      implicit none
-
-      type(ncclresult), intent(IN) :: errorcode
-      character(len=*), intent(IN) :: msg
-
-      call decomp_2d_abort(_ncclresult_to_integer(errorcode), &
-                           msg//" "//ncclGetErrorString(errorcode))
-
-   end subroutine decomp_2d_abort_nccl_basic
-
-   !
-   ! Small wrapper for NCCL errors
-   !
-   subroutine decomp_2d_abort_nccl_file_line(file, line, errorcode, msg)
-
-      implicit none
-
-      type(ncclresult), intent(IN) :: errorcode
-      integer, intent(in) :: line
-      character(len=*), intent(IN) :: msg, file
-
-      call decomp_2d_abort(file, &
-                           line, &
-                           _ncclresult_to_integer(errorcode), &
-                           msg//" "//ncclGetErrorString(errorcode))
-
-   end subroutine decomp_2d_abort_nccl_file_line
-#endif
-
-   subroutine decomp_2d_warning_basic(errorcode, msg)
-
-      use iso_fortran_env, only: error_unit
-
-      implicit none
-
-      integer, intent(IN) :: errorcode
-      character(len=*), intent(IN) :: msg
-
-      if (nrank == 0) then
-         write (*, *) '2DECOMP&FFT WARNING - errorcode: ', errorcode
-         write (*, *) 'ERROR MESSAGE: '//msg
-         write (error_unit, *) '2DECOMP&FFT WARNING - errorcode: ', errorcode
-         write (error_unit, *) 'ERROR MESSAGE: '//msg
-      end if
-
-   end subroutine decomp_2d_warning_basic
-
-   subroutine decomp_2d_warning_file_line(file, line, errorcode, msg)
-
-      use iso_fortran_env, only: error_unit
-
-      implicit none
-
-      integer, intent(IN) :: errorcode, line
-      character(len=*), intent(IN) :: msg, file
-
-      if (nrank == 0) then
-         write (*, *) '2DECOMP&FFT WARNING'
-         write (*, *) '  errorcode:     ', errorcode
-         write (*, *) '  error in file  '//file
-         write (*, *) '           line  ', line
-         write (*, *) '  error message: '//msg
-         write (error_unit, *) '2DECOMP&FFT WARNING'
-         write (error_unit, *) '  errorcode:     ', errorcode
-         write (error_unit, *) '  error in file  '//file
-         write (error_unit, *) '           line  ', line
-         write (error_unit, *) '  error message: '//msg
-      end if
-
-   end subroutine decomp_2d_warning_file_line
-
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
    ! Utility routines to help allocate 3D arrays
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 #include "alloc.f90"
 
 end module decomp_2d
-

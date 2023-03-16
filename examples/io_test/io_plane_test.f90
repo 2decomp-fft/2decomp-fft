@@ -7,7 +7,8 @@
 program io_plane_test
 
    use mpi
-
+   use decomp_2d_constants
+   use decomp_2d_mpi
    use decomp_2d
    use decomp_2d_io
 #if defined(_GPU)

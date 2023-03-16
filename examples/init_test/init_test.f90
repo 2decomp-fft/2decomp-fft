@@ -5,9 +5,9 @@
 program init_test
 
    use MPI
-   use decomp_2d
    use decomp_2d_constants
-   use MPI
+   use decomp_2d_mpi
+   use decomp_2d
 #if defined(_GPU)
    use cudafor
    use openacc

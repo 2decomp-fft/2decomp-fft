@@ -47,34 +47,12 @@
      if (decomp_profiler_d2d) call decomp_profiler_start("decomp_2d_init")
 #endif
 
-     ! Use the provided MPI communicator if present
-     if (present(comm)) then
-        decomp_2d_comm = comm
-     else
-        decomp_2d_comm = MPI_COMM_WORLD
-     end if
+     call decomp_2d_mpi_init(comm)
 
-     ! Safety check
-     if (MPI_SUCCESS /= 0) then
-        call decomp_2d_abort(__FILE__, __LINE__, MPI_SUCCESS, "MPI error check is broken")
-     end if
      if (nx <= 0) call decomp_2d_abort(__FILE__, __LINE__, nx, "Invalid value for nx")
      if (ny <= 0) call decomp_2d_abort(__FILE__, __LINE__, ny, "Invalid value for ny")
      if (nz <= 0) call decomp_2d_abort(__FILE__, __LINE__, nz, "Invalid value for nz")
 
-     ! If the external code has not set nrank and nproc
-     if (nrank == -1) then
-        call MPI_COMM_RANK(decomp_2d_comm, nrank, ierror)
-        if (ierror /= 0) then
-           call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_COMM_RANK")
-        end if
-     end if
-     if (nproc == -1) then
-        call MPI_COMM_SIZE(decomp_2d_comm, nproc, ierror)
-        if (ierror /= 0) then
-           call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_COMM_SIZE")
-        end if
-     end if
 #ifdef DEBUG
      ! Check if a modification of the debug level is needed
      call decomp_2d_debug()
@@ -200,12 +178,17 @@
 
      if (nrank == 0) then
         nccl_stat = ncclGetUniqueId(nccl_uid_2decomp)
+     else
+        nccl_stat = ncclSuccess
      end if
+     if (nccl_stat /= ncclSuccess) call decomp_2d_abort(__FILE__, __LINE__, nccl_stat, "ncclGetUniqueId")
      call MPI_Bcast(nccl_uid_2decomp, int(sizeof(ncclUniqueId)), MPI_BYTE, 0, decomp_2d_comm, ierror)
      if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_BCAST")
 
      nccl_stat = ncclCommInitRank(nccl_comm_2decomp, nproc, nccl_uid_2decomp, nrank)
+     if (nccl_stat /= ncclSuccess) call decomp_2d_abort(__FILE__, __LINE__, nccl_stat, "ncclCommInitRank")
      cuda_stat = cudaStreamCreate(cuda_stream_2decomp)
+     if (cuda_stat /= 0) call decomp_2d_abort(__FILE__, __LINE__, cuda_stat, "cudaStreamCreate")
 #endif
 #endif
 
@@ -240,26 +223,25 @@
      if (decomp_profiler_d2d) call decomp_profiler_start("decomp_2d_fin")
 #endif
 
-     call decomp_mpi_comm_free(DECOMP_2D_COMM_ROW)
-     call decomp_mpi_comm_free(DECOMP_2D_COMM_COL)
-     call decomp_mpi_comm_free(DECOMP_2D_COMM_CART_X)
-     call decomp_mpi_comm_free(DECOMP_2D_COMM_CART_Y)
-     call decomp_mpi_comm_free(DECOMP_2D_COMM_CART_Z)
+     call decomp_2d_mpi_comm_free(DECOMP_2D_COMM_ROW)
+     call decomp_2d_mpi_comm_free(DECOMP_2D_COMM_COL)
+     call decomp_2d_mpi_comm_free(DECOMP_2D_COMM_CART_X)
+     call decomp_2d_mpi_comm_free(DECOMP_2D_COMM_CART_Y)
+     call decomp_2d_mpi_comm_free(DECOMP_2D_COMM_CART_Z)
 
      call decomp_info_finalize(decomp_main)
 
      decomp_buf_size = 0
      deallocate (work1_r, work2_r, work1_c, work2_c)
 #if defined(_GPU)
-     deallocate (work1_r_d, work2_r_d, work1_c_d, work2_c_d)
-
+     call decomp_2d_cumpi_fin()
 #if defined(_NCCL)
      nccl_stat = ncclCommDestroy(nccl_comm_2decomp)
+     if (nccl_stat /= ncclSuccess) call decomp_2d_abort(__FILE__, __LINE__, nccl_stat, "ncclCommDestroy")
 #endif
 #endif
 
-     nrank = -1
-     nproc = -1
+     call decomp_2d_mpi_fin()
 
 #ifdef PROFILER
      if (decomp_profiler_d2d) call decomp_profiler_end("decomp_2d_fin")

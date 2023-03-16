@@ -14,7 +14,42 @@
 
 module decomp_2d_constants
 
+   use mpi
+   use, intrinsic :: iso_fortran_env, only: real32, real64
+#if defined(_GPU) && defined(_NCCL)
+   use nccl 
+#endif
+
    implicit none
+
+   !private 
+ 
+#ifdef DOUBLE_PREC
+   integer, parameter, public :: mytype = KIND(0._real64)
+   integer, parameter, public :: real_type = MPI_DOUBLE_PRECISION
+   integer, parameter, public :: real2_type = MPI_2DOUBLE_PRECISION
+   integer, parameter, public :: complex_type = MPI_DOUBLE_COMPLEX
+#ifdef SAVE_SINGLE
+   integer, parameter, public :: mytype_single = KIND(0._real32)
+   integer, parameter, public :: real_type_single = MPI_REAL
+#else
+   integer, parameter, public :: mytype_single = KIND(0._real64)
+   integer, parameter, public :: real_type_single = MPI_DOUBLE_PRECISION
+#endif
+#if defined(_GPU) && defined(_NCCL)
+   type(ncclDataType), parameter, public :: ncclType = ncclDouble
+#endif
+#else
+   integer, parameter, public :: mytype = KIND(0._real32)
+   integer, parameter, public :: real_type = MPI_REAL
+   integer, parameter, public :: real2_type = MPI_2REAL
+   integer, parameter, public :: complex_type = MPI_COMPLEX
+   integer, parameter, public :: mytype_single = KIND(0._real32)
+   integer, parameter, public :: real_type_single = MPI_REAL
+#if defined(_GPU) && defined(_NCCL)
+   type(ncclDataType), parameter, public :: ncclType = ncclFloat
+#endif
+#endif
 
    !
    ! Output for the log can be changed by the external code before calling decomp_2d_init

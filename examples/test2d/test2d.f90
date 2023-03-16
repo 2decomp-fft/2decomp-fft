@@ -3,6 +3,7 @@ program test2d
    use mpi
    use decomp_2d
    use decomp_2d_constants
+   use decomp_2d_mpi
 #if defined(_GPU)
    use cudafor
    use openacc

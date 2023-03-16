@@ -1,5 +1,6 @@
 file(GLOB files_decomp factor.f90
 	               decomp_2d_constants.f90
+		       decomp_2d_mpi.f90
 	               decomp_2d.f90
 		       log.f90
 		       io.f90)

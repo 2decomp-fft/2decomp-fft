@@ -31,7 +31,7 @@ jobs:
       run: |
         export FC=mpif90
         cmake -S . -B build -DCMAKE_BUILD_TYPE=dev
-        cmake --build build --target decomp2d
+        cmake --build build --verbose
 
   bld_gnu_mpich:
     # The type of runner that the job will run on
@@ -53,7 +53,7 @@ jobs:
       run: |
         export FC=mpif90
         cmake -S . -B build -DCMAKE_BUILD_TYPE=dev
-        cmake --build build --target decomp2d
+        cmake --build build --verbose
 
   bld_nvidia:
     # The type of runner that the job will run on

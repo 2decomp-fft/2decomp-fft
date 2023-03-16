@@ -24,11 +24,14 @@ jobs:
     - name: Install requirements
       run: |
         sudo apt-get update
-        sudo apt-get install -y gfortran openmpi-bin libopenmpi-dev
+        sudo apt-get install -y gfortran openmpi-bin libopenmpi-dev cmake
 
     # Runs a set of commands using the runners shell
     - name: Compile
-      run: make BUILD=dev && make examples
+      run: |
+        export FC=mpif90
+        cmake -S . -B build -DCMAKE_BUILD_TYPE=Dev
+        cmake --build build --verbose
 
   bld_gnu_mpich:
     # The type of runner that the job will run on
@@ -43,11 +46,14 @@ jobs:
     - name: Install requirements
       run: |
         sudo apt-get update
-        sudo apt-get install -y gfortran mpich libmpich-dev
+        sudo apt-get install -y gfortran mpich libmpich-dev cmake
 
     # Runs a set of commands using the runners shell
     - name: Compile
-      run: make BUILD=debug && make examples
+      run: |
+        export FC=mpif90
+        cmake -S . -B build -DCMAKE_BUILD_TYPE=Dev
+        cmake --build build --verbose
 
   bld_nvidia:
     # The type of runner that the job will run on
@@ -74,8 +80,8 @@ jobs:
     # Runs a set of commands using the runners shell
     - name: CPU version
       run: |
-        PATH=$TMP:$PATH make CMP=nvhpc BUILD=debug
-        PATH=$TMP:$PATH make examples
+        PATH=$TMP:$PATH FC=mpif90 cmake -S . -B build -DCMAKE_BUILD_TYPE=Dev
+        PATH=$TMP:$PATH cmake --build build --verbose
 
 ###    - name: GPU version
 ###      run: |
@@ -99,15 +105,25 @@ jobs:
     - name: install
       run: |
         sudo apt-get update
-        sudo apt-get install -y intel-oneapi-common-vars intel-oneapi-compiler-fortran intel-oneapi-mkl intel-oneapi-mkl-devel intel-oneapi-mpi intel-oneapi-mpi-devel
+        sudo apt-get install -y intel-oneapi-common-vars intel-oneapi-compiler-fortran intel-oneapi-mkl intel-oneapi-mkl-devel intel-oneapi-mpi intel-oneapi-mpi-devel cmake
 
     # Runs a set of commands using the runners shell
     - name: Compile
-      run: source /opt/intel/oneapi/setvars.sh && make CMP=intel BUILD=debug && make examples
+      run: |
+        source /opt/intel/oneapi/setvars.sh
+        export FC=mpiifort
+        cmake -S . -B build -DCMAKE_BUILD_TYPE=Dev
+        cmake --build build
 
     # Runs a set of commands using the runners shell
     - name: Compile
-      run: source /opt/intel/oneapi/setvars.sh && make clean && make CMP=intel FFT=mkl BUILD=debug && make examples
+      run: |
+        source /opt/intel/oneapi/setvars.sh
+        export FC=mpiifort
+        export MKL_DIR=${MKLROOT}/lib/cmake/mkl
+        cmake -S . -B build -DCMAKE_BUILD_TYPE=Dev -DFFT_Choice=mkl
+        cmake --build build --target clean
+        cmake --build build
 
   bld_fftw3:
     # The type of runner that the job will run on
@@ -127,15 +143,15 @@ jobs:
     # Runs a set of commands using the runners shell
     - name: Regular FFTW3
       run: |
-        make clean
-        make BUILD=dev FFT=fftw3 FFTW3_PATH_INCLUDE=/usr/include FFTW3_PATH_LIB=/usr/lib/x86_64-linux-gnu
-        make examples
+        export FC=mpif90
+        cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug -DFFT_Choice=fftw
+        cmake --build build --verbose
 
     - name: New FFTW3
       run: |
-        make clean
-        make BUILD=dev FFT=fftw3_f03 FFTW3_PATH_INCLUDE=/usr/include FFTW3_PATH_LIB=/usr/lib/x86_64-linux-gnu
-        make examples
+        export FC=mpif90
+        cmake -S . -B build -DCMAKE_BUILD_TYPE=Dev -DFFT_Choice=fftw_f03
+        cmake --build build --verbose
 
   bld_caliper:
     # The type of runner that the job will run on
@@ -164,5 +180,6 @@ jobs:
 
     - name: Compile
       run: |
-        make clean
-        make BUILD=dev PROFILER=caliper CALIPER_PATH=./Caliper-2.8.0_bld
+        export caliper_DIR=./Caliper-2.8.0_bld/share/cmake/caliper
+        FC=mpif90 cmake -S . -B build -DENABLE_PROFILER=caliper
+        cmake --build build --verbose

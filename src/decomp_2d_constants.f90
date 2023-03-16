@@ -173,6 +173,10 @@ contains
             call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_COMM_SIZE")
          end if
       end if
+
+      if (MPI_SUCCESS /= 0) then
+         call decomp_2d_abort(__FILE__, __LINE__, MPI_SUCCESS, "MPI error check is broken")
+      end if
    
    end subroutine decomp_2d_mpi_init
    !

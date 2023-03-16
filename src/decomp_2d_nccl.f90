@@ -16,6 +16,7 @@ module decomp_2d_nccl
 
    use mpi
    use decomp_2d_constants  
+   use decomp_2d_mpi
    use decomp_2d_cumpi
    use nccl
 

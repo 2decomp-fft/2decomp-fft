@@ -240,6 +240,14 @@ make -j check
 make install
 ```
 
+To build `2decomp&fft` against fftw3 first ensure the package configuration for fftw3 is in your `PKG_CONFIG_PATH` environment variable, this should be found under `/path/to/fftw3/install/lib/pkgconfig`, then either specify on the command line when configuring the build
+```
+cmake -S . -B build -DFFT_Choice=<fftw|fftw_f03>
+```
+or modify the build configuration using `ccmake`.
+
+Note the legacy `fftw` interface lacks interface definitions and will fail when stricter compilation flags are used (e.g. when `-DCMAKE_BUILD_TYPE=Dev`) for this it is recommended to use `fftw_f03` which provides proper interfaces.
+
 ### Caliper
 
 The library [caliper](https://github.com/LLNL/Caliper) can be used to profile the execution of the code. The version 2.9.0 was tested and is supported, version 2.8.0 has also been tested and is still expected to work. Please note that one must build caliper and decomp2d against the same C/C++/Fortran compilers and MPI libray. For build instructions, please check [here](https://github.com/LLNL/Caliper#building-and-installing) and [here](https://software.llnl.gov/Caliper/CaliperBasics.html#build-and-install). Below is a suggestion for the compilation of the library using the GNU compilers:

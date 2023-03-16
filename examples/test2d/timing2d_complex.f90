@@ -261,16 +261,16 @@ program timing2d_complex
       if (error_flag) call decomp_2d_abort(4, "error swaping y->x")
    enddo
 
-   call MPI_ALLREDUCE(t2, t1, 1, MPI_DOUBLE, MPI_SUM, &
+   call MPI_ALLREDUCE(t2, t1, 1, MPI_DOUBLE_PRECISION, MPI_SUM, &
                       MPI_COMM_WORLD, ierror)
    t1 = t1/dble(nproc)
-   call MPI_ALLREDUCE(t4, t3, 1, MPI_DOUBLE, MPI_SUM, &
+   call MPI_ALLREDUCE(t4, t3, 1, MPI_DOUBLE_PRECISION, MPI_SUM, &
                       MPI_COMM_WORLD, ierror)
    t3 = t3/dble(nproc)
-   call MPI_ALLREDUCE(t6, t5, 1, MPI_DOUBLE, MPI_SUM, &
+   call MPI_ALLREDUCE(t6, t5, 1, MPI_DOUBLE_PRECISION, MPI_SUM, &
                       MPI_COMM_WORLD, ierror)
    t5 = t5/dble(nproc)
-   call MPI_ALLREDUCE(t8, t7, 1, MPI_DOUBLE, MPI_SUM, &
+   call MPI_ALLREDUCE(t8, t7, 1, MPI_DOUBLE_PRECISION, MPI_SUM, &
                       MPI_COMM_WORLD, ierror)
    t7 = t7/dble(nproc)
    t8 = t1+t3+t5+t7

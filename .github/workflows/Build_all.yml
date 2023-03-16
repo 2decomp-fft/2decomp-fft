@@ -180,5 +180,6 @@ jobs:
 
     - name: Compile
       run: |
-        make clean
-        make BUILD=dev PROFILER=caliper CALIPER_PATH=./Caliper-2.8.0_bld
+        export caliper_DIR=./Caliper-2.8.0_bld/share/cmake/caliper
+        FC=mpif90 cmake -S . -B build -DENABLE_PROFILER=caliper
+        cmake --build build --verbose

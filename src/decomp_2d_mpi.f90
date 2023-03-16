@@ -16,10 +16,8 @@ module decomp_2d_mpi
 
    use MPI
    use decomp_2d_constants
-#if defined(_GPU)
-#if defined(_NCCL)
+#if defined(_GPU) && defined(_NCCL)
    use nccl
-#endif
 #endif
 
    implicit none

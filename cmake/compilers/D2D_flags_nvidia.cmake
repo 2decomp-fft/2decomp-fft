@@ -3,6 +3,7 @@
 set(D2D_FFLAGS "-cpp -Mfree -Kieee")
 set(D2D_FFLAGS_RELEASE "-O3")
 set(D2D_FFLAGS_DEBUG   "-O0 -g -traceback -Mbounds -Mchkptr -Ktrap=fp")
+set(D2D_FFLAGS_DEV     "${D2D_FFLAGS_DEBUG}")
 if (BUILD_TARGET MATCHES "mpi")
   set(D2D_FFLAGS_RELEASE "${D2D_FFLAGS_RELEASE} -fast -march=native")
 endif (BUILD_TARGET MATCHES "mpi")

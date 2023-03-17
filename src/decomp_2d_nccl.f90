@@ -25,9 +25,9 @@ module decomp_2d_nccl
    private        ! Make everything private unless declared public
 
 #ifdef DOUBLE_PREC
-   type(ncclDataType),public :: ncclType = ncclDouble
+   type(ncclDataType),parameter,public :: ncclType = ncclDouble
 #else
-   type(ncclDataType),public :: ncclType = ncclFloat
+   type(ncclDataType),parameter,public :: ncclType = ncclFloat
 #endif
    
    integer, save, public :: row_rank, col_rank
@@ -111,6 +111,7 @@ contains
       type(ncclResult) :: nccl_stat
 
       nccl_stat = ncclCommDestroy(nccl_comm_2decomp)
+      if (nccl_stat /= ncclSuccess) call decomp_2d_abort(__FILE__, __LINE__, nccl_stat, "ncclCommDestroy")
 
    end subroutine decomp_2d_nccl_fin
   !

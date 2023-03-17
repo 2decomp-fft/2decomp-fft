@@ -30,11 +30,6 @@
      real(mytype), dimension(:, :, :), intent(OUT) :: dst
      TYPE(DECOMP_INFO), intent(IN) :: decomp
 
-!#if defined(_GPU) && defined(_NCCL)
-!     type(ncclResult) :: nccl_stat
-!     integer :: col_rank_id, cuda_stat
-!#endif
-
      integer :: s1, s2, s3, d1, d2, d3
      integer :: ierror
 

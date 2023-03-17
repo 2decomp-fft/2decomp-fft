@@ -100,8 +100,9 @@ contains
       if (cuda_stat /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "cudaStreamCreate")
 
    end subroutine decomp_2d_nccl_init
+
    !
-   ! init of the arrays
+   ! Finalize the module (release nccl communicator)
    !
    subroutine decomp_2d_nccl_fin()
 

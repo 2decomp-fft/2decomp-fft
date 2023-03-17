@@ -4,7 +4,7 @@
 
 ### CMake
 
-The new experimental build system is driven by `cmake`. It is good practice to directly point to the MPI Fortran wrapper that you would like to use to guarantee consistency between Fortran compiler and MPI. This can be done by setting the default Fortran environmental variable 
+The build system is driven by `cmake`. It is good practice to directly point to the MPI Fortran wrapper that you would like to use to guarantee consistency between Fortran compiler and MPI. This can be done by setting the default Fortran environmental variable 
 ```
 export FC=my_mpif90
 ```

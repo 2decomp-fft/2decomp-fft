@@ -36,9 +36,6 @@ module decomp_2d_constants
    integer, parameter, public :: mytype_single = KIND(0._real64)
    integer, parameter, public :: real_type_single = MPI_DOUBLE_PRECISION
 #endif
-#if defined(_GPU) && defined(_NCCL)
-   type(ncclDataType), parameter, public :: ncclType = ncclDouble
-#endif
 #else
    integer, parameter, public :: mytype = KIND(0._real32)
    integer, parameter, public :: real_type = MPI_REAL
@@ -46,9 +43,6 @@ module decomp_2d_constants
    integer, parameter, public :: complex_type = MPI_COMPLEX
    integer, parameter, public :: mytype_single = KIND(0._real32)
    integer, parameter, public :: real_type_single = MPI_REAL
-#if defined(_GPU) && defined(_NCCL)
-   type(ncclDataType), parameter, public :: ncclType = ncclFloat
-#endif
 #endif
 
    !

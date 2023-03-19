@@ -33,10 +33,6 @@
 
      integer :: errorcode, ierror, row, col, iounit
      logical, dimension(2) :: periodic
-#if defined(_GPU) && defined(_NCCL)
-     integer :: cuda_stat
-     type(ncclResult) :: nccl_stat
-#endif
 
 #ifdef PROFILER
      ! Prepare the profiler if it was not already prepared
@@ -153,43 +149,8 @@
      if (nrank == 0) write (*, *) 'Padded ALLTOALL optimisation on'
 #endif
 
-#if defined(_GPU)
-#if defined(_NCCL)
-     call MPI_COMM_RANK(DECOMP_2D_COMM_COL, col_rank, ierror)
-     if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_COMM_RANK")
-     call MPI_COMM_RANK(DECOMP_2D_COMM_ROW, row_rank, ierror)
-     if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_COMM_RANK")
-     call MPI_COMM_SIZE(DECOMP_2D_COMM_COL, col_comm_size, ierror)
-     if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_COMM_SIZE")
-     call MPI_COMM_SIZE(DECOMP_2D_COMM_ROW, row_comm_size, ierror)
-     if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_COMM_SIZE")
-
-     allocate (local_to_global_col(col_comm_size), local_to_global_row(row_comm_size))
-
-     local_to_global_col(:) = 0
-     local_to_global_row(:) = 0
-     local_to_global_col(col_rank + 1) = nrank
-     local_to_global_row(row_rank + 1) = nrank
-
-     call mpi_allreduce(MPI_IN_PLACE, local_to_global_col, col_comm_size, MPI_INTEGER, MPI_SUM, DECOMP_2D_COMM_COL, ierror)
-     if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_ALLREDUCE")
-     call mpi_allreduce(MPI_IN_PLACE, local_to_global_row, row_comm_size, MPI_INTEGER, MPI_SUM, DECOMP_2D_COMM_ROW, ierror)
-     if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_ALLREDUCE")
-
-     if (nrank == 0) then
-        nccl_stat = ncclGetUniqueId(nccl_uid_2decomp)
-     else
-        nccl_stat = ncclSuccess
-     end if
-     if (nccl_stat /= ncclSuccess) call decomp_2d_abort(__FILE__, __LINE__, nccl_stat, "ncclGetUniqueId")
-     call MPI_Bcast(nccl_uid_2decomp, int(sizeof(ncclUniqueId)), MPI_BYTE, 0, decomp_2d_comm, ierror)
-     if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_BCAST")
-
-     nccl_stat = ncclCommInitRank(nccl_comm_2decomp, nproc, nccl_uid_2decomp, nrank)
-     if (nccl_stat /= ncclSuccess) call decomp_2d_abort(__FILE__, __LINE__, nccl_stat, "ncclCommInitRank")
-     cuda_stat = cudaStreamCreate(cuda_stream_2decomp)
-     if (cuda_stat /= 0) call decomp_2d_abort(__FILE__, __LINE__, cuda_stat, "cudaStreamCreate")
-#endif
+#if defined(_GPU) && defined(_NCCL)
+     call decomp_2d_nccl_init(DECOMP_2D_COMM_COL,DECOMP_2D_COMM_ROW)
 #endif
 
      !
@@ -215,9 +176,6 @@
   subroutine decomp_2d_finalize_ref
 
      implicit none
-#if defined(_GPU) && defined(_NCCL)
-     type(ncclResult) :: nccl_stat
-#endif
 
 #ifdef PROFILER
      if (decomp_profiler_d2d) call decomp_profiler_start("decomp_2d_fin")
@@ -236,8 +194,7 @@
 #if defined(_GPU)
      call decomp_2d_cumpi_fin()
 #if defined(_NCCL)
-     nccl_stat = ncclCommDestroy(nccl_comm_2decomp)
-     if (nccl_stat /= ncclSuccess) call decomp_2d_abort(__FILE__, __LINE__, nccl_stat, "ncclCommDestroy")
+     call decomp_2d_nccl_fin()
 #endif
 #endif
 

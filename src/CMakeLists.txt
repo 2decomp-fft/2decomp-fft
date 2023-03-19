@@ -8,6 +8,9 @@ include_directories(${CMAKE_SOURCE_DIR}/src)
 
 if(${BUILD_TARGET} MATCHES "gpu")
   list(APPEND files_decomp decomp_2d_cumpi.f90)
+  if(ENABLE_NCCL)
+    list(APPEND files_decomp decomp_2d_nccl.f90)
+  endif()
 endif(${BUILD_TARGET} MATCHES "gpu")
 
 if(FFTW_FOUND)

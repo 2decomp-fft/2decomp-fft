@@ -30,7 +30,7 @@ program fft_physical_x
    integer :: ierror, i, j, k, m
    integer :: xst1, xst2, xst3
    integer :: xen1, xen2, xen3
-   real(mytype) :: t1, t2, t3, t4
+   double precision :: t1, t2, t3, t4
 
    call MPI_INIT(ierror)
    ! To resize the domain we need to know global number of ranks
@@ -106,8 +106,8 @@ program fft_physical_x
       end do
    end do
 
-   t2 = 0._mytype
-   t4 = 0._mytype
+   t2 = 0.d0
+   t4 = 0.d0
    !$acc data copyin(in) copy(out)
    do m = 1, ntest
 
@@ -131,12 +131,12 @@ program fft_physical_x
    ierror = cudaDeviceSynchronize()
 #endif
 
-   call MPI_ALLREDUCE(t2, t1, 1, real_type, MPI_SUM, &
+   call MPI_ALLREDUCE(t2, t1, 1, MPI_DOUBLE_PRECISION, MPI_SUM, &
                       MPI_COMM_WORLD, ierror)
-   t1 = t1/real(nproc, mytype)
-   call MPI_ALLREDUCE(t4, t3, 1, real_type, MPI_SUM, &
+   t1 = t1/dble(nproc)
+   call MPI_ALLREDUCE(t4, t3, 1, MPI_DOUBLE_PRECISION, MPI_SUM, &
                       MPI_COMM_WORLD, ierror)
-   t3 = t3/real(nproc, mytype)
+   t3 = t3/dble(nproc)
 
    ! checking accuracy
    error = 0._mytype

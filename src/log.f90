@@ -138,9 +138,9 @@ contains
 
       ! Major and minor version number
       if (D2D_RELEASE) then
-         write (io_unit, *) 'Release ', D2D_LOG_MAJOR, '.', D2D_LOG_MINOR
+         write (io_unit, "(A,I0,A,I0)") ' Release ', D2D_MAJOR, '.', D2D_MINOR
       else
-         write (io_unit, *) 'Release ', D2D_LOG_MAJOR, '.', D2D_LOG_MINOR, '.alpha'
+         write (io_unit, "(A,I0,A,I0,A)") ' Release ', D2D_MAJOR, '.', D2D_MINOR, '.alpha'
       end if
 
       ! Git hash if available

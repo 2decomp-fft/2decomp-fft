@@ -116,8 +116,6 @@ module decomp_2d_constants
    integer, parameter :: D2D_MAJOR = 2
    integer, parameter :: D2D_MINOR = 0
    logical, parameter :: D2D_RELEASE = .false.
-   character, parameter :: D2D_LOG_MAJOR = char(48 + D2D_MAJOR)
-   character, parameter :: D2D_LOG_MINOR = char(48 + D2D_MINOR)
 
 end module decomp_2d_constants
 

@@ -140,7 +140,7 @@ contains
       call adios2_init(adios, trim(config_file), decomp_2d_comm, adios2_debug_mode, ierror)
       if (ierror /= 0) then
          call decomp_2d_abort(__FILE__, __LINE__, ierror, &
-              "Error initialising ADIOS2 - is "//trim(config_file)//" present and valid?")
+                              "Error initialising ADIOS2 - is "//trim(config_file)//" present and valid?")
       end if
       engine_live(:) = .false.
 
@@ -448,7 +448,7 @@ contains
       if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "adios2_inquire_variable "//trim(varname))
       if (.not. var_handle%valid) then
          call decomp_2d_abort(__FILE__, __LINE__, -1, &
-              "ERROR: trying to read variable without registering first! "//trim(varname))
+                              "ERROR: trying to read variable without registering first! "//trim(varname))
       end if
 
       call adios2_variable_steps(nsteps, var_handle, ierror)
@@ -1350,12 +1350,12 @@ contains
       if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "adios2_inquire_variable "//trim(varname))
       if (.not. var_handle%valid) then
          call decomp_2d_abort(__FILE__, __LINE__, -1, &
-              "ERROR: trying to write variable before registering! "//trim(varname))
+                              "ERROR: trying to write variable before registering! "//trim(varname))
       end if
 
       if (idx < 1) then
          call decomp_2d_abort(__FILE__, __LINE__, idx, &
-              "You haven't opened "//trim(io_name)//":"//trim(dirname))
+                              "You haven't opened "//trim(io_name)//":"//trim(dirname))
       end if
 
       if (deferred_writes) then
@@ -1454,7 +1454,7 @@ contains
                                         adios2_constant_dims, ierror)
             if (ierror /= 0) then
                call decomp_2d_abort(__FILE__, __LINE__, ierror, &
-                    "adios2_define_variable, ERROR registering variable "//trim(varname))
+                                    "adios2_define_variable, ERROR registering variable "//trim(varname))
             end if
          end if
       else

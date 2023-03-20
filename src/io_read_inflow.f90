@@ -78,7 +78,7 @@ call adios2_inquire_variable(var_handle, io_handle, varname, ierror)
 if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "adios2_inquire_variable "//trim(varname))
 if (.not. var_handle%valid) then
    call decomp_2d_abort(__FILE__, __LINE__, -1, &
-        "trying to write variable before registering!  "//trim(varname))
+                        "trying to write variable before registering!  "//trim(varname))
 end if
 
 !! Note - need to use sync mode as we are using a view into the array - unsure how this works with deferred writes

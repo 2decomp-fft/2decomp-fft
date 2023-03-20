@@ -150,7 +150,7 @@
 #endif
 
 #if defined(_GPU) && defined(_NCCL)
-     call decomp_2d_nccl_init(DECOMP_2D_COMM_COL,DECOMP_2D_COMM_ROW)
+     call decomp_2d_nccl_init(DECOMP_2D_COMM_COL, DECOMP_2D_COMM_ROW)
 #endif
 
      !
@@ -242,7 +242,7 @@
      read (val, '(i4)', iostat=ierror) decomp_debug
      if (ierror /= 0) then
         call decomp_2d_warning(__FILE__, __LINE__, ierror, &
-             "Error when reading DECOMP_2D_DEBUG : "//val)
+                               "Error when reading DECOMP_2D_DEBUG : "//val)
      end if
 
   end subroutine decomp_2d_debug

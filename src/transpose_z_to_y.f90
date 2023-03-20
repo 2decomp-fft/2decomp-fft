@@ -35,20 +35,20 @@
 
      if (dims(2) == 1) then
 #if defined(_GPU)
-        nsize =  product(decomp%zsz)
+        nsize = product(decomp%zsz)
         !$acc host_data use_device(src,dst)
         istat = cudaMemcpy(dst, src, nsize, cudaMemcpyDeviceToDevice)
         !$acc end host_data
         if (istat /= 0) call decomp_2d_abort(__FILE__, __LINE__, istat, "cudaMemcpy")
 #else
-        dst=src
-#endif       
+        dst = src
+#endif
      else
         call transpose_z_to_y_real(src, dst, decomp)
-     endif
+     end if
 
   end subroutine transpose_z_to_y_real_long
- 
+
   subroutine transpose_z_to_y_real(src, dst, decomp)
 
      implicit none
@@ -110,13 +110,13 @@
 
 #if defined(_GPU)
 #if defined(_NCCL)
-     call decomp_2d_nccl_send_recv_row(work2_r_d,     &
-                                       work1_r_d,     &
+     call decomp_2d_nccl_send_recv_row(work2_r_d, &
+                                       work1_r_d, &
                                        decomp%z2disp, &
                                        decomp%z2cnts, &
                                        decomp%y2disp, &
                                        decomp%y2cnts, &
-                                       dims(2)        )
+                                       dims(2))
 #else
      call MPI_ALLTOALLV(work1_r_d, decomp%z2cnts, decomp%z2disp, &
                         real_type, work2_r_d, decomp%y2cnts, decomp%y2disp, &
@@ -171,17 +171,17 @@
 
      if (dims(2) == 1) then
 #if defined(_GPU)
-        nsize =  product(decomp%zsz)
+        nsize = product(decomp%zsz)
         !$acc host_data use_device(src,dst)
         istat = cudaMemcpy(dst, src, nsize, cudaMemcpyDeviceToDevice)
         !$acc end host_data
         if (istat /= 0) call decomp_2d_abort(__FILE__, __LINE__, istat, "cudaMemcpy")
 #else
-        dst=src
-#endif       
+        dst = src
+#endif
      else
         call transpose_z_to_y_complex(src, dst, decomp)
-     endif
+     end if
 
   end subroutine transpose_z_to_y_complex_long
 
@@ -246,13 +246,13 @@
 
 #if defined(_GPU)
 #if defined(_NCCL)
-     call decomp_2d_nccl_send_recv_row(work2_c_d,     &
-                                       work1_c_d,     &
+     call decomp_2d_nccl_send_recv_row(work2_c_d, &
+                                       work1_c_d, &
                                        decomp%z2disp, &
                                        decomp%z2cnts, &
                                        decomp%y2disp, &
                                        decomp%y2cnts, &
-                                       dims(2)      , &
+                                       dims(2), &
                                        decomp_buf_size)
 #else
      call MPI_ALLTOALLV(work1_c_d, decomp%z2cnts, decomp%z2disp, &

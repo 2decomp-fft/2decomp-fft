@@ -18,6 +18,7 @@ module decomp_2d
    use, intrinsic :: iso_fortran_env, only: real32, real64
    use factor
    use decomp_2d_constants
+   use decomp_2d_mpi
 #if defined(_GPU)
    use cudafor
    use decomp_2d_cumpi
@@ -1149,4 +1150,3 @@ contains
 #include "alloc.f90"
 
 end module decomp_2d
-

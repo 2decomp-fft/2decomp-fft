@@ -3,6 +3,7 @@ program timing2d_real
    use mpi
    use decomp_2d
    use decomp_2d_constants
+   use decomp_2d_mpi
 #if defined(_GPU)
    use cudafor
    use openacc
@@ -117,7 +118,7 @@ program timing2d_real
 
    !$acc data copy(u1,u2,u3)
    ! original x-pensil based data
-   !$acc parallel loop default(present) collapse(3)
+   !$acc parallel loop default(present) private(m) 
    do k = xst3, xen3
       do j = xst2, xen2
          do i = xst1, xen1
@@ -166,7 +167,7 @@ program timing2d_real
       ! 'u1.dat' and 'u2.dat' should be identical byte-by-byte
 
       ! also check the transposition this way
-      !$acc parallel loop default(present) collapse(3)
+      !$acc parallel loop default(present) private(m)
       do k = yst3, yen3
          do j = yst2, yen2
             do i = yst1, yen1
@@ -198,7 +199,7 @@ program timing2d_real
       ! call decomp_2d_write_one(3,u3,'u3.dat')
       ! 'u1.dat','u2.dat' and 'u3.dat' should be identical
 
-      !$acc parallel loop default(present) collapse(3)
+      !$acc parallel loop default(present) private(m)
       do k = zst3, zen3
          do j = zst2, zen2
             do i = zst1, zen1
@@ -219,7 +220,7 @@ program timing2d_real
       t6 = t6 + MPI_WTIME()-t5
       ! call decomp_2d_write_one(2,u2,'u2b.dat')
 
-      !$acc parallel loop default(present) collapse(3)
+      !$acc parallel loop default(present) private(m)
       do k = yst3, yen3
          do j = yst2, yen2
             do i = yst1, yen1
@@ -240,7 +241,7 @@ program timing2d_real
       t8 = t8 + MPI_WTIME()-t7
       ! call decomp_2d_write_one(1,u1,'u1b.dat')
 
-      !$acc parallel loop default(present) collapse(3)
+      !$acc parallel loop default(present) private(m)
       do k = xst3, xen3
          do j = xst2, xen2
             do i = xst1, xen1
@@ -255,16 +256,16 @@ program timing2d_real
       if (error_flag) call decomp_2d_abort(4, "error swaping y->x")
    enddo
 
-   call MPI_ALLREDUCE(t2, t1, 1, MPI_DOUBLE, MPI_SUM, &
+   call MPI_ALLREDUCE(t2, t1, 1, MPI_DOUBLE_PRECISION, MPI_SUM, &
                       MPI_COMM_WORLD, ierror)
    t1 = t1/dble(nproc)
-   call MPI_ALLREDUCE(t4, t3, 1, MPI_DOUBLE, MPI_SUM, &
+   call MPI_ALLREDUCE(t4, t3, 1, MPI_DOUBLE_PRECISION, MPI_SUM, &
                       MPI_COMM_WORLD, ierror)
    t3 = t3/dble(nproc)
-   call MPI_ALLREDUCE(t6, t5, 1, MPI_DOUBLE, MPI_SUM, &
+   call MPI_ALLREDUCE(t6, t5, 1, MPI_DOUBLE_PRECISION, MPI_SUM, &
                       MPI_COMM_WORLD, ierror)
    t5 = t5/dble(nproc)
-   call MPI_ALLREDUCE(t8, t7, 1, MPI_DOUBLE, MPI_SUM, &
+   call MPI_ALLREDUCE(t8, t7, 1, MPI_DOUBLE_PRECISION, MPI_SUM, &
                       MPI_COMM_WORLD, ierror)
    t7 = t7/dble(nproc)
    t8 = t1+t3+t5+t7

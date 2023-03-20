@@ -3,6 +3,7 @@ program fft_r2c_x
    use decomp_2d
    use decomp_2d_fft
    use decomp_2d_constants
+   use decomp_2d_mpi
    use MPI
 #if defined(_GPU)
    use cudafor
@@ -129,10 +130,10 @@ program fft_r2c_x
    ierror = cudaDeviceSynchronize()
 #endif
 
-   call MPI_ALLREDUCE(t2, t1, 1, MPI_DOUBLE, MPI_SUM, &
+   call MPI_ALLREDUCE(t2, t1, 1, MPI_DOUBLE_PRECISION, MPI_SUM, &
                       MPI_COMM_WORLD, ierror)
    t1 = t1/dble(nproc)
-   call MPI_ALLREDUCE(t4, t3, 1, MPI_DOUBLE, MPI_SUM, &
+   call MPI_ALLREDUCE(t4, t3, 1, MPI_DOUBLE_PRECISION, MPI_SUM, &
                       MPI_COMM_WORLD, ierror)
    t3 = t3/dble(nproc)
 

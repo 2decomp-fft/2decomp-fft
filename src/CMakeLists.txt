@@ -1,5 +1,6 @@
 file(GLOB files_decomp factor.f90
 	               decomp_2d_constants.f90
+		       decomp_2d_mpi.f90
 	               decomp_2d.f90
 		       log.f90
 		       io.f90)
@@ -13,8 +14,13 @@ if(${BUILD_TARGET} MATCHES "gpu")
 endif(${BUILD_TARGET} MATCHES "gpu")
 
 if(FFTW_FOUND)
-  message (STATUS "Compiling using FFTW3")
-  file(GLOB files_fft fft_fftw3.f90)
+  if (${FFT_Choice} MATCHES "fftw_f03")
+    message (STATUS "Compiling using FFTW3 F2003 interface")
+    file(GLOB files_fft fft_fftw3_f03.f90)
+  else()
+    message (STATUS "Compiling using FFTW3 legacy interface")
+    file(GLOB files_fft fft_fftw3.f90)
+  endif()
 elseif(MKL_FOUND)
   message (STATUS "Compiling using MKL")
   file(GLOB files_fft $ENV{MKLROOT}/include/mkl_dfti.f90 fft_mkl.f90)

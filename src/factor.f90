@@ -35,7 +35,7 @@ contains
       m = int(sqrt(real(num)))
       nfact = 1
       do i = 1, m
-         if (num/i*i == num) then
+         if (num / i * i == num) then
             factors(nfact) = i
             nfact = nfact + 1
          end if
@@ -44,15 +44,15 @@ contains
 
       ! derive those > sqrt(num)
       if (factors(nfact)**2 /= num) then
-         do i = nfact + 1, 2*nfact
-            factors(i) = num/factors(2*nfact - i + 1)
+         do i = nfact + 1, 2 * nfact
+            factors(i) = num / factors(2 * nfact - i + 1)
          end do
-         nfact = nfact*2
+         nfact = nfact * 2
       else
-         do i = nfact + 1, 2*nfact - 1
-            factors(i) = num/factors(2*nfact - i)
+         do i = nfact + 1, 2 * nfact - 1
+            factors(i) = num / factors(2 * nfact - i)
          end do
-         nfact = nfact*2 - 1
+         nfact = nfact * 2 - 1
       end if
 
       return
@@ -76,7 +76,7 @@ contains
          if (mod(n, i) == 0) then
             factors(nfact) = i
             nfact = nfact + 1
-            n = n/i
+            n = n / i
          else
             i = i + 1
          end if

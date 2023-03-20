@@ -40,10 +40,10 @@ program io_plane_test
    ! To resize the domain we need to know global number of ranks
    ! This operation is also done as part of decomp_2d_init
    call MPI_COMM_SIZE(MPI_COMM_WORLD, nranks_tot, ierror)
-   resize_domain = int(nranks_tot/4) + 1
-   nx = nx_base*resize_domain
-   ny = ny_base*resize_domain
-   nz = nz_base*resize_domain
+   resize_domain = int(nranks_tot / 4) + 1
+   nx = nx_base * resize_domain
+   ny = ny_base * resize_domain
+   nz = nz_base * resize_domain
    ! Now we can check if user put some inputs
    ! Handle input file like a boss -- GD
    nargin = command_argument_count()
@@ -124,17 +124,17 @@ program io_plane_test
    !$acc update self(u3)
    !$acc end data
    ! X-pencil data
-   call decomp_2d_write_plane(1, u1, 1, nx/2, '.', 'x_pencil-x_plane.dat', 'test')
-   call decomp_2d_write_plane(1, u1, 2, ny/2, '.', 'x_pencil-y_plane.dat', 'test')
-   call decomp_2d_write_plane(1, u1, 3, nz/2, '.', 'x_pencil-z_plane.dat', 'test')
+   call decomp_2d_write_plane(1, u1, 1, nx / 2, '.', 'x_pencil-x_plane.dat', 'test')
+   call decomp_2d_write_plane(1, u1, 2, ny / 2, '.', 'x_pencil-y_plane.dat', 'test')
+   call decomp_2d_write_plane(1, u1, 3, nz / 2, '.', 'x_pencil-z_plane.dat', 'test')
    ! Y-pencil data
-   call decomp_2d_write_plane(2, u2, 2, ny/2, '.', 'y_pencil-y_plane.dat', 'test')
-   call decomp_2d_write_plane(2, u2, 1, nx/2, '.', 'y_pencil-x_plane.dat', 'test')
-   call decomp_2d_write_plane(2, u2, 3, nz/2, '.', 'y_pencil-z_plane.dat', 'test')
+   call decomp_2d_write_plane(2, u2, 2, ny / 2, '.', 'y_pencil-y_plane.dat', 'test')
+   call decomp_2d_write_plane(2, u2, 1, nx / 2, '.', 'y_pencil-x_plane.dat', 'test')
+   call decomp_2d_write_plane(2, u2, 3, nz / 2, '.', 'y_pencil-z_plane.dat', 'test')
    ! Z-pencil data
-   call decomp_2d_write_plane(3, u3, 1, nx/2, '.', 'z_pencil-x_plane.dat', 'test')
-   call decomp_2d_write_plane(3, u3, 2, ny/2, '.', 'z_pencil-y_plane.dat', 'test')
-   call decomp_2d_write_plane(3, u3, 3, nz/2, '.', 'z_pencil-z_plane.dat', 'test')
+   call decomp_2d_write_plane(3, u3, 1, nx / 2, '.', 'z_pencil-x_plane.dat', 'test')
+   call decomp_2d_write_plane(3, u3, 2, ny / 2, '.', 'z_pencil-y_plane.dat', 'test')
+   call decomp_2d_write_plane(3, u3, 3, nz / 2, '.', 'z_pencil-z_plane.dat', 'test')
    ! Attemp to read the files
    if (nrank == 0) then
       inquire (iolength=iol) data1(1, 1, 1)

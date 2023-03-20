@@ -87,7 +87,7 @@
 
 #if defined(_GPU)
      !$acc host_data use_device(src)
-     istat = cudaMemcpy(work1_r_d, src, s1*s2*s3, cudaMemcpyDeviceToDevice)
+     istat = cudaMemcpy(work1_r_d, src, s1 * s2 * s3, cudaMemcpyDeviceToDevice)
      !$acc end host_data
      if (istat /= 0) call decomp_2d_abort(__FILE__, __LINE__, istat, "cudaMemcpy2D")
 #endif
@@ -223,7 +223,7 @@
 
 #if defined(_GPU)
      !$acc host_data use_device(src)
-     istat = cudaMemcpy(work1_c_d, src, s1*s2*s3, cudaMemcpyDeviceToDevice)
+     istat = cudaMemcpy(work1_c_d, src, s1 * s2 * s3, cudaMemcpyDeviceToDevice)
      !$acc end host_data
      if (istat /= 0) call decomp_2d_abort(__FILE__, __LINE__, istat, "cudaMemcpy2D")
 #endif
@@ -310,7 +310,7 @@
         end if
 
 #ifdef EVEN
-        pos = m*decomp%z2count + 1
+        pos = m * decomp%z2count + 1
 #else
         pos = decomp%z2disp(m) + 1
 #endif
@@ -351,7 +351,7 @@
         end if
 
 #ifdef EVEN
-        pos = m*decomp%z2count + 1
+        pos = m * decomp%z2count + 1
 #else
         pos = decomp%z2disp(m) + 1
 #endif
@@ -396,14 +396,14 @@
         end if
 
 #ifdef EVEN
-        pos = m*decomp%y2count + 1
+        pos = m * decomp%y2count + 1
 #else
         pos = decomp%y2disp(m) + 1
 #endif
 
 #if defined(_GPU)
         !$acc host_data use_device(out)
-        istat = cudaMemcpy2D(out(1, i1, 1), n1*n2, in(pos), n1*(i2 - i1 + 1), n1*(i2 - i1 + 1), n3, cudaMemcpyDeviceToDevice)
+        istat = cudaMemcpy2D(out(1, i1, 1), n1 * n2, in(pos), n1 * (i2 - i1 + 1), n1 * (i2 - i1 + 1), n3, cudaMemcpyDeviceToDevice)
         !$acc end host_data
         if (istat /= 0) call decomp_2d_abort(__FILE__, __LINE__, istat, "cudaMemcpy2D")
 #else
@@ -449,14 +449,14 @@
         end if
 
 #ifdef EVEN
-        pos = m*decomp%y2count + 1
+        pos = m * decomp%y2count + 1
 #else
         pos = decomp%y2disp(m) + 1
 #endif
 
 #if defined(_GPU)
         !$acc host_data use_device(out)
-        istat = cudaMemcpy2D(out(1, i1, 1), n1*n2, in(pos), n1*(i2 - i1 + 1), n1*(i2 - i1 + 1), n3, cudaMemcpyDeviceToDevice)
+        istat = cudaMemcpy2D(out(1, i1, 1), n1 * n2, in(pos), n1 * (i2 - i1 + 1), n1 * (i2 - i1 + 1), n3, cudaMemcpyDeviceToDevice)
         !$acc end host_data
         if (istat /= 0) call decomp_2d_abort(__FILE__, __LINE__, istat, "cudaMemcpy2D")
 #else

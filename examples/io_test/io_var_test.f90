@@ -57,10 +57,10 @@ program io_var_test
    ! To resize the domain we need to know global number of ranks
    ! This operation is also done as part of decomp_2d_init
    call MPI_COMM_SIZE(MPI_COMM_WORLD, nranks_tot, ierror)
-   resize_domain = int(nranks_tot/4) + 1
-   nx = nx_base*resize_domain
-   ny = ny_base*resize_domain
-   nz = nz_base*resize_domain
+   resize_domain = int(nranks_tot / 4) + 1
+   nx = nx_base * resize_domain
+   ny = ny_base * resize_domain
+   nz = nz_base * resize_domain
    ! Now we can check if user put some inputs
    ! Handle input file like a boss -- GD
    nargin = command_argument_count()
@@ -102,12 +102,12 @@ program io_var_test
    call decomp_2d_init(nx, ny, nz, p_row, p_col)
 
    ! also create a data set over a large domain
-   call decomp_info_init(nx*2, ny*2, nz*2, large)
+   call decomp_info_init(nx * 2, ny * 2, nz * 2, large)
 
    ! initialise global data
    allocate (data1(nx, ny, nz))
    allocate (cdata1(nx, ny, nz))
-   allocate (data1_large(nx*2, ny*2, nz*2))
+   allocate (data1_large(nx * 2, ny * 2, nz * 2))
    m = 1
    do k = 1, nz
       do j = 1, ny
@@ -120,9 +120,9 @@ program io_var_test
    end do
 
    m = 1
-   do k = 1, nz*2
-      do j = 1, ny*2
-         do i = 1, nx*2
+   do k = 1, nz * 2
+      do j = 1, ny * 2
+         do i = 1, nx * 2
             data1_large(i, j, k) = real(m, mytype)
             m = m + 1
          end do

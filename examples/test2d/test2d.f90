@@ -38,10 +38,10 @@ program test2d
    ! To resize the domain we need to know global number of ranks
    ! This operation is also done as part of decomp_2d_init
    call MPI_COMM_SIZE(MPI_COMM_WORLD, nranks_tot, ierror)
-   resize_domain = int(nranks_tot/4) + 1
-   nx = nx_base*resize_domain
-   ny = ny_base*resize_domain
-   nz = nz_base*resize_domain
+   resize_domain = int(nranks_tot / 4) + 1
+   nx = nx_base * resize_domain
+   ny = ny_base * resize_domain
+   nz = nz_base * resize_domain
    ! Now we can check if user put some inputs
    ! Handle input file like a boss -- GD
    nargin = command_argument_count()
@@ -118,7 +118,7 @@ program test2d
    do k = xst3, xen3
       do j = xst2, xen2
          do i = xst1, xen1
-            m = real(i + (j - 1)*nx + (k - 1)*nx*ny, mytype)
+            m = real(i + (j - 1) * nx + (k - 1) * nx * ny, mytype)
             u1(i, j, k) = m
          end do
       end do
@@ -160,7 +160,7 @@ program test2d
    do k = yst3, yen3
       do j = yst2, yen2
          do i = yst1, yen1
-            m = real(i + (j - 1)*nx + (k - 1)*nx*ny, mytype)
+            m = real(i + (j - 1) * nx + (k - 1) * nx * ny, mytype)
             if (abs(u2(i, j, k) - m) > 0) error_flag = .true.
          end do
       end do
@@ -190,7 +190,7 @@ program test2d
    do k = zst3, zen3
       do j = zst2, zen2
          do i = zst1, zen1
-            m = real(i + (j - 1)*nx + (k - 1)*nx*ny, mytype)
+            m = real(i + (j - 1) * nx + (k - 1) * nx * ny, mytype)
             if (abs(u3(i, j, k) - m) > 0) error_flag = .true.
          end do
       end do
@@ -209,7 +209,7 @@ program test2d
    do k = yst3, yen3
       do j = yst2, yen2
          do i = yst1, yen1
-            m = real(i + (j - 1)*nx + (k - 1)*nx*ny, mytype)
+            m = real(i + (j - 1) * nx + (k - 1) * nx * ny, mytype)
             if (abs(u2(i, j, k) - m) > 0) error_flag = .true.
          end do
       end do
@@ -228,7 +228,7 @@ program test2d
    do k = xst3, xen3
       do j = xst2, xen2
          do i = xst1, xen1
-            m = real(i + (j - 1)*nx + (k - 1)*nx*ny, mytype)
+            m = real(i + (j - 1) * nx + (k - 1) * nx * ny, mytype)
             if (abs(u1(i, j, k) - m) > 0) error_flag = .true.
          end do
       end do

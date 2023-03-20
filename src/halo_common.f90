@@ -203,9 +203,9 @@
        else
           tag_n = coord(1) + 1
        end if
-       icount = s3 + 2*level
-       ilength = level*s1
-       ijump = s1*(s2 + 2*level)
+       icount = s3 + 2 * level
+       ilength = level * s1
+       ijump = s1 * (s2 + 2 * level)
        call MPI_TYPE_VECTOR(icount, ilength, ijump, &
                             data_type, halo12, ierror)
        if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_TYPE_VECTOR")
@@ -254,7 +254,7 @@
        else
           tag_t = coord(2) + 1
        end if
-       icount = (s1*(s2 + 2*level))*level
+       icount = (s1 * (s2 + 2 * level)) * level
        ! receive from bottom
        call MPI_IRECV(out(xs, ys, zs), icount, data_type, &
                       neighbour(1, 6), tag_b, DECOMP_2D_COMM_CART_X, &
@@ -309,9 +309,9 @@
        else
           tag_e = coord(1) + 1
        end if
-       icount = s2*(s3 + 2*level)
+       icount = s2 * (s3 + 2 * level)
        ilength = level
-       ijump = s1 + 2*level
+       ijump = s1 + 2 * level
        call MPI_TYPE_VECTOR(icount, ilength, ijump, &
                             data_type, halo21, ierror)
        if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_TYPE_VECTOR")
@@ -363,7 +363,7 @@
        else
           tag_t = coord(2) + 1
        end if
-       icount = (s2*(s1 + 2*level))*level
+       icount = (s2 * (s1 + 2 * level)) * level
        ! receive from bottom
        call MPI_IRECV(out(xs, ys, zs), icount, data_type, &
                       neighbour(2, 6), tag_b, DECOMP_2D_COMM_CART_Y, &
@@ -417,9 +417,9 @@
        else
           tag_e = coord(1) + 1
        end if
-       icount = (s2 + 2*level)*s3
+       icount = (s2 + 2 * level) * s3
        ilength = level
-       ijump = s1 + 2*level
+       ijump = s1 + 2 * level
        call MPI_TYPE_VECTOR(icount, ilength, ijump, &
                             data_type, halo31, ierror)
        if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_TYPE_VECTOR")
@@ -466,8 +466,8 @@
           tag_n = coord(2) + 1
        end if
        icount = s3
-       ilength = level*(s1 + 2*level)
-       ijump = (s1 + 2*level)*(s2 + 2*level)
+       ilength = level * (s1 + 2 * level)
+       ijump = (s1 + 2 * level) * (s2 + 2 * level)
        call MPI_TYPE_VECTOR(icount, ilength, ijump, &
                             data_type, halo32, ierror)
        if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_TYPE_VECTOR")

@@ -90,7 +90,7 @@ module decomp_2d_fft
 #endif
       if (status /= 0) call decomp_2d_abort(__FILE__, __LINE__, status, "DftiCreateDescriptor")
       status = DftiSetValue(desc, DFTI_NUMBER_OF_TRANSFORMS, &
-                            decomp%xsz(2)*decomp%xsz(3))
+                            decomp%xsz(2) * decomp%xsz(3))
       if (status /= 0) call decomp_2d_abort(__FILE__, __LINE__, status, "DftiSetValue")
 #ifdef OVERWRITE
       status = DftiSetValue(desc, DFTI_PLACEMENT, DFTI_INPLACE)
@@ -178,14 +178,14 @@ module decomp_2d_fft
 #endif
       if (status /= 0) call decomp_2d_abort(__FILE__, __LINE__, status, "DftiSetValue")
       status = DftiSetValue(desc, DFTI_NUMBER_OF_TRANSFORMS, &
-                            decomp%zsz(1)*decomp%zsz(2))
+                            decomp%zsz(1) * decomp%zsz(2))
       if (status /= 0) call decomp_2d_abort(__FILE__, __LINE__, status, "DftiSetValue")
       status = DftiSetValue(desc, DFTI_INPUT_DISTANCE, 1)
       if (status /= 0) call decomp_2d_abort(__FILE__, __LINE__, status, "DftiSetValue")
       status = DftiSetValue(desc, DFTI_OUTPUT_DISTANCE, 1)
       if (status /= 0) call decomp_2d_abort(__FILE__, __LINE__, status, "DftiSetValue")
       strides(1) = 0
-      strides(2) = decomp%zsz(1)*decomp%zsz(2)
+      strides(2) = decomp%zsz(1) * decomp%zsz(2)
       status = DftiSetValue(desc, DFTI_INPUT_STRIDES, strides)
       if (status /= 0) call decomp_2d_abort(__FILE__, __LINE__, status, "DftiSetValue")
       status = DftiSetValue(desc, DFTI_OUTPUT_STRIDES, strides)
@@ -218,7 +218,7 @@ module decomp_2d_fft
 #endif
       if (status /= 0) call decomp_2d_abort(__FILE__, __LINE__, status, "DftiCreateDescriptor")
       status = DftiSetValue(desc, DFTI_NUMBER_OF_TRANSFORMS, &
-                            decomp_ph%xsz(2)*decomp_ph%xsz(3))
+                            decomp_ph%xsz(2) * decomp_ph%xsz(3))
       if (status /= 0) call decomp_2d_abort(__FILE__, __LINE__, status, "DftiSetValue")
       status = DftiSetValue(desc, DFTI_CONJUGATE_EVEN_STORAGE, &
                             DFTI_COMPLEX_COMPLEX)
@@ -268,7 +268,7 @@ module decomp_2d_fft
 #endif
       if (status /= 0) call decomp_2d_abort(__FILE__, __LINE__, status, "DftiCreateDescriptor")
       status = DftiSetValue(desc, DFTI_NUMBER_OF_TRANSFORMS, &
-                            decomp_ph%zsz(1)*decomp_ph%zsz(2))
+                            decomp_ph%zsz(1) * decomp_ph%zsz(2))
       if (status /= 0) call decomp_2d_abort(__FILE__, __LINE__, status, "DftiSetValue")
       status = DftiSetValue(desc, DFTI_CONJUGATE_EVEN_STORAGE, &
                             DFTI_COMPLEX_COMPLEX)
@@ -280,14 +280,14 @@ module decomp_2d_fft
       status = DftiSetValue(desc, DFTI_OUTPUT_DISTANCE, 1)
       if (status /= 0) call decomp_2d_abort(__FILE__, __LINE__, status, "DftiSetValue")
       strides(1) = 0
-      strides(2) = decomp_ph%zsz(1)*decomp_ph%zsz(2)
+      strides(2) = decomp_ph%zsz(1) * decomp_ph%zsz(2)
       if (direction == -1) then
          status = DftiSetValue(desc, DFTI_INPUT_STRIDES, strides)
       else if (direction == 1) then
          status = DftiSetValue(desc, DFTI_OUTPUT_STRIDES, strides)
       end if
       if (status /= 0) call decomp_2d_abort(__FILE__, __LINE__, status, "DftiSetValue")
-      strides(2) = decomp_sp%zsz(1)*decomp_sp%zsz(2)
+      strides(2) = decomp_sp%zsz(1) * decomp_sp%zsz(2)
       if (direction == -1) then
          status = DftiSetValue(desc, DFTI_OUTPUT_STRIDES, strides)
       else if (direction == 1) then

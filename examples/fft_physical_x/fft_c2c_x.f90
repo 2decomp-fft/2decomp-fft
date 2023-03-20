@@ -36,10 +36,10 @@ program fft_c2c_x
    ! To resize the domain we need to know global number of ranks
    ! This operation is also done as part of decomp_2d_init
    call MPI_COMM_SIZE(MPI_COMM_WORLD, nranks_tot, ierror)
-   resize_domain = int(nranks_tot/4) + 1
-   nx = nx_base*resize_domain
-   ny = ny_base*resize_domain
-   nz = nz_base*resize_domain
+   resize_domain = int(nranks_tot / 4) + 1
+   nx = nx_base * resize_domain
+   ny = ny_base * resize_domain
+   nz = nz_base * resize_domain
    ! Now we can check if user put some inputs
    ! Handle input file like a boss -- GD
    nargin = command_argument_count()
@@ -97,8 +97,8 @@ program fft_c2c_x
    do k = xst3, xen3
       do j = xst2, xen2
          do i = xst1, xen1
-            dr = real(i, mytype)/real(nx, mytype)*real(j, mytype) &
-                 /real(ny, mytype)*real(k, mytype)/real(nz, mytype)
+            dr = real(i, mytype) / real(nx, mytype) * real(j, mytype) &
+                 / real(ny, mytype) * real(k, mytype) / real(nz, mytype)
             di = dr
             in(i, j, k) = cmplx(dr, di, mytype)
          end do
@@ -122,7 +122,7 @@ program fft_c2c_x
 
       ! normalisation - note 2DECOMP&FFT doesn't normalise
       !$acc kernels
-      in = in/real(nx, mytype)/real(ny, mytype)/real(nz, mytype)
+      in = in / real(nx, mytype) / real(ny, mytype) / real(nz, mytype)
       !$acc end kernels
 
    end do
@@ -132,10 +132,10 @@ program fft_c2c_x
 
    call MPI_ALLREDUCE(t2, t1, 1, MPI_DOUBLE_PRECISION, MPI_SUM, &
                       MPI_COMM_WORLD, ierror)
-   t1 = t1/dble(nproc)
+   t1 = t1 / dble(nproc)
    call MPI_ALLREDUCE(t4, t3, 1, MPI_DOUBLE_PRECISION, MPI_SUM, &
                       MPI_COMM_WORLD, ierror)
-   t3 = t3/dble(nproc)
+   t3 = t3 / dble(nproc)
 
    ! checking accuracy
    error = 0._mytype
@@ -143,31 +143,31 @@ program fft_c2c_x
    do k = xst3, xen3
       do j = xst2, xen2
          do i = xst1, xen1
-            dr = real(i, mytype)/real(nx, mytype)*real(j, mytype) &
-                 /real(ny, mytype)*real(k, mytype)/real(nz, mytype)
+            dr = real(i, mytype) / real(nx, mytype) * real(j, mytype) &
+                 / real(ny, mytype) * real(k, mytype) / real(nz, mytype)
             di = dr
             dr = dr - real(in(i, j, k), mytype)
             di = di - aimag(in(i, j, k))
-            error = error + sqrt(dr*dr + di*di)
+            error = error + sqrt(dr * dr + di * di)
          end do
       end do
    end do
    !$acc end loop
    call MPI_ALLREDUCE(error, err_all, 1, real_type, MPI_SUM, MPI_COMM_WORLD, ierror)
-   err_all = err_all/real(nx, mytype)/real(ny, mytype)/real(nz, mytype)
+   err_all = err_all / real(nx, mytype) / real(ny, mytype) / real(nz, mytype)
 
    if (nrank == 0) then
       write (*, *) '===== c2c interface ====='
       write (*, *) 'error / mesh point: ', err_all
       write (*, *) 'time (sec): ', t1, t3
-      n1 = real(nx, mytype)*real(ny, mytype)*real(nz, mytype)
-      n1 = n1**(1._mytype/3._mytype)
+      n1 = real(nx, mytype) * real(ny, mytype) * real(nz, mytype)
+      n1 = n1**(1._mytype / 3._mytype)
       ! 5n*log(n) flops per 1D FFT of size n using Cooley-Tukey algorithm
-      flops = 5._mytype*n1*log(n1)/log(2.0_mytype)
+      flops = 5._mytype * n1 * log(n1) / log(2.0_mytype)
       ! 3 sets of 1D FFTs for 3 directions, each having n^2 1D FFTs
-      flops = flops*3._mytype*n1**2
-      flops = 2._mytype*flops/((t1 + t3)/real(NTEST, mytype))
-      write (*, *) 'GFLOPS : ', flops/1000._mytype**3
+      flops = flops * 3._mytype * n1**2
+      flops = 2._mytype * flops / ((t1 + t3) / real(NTEST, mytype))
+      write (*, *) 'GFLOPS : ', flops / 1000._mytype**3
    end if
    !$acc end data
 

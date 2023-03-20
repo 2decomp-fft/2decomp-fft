@@ -47,10 +47,10 @@ program halo_test
    ! To resize the domain we need to know global number of ranks
    ! This operation is also done as part of decomp_2d_init
    call MPI_COMM_SIZE(MPI_COMM_WORLD, nranks_tot, ierror)
-   resize_domain = int(nranks_tot/4) + 1
-   nx = nx_base*resize_domain
-   ny = ny_base*resize_domain
-   nz = nz_base*resize_domain
+   resize_domain = int(nranks_tot / 4) + 1
+   nx = nx_base * resize_domain
+   ny = ny_base * resize_domain
+   nz = nz_base * resize_domain
    ! Now we can check if user put some inputs
    ! Handle input file like a boss -- GD
    nargin = command_argument_count()
@@ -517,7 +517,7 @@ contains
       !$acc end kernels
       divmag = mag(tmp)
 
-      if (err < epsilon(divmag)*divmag) then
+      if (err < epsilon(divmag) * divmag) then
          passing = .true.
       else
          passing = .false.
@@ -530,7 +530,7 @@ contains
 #ifdef DEBUG
          write (*, *) (divh(i, i, i), i=2, 13)
 #endif
-         write (*, *) 'Error: ', err, '; Relative: ', err/divmag
+         write (*, *) 'Error: ', err, '; Relative: ', err / divmag
          write (*, *) 'Pass: ', passing
       end if
       deallocate (tmp)
@@ -567,7 +567,7 @@ contains
                               "halo_test::mag::MPI_Allreduce")
       end if
 
-      mag = sqrt(gmag/(nx - 2)/(ny - 2)/(nz - 2))
+      mag = sqrt(gmag / (nx - 2) / (ny - 2) / (nz - 2))
 
    end function mag
    !=====================================================================

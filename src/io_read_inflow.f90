@@ -50,7 +50,7 @@ associate (fh => fh_registry(idx), &
                           newtype, 'native', MPI_INFO_NULL, ierror)
    if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_FILE_SET_VIEW")
    call MPI_FILE_READ_ALL(fh, var, &
-                          subsizes(1)*subsizes(2)*subsizes(3), &
+                          subsizes(1) * subsizes(2) * subsizes(3), &
                           data_type, MPI_STATUS_IGNORE, ierror)
    if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_FILE_READ_ALL")
    call MPI_TYPE_FREE(newtype, ierror)
@@ -58,13 +58,13 @@ associate (fh => fh_registry(idx), &
 
    ! update displacement for the next read operation
    disp = disp + int(sizes(1), kind=MPI_OFFSET_KIND) &
-          *int(sizes(2), kind=MPI_OFFSET_KIND) &
-          *int(sizes(3), kind=MPI_OFFSET_KIND) &
-          *int(mytype_bytes, kind=MPI_OFFSET_KIND)
+          * int(sizes(2), kind=MPI_OFFSET_KIND) &
+          * int(sizes(3), kind=MPI_OFFSET_KIND) &
+          * int(mytype_bytes, kind=MPI_OFFSET_KIND)
    if (data_type == complex_type) disp = disp + int(sizes(1), kind=MPI_OFFSET_KIND) &
-                                         *int(sizes(2), kind=MPI_OFFSET_KIND) &
-                                         *int(sizes(3), kind=MPI_OFFSET_KIND) &
-                                         *int(mytype_bytes, kind=MPI_OFFSET_KIND)
+                                         * int(sizes(2), kind=MPI_OFFSET_KIND) &
+                                         * int(sizes(3), kind=MPI_OFFSET_KIND) &
+                                         * int(mytype_bytes, kind=MPI_OFFSET_KIND)
 end associate
 
 associate (vnm => varname) ! Silence unused argument

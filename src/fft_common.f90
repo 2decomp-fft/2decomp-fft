@@ -128,9 +128,9 @@ subroutine fft_init_general(pencil, nx, ny, nz)
       call decomp_info_init(nx, ny, nz, ph)
    end if
    if (format == PHYSICAL_IN_X) then
-      call decomp_info_init(nx/2 + 1, ny, nz, sp)
+      call decomp_info_init(nx / 2 + 1, ny, nz, sp)
    else if (format == PHYSICAL_IN_Z) then
-      call decomp_info_init(nx, ny, nz/2 + 1, sp)
+      call decomp_info_init(nx, ny, nz / 2 + 1, sp)
    else
       call decomp_2d_abort(__FILE__, __LINE__, format, "Invalid value for format")
    end if

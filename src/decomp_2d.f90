@@ -403,13 +403,13 @@ contains
       ! allocate memory for the MPI_ALLTOALL(V) buffers
       ! define the buffers globally for performance reason
 
-      buf_size = max(decomp%xsz(1)*decomp%xsz(2)*decomp%xsz(3), &
-                     max(decomp%ysz(1)*decomp%ysz(2)*decomp%ysz(3), &
-                         decomp%zsz(1)*decomp%zsz(2)*decomp%zsz(3)))
+      buf_size = max(decomp%xsz(1) * decomp%xsz(2) * decomp%xsz(3), &
+                     max(decomp%ysz(1) * decomp%ysz(2) * decomp%ysz(3), &
+                         decomp%zsz(1) * decomp%zsz(2) * decomp%zsz(3)))
 #ifdef EVEN
       ! padded alltoall optimisation may need larger buffer space
       buf_size = max(buf_size, &
-                     max(decomp%x1count*dims(1), decomp%y2count*dims(2)))
+                     max(decomp%x1count * dims(1), decomp%y2count * dims(2)))
 #endif
 
       ! check if additional memory is required
@@ -502,39 +502,39 @@ contains
 
       do i = 1, 3
          if (from1) then
-            xstS(i) = (xstart(i) + skip(i) - 1)/skip(i)
+            xstS(i) = (xstart(i) + skip(i) - 1) / skip(i)
             if (mod(xstart(i) + skip(i) - 1, skip(i)) /= 0) xstS(i) = xstS(i) + 1
-            xenS(i) = (xend(i) + skip(i) - 1)/skip(i)
+            xenS(i) = (xend(i) + skip(i) - 1) / skip(i)
          else
-            xstS(i) = xstart(i)/skip(i)
+            xstS(i) = xstart(i) / skip(i)
             if (mod(xstart(i), skip(i)) /= 0) xstS(i) = xstS(i) + 1
-            xenS(i) = xend(i)/skip(i)
+            xenS(i) = xend(i) / skip(i)
          end if
          xszS(i) = xenS(i) - xstS(i) + 1
       end do
 
       do i = 1, 3
          if (from1) then
-            ystS(i) = (ystart(i) + skip(i) - 1)/skip(i)
+            ystS(i) = (ystart(i) + skip(i) - 1) / skip(i)
             if (mod(ystart(i) + skip(i) - 1, skip(i)) /= 0) ystS(i) = ystS(i) + 1
-            yenS(i) = (yend(i) + skip(i) - 1)/skip(i)
+            yenS(i) = (yend(i) + skip(i) - 1) / skip(i)
          else
-            ystS(i) = ystart(i)/skip(i)
+            ystS(i) = ystart(i) / skip(i)
             if (mod(ystart(i), skip(i)) /= 0) ystS(i) = ystS(i) + 1
-            yenS(i) = yend(i)/skip(i)
+            yenS(i) = yend(i) / skip(i)
          end if
          yszS(i) = yenS(i) - ystS(i) + 1
       end do
 
       do i = 1, 3
          if (from1) then
-            zstS(i) = (zstart(i) + skip(i) - 1)/skip(i)
+            zstS(i) = (zstart(i) + skip(i) - 1) / skip(i)
             if (mod(zstart(i) + skip(i) - 1, skip(i)) /= 0) zstS(i) = zstS(i) + 1
-            zenS(i) = (zend(i) + skip(i) - 1)/skip(i)
+            zenS(i) = (zend(i) + skip(i) - 1) / skip(i)
          else
-            zstS(i) = zstart(i)/skip(i)
+            zstS(i) = zstart(i) / skip(i)
             if (mod(zstart(i), skip(i)) /= 0) zstS(i) = zstS(i) + 1
-            zenS(i) = zend(i)/skip(i)
+            zenS(i) = zend(i) / skip(i)
          end if
          zszS(i) = zenS(i) - zstS(i) + 1
       end do
@@ -567,39 +567,39 @@ contains
 
       do i = 1, 3
          if (from1) then
-            xstV(i) = (xstart(i) + skip(i) - 1)/skip(i)
+            xstV(i) = (xstart(i) + skip(i) - 1) / skip(i)
             if (mod(xstart(i) + skip(i) - 1, skip(i)) /= 0) xstV(i) = xstV(i) + 1
-            xenV(i) = (xend(i) + skip(i) - 1)/skip(i)
+            xenV(i) = (xend(i) + skip(i) - 1) / skip(i)
          else
-            xstV(i) = xstart(i)/skip(i)
+            xstV(i) = xstart(i) / skip(i)
             if (mod(xstart(i), skip(i)) /= 0) xstV(i) = xstV(i) + 1
-            xenV(i) = xend(i)/skip(i)
+            xenV(i) = xend(i) / skip(i)
          end if
          xszV(i) = xenV(i) - xstV(i) + 1
       end do
 
       do i = 1, 3
          if (from1) then
-            ystV(i) = (ystart(i) + skip(i) - 1)/skip(i)
+            ystV(i) = (ystart(i) + skip(i) - 1) / skip(i)
             if (mod(ystart(i) + skip(i) - 1, skip(i)) /= 0) ystV(i) = ystV(i) + 1
-            yenV(i) = (yend(i) + skip(i) - 1)/skip(i)
+            yenV(i) = (yend(i) + skip(i) - 1) / skip(i)
          else
-            ystV(i) = ystart(i)/skip(i)
+            ystV(i) = ystart(i) / skip(i)
             if (mod(ystart(i), skip(i)) /= 0) ystV(i) = ystV(i) + 1
-            yenV(i) = yend(i)/skip(i)
+            yenV(i) = yend(i) / skip(i)
          end if
          yszV(i) = yenV(i) - ystV(i) + 1
       end do
 
       do i = 1, 3
          if (from1) then
-            zstV(i) = (zstart(i) + skip(i) - 1)/skip(i)
+            zstV(i) = (zstart(i) + skip(i) - 1) / skip(i)
             if (mod(zstart(i) + skip(i) - 1, skip(i)) /= 0) zstV(i) = zstV(i) + 1
-            zenV(i) = (zend(i) + skip(i) - 1)/skip(i)
+            zenV(i) = (zend(i) + skip(i) - 1) / skip(i)
          else
-            zstV(i) = zstart(i)/skip(i)
+            zstV(i) = zstart(i) / skip(i)
             if (mod(zstart(i), skip(i)) /= 0) zstV(i) = zstV(i) + 1
-            zenV(i) = zend(i)/skip(i)
+            zenV(i) = zend(i) / skip(i)
          end if
          zszV(i) = zenV(i) - zstV(i) + 1
       end do
@@ -632,39 +632,39 @@ contains
 
       do i = 1, 3
          if (from1) then
-            xstP(i) = (xstart(i) + skip(i) - 1)/skip(i)
+            xstP(i) = (xstart(i) + skip(i) - 1) / skip(i)
             if (mod(xstart(i) + skip(i) - 1, skip(i)) /= 0) xstP(i) = xstP(i) + 1
-            xenP(i) = (xend(i) + skip(i) - 1)/skip(i)
+            xenP(i) = (xend(i) + skip(i) - 1) / skip(i)
          else
-            xstP(i) = xstart(i)/skip(i)
+            xstP(i) = xstart(i) / skip(i)
             if (mod(xstart(i), skip(i)) /= 0) xstP(i) = xstP(i) + 1
-            xenP(i) = xend(i)/skip(i)
+            xenP(i) = xend(i) / skip(i)
          end if
          xszP(i) = xenP(i) - xstP(i) + 1
       end do
 
       do i = 1, 3
          if (from1) then
-            ystP(i) = (ystart(i) + skip(i) - 1)/skip(i)
+            ystP(i) = (ystart(i) + skip(i) - 1) / skip(i)
             if (mod(ystart(i) + skip(i) - 1, skip(i)) /= 0) ystP(i) = ystP(i) + 1
-            yenP(i) = (yend(i) + skip(i) - 1)/skip(i)
+            yenP(i) = (yend(i) + skip(i) - 1) / skip(i)
          else
-            ystP(i) = ystart(i)/skip(i)
+            ystP(i) = ystart(i) / skip(i)
             if (mod(ystart(i), skip(i)) /= 0) ystP(i) = ystP(i) + 1
-            yenP(i) = yend(i)/skip(i)
+            yenP(i) = yend(i) / skip(i)
          end if
          yszP(i) = yenP(i) - ystP(i) + 1
       end do
 
       do i = 1, 3
          if (from1) then
-            zstP(i) = (zstart(i) + skip(i) - 1)/skip(i)
+            zstP(i) = (zstart(i) + skip(i) - 1) / skip(i)
             if (mod(zstart(i) + skip(i) - 1, skip(i)) /= 0) zstP(i) = zstP(i) + 1
-            zenP(i) = (zend(i) + skip(i) - 1)/skip(i)
+            zenP(i) = (zend(i) + skip(i) - 1) / skip(i)
          else
-            zstP(i) = zstart(i)/skip(i)
+            zstP(i) = zstart(i) / skip(i)
             if (mod(zstart(i), skip(i)) /= 0) zstP(i) = zstP(i) + 1
-            zenP(i) = zend(i)/skip(i)
+            zenP(i) = zend(i) / skip(i)
          end if
          zszP(i) = zenP(i) - zstP(i) + 1
       end do
@@ -692,7 +692,7 @@ contains
             do k = xstS(3), xenS(3)
                do j = xstS(2), xenS(2)
                   do i = xstS(1), xenS(1)
-                     wk(i, j, k) = wk2((i - 1)*iskipS + 1, (j - 1)*jskipS + 1, (k - 1)*kskipS + 1)
+                     wk(i, j, k) = wk2((i - 1) * iskipS + 1, (j - 1) * jskipS + 1, (k - 1) * kskipS + 1)
                   end do
                end do
             end do
@@ -700,7 +700,7 @@ contains
             do k = xstS(3), xenS(3)
                do j = xstS(2), xenS(2)
                   do i = xstS(1), xenS(1)
-                     wk(i, j, k) = wk2(i*iskipS, j*jskipS, k*kskipS)
+                     wk(i, j, k) = wk2(i * iskipS, j * jskipS, k * kskipS)
                   end do
                end do
             end do
@@ -714,7 +714,7 @@ contains
             do k = ystS(3), yenS(3)
                do j = ystS(2), yenS(2)
                   do i = ystS(1), yenS(1)
-                     wk(i, j, k) = wk2((i - 1)*iskipS + 1, (j - 1)*jskipS + 1, (k - 1)*kskipS + 1)
+                     wk(i, j, k) = wk2((i - 1) * iskipS + 1, (j - 1) * jskipS + 1, (k - 1) * kskipS + 1)
                   end do
                end do
             end do
@@ -722,7 +722,7 @@ contains
             do k = ystS(3), yenS(3)
                do j = ystS(2), yenS(2)
                   do i = ystS(1), yenS(1)
-                     wk(i, j, k) = wk2(i*iskipS, j*jskipS, k*kskipS)
+                     wk(i, j, k) = wk2(i * iskipS, j * jskipS, k * kskipS)
                   end do
                end do
             end do
@@ -736,7 +736,7 @@ contains
             do k = zstS(3), zenS(3)
                do j = zstS(2), zenS(2)
                   do i = zstS(1), zenS(1)
-                     wk(i, j, k) = wk2((i - 1)*iskipS + 1, (j - 1)*jskipS + 1, (k - 1)*kskipS + 1)
+                     wk(i, j, k) = wk2((i - 1) * iskipS + 1, (j - 1) * jskipS + 1, (k - 1) * kskipS + 1)
                   end do
                end do
             end do
@@ -744,7 +744,7 @@ contains
             do k = zstS(3), zenS(3)
                do j = zstS(2), zenS(2)
                   do i = zstS(1), zenS(1)
-                     wk(i, j, k) = wk2(i*iskipS, j*jskipS, k*kskipS)
+                     wk(i, j, k) = wk2(i * iskipS, j * jskipS, k * kskipS)
                   end do
                end do
             end do
@@ -777,7 +777,7 @@ contains
             do k = xstV(3), xenV(3)
                do j = xstV(2), xenV(2)
                   do i = xstV(1), xenV(1)
-                     wk(i, j, k) = wk2((i - 1)*iskipV + 1, (j - 1)*jskipV + 1, (k - 1)*kskipV + 1)
+                     wk(i, j, k) = wk2((i - 1) * iskipV + 1, (j - 1) * jskipV + 1, (k - 1) * kskipV + 1)
                   end do
                end do
             end do
@@ -785,7 +785,7 @@ contains
             do k = xstV(3), xenV(3)
                do j = xstV(2), xenV(2)
                   do i = xstV(1), xenV(1)
-                     wk(i, j, k) = wk2(i*iskipV, j*jskipV, k*kskipV)
+                     wk(i, j, k) = wk2(i * iskipV, j * jskipV, k * kskipV)
                   end do
                end do
             end do
@@ -799,7 +799,7 @@ contains
             do k = ystV(3), yenV(3)
                do j = ystV(2), yenV(2)
                   do i = ystV(1), yenV(1)
-                     wk(i, j, k) = wk2((i - 1)*iskipV + 1, (j - 1)*jskipV + 1, (k - 1)*kskipV + 1)
+                     wk(i, j, k) = wk2((i - 1) * iskipV + 1, (j - 1) * jskipV + 1, (k - 1) * kskipV + 1)
                   end do
                end do
             end do
@@ -807,7 +807,7 @@ contains
             do k = ystV(3), yenV(3)
                do j = ystV(2), yenV(2)
                   do i = ystV(1), yenV(1)
-                     wk(i, j, k) = wk2(i*iskipV, j*jskipV, k*kskipV)
+                     wk(i, j, k) = wk2(i * iskipV, j * jskipV, k * kskipV)
                   end do
                end do
             end do
@@ -821,7 +821,7 @@ contains
             do k = zstV(3), zenV(3)
                do j = zstV(2), zenV(2)
                   do i = zstV(1), zenV(1)
-                     wk(i, j, k) = wk2((i - 1)*iskipV + 1, (j - 1)*jskipV + 1, (k - 1)*kskipV + 1)
+                     wk(i, j, k) = wk2((i - 1) * iskipV + 1, (j - 1) * jskipV + 1, (k - 1) * kskipV + 1)
                   end do
                end do
             end do
@@ -829,7 +829,7 @@ contains
             do k = zstV(3), zenV(3)
                do j = zstV(2), zenV(2)
                   do i = zstV(1), zenV(1)
-                     wk(i, j, k) = wk2(i*iskipV, j*jskipV, k*kskipV)
+                     wk(i, j, k) = wk2(i * iskipV, j * jskipV, k * kskipV)
                   end do
                end do
             end do
@@ -862,7 +862,7 @@ contains
             do k = xstP(3), xenP(3)
                do j = xstP(2), xenP(2)
                   do i = xstP(1), xenP(1)
-                     wk(i, j, k) = wk2((i - 1)*iskipP + 1, (j - 1)*jskipP + 1, (k - 1)*kskipP + 1)
+                     wk(i, j, k) = wk2((i - 1) * iskipP + 1, (j - 1) * jskipP + 1, (k - 1) * kskipP + 1)
                   end do
                end do
             end do
@@ -870,7 +870,7 @@ contains
             do k = xstP(3), xenP(3)
                do j = xstP(2), xenP(2)
                   do i = xstP(1), xenP(1)
-                     wk(i, j, k) = wk2(i*iskipP, j*jskipP, k*kskipP)
+                     wk(i, j, k) = wk2(i * iskipP, j * jskipP, k * kskipP)
                   end do
                end do
             end do
@@ -884,7 +884,7 @@ contains
             do k = ystP(3), yenP(3)
                do j = ystP(2), yenP(2)
                   do i = ystP(1), yenP(1)
-                     wk(i, j, k) = wk2((i - 1)*iskipP + 1, (j - 1)*jskipP + 1, (k - 1)*kskipP + 1)
+                     wk(i, j, k) = wk2((i - 1) * iskipP + 1, (j - 1) * jskipP + 1, (k - 1) * kskipP + 1)
                   end do
                end do
             end do
@@ -892,7 +892,7 @@ contains
             do k = ystP(3), yenP(3)
                do j = ystP(2), yenP(2)
                   do i = ystP(1), yenP(1)
-                     wk(i, j, k) = wk2(i*iskipP, j*jskipP, k*kskipP)
+                     wk(i, j, k) = wk2(i * iskipP, j * jskipP, k * kskipP)
                   end do
                end do
             end do
@@ -906,7 +906,7 @@ contains
             do k = zstP(3), zenP(3)
                do j = zstP(2), zenP(2)
                   do i = zstP(1), zenP(1)
-                     wk(i, j, k) = wk2((i - 1)*iskipP + 1, (j - 1)*jskipP + 1, (k - 1)*kskipP + 1)
+                     wk(i, j, k) = wk2((i - 1) * iskipP + 1, (j - 1) * jskipP + 1, (k - 1) * kskipP + 1)
                   end do
                end do
             end do
@@ -914,7 +914,7 @@ contains
             do k = zstP(3), zenP(3)
                do j = zstP(2), zenP(2)
                   do i = zstP(1), zenP(1)
-                     wk(i, j, k) = wk2(i*iskipP, j*jskipP, k*kskipP)
+                     wk(i, j, k) = wk2(i * iskipP, j * jskipP, k * kskipP)
                   end do
                end do
             end do
@@ -1005,8 +1005,8 @@ contains
       integer data1, proc, st(0:proc - 1), en(0:proc - 1), sz(0:proc - 1)
       integer i, size1, nl, nu
 
-      size1 = data1/proc
-      nu = data1 - size1*proc
+      size1 = data1 / proc
+      nu = data1 - size1 * proc
       nl = proc - nu
       st(0) = 1
       sz(0) = size1
@@ -1082,8 +1082,8 @@ contains
       ! MPI_ALLTOALLV buffer information
 
       do i = 0, dims(1) - 1
-         decomp%x1cnts(i) = decomp%x1dist(i)*decomp%xsz(2)*decomp%xsz(3)
-         decomp%y1cnts(i) = decomp%ysz(1)*decomp%y1dist(i)*decomp%ysz(3)
+         decomp%x1cnts(i) = decomp%x1dist(i) * decomp%xsz(2) * decomp%xsz(3)
+         decomp%y1cnts(i) = decomp%ysz(1) * decomp%y1dist(i) * decomp%ysz(3)
          if (i == 0) then
             decomp%x1disp(i) = 0  ! displacement is 0-based index
             decomp%y1disp(i) = 0
@@ -1094,8 +1094,8 @@ contains
       end do
 
       do i = 0, dims(2) - 1
-         decomp%y2cnts(i) = decomp%ysz(1)*decomp%y2dist(i)*decomp%ysz(3)
-         decomp%z2cnts(i) = decomp%zsz(1)*decomp%zsz(2)*decomp%z2dist(i)
+         decomp%y2cnts(i) = decomp%ysz(1) * decomp%y2dist(i) * decomp%ysz(3)
+         decomp%z2cnts(i) = decomp%zsz(1) * decomp%zsz(2) * decomp%z2dist(i)
          if (i == 0) then
             decomp%y2disp(i) = 0  ! displacement is 0-based index
             decomp%z2disp(i) = 0
@@ -1117,12 +1117,12 @@ contains
       ! For unevenly distributed data, pad smaller messages. Note the
       ! last blocks along pencils always get assigned more mesh points
       ! for X <=> Y transposes
-      decomp%x1count = decomp%x1dist(dims(1) - 1)* &
-                       decomp%y1dist(dims(1) - 1)*decomp%xsz(3)
+      decomp%x1count = decomp%x1dist(dims(1) - 1) * &
+                       decomp%y1dist(dims(1) - 1) * decomp%xsz(3)
       decomp%y1count = decomp%x1count
       ! for Y <=> Z transposes
-      decomp%y2count = decomp%y2dist(dims(2) - 1)* &
-                       decomp%z2dist(dims(2) - 1)*decomp%zsz(1)
+      decomp%y2count = decomp%y2dist(dims(2) - 1) * &
+                       decomp%z2dist(dims(2) - 1) * decomp%zsz(1)
       decomp%z2count = decomp%y2count
 
       return

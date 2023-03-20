@@ -74,7 +74,7 @@
         p_row = row
         p_col = col
      else
-        if (nproc /= p_row*p_col) then
+        if (nproc /= p_row * p_col) then
            errorcode = 1
            call decomp_2d_abort(__FILE__, __LINE__, errorcode, &
                                 'Invalid 2D processor grid - nproc /= p_row*p_col')
@@ -268,11 +268,11 @@
      call findfactor(iproc, factors, nfact)
      if (nrank == 0) write (*, *) 'factors: ', (factors(i), i=1, nfact)
 
-     i_best = nfact/2 + 1
+     i_best = nfact / 2 + 1
      col = factors(i_best)
 
      best_p_col = col
-     best_p_row = iproc/col
+     best_p_row = iproc / col
      if (nrank == 0) print *, 'p_row x p_col', best_p_row, best_p_col
      if ((best_p_col == 1) .and. (nrank == 0)) then
         print *, 'WARNING: current 2D DECOMP set-up might not work'

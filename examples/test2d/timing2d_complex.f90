@@ -42,10 +42,10 @@ program timing2d_complex
    ! To resize the domain we need to know global number of ranks
    ! This operation is also done as part of decomp_2d_init
    call MPI_COMM_SIZE(MPI_COMM_WORLD, nranks_tot, ierror)
-   resize_domain = int(nranks_tot/4) + 1
-   nx = nx_base*resize_domain
-   ny = ny_base*resize_domain
-   nz = nz_base*resize_domain
+   resize_domain = int(nranks_tot / 4) + 1
+   nx = nx_base * resize_domain
+   ny = ny_base * resize_domain
+   nz = nz_base * resize_domain
    ! Now we can check if user put some inputs
    ! Handle input file like a boss -- GD
    nargin = command_argument_count()
@@ -122,7 +122,7 @@ program timing2d_complex
    do k = xst3, xen3
       do j = xst2, xen2
          do i = xst1, xen1
-            m = real(i + (j - 1)*nx + (k - 1)*nx*ny, mytype)
+            m = real(i + (j - 1) * nx + (k - 1) * nx * ny, mytype)
             u1(i, j, k) = cmplx(m, real(m - 1, mytype), kind=mytype)
          end do
       end do
@@ -171,7 +171,7 @@ program timing2d_complex
       do k = yst3, yen3
          do j = yst2, yen2
             do i = yst1, yen1
-               m = real(i + (j - 1)*nx + (k - 1)*nx*ny, mytype)
+               m = real(i + (j - 1) * nx + (k - 1) * nx * ny, mytype)
                cm = cmplx(m, real(m - 1, mytype), kind=mytype)
                if (abs(u2(i, j, k) - cm) > 0) error_flag = .true.
             end do
@@ -204,7 +204,7 @@ program timing2d_complex
       do k = zst3, zen3
          do j = zst2, zen2
             do i = zst1, zen1
-               m = real(i + (j - 1)*nx + (k - 1)*nx*ny, mytype)
+               m = real(i + (j - 1) * nx + (k - 1) * nx * ny, mytype)
                cm = cmplx(m, real(m - 1, mytype), kind=mytype)
                if (abs(u3(i, j, k) - cm) > 0) error_flag = .true.
             end do
@@ -226,7 +226,7 @@ program timing2d_complex
       do k = yst3, yen3
          do j = yst2, yen2
             do i = yst1, yen1
-               m = real(i + (j - 1)*nx + (k - 1)*nx*ny, mytype)
+               m = real(i + (j - 1) * nx + (k - 1) * nx * ny, mytype)
                cm = cmplx(m, real(m - 1, mytype), kind=mytype)
                if (abs(u2(i, j, k) - cm) > 0) error_flag = .true.
             end do
@@ -248,7 +248,7 @@ program timing2d_complex
       do k = xst3, xen3
          do j = xst2, xen2
             do i = xst1, xen1
-               m = real(i + (j - 1)*nx + (k - 1)*nx*ny, mytype)
+               m = real(i + (j - 1) * nx + (k - 1) * nx * ny, mytype)
                cm = cmplx(m, real(m - 1, mytype), kind=mytype)
                if (abs(u1(i, j, k) - cm) > 0) error_flag = .true.
             end do
@@ -262,16 +262,16 @@ program timing2d_complex
 
    call MPI_ALLREDUCE(t2, t1, 1, MPI_DOUBLE_PRECISION, MPI_SUM, &
                       MPI_COMM_WORLD, ierror)
-   t1 = t1/dble(nproc)
+   t1 = t1 / dble(nproc)
    call MPI_ALLREDUCE(t4, t3, 1, MPI_DOUBLE_PRECISION, MPI_SUM, &
                       MPI_COMM_WORLD, ierror)
-   t3 = t3/dble(nproc)
+   t3 = t3 / dble(nproc)
    call MPI_ALLREDUCE(t6, t5, 1, MPI_DOUBLE_PRECISION, MPI_SUM, &
                       MPI_COMM_WORLD, ierror)
-   t5 = t5/dble(nproc)
+   t5 = t5 / dble(nproc)
    call MPI_ALLREDUCE(t8, t7, 1, MPI_DOUBLE_PRECISION, MPI_SUM, &
                       MPI_COMM_WORLD, ierror)
-   t7 = t7/dble(nproc)
+   t7 = t7 / dble(nproc)
    t8 = t1 + t3 + t5 + t7
    if (nrank == 0) then
       write (*, *) 'Time X->Y ', t1

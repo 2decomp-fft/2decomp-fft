@@ -42,10 +42,10 @@ program io_test
    ! To resize the domain we need to know global number of ranks
    ! This operation is also done as part of decomp_2d_init
    call MPI_COMM_SIZE(MPI_COMM_WORLD, nranks_tot, ierror)
-   resize_domain = int(nranks_tot/4) + 1
-   nx = nx_base*resize_domain
-   ny = ny_base*resize_domain
-   nz = nz_base*resize_domain
+   resize_domain = int(nranks_tot / 4) + 1
+   nx = nx_base * resize_domain
+   ny = ny_base * resize_domain
+   nz = nz_base * resize_domain
    ! Now we can check if user put some inputs
    ! Handle input file like a boss -- GD
    nargin = command_argument_count()
@@ -93,7 +93,7 @@ program io_test
       do j = 1, ny
          do i = 1, nx
 #ifdef COMPLEX_TEST
-            data1(i, j, k) = cmplx(real(m, mytype), real(nx*ny*nz - m, mytype))
+            data1(i, j, k) = cmplx(real(m, mytype), real(nx * ny * nz - m, mytype))
 #else
             data1(i, j, k) = real(m, mytype)
 #endif

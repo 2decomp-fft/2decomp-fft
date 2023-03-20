@@ -79,6 +79,10 @@ add_subdirectory(src)
 # Add tests
 add_subdirectory(examples)
 
+# Add a prettify target
+add_custom_target(format sh ${CMAKE_SOURCE_DIR}/scripts/format.sh
+  WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
+
 # # Create an example dir with all input.i3d example files
 # option(BUILD_TESTING "Build with tests" ON)
 # set(test_dir "${PROJECT_BINARY_DIR}/Test")

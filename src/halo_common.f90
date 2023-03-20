@@ -124,8 +124,8 @@
        ! note the input array passed in always has index starting from 1
        ! need to work out the corresponding global index
        if (ipencil == 1) then
-          kst=decomp%xst(3); ken=decomp%xen(3)
-          jst=decomp%xst(2); jen=decomp%xen(2)
+          kst = decomp%xst(3); ken = decomp%xen(3)
+          jst = decomp%xst(2); jen = decomp%xen(2)
           !$acc kernels default(present)
           do k = kst, ken
              do j = jst, jen
@@ -136,8 +136,8 @@
           end do
           !$acc end kernels
        else if (ipencil == 2) then
-          kst=decomp%yst(3); ken=decomp%yen(3)
-          ist=decomp%yst(1); ien=decomp%yen(1)
+          kst = decomp%yst(3); ken = decomp%yen(3)
+          ist = decomp%yst(1); ien = decomp%yen(1)
           !$acc kernels default(present)
           do k = kst, ken
              do j = 1, s2  ! y all local
@@ -148,8 +148,8 @@
           end do
           !$acc end kernels
        else if (ipencil == 3) then
-          jst=decomp%zst(2); jen=decomp%zen(2)
-          ist=decomp%xst(1); ien=decomp%xen(1)
+          jst = decomp%zst(2); jen = decomp%zen(2)
+          ist = decomp%xst(1); ien = decomp%xen(1)
           !$acc kernels default(present)
           do k = 1, s3  ! z all local
              do j = jst, jen

@@ -21,8 +21,8 @@
      call transpose_x_to_y(src, dst, decomp_main)
 
   end subroutine transpose_x_to_y_real_short
-  
-  subroutine transpose_x_to_y_real_long(src, dst,decomp)
+
+  subroutine transpose_x_to_y_real_long(src, dst, decomp)
 
      implicit none
 
@@ -35,17 +35,17 @@
 
      if (dims(1) == 1) then
 #if defined(_GPU)
-        nsize =  product(decomp%xsz)
+        nsize = product(decomp%xsz)
         !$acc host_data use_device(src,dst)
         istat = cudaMemcpy(dst, src, nsize, cudaMemcpyDeviceToDevice)
         !$acc end host_data
         if (istat /= 0) call decomp_2d_abort(__FILE__, __LINE__, istat, "cudaMemcpy")
 #else
-        dst=src
-#endif       
+        dst = src
+#endif
      else
         call transpose_x_to_y_real(src, dst, decomp)
-     endif
+     end if
 
   end subroutine transpose_x_to_y_real_long
 
@@ -91,13 +91,13 @@
 
 #if defined(_GPU)
 #if defined(_NCCL)
-     call decomp_2d_nccl_send_recv_col(work2_r_d,     &
-                                       work1_r_d,     &
+     call decomp_2d_nccl_send_recv_col(work2_r_d, &
+                                       work1_r_d, &
                                        decomp%x1disp, &
                                        decomp%x1cnts, &
-                                       decomp%y1disp, & 
-                                       decomp%y1cnts, &  
-                                       dims(1)        )
+                                       decomp%y1disp, &
+                                       decomp%y1cnts, &
+                                       dims(1))
 #else
      call MPI_ALLTOALLV(work1_r_d, decomp%x1cnts, decomp%x1disp, &
                         real_type, work2_r_d, decomp%y1cnts, decomp%y1disp, &
@@ -140,7 +140,7 @@
 
   end subroutine transpose_x_to_y_complex_short
 
-  subroutine transpose_x_to_y_complex_long(src, dst,decomp)
+  subroutine transpose_x_to_y_complex_long(src, dst, decomp)
 
      implicit none
 
@@ -152,20 +152,20 @@
 #endif
      if (dims(1) == 1) then
 #if defined(_GPU)
-        nsize =  product(decomp%xsz)
+        nsize = product(decomp%xsz)
         !$acc host_data use_device(src,dst)
         istat = cudaMemcpy(dst, src, nsize, cudaMemcpyDeviceToDevice)
         !$acc end host_data
         if (istat /= 0) call decomp_2d_abort(__FILE__, __LINE__, istat, "cudaMemcpy")
 #else
-        dst=src
-#endif       
+        dst = src
+#endif
      else
         call transpose_x_to_y_complex(src, dst, decomp)
-     endif
+     end if
 
   end subroutine transpose_x_to_y_complex_long
-  
+
   subroutine transpose_x_to_y_complex(src, dst, decomp)
 
      implicit none
@@ -208,13 +208,13 @@
 
 #if defined(_GPU)
 #if defined(_NCCL)
-     call decomp_2d_nccl_send_recv_col(work2_c_d,     &
-                                       work1_c_d,     &
+     call decomp_2d_nccl_send_recv_col(work2_c_d, &
+                                       work1_c_d, &
                                        decomp%x1disp, &
                                        decomp%x1cnts, &
-                                       decomp%y1disp, & 
-                                       decomp%y1cnts, &  
-                                       dims(1)      , &
+                                       decomp%y1disp, &
+                                       decomp%y1cnts, &
+                                       dims(1), &
                                        decomp_buf_size)
 #else
      call MPI_ALLTOALLV(work1_c_d, decomp%x1cnts, decomp%x1disp, &

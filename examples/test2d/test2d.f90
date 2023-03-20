@@ -44,28 +44,28 @@ program test2d
    nz = nz_base*resize_domain
    ! Now we can check if user put some inputs
    ! Handle input file like a boss -- GD
-   nargin=command_argument_count()
-   if ((nargin==0).or.(nargin==2).or.(nargin==5)) then
+   nargin = command_argument_count()
+   if ((nargin == 0) .or. (nargin == 2) .or. (nargin == 5)) then
       do arg = 1, nargin
          call get_command_argument(arg, InputFN, FNLength, status)
-         read(InputFN, *, iostat=status) DecInd
-         if (arg.eq.1) then
+         read (InputFN, *, iostat=status) DecInd
+         if (arg == 1) then
             p_row = DecInd
-         elseif (arg.eq.2) then
+         elseif (arg == 2) then
             p_col = DecInd
-         elseif (arg.eq.3) then
+         elseif (arg == 3) then
             nx = DecInd
-         elseif (arg.eq.4) then
+         elseif (arg == 4) then
             ny = DecInd
-         elseif (arg.eq.5) then
+         elseif (arg == 5) then
             nz = DecInd
-         endif
-      enddo
+         end if
+      end do
    else
       ! nrank not yet computed we need to avoid write
       ! for every rank
       call MPI_COMM_RANK(MPI_COMM_WORLD, nrank, ierror)
-      if (nrank==0) then
+      if (nrank == 0) then
          print *, "This Test takes no inputs or 2 inputs as"
          print *, "  1) p_row (default=0)"
          print *, "  2) p_col (default=0)"
@@ -77,8 +77,8 @@ program test2d
          print *, "  5) nz "
          print *, "Number of inputs is not correct and the defult settings"
          print *, "will be used"
-      endif
-   endif
+      end if
+   end if
    call decomp_2d_init(nx, ny, nz, p_row, p_col)
 
    !! ***** global data *****
@@ -103,7 +103,6 @@ program test2d
    zst1 = zstart(1); zen1 = zend(1)
    zst2 = zstart(2); zen2 = zend(2)
    zst3 = zstart(3); zen3 = zend(3)
-   
 
    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
    ! Testing the swap routines
@@ -119,7 +118,7 @@ program test2d
    do k = xst3, xen3
       do j = xst2, xen2
          do i = xst1, xen1
-            m = real(i+(j-1)*nx+(k-1)*nx*ny,mytype)
+            m = real(i + (j - 1)*nx + (k - 1)*nx*ny, mytype)
             u1(i, j, k) = m
          end do
       end do
@@ -161,7 +160,7 @@ program test2d
    do k = yst3, yen3
       do j = yst2, yen2
          do i = yst1, yen1
-            m = real(i+(j-1)*nx+(k-1)*nx*ny,mytype)
+            m = real(i + (j - 1)*nx + (k - 1)*nx*ny, mytype)
             if (abs(u2(i, j, k) - m) > 0) error_flag = .true.
          end do
       end do
@@ -191,7 +190,7 @@ program test2d
    do k = zst3, zen3
       do j = zst2, zen2
          do i = zst1, zen1
-            m = real(i+(j-1)*nx+(k-1)*nx*ny,mytype)
+            m = real(i + (j - 1)*nx + (k - 1)*nx*ny, mytype)
             if (abs(u3(i, j, k) - m) > 0) error_flag = .true.
          end do
       end do
@@ -210,7 +209,7 @@ program test2d
    do k = yst3, yen3
       do j = yst2, yen2
          do i = yst1, yen1
-            m = real(i+(j-1)*nx+(k-1)*nx*ny,mytype)
+            m = real(i + (j - 1)*nx + (k - 1)*nx*ny, mytype)
             if (abs(u2(i, j, k) - m) > 0) error_flag = .true.
          end do
       end do
@@ -229,7 +228,7 @@ program test2d
    do k = xst3, xen3
       do j = xst2, xen2
          do i = xst1, xen1
-            m = real(i+(j-1)*nx+(k-1)*nx*ny,mytype)
+            m = real(i + (j - 1)*nx + (k - 1)*nx*ny, mytype)
             if (abs(u1(i, j, k) - m) > 0) error_flag = .true.
          end do
       end do

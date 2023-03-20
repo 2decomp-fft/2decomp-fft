@@ -24,14 +24,13 @@ module decomp_2d
    use decomp_2d_cumpi
 #if defined(_NCCL)
    use nccl
-   use decomp_2d_nccl 
+   use decomp_2d_nccl
 #endif
 #endif
 
    implicit none
 
    private        ! Make everything private unless declared public
-
 
    ! some key global variables
    integer, save, public :: nx_global, ny_global, nz_global  ! global size
@@ -249,7 +248,6 @@ module decomp_2d
       module procedure alloc_z_complex_short
    end interface alloc_z
 
-
    interface
 
       module function d2d_listing_get_unit()
@@ -315,7 +313,6 @@ module decomp_2d
 contains
 
 #include "decomp_2d_init_fin.f90"
-
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
    ! Return the default decomposition object

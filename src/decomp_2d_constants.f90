@@ -17,13 +17,13 @@ module decomp_2d_constants
    use mpi
    use, intrinsic :: iso_fortran_env, only: real32, real64
 #if defined(_GPU) && defined(_NCCL)
-   use nccl 
+   use nccl
 #endif
 
    implicit none
 
-   !private 
- 
+   !private
+
 #ifdef DOUBLE_PREC
    integer, parameter, public :: mytype = KIND(0._real64)
    integer, parameter, public :: real_type = MPI_DOUBLE_PRECISION

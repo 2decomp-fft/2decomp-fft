@@ -22,7 +22,7 @@ program init_test
    integer :: nranks_tot
    integer :: nargin, arg, FNLength, status, DecInd
    character(len=80) :: InputFN
-   integer :: nexpect 
+   integer :: nexpect
    integer :: ierror
 
    call MPI_Init(ierror)
@@ -36,28 +36,28 @@ program init_test
    nz = nz_base*resize_domain
    ! Now we can check if user put some inputs
    ! Handle input file like a boss -- GD
-   nargin=command_argument_count()
-   if ((nargin==0).or.(nargin==2).or.(nargin==5)) then
+   nargin = command_argument_count()
+   if ((nargin == 0) .or. (nargin == 2) .or. (nargin == 5)) then
       do arg = 1, nargin
          call get_command_argument(arg, InputFN, FNLength, status)
-         read(InputFN, *, iostat=status) DecInd
-         if (arg.eq.1) then
+         read (InputFN, *, iostat=status) DecInd
+         if (arg == 1) then
             p_row = DecInd
-         elseif (arg.eq.2) then
+         elseif (arg == 2) then
             p_col = DecInd
-         elseif (arg.eq.3) then
+         elseif (arg == 3) then
             nx = DecInd
-         elseif (arg.eq.4) then
+         elseif (arg == 4) then
             ny = DecInd
-         elseif (arg.eq.5) then
+         elseif (arg == 5) then
             nz = DecInd
-         endif
-      enddo
+         end if
+      end do
    else
       ! nrank not yet computed we need to avoid write
       ! for every rank
       call MPI_COMM_RANK(MPI_COMM_WORLD, nrank, ierror)
-      if (nrank==0) then
+      if (nrank == 0) then
          print *, "This Test takes no inputs or 2 inputs as"
          print *, "  1) p_row (default=0)"
          print *, "  2) p_col (default=0)"
@@ -69,9 +69,9 @@ program init_test
          print *, "  5) nz "
          print *, "Number of inputs is not correct and the defult settings"
          print *, "will be used"
-      endif
-   endif
-   nexpect = nx * ny *nz
+      end if
+   end if
+   nexpect = nx*ny*nz
    call run(p_row, p_col)
 
    call MPI_Finalize(ierror)
@@ -108,7 +108,7 @@ contains
          sizes = zsize
       else
          sizes = 0
-         if (nrank==0) print *, "ERROR: unknown axis requested!"
+         if (nrank == 0) print *, "ERROR: unknown axis requested!"
          stop 1
       end if
 
@@ -116,10 +116,10 @@ contains
       call MPI_Allreduce(suml, sumg, 1, MPI_INTEGER, MPI_SUM, MPI_COMM_WORLD, ierror)
 
       if (sumg /= nexpect) then
-         if (nrank==0) print *, "ERROR: got ", sumg, " nodes, expected ", nexpect
+         if (nrank == 0) print *, "ERROR: got ", sumg, " nodes, expected ", nexpect
          stop 1
       else
-         if (nrank==0) print *, "Init Test pass for axis ", axis
+         if (nrank == 0) print *, "Init Test pass for axis ", axis
       end if
 
    end subroutine check_axis

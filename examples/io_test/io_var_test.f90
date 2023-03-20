@@ -53,7 +53,6 @@ program io_var_test
    character(len=15) :: filename
    integer(kind=MPI_OFFSET_KIND) :: filesize, disp
 
-
    call MPI_INIT(ierror)
    ! To resize the domain we need to know global number of ranks
    ! This operation is also done as part of decomp_2d_init
@@ -64,28 +63,28 @@ program io_var_test
    nz = nz_base*resize_domain
    ! Now we can check if user put some inputs
    ! Handle input file like a boss -- GD
-   nargin=command_argument_count()
-   if ((nargin==0).or.(nargin==2).or.(nargin==5)) then
+   nargin = command_argument_count()
+   if ((nargin == 0) .or. (nargin == 2) .or. (nargin == 5)) then
       do arg = 1, nargin
          call get_command_argument(arg, InputFN, FNLength, status)
-         read(InputFN, *, iostat=status) DecInd
-         if (arg.eq.1) then
+         read (InputFN, *, iostat=status) DecInd
+         if (arg == 1) then
             p_row = DecInd
-         elseif (arg.eq.2) then
+         elseif (arg == 2) then
             p_col = DecInd
-         elseif (arg.eq.3) then
+         elseif (arg == 3) then
             nx = DecInd
-         elseif (arg.eq.4) then
+         elseif (arg == 4) then
             ny = DecInd
-         elseif (arg.eq.5) then
+         elseif (arg == 5) then
             nz = DecInd
-         endif
-      enddo
+         end if
+      end do
    else
       ! nrank not yet computed we need to avoid write
       ! for every rank
       call MPI_COMM_RANK(MPI_COMM_WORLD, nrank, ierror)
-      if (nrank==0) then
+      if (nrank == 0) then
          print *, "This Test takes no inputs or 2 inputs as"
          print *, "  1) p_row (default=0)"
          print *, "  2) p_col (default=0)"
@@ -97,9 +96,9 @@ program io_var_test
          print *, "  5) nz "
          print *, "Number of inputs is not correct and the defult settings"
          print *, "will be used"
-      endif
-   endif
-   
+      end if
+   end if
+
    call decomp_2d_init(nx, ny, nz, p_row, p_col)
 
    ! also create a data set over a large domain
@@ -154,9 +153,9 @@ program io_var_test
 
    ! distribute the data
    !$acc data copyin(data1,cdata1,data1_large) copy(u1,u2,u3,u1l,u2l,u3l,cu1,cu2,cu3)
-   xst1 = xstart(1); xen1=xend(1)
-   xst2 = xstart(2); xen2=xend(2)
-   xst3 = xstart(3); xen3=xend(3)
+   xst1 = xstart(1); xen1 = xend(1)
+   xst2 = xstart(2); xen2 = xend(2)
+   xst3 = xstart(3); xen3 = xend(3)
    !$acc parallel loop default(present)
    do k = xst3, xen3
       do j = xst2, xen2
@@ -167,9 +166,9 @@ program io_var_test
       end do
    end do
    !$acc end loop
-   xst1 = large%xst(1); xen1=large%xen(1)
-   xst2 = large%xst(2); xen2=large%xen(2)
-   xst3 = large%xst(3); xen3=large%xen(3)
+   xst1 = large%xst(1); xen1 = large%xen(1)
+   xst2 = large%xst(2); xen2 = large%xen(2)
+   xst3 = large%xst(3); xen3 = large%xen(3)
    !$acc parallel loop default(present)
    do k = xst3, xen3
       do j = xst2, xen2

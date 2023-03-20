@@ -110,5 +110,14 @@ module decomp_2d_constants
    integer, parameter, public :: PHYSICAL_IN_X = 1 ! Forward is input in X, output in Z
    integer, parameter, public :: PHYSICAL_IN_Z = 3 ! Forward is input in Z, output in X
 
+   !
+   ! Major and minor version number
+   !
+   integer, parameter :: D2D_MAJOR = 2
+   integer, parameter :: D2D_MINOR = 0
+   logical, parameter :: D2D_RELEASE = .false.
+   character, parameter :: D2D_LOG_MAJOR = char(48 + D2D_MAJOR)
+   character, parameter :: D2D_LOG_MINOR = char(48 + D2D_MINOR)
+
 end module decomp_2d_constants
 

@@ -136,6 +136,13 @@ contains
       write (io_unit, *) '=================== Decomp2D - log ========================'
       write (io_unit, *) '==========================================================='
 
+      ! Major and minor version number
+      if (D2D_RELEASE) then
+         write (io_unit, *) 'Release ', D2D_LOG_MAJOR, '.', D2D_LOG_MINOR
+      else
+         write (io_unit, *) 'Release ', D2D_LOG_MAJOR, '.', D2D_LOG_MINOR, '.alpha'
+      end if
+
       ! Git hash if available
 #if defined(VERSION)
       write (io_unit, *) 'Git version        : ', VERSION

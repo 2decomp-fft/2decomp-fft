@@ -224,6 +224,11 @@ This variable is automatically added in GPU builds.
 
 This variable is valid only for GPU builds. The NVIDIA Collective Communication Library (NCCL) implements multi-GPU and multi-node communication primitives optimized for NVIDIA GPUs and Networking.
 
+### Code formatting
+
+The code is formatted using the `fprettify` program (available via `pip`), to ensure consistency of use there is a script file `scripts/format.sh` which will run `fprettify` across the 2decomp&fft source, you can also use the `format` build target to run the script.
+It is recommended that you should format the code before making a pull request.
+
 ## Optional dependencies
 
 ### FFTW

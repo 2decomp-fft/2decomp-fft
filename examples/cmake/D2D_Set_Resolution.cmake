@@ -1,0 +1,11 @@
+# Set the resolution in each direction
+set(NX 0 CACHE STRING "Number of points in X direction, 0 for default resolution")
+set(NY 0 CACHE STRING "Number of points in Y direction, 0 for default resolution")
+set(NZ 0 CACHE STRING "Number of points in Z direction, 0 for default resolution")
+math(EXPR NPOINTS "${NX} * ${NY} * ${NZ}")
+message(STATUS "Total number of points: ${NPOINTS}")
+if (NPOINTS GREATER "0")
+  list(APPEND TEST_ARGUMENTS "${NX}")
+  list(APPEND TEST_ARGUMENTS "${NY}")
+  list(APPEND TEST_ARGUMENTS "${NZ}")
+endif()

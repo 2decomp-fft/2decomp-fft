@@ -1,5 +1,6 @@
 file(GLOB files_decomp factor.f90
 	               decomp_2d_constants.f90
+		       decomp_2d_mpi.f90
 	               decomp_2d.f90
 		       log.f90
 		       io.f90
@@ -7,13 +8,21 @@ file(GLOB files_decomp factor.f90
 		       interp.f90)
 include_directories(${CMAKE_SOURCE_DIR}/src)
 
-#if(${FFT_Choice} MATCHES "generic")
-#  file(GLOB files_fft fft_generic.f90)
-#endif(${FFT_Choice} MATCHES "generic")
+if(${BUILD_TARGET} MATCHES "gpu")
+  list(APPEND files_decomp decomp_2d_cumpi.f90)
+  if(ENABLE_NCCL)
+    list(APPEND files_decomp decomp_2d_nccl.f90)
+  endif()
+endif(${BUILD_TARGET} MATCHES "gpu")
 
 if(FFTW_FOUND)
-  message (STATUS "Compiling using FFTW3")
-  file(GLOB files_fft fft_fftw3.f90)
+  if (${FFT_Choice} MATCHES "fftw_f03")
+    message (STATUS "Compiling using FFTW3 F2003 interface")
+    file(GLOB files_fft fft_fftw3_f03.f90)
+  else()
+    message (STATUS "Compiling using FFTW3 legacy interface")
+    file(GLOB files_fft fft_fftw3.f90)
+  endif()
 elseif(MKL_FOUND)
   message (STATUS "Compiling using MKL")
   file(GLOB files_fft $ENV{MKLROOT}/include/mkl_dfti.f90 fft_mkl.f90)

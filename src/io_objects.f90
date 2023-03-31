@@ -182,9 +182,9 @@ contains
 
       ! Advanced API
       ! The external code can set its own object of type adios2_adios before calling init
-      if (.not.associated(family%adios)) then
+      if (.not. associated(family%adios)) then
          family%adios => adios
-      endif
+      end if
 
       if (family%adios%valid) then
          call adios2_declare_io(family%io, family%adios, label, ierror)
@@ -242,7 +242,7 @@ contains
             call decomp_2d_abort(__FILE__, __LINE__, ierror, &
                                  "adios2_remove_all_attributes "//family%label)
          end if
-         nullify(family%adios)
+         nullify (family%adios)
       end if
 #endif
 

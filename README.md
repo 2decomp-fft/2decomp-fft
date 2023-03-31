@@ -2,38 +2,9 @@
 
 ## Building
 
-### Makefile
-
-Different compilers can be set by specifying `CMP`, e.g. `make CMP=intel`
-to build with Intel compilers, see `Makefile` for options.
-
-By default an optimised library will be built, debugging versions of the
-library can be built with `make BUILD=debug`, a development version which 
-additionally sets compile time flags to catch coding errors can be built 
-with `make BUILD=dev` (GNU compilers only currently). The behaviour of debug
-and development versions of the library can be changed before the initialization
-using the variable ``decomp_debug`` or the environment variable ``DECOMP_2D_DEBUG``.
-The value provided with the environment variable must be a positive integer below 9999.
-
-On each build of the library (`make`, `make all`) a temporary file `Makefile.settings` with
-all current options (`FFLAGS`, `DEFS`, etc.) will be created, and included
-on subsequent invocations, the user therefore does not need to keep
-specifying options between builds.
-
-To perform a clean build run `make clean` first, this will delete all
-output files, including `Makefile.settings`.
-
-On each build of the library (`make`, `make all`) a temporary file `Makefile.settings` with
-all current options (`FFLAGS`, `DEFS`, etc.) will be created, and included
-on subsequent invocations, the user therefore does not need to keep
-specifying options between builds.
-
-To perform a clean build run `make clean` first, this will delete all
-output files, including `Makefile.settings`.
-
 ### CMake
 
-The new experimental build system is driven by `cmake`. It is good practice to directly point to the MPI Fortran wrapper that you would like to use to guarantee consistency between Fortran compiler and MPI. This can be done by setting the default Fortran environmental variable 
+The build system is driven by `cmake`. It is good practice to directly point to the MPI Fortran wrapper that you would like to use to guarantee consistency between Fortran compiler and MPI. This can be done by setting the default Fortran environmental variable 
 ```
 export FC=my_mpif90
 ```
@@ -85,46 +56,25 @@ cmake --build $path_to_build_directory --target clean
 
 ## Testing and examples
 
-### Makefile
-
-Various example code to exercise 2decomp functionality can be found under ``examples/``
-and can be built from the top-level directory by executing
-```
-make check
-```
-which will (re)build 2decomp&fft as necessary.
-
-By default this will run the tests/examples on a single rank, launched with ``mpirun``.
-The number of ranks can be controlled by setting the ``NP`` variable and the launcher is overridden by
-setting ``MPIRUN``, for example to run tests on 4 ranks using an ``mpiexec`` launcher installed at
-``${HOME}/bin/mpiexec`` the command would be
-```
-make NP=4 MPIRUN=${HOME}/bin/mpiexec check
-```
-
 ### CMake
 
 After building the library can be tested by running
 ```
 ctest --test-dir $path_to_build_directory
 ```
-which uses the `ctest` utility. By default tests are performed in serial, but more than 1 rank can be used by setting `MPIEXEC_MAX_NUMPROCS`.  For the GPU implementation please be aware that it is based on a single MPI rank per GPU. Therefore to test multiple GPUs, please use the maximum number of available GPUs and not the maximum number of MPI tasks that are available in the system/node. 
+which uses the `ctest` utility. By default tests are performed in serial, but more than 1 rank can be used by setting `MPIEXEC_MAX_NUMPROCS` under `ccmake` utility.  
+It is also possible to specify the decomposition by setting `PROW` and `PCOL` parameters at the configure stage or using `ccmake`. 
+Consequently, the configure stage is forcing the number of MPI tasks `MPIEXEC_MAX_NUMPROCS` to be equal to the product of PROW times PCOL. 
+Mesh resolution can also be imposed using the parameters `NX`, `NY` and `NZ`. 
+
+For the GPU implementation please be aware that it is based on a single MPI rank per GPU. Therefore, to test multiple GPUs, use the maximum number of available GPUs on the system/node and not the maximum number of MPI tasks. 
 
 ## GPU compilation
 
 The library can perform multi GPU offoloading using the NVHPC compiler suite for NVIDIA hardware. 
 The implementation is based on CUDA-aware MPI and NVIDIA Collective Communication Library (NCCL).
 The FFT is based on cuFFT. 
-### Makefile
-To compile the library for GPU it is possible to execute the following
-```
-make CMP=nvhpc FFT=cufft PARAMOD=gpu CUFFT_PATH=PATH_TO_NVHPC/Vers/Linux_x86_64/Vers/compilers/ 
-``` 
-The `Makefile` will look for the relative libraries (NVCC, cuFFT, etc) under the `${CUFFT_PATH}/include`
-NCCL is not activated by default. If NCCL is installed/required use `NCCL=yes`. 
-The current implementation relays also on opeanACC
-and on automatic optimization of `do concurrent` loops.
-By default the compute architecture for the GPU is 80 (i.e. Ampere), to change it use `CCXY=XY` 
+
 ### CMake
 To properly configure for GPU build the following needs to be used 
 ```
@@ -147,14 +97,7 @@ It is possible that your default C compiler is too recent and not supported by `
 
 ## Profiling
 
-Profiling can be activated in the Makefile. Set the variable `PROFILER` to one of the supported profilers (only `caliper` currently). If using `caliper`, provide the installation path in the variable `CALIPER_PATH`. When the profiling is active, one can tune it before calling `decomp_2d_init` using the subroutine `decomp_profiler_prep`. The input argument for this subroutine is a logical array of size 4. Each input allow activation / deactivation of the profiling as follows :
-
-1. Profile transpose operations (default : true)
-2. Profile IO operations (default : true)
-3. Profile FFT operations (default : true)
-4. Profile decomp_2d init / fin subroutines (default : true)
-
-Profiling can be activated via `cmake` builds, the recommended approach is to run the initial configuration as follows:
+Profiling can be activated via `cmake` configuration, the recommended approach is to run the initial configuration as follows:
 ```
 export caliper_DIR=/path/to/caliper/install/share/cmake/caliper
 export CXX=mpicxx
@@ -162,6 +105,16 @@ cmake -S $path_to_sources -B $path_to_build_directory -DENABLE_PROFILER=caliper
 ```
 where `ENABLE_PROFILER` is set to the profiling tool desired, currently supported values are: `caliper`.
 Note that when using `caliper` a C++ compiler is required as indicated in the above command line.
+
+When the profiling is active, one can tune it before calling `decomp_2d_init` using the subroutine
+`decomp_profiler_prep`. 
+The input argument for this subroutine is a logical array of size 4. 
+Each input allow activation / deactivation of the profiling as follows :
+
+1. Profile transpose operations (default : true)
+2. Profile IO operations (default : true)
+3. Profile FFT operations (default : true)
+4. Profile decomp_2d init / fin subroutines (default : true)
 
 ## FFT backends
 
@@ -182,6 +135,37 @@ The external code can use the named variables to check the FFT backend used in a
 - The FFTW3 and FFTW3_F03 backends support the OVERWRITE flag and can perform in-place complex 1D fft
 - The oneMKL backend supports the OVERWRITE flag and can perform in-place complex 1D fft
 - The cuFFT backend supports the OVERWRITE flag and can perform in-place complex 1D fft
+
+## Linking from external codes
+
+### Codes using Makefiles
+
+When building a code that links 2decomp-fft using a Makefile you will need to add the include and link paths as appropriate (`inlude/` and `link/` under the installation directory, respectively).
+It is also possible to drive the build and installation of 2decomp-fft from a Makefile such as in the following example code
+```
+FC = mpif90
+BUILD = Release
+
+DECOMP_ROOT = /path/to/2decomp-fft
+DECOMP_BUILD_DIR = $(DECOMP_ROOT)/build
+DECOMP_INSTALL_DIR ?= $(DECOMP_BUILD_DIR)/opt # Use default unless set by user
+
+INC += -I$(DECOMP_INSTALL_DIR)/include
+
+# Users build/link targets
+LFLAGS += -L$(DECOMP_INSTALL_DIR)/lib -ldecomp.a
+
+# Building libdecomp.a
+$(DECOMP_INSTALL_DIR)/lib/libdecomp.a:
+	FC=$(FC) cmake -S $(DECOMP_ROOT) -B $(DECOMP_BUILD_DIR) -DCMAKE_BUILD_TYPE=$(BUILD) -DCMAKE_INSTALL_PREFIX=$(DECOMP_INSTALL_DIR)
+	cmake --build $(DECOMP_BUILD_DIR) --target decomp2d
+	cmake --build $(DECOMP_BUILD_DIR) --target install
+
+# Clean libdecomp.a
+clean-decomp:
+	cmake --build $(DECOMP_BUILD_DIR) --target clean
+	rm -f $(DECOMP_INSTALL_DIR)/lib/libdecomp.a
+```
 
 ## Miscellaneous
 
@@ -218,7 +202,7 @@ This variable is valid for double precision builds only. When it is present, sna
 
 #### PROFILER
 
-This variable is automatically added when selecting the profiler. It activates the profiling sectionsof the code.
+This variable is automatically added when selecting the profiler. It activates the profiling sections of the code.
 
 #### EVEN
 
@@ -240,6 +224,11 @@ This variable is automatically added in GPU builds.
 
 This variable is valid only for GPU builds. The NVIDIA Collective Communication Library (NCCL) implements multi-GPU and multi-node communication primitives optimized for NVIDIA GPUs and Networking.
 
+### Code formatting
+
+The code is formatted using the `fprettify` program (available via `pip`), to ensure consistency of use there is a script file `scripts/format.sh` which will run `fprettify` across the 2decomp&fft source, you can also use the `format` build target to run the script.
+It is recommended that you should format the code before making a pull request.
+
 ## Optional dependencies
 
 ### FFTW
@@ -256,6 +245,14 @@ make -j check
 make install
 ```
 
+To build `2decomp&fft` against fftw3 first ensure the package configuration for fftw3 is in your `PKG_CONFIG_PATH` environment variable, this should be found under `/path/to/fftw3/install/lib/pkgconfig`, then either specify on the command line when configuring the build
+```
+cmake -S . -B build -DFFT_Choice=<fftw|fftw_f03>
+```
+or modify the build configuration using `ccmake`.
+
+Note the legacy `fftw` interface lacks interface definitions and will fail when stricter compilation flags are used (e.g. when `-DCMAKE_BUILD_TYPE=Dev`) for this it is recommended to use `fftw_f03` which provides proper interfaces.
+
 ### Caliper
 
 The library [caliper](https://github.com/LLNL/Caliper) can be used to profile the execution of the code. The version 2.9.0 was tested and is supported, version 2.8.0 has also been tested and is still expected to work. Please note that one must build caliper and decomp2d against the same C/C++/Fortran compilers and MPI libray. For build instructions, please check [here](https://github.com/LLNL/Caliper#building-and-installing) and [here](https://software.llnl.gov/Caliper/CaliperBasics.html#build-and-install). Below is a suggestion for the compilation of the library using the GNU compilers:
@@ -271,3 +268,9 @@ make test
 make install
 ```
 
+After installing Caliper ensure to set `caliper_DIR=/path/to/caliper/install/share/cmake/caliper`.
+Following this the `2decomp-fft` build can be configured to use Caliper profiling as
+```
+cmake -S . -B -DENABLE_PROFILING=caliper
+```
+or by modifying the configuration to set `ENABLE_PROFILING=caliper` via `ccmake`.

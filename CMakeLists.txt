@@ -70,7 +70,7 @@ if (BUILD_TARGET MATCHES "gpu")
 else ()
   set(FFT_Choice "generic" CACHE STRING "FFT for XCompact3d project (generic is the default)")
 endif (BUILD_TARGET MATCHES "gpu")
-set_property(CACHE FFT_Choice PROPERTY STRINGS generic fftw mkl cufft)
+set_property(CACHE FFT_Choice PROPERTY STRINGS generic fftw fftw_f03 mkl cufft)
 include(fft)
 
 # Create a static library for the fft
@@ -78,6 +78,10 @@ add_subdirectory(src)
 
 # Add tests
 add_subdirectory(examples)
+
+# Add a prettify target
+add_custom_target(format sh ${CMAKE_SOURCE_DIR}/scripts/format.sh
+  WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
 
 # # Create an example dir with all input.i3d example files
 # option(BUILD_TESTING "Build with tests" ON)

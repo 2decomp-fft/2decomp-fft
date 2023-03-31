@@ -14,6 +14,7 @@
 module decomp_2d_fft
 
    use decomp_2d_constants
+   use decomp_2d_mpi
    use decomp_2d  ! 2D decomposition module
    use iso_c_binding
 
@@ -64,12 +65,12 @@ module decomp_2d_fft
 
 #ifdef DOUBLE_PREC
       call dfftw_plan_many_dft(plan1, 1, decomp%xsz(1), &
-                               decomp%xsz(2)*decomp%xsz(3), a1, decomp%xsz(1), 1, &
+                               decomp%xsz(2) * decomp%xsz(3), a1, decomp%xsz(1), 1, &
                                decomp%xsz(1), a1, decomp%xsz(1), 1, decomp%xsz(1), &
                                isign, plan_type)
 #else
       call sfftw_plan_many_dft(plan1, 1, decomp%xsz(1), &
-                               decomp%xsz(2)*decomp%xsz(3), a1, decomp%xsz(1), 1, &
+                               decomp%xsz(2) * decomp%xsz(3), a1, decomp%xsz(1), 1, &
                                decomp%xsz(1), a1, decomp%xsz(1), 1, decomp%xsz(1), &
                                isign, plan_type)
 #endif
@@ -125,14 +126,14 @@ module decomp_2d_fft
 
 #ifdef DOUBLE_PREC
       call dfftw_plan_many_dft(plan1, 1, decomp%zsz(3), &
-                               decomp%zsz(1)*decomp%zsz(2), a1, decomp%zsz(3), &
-                               decomp%zsz(1)*decomp%zsz(2), 1, a1, decomp%zsz(3), &
-                               decomp%zsz(1)*decomp%zsz(2), 1, isign, plan_type)
+                               decomp%zsz(1) * decomp%zsz(2), a1, decomp%zsz(3), &
+                               decomp%zsz(1) * decomp%zsz(2), 1, a1, decomp%zsz(3), &
+                               decomp%zsz(1) * decomp%zsz(2), 1, isign, plan_type)
 #else
       call sfftw_plan_many_dft(plan1, 1, decomp%zsz(3), &
-                               decomp%zsz(1)*decomp%zsz(2), a1, decomp%zsz(3), &
-                               decomp%zsz(1)*decomp%zsz(2), 1, a1, decomp%zsz(3), &
-                               decomp%zsz(1)*decomp%zsz(2), 1, isign, plan_type)
+                               decomp%zsz(1) * decomp%zsz(2), a1, decomp%zsz(3), &
+                               decomp%zsz(1) * decomp%zsz(2), 1, a1, decomp%zsz(3), &
+                               decomp%zsz(1) * decomp%zsz(2), 1, isign, plan_type)
 #endif
 
       deallocate (a1)
@@ -156,12 +157,12 @@ module decomp_2d_fft
       allocate (a2(decomp_sp%xsz(1), decomp_sp%xsz(2), decomp_sp%xsz(3)))
 #ifdef DOUBLE_PREC
       call dfftw_plan_many_dft_r2c(plan1, 1, decomp_ph%xsz(1), &
-                                   decomp_ph%xsz(2)*decomp_ph%xsz(3), a1, decomp_ph%xsz(1), 1, &
+                                   decomp_ph%xsz(2) * decomp_ph%xsz(3), a1, decomp_ph%xsz(1), 1, &
                                    decomp_ph%xsz(1), a2, decomp_sp%xsz(1), 1, decomp_sp%xsz(1), &
                                    plan_type)
 #else
       call sfftw_plan_many_dft_r2c(plan1, 1, decomp_ph%xsz(1), &
-                                   decomp_ph%xsz(2)*decomp_ph%xsz(3), a1, decomp_ph%xsz(1), 1, &
+                                   decomp_ph%xsz(2) * decomp_ph%xsz(3), a1, decomp_ph%xsz(1), 1, &
                                    decomp_ph%xsz(1), a2, decomp_sp%xsz(1), 1, decomp_sp%xsz(1), &
                                    plan_type)
 #endif
@@ -186,12 +187,12 @@ module decomp_2d_fft
       allocate (a2(decomp_ph%xsz(1), decomp_ph%xsz(2), decomp_ph%xsz(3)))
 #ifdef DOUBLE_PREC
       call dfftw_plan_many_dft_c2r(plan1, 1, decomp_ph%xsz(1), &
-                                   decomp_ph%xsz(2)*decomp_ph%xsz(3), a1, decomp_sp%xsz(1), 1, &
+                                   decomp_ph%xsz(2) * decomp_ph%xsz(3), a1, decomp_sp%xsz(1), 1, &
                                    decomp_sp%xsz(1), a2, decomp_ph%xsz(1), 1, decomp_ph%xsz(1), &
                                    plan_type)
 #else
       call sfftw_plan_many_dft_c2r(plan1, 1, decomp_ph%xsz(1), &
-                                   decomp_ph%xsz(2)*decomp_ph%xsz(3), a1, decomp_sp%xsz(1), 1, &
+                                   decomp_ph%xsz(2) * decomp_ph%xsz(3), a1, decomp_sp%xsz(1), 1, &
                                    decomp_sp%xsz(1), a2, decomp_ph%xsz(1), 1, decomp_ph%xsz(1), &
                                    plan_type)
 #endif
@@ -216,14 +217,14 @@ module decomp_2d_fft
       allocate (a2(decomp_sp%zsz(1), decomp_sp%zsz(2), decomp_sp%zsz(3)))
 #ifdef DOUBLE_PREC
       call dfftw_plan_many_dft_r2c(plan1, 1, decomp_ph%zsz(3), &
-                                   decomp_ph%zsz(1)*decomp_ph%zsz(2), a1, decomp_ph%zsz(3), &
-                                   decomp_ph%zsz(1)*decomp_ph%zsz(2), 1, a2, decomp_sp%zsz(3), &
-                                   decomp_sp%zsz(1)*decomp_sp%zsz(2), 1, plan_type)
+                                   decomp_ph%zsz(1) * decomp_ph%zsz(2), a1, decomp_ph%zsz(3), &
+                                   decomp_ph%zsz(1) * decomp_ph%zsz(2), 1, a2, decomp_sp%zsz(3), &
+                                   decomp_sp%zsz(1) * decomp_sp%zsz(2), 1, plan_type)
 #else
       call sfftw_plan_many_dft_r2c(plan1, 1, decomp_ph%zsz(3), &
-                                   decomp_ph%zsz(1)*decomp_ph%zsz(2), a1, decomp_ph%zsz(3), &
-                                   decomp_ph%zsz(1)*decomp_ph%zsz(2), 1, a2, decomp_sp%zsz(3), &
-                                   decomp_sp%zsz(1)*decomp_sp%zsz(2), 1, plan_type)
+                                   decomp_ph%zsz(1) * decomp_ph%zsz(2), a1, decomp_ph%zsz(3), &
+                                   decomp_ph%zsz(1) * decomp_ph%zsz(2), 1, a2, decomp_sp%zsz(3), &
+                                   decomp_sp%zsz(1) * decomp_sp%zsz(2), 1, plan_type)
 #endif
       deallocate (a1, a2)
 
@@ -247,14 +248,14 @@ module decomp_2d_fft
 
 #ifdef DOUBLE_PREC
       call dfftw_plan_many_dft_c2r(plan1, 1, decomp_ph%zsz(3), &
-                                   decomp_ph%zsz(1)*decomp_ph%zsz(2), a1, decomp_sp%zsz(3), &
-                                   decomp_sp%zsz(1)*decomp_sp%zsz(2), 1, a2, decomp_ph%zsz(3), &
-                                   decomp_ph%zsz(1)*decomp_ph%zsz(2), 1, plan_type)
+                                   decomp_ph%zsz(1) * decomp_ph%zsz(2), a1, decomp_sp%zsz(3), &
+                                   decomp_sp%zsz(1) * decomp_sp%zsz(2), 1, a2, decomp_ph%zsz(3), &
+                                   decomp_ph%zsz(1) * decomp_ph%zsz(2), 1, plan_type)
 #else
       call sfftw_plan_many_dft_c2r(plan1, 1, decomp_ph%zsz(3), &
-                                   decomp_ph%zsz(1)*decomp_ph%zsz(2), a1, decomp_sp%zsz(3), &
-                                   decomp_sp%zsz(1)*decomp_sp%zsz(2), 1, a2, decomp_ph%zsz(3), &
-                                   decomp_ph%zsz(1)*decomp_ph%zsz(2), 1, plan_type)
+                                   decomp_ph%zsz(1) * decomp_ph%zsz(2), a1, decomp_sp%zsz(3), &
+                                   decomp_sp%zsz(1) * decomp_sp%zsz(2), 1, a2, decomp_ph%zsz(3), &
+                                   decomp_ph%zsz(1) * decomp_ph%zsz(2), 1, plan_type)
 #endif
       deallocate (a1, a2)
 

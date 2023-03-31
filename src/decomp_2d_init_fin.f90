@@ -33,10 +33,6 @@
 
      integer :: errorcode, ierror, row, col, iounit
      logical, dimension(2) :: periodic
-#if defined(_GPU) && defined(_NCCL)
-     integer :: cuda_stat
-     type(ncclResult) :: nccl_stat
-#endif
 
 #ifdef PROFILER
      ! Prepare the profiler if it was not already prepared
@@ -47,34 +43,12 @@
      if (decomp_profiler_d2d) call decomp_profiler_start("decomp_2d_init")
 #endif
 
-     ! Use the provided MPI communicator if present
-     if (present(comm)) then
-        decomp_2d_comm = comm
-     else
-        decomp_2d_comm = MPI_COMM_WORLD
-     end if
+     call decomp_2d_mpi_init(comm)
 
-     ! Safety check
-     if (MPI_SUCCESS /= 0) then
-        call decomp_2d_abort(__FILE__, __LINE__, MPI_SUCCESS, "MPI error check is broken")
-     end if
      if (nx <= 0) call decomp_2d_abort(__FILE__, __LINE__, nx, "Invalid value for nx")
      if (ny <= 0) call decomp_2d_abort(__FILE__, __LINE__, ny, "Invalid value for ny")
      if (nz <= 0) call decomp_2d_abort(__FILE__, __LINE__, nz, "Invalid value for nz")
 
-     ! If the external code has not set nrank and nproc
-     if (nrank == -1) then
-        call MPI_COMM_RANK(decomp_2d_comm, nrank, ierror)
-        if (ierror /= 0) then
-           call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_COMM_RANK")
-        end if
-     end if
-     if (nproc == -1) then
-        call MPI_COMM_SIZE(decomp_2d_comm, nproc, ierror)
-        if (ierror /= 0) then
-           call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_COMM_SIZE")
-        end if
-     end if
 #ifdef DEBUG
      ! Check if a modification of the debug level is needed
      call decomp_2d_debug()
@@ -100,7 +74,7 @@
         p_row = row
         p_col = col
      else
-        if (nproc /= p_row*p_col) then
+        if (nproc /= p_row * p_col) then
            errorcode = 1
            call decomp_2d_abort(__FILE__, __LINE__, errorcode, &
                                 'Invalid 2D processor grid - nproc /= p_row*p_col')
@@ -175,38 +149,8 @@
      if (nrank == 0) write (*, *) 'Padded ALLTOALL optimisation on'
 #endif
 
-#if defined(_GPU)
-#if defined(_NCCL)
-     call MPI_COMM_RANK(DECOMP_2D_COMM_COL, col_rank, ierror)
-     if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_COMM_RANK")
-     call MPI_COMM_RANK(DECOMP_2D_COMM_ROW, row_rank, ierror)
-     if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_COMM_RANK")
-     call MPI_COMM_SIZE(DECOMP_2D_COMM_COL, col_comm_size, ierror)
-     if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_COMM_SIZE")
-     call MPI_COMM_SIZE(DECOMP_2D_COMM_ROW, row_comm_size, ierror)
-     if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_COMM_SIZE")
-
-     allocate (local_to_global_col(col_comm_size), local_to_global_row(row_comm_size))
-
-     local_to_global_col(:) = 0
-     local_to_global_row(:) = 0
-     local_to_global_col(col_rank + 1) = nrank
-     local_to_global_row(row_rank + 1) = nrank
-
-     call mpi_allreduce(MPI_IN_PLACE, local_to_global_col, col_comm_size, MPI_INTEGER, MPI_SUM, DECOMP_2D_COMM_COL, ierror)
-     if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_ALLREDUCE")
-     call mpi_allreduce(MPI_IN_PLACE, local_to_global_row, row_comm_size, MPI_INTEGER, MPI_SUM, DECOMP_2D_COMM_ROW, ierror)
-     if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_ALLREDUCE")
-
-     if (nrank == 0) then
-        nccl_stat = ncclGetUniqueId(nccl_uid_2decomp)
-     end if
-     call MPI_Bcast(nccl_uid_2decomp, int(sizeof(ncclUniqueId)), MPI_BYTE, 0, decomp_2d_comm, ierror)
-     if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_BCAST")
-
-     nccl_stat = ncclCommInitRank(nccl_comm_2decomp, nproc, nccl_uid_2decomp, nrank)
-     cuda_stat = cudaStreamCreate(cuda_stream_2decomp)
-#endif
+#if defined(_GPU) && defined(_NCCL)
+     call decomp_2d_nccl_init(DECOMP_2D_COMM_COL, DECOMP_2D_COMM_ROW)
 #endif
 
      !
@@ -232,34 +176,29 @@
   subroutine decomp_2d_finalize_ref
 
      implicit none
-#if defined(_GPU) && defined(_NCCL)
-     type(ncclResult) :: nccl_stat
-#endif
 
 #ifdef PROFILER
      if (decomp_profiler_d2d) call decomp_profiler_start("decomp_2d_fin")
 #endif
 
-     call decomp_mpi_comm_free(DECOMP_2D_COMM_ROW)
-     call decomp_mpi_comm_free(DECOMP_2D_COMM_COL)
-     call decomp_mpi_comm_free(DECOMP_2D_COMM_CART_X)
-     call decomp_mpi_comm_free(DECOMP_2D_COMM_CART_Y)
-     call decomp_mpi_comm_free(DECOMP_2D_COMM_CART_Z)
+     call decomp_2d_mpi_comm_free(DECOMP_2D_COMM_ROW)
+     call decomp_2d_mpi_comm_free(DECOMP_2D_COMM_COL)
+     call decomp_2d_mpi_comm_free(DECOMP_2D_COMM_CART_X)
+     call decomp_2d_mpi_comm_free(DECOMP_2D_COMM_CART_Y)
+     call decomp_2d_mpi_comm_free(DECOMP_2D_COMM_CART_Z)
 
      call decomp_info_finalize(decomp_main)
 
      decomp_buf_size = 0
      deallocate (work1_r, work2_r, work1_c, work2_c)
 #if defined(_GPU)
-     deallocate (work1_r_d, work2_r_d, work1_c_d, work2_c_d)
-
+     call decomp_2d_cumpi_fin()
 #if defined(_NCCL)
-     nccl_stat = ncclCommDestroy(nccl_comm_2decomp)
+     call decomp_2d_nccl_fin()
 #endif
 #endif
 
-     nrank = -1
-     nproc = -1
+     call decomp_2d_mpi_fin()
 
 #ifdef PROFILER
      if (decomp_profiler_d2d) call decomp_profiler_end("decomp_2d_fin")
@@ -303,7 +242,7 @@
      read (val, '(i4)', iostat=ierror) decomp_debug
      if (ierror /= 0) then
         call decomp_2d_warning(__FILE__, __LINE__, ierror, &
-             "Error when reading DECOMP_2D_DEBUG : "//val)
+                               "Error when reading DECOMP_2D_DEBUG : "//val)
      end if
 
   end subroutine decomp_2d_debug
@@ -329,11 +268,11 @@
      call findfactor(iproc, factors, nfact)
      if (nrank == 0) write (*, *) 'factors: ', (factors(i), i=1, nfact)
 
-     i_best = nfact/2 + 1
+     i_best = nfact / 2 + 1
      col = factors(i_best)
 
      best_p_col = col
-     best_p_row = iproc/col
+     best_p_row = iproc / col
      if (nrank == 0) print *, 'p_row x p_col', best_p_row, best_p_col
      if ((best_p_col == 1) .and. (nrank == 0)) then
         print *, 'WARNING: current 2D DECOMP set-up might not work'

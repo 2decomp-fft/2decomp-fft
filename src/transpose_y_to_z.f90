@@ -22,6 +22,33 @@
 
   end subroutine transpose_y_to_z_real_short
 
+  subroutine transpose_y_to_z_real_long(src, dst, decomp)
+
+     implicit none
+
+     real(mytype), dimension(:, :, :), intent(IN) :: src
+     real(mytype), dimension(:, :, :), intent(OUT) :: dst
+     TYPE(DECOMP_INFO), intent(IN) :: decomp
+#if defined(_GPU)
+     integer :: istat, nsize
+#endif
+
+     if (dims(2) == 1) then
+#if defined(_GPU)
+        nsize = product(decomp%ysz)
+        !$acc host_data use_device(src,dst)
+        istat = cudaMemcpy(dst, src, nsize, cudaMemcpyDeviceToDevice)
+        !$acc end host_data
+        if (istat /= 0) call decomp_2d_abort(__FILE__, __LINE__, istat, "cudaMemcpy")
+#else
+        dst = src
+#endif
+     else
+        call transpose_y_to_z_real(src, dst, decomp)
+     end if
+
+  end subroutine transpose_y_to_z_real_long
+
   subroutine transpose_y_to_z_real(src, dst, decomp)
 
      implicit none
@@ -31,10 +58,6 @@
      TYPE(DECOMP_INFO), intent(IN) :: decomp
 
 #if defined(_GPU)
-#if defined(_NCCL)
-     type(ncclResult) :: nccl_stat
-     integer :: row_rank_id, cuda_stat
-#endif
      integer :: istat
 #endif
 
@@ -78,20 +101,13 @@
 
 #if defined(_GPU)
 #if defined(_NCCL)
-     nccl_stat = ncclGroupStart()
-     if (nccl_stat /= ncclSuccess) call decomp_2d_abort(__FILE__, __LINE__, nccl_stat, "ncclGroupStart")
-     do row_rank_id = 0, (row_comm_size - 1)
-        nccl_stat = ncclSend(work1_r_d(decomp%y2disp(row_rank_id) + 1), decomp%y2cnts(row_rank_id), &
-                             ncclDouble, local_to_global_row(row_rank_id + 1), nccl_comm_2decomp, cuda_stream_2decomp)
-        if (nccl_stat /= ncclSuccess) call decomp_2d_abort(__FILE__, __LINE__, nccl_stat, "ncclSend")
-        nccl_stat = ncclRecv(work2_r_d(decomp%z2disp(row_rank_id) + 1), decomp%z2cnts(row_rank_id), &
-                             ncclDouble, local_to_global_row(row_rank_id + 1), nccl_comm_2decomp, cuda_stream_2decomp)
-        if (nccl_stat /= ncclSuccess) call decomp_2d_abort(__FILE__, __LINE__, nccl_stat, "ncclRecv")
-     end do
-     nccl_stat = ncclGroupEnd()
-     if (nccl_stat /= ncclSuccess) call decomp_2d_abort(__FILE__, __LINE__, nccl_stat, "ncclGroupEnd")
-     cuda_stat = cudaStreamSynchronize(cuda_stream_2decomp)
-     if (cuda_stat /= 0) call decomp_2d_abort(__FILE__, __LINE__, cuda_stat, "cudaStreamSynchronize")
+     call decomp_2d_nccl_send_recv_row(work2_r_d, &
+                                       work1_r_d, &
+                                       decomp%y2disp, &
+                                       decomp%y2cnts, &
+                                       decomp%z2disp, &
+                                       decomp%z2cnts, &
+                                       dims(2))
 #else
      call MPI_ALLTOALLV(work1_r_d, decomp%y2cnts, decomp%y2disp, &
                         real_type, work2_r_d, decomp%z2cnts, decomp%z2disp, &
@@ -120,7 +136,7 @@
 #if defined(_GPU)
      !If one of the array in cuda call is not device we need to add acc host_data
      !$acc host_data use_device(dst)
-     istat = cudaMemcpy(dst, work2_r_d, d1*d2*d3, cudaMemcpyDeviceToDevice)
+     istat = cudaMemcpy(dst, work2_r_d, d1 * d2 * d3, cudaMemcpyDeviceToDevice)
      !$acc end host_data
      if (istat /= 0) call decomp_2d_abort(__FILE__, __LINE__, istat, "cudaMemcpy2D")
 #endif
@@ -144,6 +160,33 @@
      call transpose_y_to_z(src, dst, decomp_main)
 
   end subroutine transpose_y_to_z_complex_short
+
+  subroutine transpose_y_to_z_complex_long(src, dst, decomp)
+
+     implicit none
+
+     complex(mytype), dimension(:, :, :), intent(IN) :: src
+     complex(mytype), dimension(:, :, :), intent(OUT) :: dst
+     TYPE(DECOMP_INFO), intent(IN) :: decomp
+#if defined(_GPU)
+     integer :: istat, nsize
+#endif
+
+     if (dims(2) == 1) then
+#if defined(_GPU)
+        nsize = product(decomp%ysz)
+        !$acc host_data use_device(src,dst)
+        istat = cudaMemcpy(dst, src, nsize, cudaMemcpyDeviceToDevice)
+        !$acc end host_data
+        if (istat /= 0) call decomp_2d_abort(__FILE__, __LINE__, istat, "cudaMemcpy")
+#else
+        dst = src
+#endif
+     else
+        call transpose_y_to_z_complex(src, dst, decomp)
+     end if
+
+  end subroutine transpose_y_to_z_complex_long
 
   subroutine transpose_y_to_z_complex(src, dst, decomp)
 
@@ -195,10 +238,21 @@
 #else
 
 #if defined(_GPU)
+#if defined(_NCCL)
+     call decomp_2d_nccl_send_recv_row(work2_c_d, &
+                                       work1_c_d, &
+                                       decomp%y2disp, &
+                                       decomp%y2cnts, &
+                                       decomp%z2disp, &
+                                       decomp%z2cnts, &
+                                       dims(2), &
+                                       decomp_buf_size)
+#else
      call MPI_ALLTOALLV(work1_c_d, decomp%y2cnts, decomp%y2disp, &
                         complex_type, work2_c_d, decomp%z2cnts, decomp%z2disp, &
                         complex_type, DECOMP_2D_COMM_ROW, ierror)
      if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_ALLTOALLV")
+#endif
 #else
      call MPI_ALLTOALLV(work1_c, decomp%y2cnts, decomp%y2disp, &
                         complex_type, dst, decomp%z2cnts, decomp%z2disp, &
@@ -220,7 +274,7 @@
 
 #if defined(_GPU)
      !$acc host_data use_device(dst)
-     istat = cudaMemcpy(dst, work2_c_d, d1*d2*d3, cudaMemcpyDeviceToDevice)
+     istat = cudaMemcpy(dst, work2_c_d, d1 * d2 * d3, cudaMemcpyDeviceToDevice)
      !$acc end host_data
      if (istat /= 0) call decomp_2d_abort(__FILE__, __LINE__, istat, "cudaMemcpy2D")
 #endif
@@ -261,14 +315,14 @@
         end if
 
 #ifdef EVEN
-        pos = m*decomp%y2count + 1
+        pos = m * decomp%y2count + 1
 #else
         pos = decomp%y2disp(m) + 1
 #endif
 
 #if defined(_GPU)
         !$acc host_data use_device(in)
-        istat = cudaMemcpy2D(out(pos), n1*(i2 - i1 + 1), in(1, i1, 1), n1*n2, n1*(i2 - i1 + 1), n3, cudaMemcpyDeviceToDevice)
+        istat = cudaMemcpy2D(out(pos), n1 * (i2 - i1 + 1), in(1, i1, 1), n1 * n2, n1 * (i2 - i1 + 1), n3, cudaMemcpyDeviceToDevice)
         !$acc end host_data
         if (istat /= 0) call decomp_2d_abort(__FILE__, __LINE__, istat, "cudaMemcpy2D")
 #else
@@ -313,14 +367,14 @@
         end if
 
 #ifdef EVEN
-        pos = m*decomp%y2count + 1
+        pos = m * decomp%y2count + 1
 #else
         pos = decomp%y2disp(m) + 1
 #endif
 
 #if defined(_GPU)
         !$acc host_data use_device(in)
-        istat = cudaMemcpy2D(out(pos), n1*(i2 - i1 + 1), in(1, i1, 1), n1*n2, n1*(i2 - i1 + 1), n3, cudaMemcpyDeviceToDevice)
+        istat = cudaMemcpy2D(out(pos), n1 * (i2 - i1 + 1), in(1, i1, 1), n1 * n2, n1 * (i2 - i1 + 1), n3, cudaMemcpyDeviceToDevice)
         !$acc end host_data
         if (istat /= 0) call decomp_2d_abort(__FILE__, __LINE__, istat, "cudaMemcpy2D")
 #else
@@ -361,7 +415,7 @@
         end if
 
 #ifdef EVEN
-        pos = m*decomp%z2count + 1
+        pos = m * decomp%z2count + 1
 #else
         pos = decomp%z2disp(m) + 1
 #endif
@@ -402,7 +456,7 @@
         end if
 
 #ifdef EVEN
-        pos = m*decomp%z2count + 1
+        pos = m * decomp%z2count + 1
 #else
         pos = decomp%z2disp(m) + 1
 #endif

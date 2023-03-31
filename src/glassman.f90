@@ -14,7 +14,7 @@
 
 module glassman
 
-   use decomp_2d, only: mytype
+   use decomp_2d_constants, only: mytype
 
    implicit none
 
@@ -52,12 +52,12 @@ contains
       INU = .TRUE.
 
       DO WHILE (B > 1)
-         A = C*A
+         A = C * A
          C = 2
          DO WHILE (MOD(B, C) /= 0)
             C = C + 1
          END DO
-         B = B/C
+         B = B / C
          IF (INU) THEN
             CALL SPCPFT(A, B, C, U, WORK, ISIGN)
          ELSE
@@ -90,7 +90,7 @@ contains
       COMPLEX(mytype), INTENT(OUT) :: UOUT(B, A, C)
       COMPLEX(mytype) :: DELTA, OMEGA, SUM
 
-      ANGLE = 6.28318530717958_mytype/REAL(A*C, kind=mytype)
+      ANGLE = 6.28318530717958_mytype / REAL(A * C, kind=mytype)
       OMEGA = CMPLX(1.0, 0.0, kind=mytype)
 
       IF (ISIGN == 1) THEN
@@ -105,11 +105,11 @@ contains
                SUM = UIN(IB, C, IA)
                DO JCR = 2, C
                   JC = C + 1 - JCR
-                  SUM = UIN(IB, JC, IA) + OMEGA*SUM
+                  SUM = UIN(IB, JC, IA) + OMEGA * SUM
                END DO
                UOUT(IB, IA, IC) = SUM
             END DO
-            OMEGA = DELTA*OMEGA
+            OMEGA = DELTA * OMEGA
          END DO
       END DO
 
@@ -148,7 +148,7 @@ contains
             end do
             call spcfft(buf, nx, -1, scratch)
             ! simply drop the redundant part of the complex output
-            do i = 1, nx/2 + 1
+            do i = 1, nx / 2 + 1
                out_c(i, j, k) = buf(i)
             end do
          end do
@@ -156,7 +156,7 @@ contains
 
       ! ===== 1D FFTs in Y =====
       do k = 1, nz
-         do i = 1, nx/2 + 1
+         do i = 1, nx / 2 + 1
             do j = 1, ny
                buf(j) = out_c(i, j, k)
             end do
@@ -169,7 +169,7 @@ contains
 
       ! ===== 1D FFTs in Z =====
       do j = 1, ny
-         do i = 1, nx/2 + 1
+         do i = 1, nx / 2 + 1
             do k = 1, nz
                buf(k) = out_c(i, j, k)
             end do

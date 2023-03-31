@@ -8,7 +8,7 @@ get_filename_component(_dir "${CMAKE_CURRENT_LIST_FILE}" PATH)
 get_filename_component(_prefix "${_dir}/../.." ABSOLUTE)
 
 # Import the targets
-include("${_prefix}/lib/2decomp-targets.cmake")
+include("${_prefix}/lib/decomp2d-targets.cmake")
 
-
+set(2decomp_INCLUDE_DIR "${_prefix}/include")
 

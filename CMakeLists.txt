@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.12)                        
 cmake_policy(SET CMP0074 NEW)
 
-project(2decomp
+project(decomp2d
   LANGUAGES Fortran)
 set(version 2.0.0)
 enable_testing()

@@ -84,15 +84,15 @@ install(EXPORT decomp2d-targets
   DESTINATION ${CMAKE_INSTALL_LIBDIR})
 
 configure_file(
-  ${CMAKE_SOURCE_DIR}/cmake/2decomp-config.cmake.in
-  ${PROJECT_BINARY_DIR}/cmake/2decomp-config.cmake @ONLY
+  ${CMAKE_SOURCE_DIR}/cmake/decomp2d-config.cmake.in
+  ${PROJECT_BINARY_DIR}/cmake/decomp2d-config.cmake @ONLY
 )
 configure_file(
-  ${CMAKE_SOURCE_DIR}/cmake/2decomp-config-version.cmake.in
-  ${PROJECT_BINARY_DIR}/cmake/2decomp-config-version.cmake
+  ${CMAKE_SOURCE_DIR}/cmake/decomp2d-config-version.cmake.in
+  ${PROJECT_BINARY_DIR}/cmake/decomp2d-config-version.cmake
 )
 
 install(FILES
-  ${PROJECT_BINARY_DIR}/cmake/2decomp-config.cmake
-  ${PROJECT_BINARY_DIR}/cmake/2decomp-config-version.cmake
-  DESTINATION ${CMAKE_INSTALL_LIBDIR}/2decomp)
+  ${PROJECT_BINARY_DIR}/cmake/decomp2d-config.cmake
+  ${PROJECT_BINARY_DIR}/cmake/decomp2d-config-version.cmake
+  DESTINATION ${CMAKE_INSTALL_LIBDIR}/decomp2d)

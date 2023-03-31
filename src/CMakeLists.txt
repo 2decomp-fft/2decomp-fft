@@ -69,6 +69,7 @@ if (HALO_DEBUG)
 endif()
 
 install(TARGETS decomp2d
+  EXPORT decomp2d-targets
   RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
   LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
   ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR})
@@ -78,3 +79,20 @@ install(DIRECTORY ${CMAKE_Fortran_MODULE_DIRECTORY}/ DESTINATION ${CMAKE_INSTALL
 install(DIRECTORY ${CMAKE_Fortran_MODULE_DIRECTORY}/ DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
   FILES_MATCHING PATTERN "*.smod")
       
+## Packaging
+install(EXPORT decomp2d-targets
+  DESTINATION ${CMAKE_INSTALL_LIBDIR})
+
+configure_file(
+  ${CMAKE_SOURCE_DIR}/cmake/2decomp-config.cmake.in
+  ${PROJECT_BINARY_DIR}/cmake/2decomp-config.cmake @ONLY
+)
+configure_file(
+  ${CMAKE_SOURCE_DIR}/cmake/2decomp-config-version.cmake.in
+  ${PROJECT_BINARY_DIR}/cmake/2decomp-config-version.cmake
+)
+
+install(FILES
+  ${PROJECT_BINARY_DIR}/cmake/2decomp-config.cmake
+  ${PROJECT_BINARY_DIR}/cmake/2decomp-config-version.cmake
+  DESTINATION ${CMAKE_INSTALL_LIBDIR}/2decomp)

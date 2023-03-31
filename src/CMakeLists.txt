@@ -99,7 +99,7 @@ install(FILES
 
 # Make 2decomp usable from build tree.
 export(TARGETS decomp2d
-  FILE decomp2d-targets.cmake)
+  FILE ${PROJECT_BINARY_DIR}/decomp2d-targets.cmake)
 configure_file(
   ${CMAKE_SOURCE_DIR}/cmake/decomp2d-build_config.cmake.in
   ${PROJECT_BINARY_DIR}/decomp2d-config.cmake @ONLY

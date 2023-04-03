@@ -141,6 +141,17 @@ The external code can use the named variables to check the FFT backend used in a
 ### Codes using Makefiles
 
 When building a code that links 2decomp-fft using a Makefile you will need to add the include and link paths as appropriate (`inlude/` and `link/` under the installation directory, respectively).
+```
+DECOMP_ROOT = /path/to/2decomp-fft
+DECOMP_BUILD_DIR = $(DECOMP_ROOT)/build
+DECOMP_INSTALL_DIR ?= $(DECOMP_BUILD_DIR)/opt # Use default unless set by user
+
+INC += -I$(DECOMP_INSTALL_DIR)/include
+
+# Users build/link targets
+LFLAGS += -L$(DECOMP_INSTALL_DIR)/lib -ldecomp2d
+
+```
 It is also possible to drive the build and installation of 2decomp-fft from a Makefile such as in the following example code
 ```
 FC = mpif90
@@ -153,7 +164,7 @@ DECOMP_INSTALL_DIR ?= $(DECOMP_BUILD_DIR)/opt # Use default unless set by user
 INC += -I$(DECOMP_INSTALL_DIR)/include
 
 # Users build/link targets
-LFLAGS += -L$(DECOMP_INSTALL_DIR)/lib -ldecomp.a
+LFLAGS += -L$(DECOMP_INSTALL_DIR)/lib -ldecomp2d
 
 # Building libdecomp.a
 $(DECOMP_INSTALL_DIR)/lib/libdecomp.a:

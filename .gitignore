@@ -32,7 +32,7 @@
 *.app
 
 # Cmake
-build
+build*
 
 # Log files
 *.log
@@ -46,3 +46,6 @@ Makefile.settings
 # emacs
 .dir-locals.el
 TAGS
+
+# vim
+*.swp

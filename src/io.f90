@@ -16,6 +16,8 @@
 module decomp_2d_io
 
    use decomp_2d
+   use decomp_2d_constants
+   use decomp_2d_mpi
    use MPI
 
 #ifdef ADIOS2
@@ -136,9 +138,10 @@ contains
       adios2_debug_mode = .true.
 
       call adios2_init(adios, trim(config_file), decomp_2d_comm, adios2_debug_mode, ierror)
-      if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, &
-                                            "Error initialising ADIOS2 - is "//trim(config_file)//" present and valid?")
-
+      if (ierror /= 0) then
+         call decomp_2d_abort(__FILE__, __LINE__, ierror, &
+                              "Error initialising ADIOS2 - is "//trim(config_file)//" present and valid?")
+      end if
       engine_live(:) = .false.
 
 #ifdef PROFILER
@@ -164,8 +167,9 @@ contains
       if (decomp_profiler_io) call decomp_profiler_start("io_fin")
 #endif
       call adios2_finalize(adios, ierror)
-      if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, &
-                                            "adios2_finalize")
+      if (ierror /= 0) then
+         call decomp_2d_abort(__FILE__, __LINE__, ierror, "adios2_finalize")
+      end if
 #ifdef PROFILER
       if (decomp_profiler_io) call decomp_profiler_end("io_fin")
 #endif
@@ -351,14 +355,14 @@ contains
          if (read_reduce_prec) then
             allocate (varsingle(xstV(1):xenV(1), xstV(2):xenV(2), xstV(3):xenV(3)))
             call MPI_FILE_READ_ALL(fh, varsingle, &
-                                   subsizes(1)*subsizes(2)*subsizes(3), &
+                                   subsizes(1) * subsizes(2) * subsizes(3), &
                                    data_type, MPI_STATUS_IGNORE, ierror)
             if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_FILE_READ_ALL")
             var = real(varsingle, mytype)
             deallocate (varsingle)
          else
             call MPI_FILE_READ_ALL(fh, var, &
-                                   subsizes(1)*subsizes(2)*subsizes(3), &
+                                   subsizes(1) * subsizes(2) * subsizes(3), &
                                    data_type, MPI_STATUS_IGNORE, ierror)
             if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_FILE_READ_ALL")
          end if
@@ -366,9 +370,9 @@ contains
          if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_TYPE_FREE")
 
          disp = disp + int(sizes(1), kind=MPI_OFFSET_KIND) &
-                *int(sizes(2), kind=MPI_OFFSET_KIND) &
-                *int(sizes(3), kind=MPI_OFFSET_KIND) &
-                *int(disp_bytes, kind=MPI_OFFSET_KIND)
+                * int(sizes(2), kind=MPI_OFFSET_KIND) &
+                * int(sizes(3), kind=MPI_OFFSET_KIND) &
+                * int(disp_bytes, kind=MPI_OFFSET_KIND)
       end associate
 
       if (opened_new) then
@@ -442,8 +446,10 @@ contains
       if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "adios2_at_io "//trim(io_name))
       call adios2_inquire_variable(var_handle, io_handle, varname, ierror)
       if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "adios2_inquire_variable "//trim(varname))
-      if (.not. var_handle%valid) call decomp_2d_abort(__FILE__, __LINE__, -1, &
-                                                       "ERROR: trying to read variable without registering first! "//trim(varname))
+      if (.not. var_handle%valid) then
+         call decomp_2d_abort(__FILE__, __LINE__, -1, &
+                              "ERROR: trying to read variable without registering first! "//trim(varname))
+      end if
 
       call adios2_variable_steps(nsteps, var_handle, ierror)
       if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "adios2_variable_steps")
@@ -662,7 +668,7 @@ contains
                               MPI_STATUS_IGNORE, ierror)
       if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_FILE_WRITE_ALL")
       disp = disp + int(n, kind=MPI_OFFSET_KIND) &
-             *int(mytype_bytes, kind=MPI_OFFSET_KIND)
+             * int(mytype_bytes, kind=MPI_OFFSET_KIND)
 
       return
    end subroutine write_scalar_real
@@ -690,8 +696,8 @@ contains
                               MPI_STATUS_IGNORE, ierror)
       if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_FILE_WRITE_ALL")
       disp = disp + int(n, kind=MPI_OFFSET_KIND) &
-             *int(mytype_bytes, kind=MPI_OFFSET_KIND) &
-             *2_MPI_OFFSET_KIND
+             * int(mytype_bytes, kind=MPI_OFFSET_KIND) &
+             * 2_MPI_OFFSET_KIND
 
       return
    end subroutine write_scalar_complex
@@ -721,7 +727,7 @@ contains
       call MPI_TYPE_SIZE(MPI_INTEGER, m, ierror)
       if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_TYPE_SIZE")
       disp = disp + int(n, kind=MPI_OFFSET_KIND) &
-             *int(m, kind=MPI_OFFSET_KIND)
+             * int(m, kind=MPI_OFFSET_KIND)
 
       return
    end subroutine write_scalar_integer
@@ -751,7 +757,7 @@ contains
       call MPI_TYPE_SIZE(MPI_LOGICAL, m, ierror)
       if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_TYPE_SIZE")
       disp = disp + int(n, kind=MPI_OFFSET_KIND) &
-             *int(m, kind=MPI_OFFSET_KIND)
+             * int(m, kind=MPI_OFFSET_KIND)
 
       return
    end subroutine write_scalar_logical
@@ -781,7 +787,7 @@ contains
                              MPI_STATUS_IGNORE, ierror)
       if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_FILE_READ_ALL")
       disp = disp + int(n, kind=MPI_OFFSET_KIND) &
-             *int(mytype_bytes, kind=MPI_OFFSET_KIND)
+             * int(mytype_bytes, kind=MPI_OFFSET_KIND)
 
       return
    end subroutine read_scalar_real
@@ -804,8 +810,8 @@ contains
                              MPI_STATUS_IGNORE, ierror)
       if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_FILE_READ_ALL")
       disp = disp + int(n, kind=MPI_OFFSET_KIND) &
-             *int(mytype_bytes, kind=MPI_OFFSET_KIND) &
-             *2_MPI_OFFSET_KIND
+             * int(mytype_bytes, kind=MPI_OFFSET_KIND) &
+             * 2_MPI_OFFSET_KIND
 
       return
    end subroutine read_scalar_complex
@@ -830,7 +836,7 @@ contains
       call MPI_TYPE_SIZE(MPI_INTEGER, m, ierror)
       if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_TYPE_SIZE")
       disp = disp + int(n, kind=MPI_OFFSET_KIND) &
-             *int(m, kind=MPI_OFFSET_KIND)
+             * int(m, kind=MPI_OFFSET_KIND)
 
       return
    end subroutine read_scalar_integer
@@ -855,7 +861,7 @@ contains
       call MPI_TYPE_SIZE(MPI_LOGICAL, m, ierror)
       if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_TYPE_SIZE")
       disp = disp + int(n, kind=MPI_OFFSET_KIND) &
-             *int(m, kind=MPI_OFFSET_KIND)
+             * int(m, kind=MPI_OFFSET_KIND)
 
       return
    end subroutine read_scalar_logical
@@ -1306,22 +1312,22 @@ contains
                                 newtype, 'native', MPI_INFO_NULL, ierror)
          if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_FILE_SET_VIEW")
          call MPI_FILE_WRITE_ALL(fh_registry(idx), varsingle, &
-                                 subsizes(1)*subsizes(2)*subsizes(3), &
+                                 subsizes(1) * subsizes(2) * subsizes(3), &
                                  real_type_single, MPI_STATUS_IGNORE, ierror)
       else
          call MPI_FILE_SET_VIEW(fh_registry(idx), fh_disp(idx), real_type, &
                                 newtype, 'native', MPI_INFO_NULL, ierror)
          if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_FILE_SET_VIEW")
          call MPI_FILE_WRITE_ALL(fh_registry(idx), var, &
-                                 subsizes(1)*subsizes(2)*subsizes(3), &
+                                 subsizes(1) * subsizes(2) * subsizes(3), &
                                  real_type, MPI_STATUS_IGNORE, ierror)
       end if
       if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_FILE_WRITE_ALL")
 
       fh_disp(idx) = fh_disp(idx) + int(sizes(1), kind=MPI_OFFSET_KIND) &
-                     *int(sizes(2), kind=MPI_OFFSET_KIND) &
-                     *int(sizes(3), kind=MPI_OFFSET_KIND) &
-                     *int(disp_bytes, kind=MPI_OFFSET_KIND)
+                     * int(sizes(2), kind=MPI_OFFSET_KIND) &
+                     * int(sizes(3), kind=MPI_OFFSET_KIND) &
+                     * int(disp_bytes, kind=MPI_OFFSET_KIND)
 
       if (opened_new) then
          call decomp_2d_close_io(io_name, full_io_name)
@@ -1342,11 +1348,15 @@ contains
       if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "adios2_at_io "//trim(io_name))
       call adios2_inquire_variable(var_handle, io_handle, varname, ierror)
       if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "adios2_inquire_variable "//trim(varname))
-      if (.not. var_handle%valid) call decomp_2d_abort(__FILE__, __LINE__, -1, &
-                                                       "ERROR: trying to write variable before registering! "//trim(varname))
+      if (.not. var_handle%valid) then
+         call decomp_2d_abort(__FILE__, __LINE__, -1, &
+                              "ERROR: trying to write variable before registering! "//trim(varname))
+      end if
 
-      if (idx < 1) call decomp_2d_abort(__FILE__, __LINE__, idx, &
-                                        "You haven't opened "//trim(io_name)//":"//trim(dirname))
+      if (idx < 1) then
+         call decomp_2d_abort(__FILE__, __LINE__, idx, &
+                              "You haven't opened "//trim(io_name)//":"//trim(dirname))
+      end if
 
       if (deferred_writes) then
          write_mode = adios2_mode_deferred
@@ -1442,8 +1452,10 @@ contains
             call adios2_define_variable(var_handle, io_handle, varname, data_type, &
                                         ndims, int(sizes, kind=8), int(starts, kind=8), int(subsizes, kind=8), &
                                         adios2_constant_dims, ierror)
-            if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, &
-                                                  "adios2_define_variable, ERROR registering variable "//trim(varname))
+            if (ierror /= 0) then
+               call decomp_2d_abort(__FILE__, __LINE__, ierror, &
+                                    "adios2_define_variable, ERROR registering variable "//trim(varname))
+            end if
          end if
       else
          call decomp_2d_abort(__FILE__, __LINE__, -1, "trying to register variable with invalid IO!")
@@ -1525,7 +1537,7 @@ contains
                              newtype, 'native', MPI_INFO_NULL, ierror)
       if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_FILE_SET_VIEW")
       call MPI_FILE_WRITE_ALL(fh, var, &
-                              subsizes(1)*subsizes(2)*subsizes(3)*subsizes(4), &
+                              subsizes(1) * subsizes(2) * subsizes(3) * subsizes(4), &
                               real_type, MPI_STATUS_IGNORE, ierror)
       if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_FILE_WRITE_ALL")
       call MPI_FILE_CLOSE(fh, ierror)
@@ -1738,7 +1750,7 @@ contains
                                 newtype, 'native', MPI_INFO_NULL, ierror)
          if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_FILE_SET_VIEW")
          call MPI_FILE_WRITE_ALL(fh, wk, &
-                                 subsizes(1)*subsizes(2)*subsizes(3), &
+                                 subsizes(1) * subsizes(2) * subsizes(3), &
                                  data_type, MPI_STATUS_IGNORE, ierror)
          if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_FILE_WRITE_ALL")
          call MPI_FILE_CLOSE(fh, ierror)
@@ -1750,7 +1762,7 @@ contains
 
       end if
 
-      call decomp_mpi_comm_free(newcomm)
+      call decomp_2d_mpi_comm_free(newcomm)
 
 #ifdef PROFILER
       if (decomp_profiler_io) call decomp_profiler_end("io_write_subdomain")

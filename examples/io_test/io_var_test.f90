@@ -3,21 +3,32 @@
 
 program io_var_test
 
+   use mpi
+   use decomp_2d_constants
+   use decomp_2d_mpi
    use decomp_2d
    use decomp_2d_io
-   use MPI
+#if defined(_GPU)
+   use cudafor
+   use openacc
+#endif
 
    implicit none
 
-   integer, parameter :: nx = 17, ny = 13, nz = 11
-   integer :: p_row, p_col
+   integer, parameter :: nx_base = 17, ny_base = 13, nz_base = 11
+   integer :: nx, ny, nz
+   integer :: p_row = 0, p_col = 0
+   integer :: resize_domain
+   integer :: nranks_tot
+   integer :: nargin, arg, FNLength, status, DecInd
+   character(len=80) :: InputFN
 
    real(mytype), parameter :: eps = 1.0E-7
 
    ! for global data
-   real(mytype), dimension(nx, ny, nz) :: data1
+   real(mytype), allocatable, dimension(:, :, :) :: data1
    real(mytype), allocatable, dimension(:, :, :) :: data1_large
-   complex(mytype), dimension(nx, ny, nz) :: cdata1
+   complex(mytype), allocatable, dimension(:, :, :) :: cdata1
 
    ! for distributed data
    real(mytype), allocatable, dimension(:, :, :) :: u1, u2, u3
@@ -33,41 +44,70 @@ program io_var_test
    complex(mytype), allocatable, dimension(:) :: ctmp
    integer, allocatable, dimension(:) :: itmp
 
+   integer :: xst1, xst2, xst3
+   integer :: xen1, xen2, xen3
+
    TYPE(DECOMP_INFO) :: large
 
    integer :: i, j, k, m, ierror, fh
-   character(len=15) :: filename, arg
+   character(len=15) :: filename
    integer(kind=MPI_OFFSET_KIND) :: filesize, disp
 
-   allocate (data1_large(nx*2, ny*2, nz*2))
-
    call MPI_INIT(ierror)
-   call MPI_COMM_SIZE(MPI_COMM_WORLD, nproc, ierror)
-   call MPI_COMM_RANK(MPI_COMM_WORLD, nrank, ierror)
-
-   ! Defaults
-   p_row = 0
-   p_col = 0
-
-   ! Read commandline input
-   i = command_argument_count()
-   if (i /= 2) then
-      call MPI_ABORT(MPI_COMM_WORLD, 1, ierror)
+   ! To resize the domain we need to know global number of ranks
+   ! This operation is also done as part of decomp_2d_init
+   call MPI_COMM_SIZE(MPI_COMM_WORLD, nranks_tot, ierror)
+   resize_domain = int(nranks_tot / 4) + 1
+   nx = nx_base * resize_domain
+   ny = ny_base * resize_domain
+   nz = nz_base * resize_domain
+   ! Now we can check if user put some inputs
+   ! Handle input file like a boss -- GD
+   nargin = command_argument_count()
+   if ((nargin == 0) .or. (nargin == 2) .or. (nargin == 5)) then
+      do arg = 1, nargin
+         call get_command_argument(arg, InputFN, FNLength, status)
+         read (InputFN, *, iostat=status) DecInd
+         if (arg == 1) then
+            p_row = DecInd
+         elseif (arg == 2) then
+            p_col = DecInd
+         elseif (arg == 3) then
+            nx = DecInd
+         elseif (arg == 4) then
+            ny = DecInd
+         elseif (arg == 5) then
+            nz = DecInd
+         end if
+      end do
    else
-      call get_command_argument(1, arg)
-      read (arg, '(I10)') i
-      p_row = i
-      call get_command_argument(2, arg)
-      read (arg, '(I10)') i
-      p_col = i
+      ! nrank not yet computed we need to avoid write
+      ! for every rank
+      call MPI_COMM_RANK(MPI_COMM_WORLD, nrank, ierror)
+      if (nrank == 0) then
+         print *, "This Test takes no inputs or 2 inputs as"
+         print *, "  1) p_row (default=0)"
+         print *, "  2) p_col (default=0)"
+         print *, "or 5 inputs as"
+         print *, "  1) p_row (default=0)"
+         print *, "  2) p_col (default=0)"
+         print *, "  3) nx "
+         print *, "  4) ny "
+         print *, "  5) nz "
+         print *, "Number of inputs is not correct and the defult settings"
+         print *, "will be used"
+      end if
    end if
 
    call decomp_2d_init(nx, ny, nz, p_row, p_col)
 
    ! also create a data set over a large domain
-   call decomp_info_init(nx*2, ny*2, nz*2, large)
+   call decomp_info_init(nx * 2, ny * 2, nz * 2, large)
 
    ! initialise global data
+   allocate (data1(nx, ny, nz))
+   allocate (cdata1(nx, ny, nz))
+   allocate (data1_large(nx * 2, ny * 2, nz * 2))
    m = 1
    do k = 1, nz
       do j = 1, ny
@@ -80,9 +120,9 @@ program io_var_test
    end do
 
    m = 1
-   do k = 1, nz*2
-      do j = 1, ny*2
-         do i = 1, nx*2
+   do k = 1, nz * 2
+      do j = 1, ny * 2
+         do i = 1, nx * 2
             data1_large(i, j, k) = real(m, mytype)
             m = m + 1
          end do
@@ -112,21 +152,32 @@ program io_var_test
    call alloc_z(u3l_b, large, .true.)
 
    ! distribute the data
-   do k = xstart(3), xend(3)
-      do j = xstart(2), xend(2)
-         do i = xstart(1), xend(1)
+   !$acc data copyin(data1,cdata1,data1_large) copy(u1,u2,u3,u1l,u2l,u3l,cu1,cu2,cu3)
+   xst1 = xstart(1); xen1 = xend(1)
+   xst2 = xstart(2); xen2 = xend(2)
+   xst3 = xstart(3); xen3 = xend(3)
+   !$acc parallel loop default(present)
+   do k = xst3, xen3
+      do j = xst2, xen2
+         do i = xst1, xen1
             u1(i, j, k) = data1(i, j, k)
             cu1(i, j, k) = cdata1(i, j, k)
          end do
       end do
    end do
-   do k = large%xst(3), large%xen(3)
-      do j = large%xst(2), large%xen(2)
-         do i = large%xst(1), large%xen(1)
+   !$acc end loop
+   xst1 = large%xst(1); xen1 = large%xen(1)
+   xst2 = large%xst(2); xen2 = large%xen(2)
+   xst3 = large%xst(3); xen3 = large%xen(3)
+   !$acc parallel loop default(present)
+   do k = xst3, xen3
+      do j = xst2, xen2
+         do i = xst1, xen1
             u1l(i, j, k) = data1_large(i, j, k)
          end do
       end do
    end do
+   !$acc end loop
 
    ! transpose
    call transpose_x_to_y(u1, u2)
@@ -135,6 +186,16 @@ program io_var_test
    call transpose_y_to_z(u2l, u3l, large)
    call transpose_x_to_y(cu1, cu2)
    call transpose_y_to_z(cu2, cu3)
+   !$acc update self (u1)
+   !$acc update self (u2)
+   !$acc update self (u3)
+   !$acc update self (u1l)
+   !$acc update self (u2l)
+   !$acc update self (u3l)
+   !$acc update self (cu1)
+   !$acc update self (cu2)
+   !$acc update self (cu3)
+   !$acc end data
 
    ! open file for IO
    write (filename, '(A,I3.3)') 'io_var_data.', nproc
@@ -271,9 +332,9 @@ program io_var_test
    deallocate (u1_b, u2_b, u3_b)
    deallocate (u1l_b, u2l_b, u3l_b)
    deallocate (cu1_b, cu2_b, cu3_b)
+   deallocate (data1, cdata1, data1_large)
    call decomp_info_finalize(large)
    call decomp_2d_finalize
    call MPI_FINALIZE(ierror)
-   deallocate (data1_large)
 
 end program io_var_test

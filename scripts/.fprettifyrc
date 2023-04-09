@@ -1,0 +1,5 @@
+# Configuration options for fprettify
+
+whitespace = 3             # Whitespace preset - operators, print/read, *, /, +, -
+enable-replacements = true # Replaces relational operators, e.g. .lt. -> <
+c-relations = true         # Use C-style relational operators, e.g. <=

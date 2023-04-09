@@ -22,6 +22,17 @@ else
    call get_decomp_info(decomp)
 end if
 
+! The current GPU build will not perform transpose operations when writing planes
+#if defined(_GPU)
+if (ipencil /= iplane) then
+   call decomp_2d_warning(__FILE__, &
+                          __LINE__, &
+                          ipencil, &
+                          "GPU build does not allow transpose operations when writing planes")
+   return
+endif
+#endif
+
 opened_new = .false.
 
 if (iplane == 1) then
@@ -150,8 +161,10 @@ call adios2_at_io(io_handle, adios, io_name, ierror)
 if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "adios2_at_io "//trim(io_name))
 call adios2_inquire_variable(var_handle, io_handle, varname, ierror)
 if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "adios2_inquire_variable "//trim(varname))
-if (.not. var_handle%valid) call decomp_2d_abort(__FILE__, __LINE__, -1, &
-                                                 "trying to write variable before registering! "//trim(varname))
+if (.not. var_handle%valid) then
+   call decomp_2d_abort(__FILE__, __LINE__, -1, &
+        "trying to write variable before registering!  "//trim(varname))
+end if
 
 !! Note - need to use sync mode as the array for the output plane gets reused.
 call adios2_put(engine_registry(idx), var_handle, wk2d, adios2_mode_sync, ierror)

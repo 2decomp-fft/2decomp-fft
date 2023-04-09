@@ -15,6 +15,7 @@
 module decomp_2d_fft
 
    use decomp_2d_constants
+   use decomp_2d_mpi
    use decomp_2d  ! 2D decomposition module
    use, intrinsic :: iso_c_binding
 
@@ -157,9 +158,9 @@ contains
          call decomp_info_init(nx, ny, nz, ph)
       end if
       if (format == PHYSICAL_IN_X) then
-         call decomp_info_init(nx/2 + 1, ny, nz, sp)
+         call decomp_info_init(nx / 2 + 1, ny, nz, sp)
       else if (format == PHYSICAL_IN_Z) then
-         call decomp_info_init(nx, ny, nz/2 + 1, sp)
+         call decomp_info_init(nx, ny, nz / 2 + 1, sp)
       else
          call decomp_2d_abort(__FILE__, __LINE__, format, "Invalid value for format")
       end if
@@ -280,10 +281,9 @@ contains
 
       type(decomp_info), pointer :: decomp_2d_fft_get_ph
 
-      if (.not. associated(ph)) call decomp_2d_abort(__FILE__, &
-                                                     __LINE__, &
-                                                     -1, &
-                                                     'FFT library must be initialised first')
+      if (.not. associated(ph)) then
+         call decomp_2d_abort(__FILE__, __LINE__, -1, 'FFT library must be initialised first')
+      end if
       decomp_2d_fft_get_ph => ph
 
    end function decomp_2d_fft_get_ph
@@ -299,10 +299,9 @@ contains
 
       type(decomp_info), pointer :: decomp_2d_fft_get_sp
 
-      if (.not. associated(ph)) call decomp_2d_abort(__FILE__, &
-                                                     __LINE__, &
-                                                     -1, &
-                                                     'FFT library must be initialised first')
+      if (.not. associated(ph)) then
+         call decomp_2d_abort(__FILE__, __LINE__, -1, 'FFT library must be initialised first')
+      end if
       decomp_2d_fft_get_sp => sp
 
    end function decomp_2d_fft_get_sp
@@ -333,12 +332,12 @@ contains
 
 #ifdef DOUBLE_PREC
       plan1 = fftw_plan_many_dft(1, decomp%xsz(1), &
-                                 decomp%xsz(2)*decomp%xsz(3), a1, decomp%xsz(1), 1, &
+                                 decomp%xsz(2) * decomp%xsz(3), a1, decomp%xsz(1), 1, &
                                  decomp%xsz(1), a1o, decomp%xsz(1), 1, decomp%xsz(1), &
                                  isign, plan_type)
 #else
       plan1 = fftwf_plan_many_dft(1, decomp%xsz(1), &
-                                  decomp%xsz(2)*decomp%xsz(3), a1, decomp%xsz(1), 1, &
+                                  decomp%xsz(2) * decomp%xsz(3), a1, decomp%xsz(1), 1, &
                                   decomp%xsz(1), a1o, decomp%xsz(1), 1, decomp%xsz(1), &
                                   isign, plan_type)
 #endif
@@ -371,7 +370,7 @@ contains
 
       ! Due to memory pattern of 3D arrays, 1D FFTs along Y have to be
       ! done one Z-plane at a time. So plan for 2D data sets here.
-      sz = decomp%ysz(1)*decomp%ysz(2)
+      sz = decomp%ysz(1) * decomp%ysz(2)
       a1_p = fftw_alloc_complex(sz)
       call c_f_pointer(a1_p, a1, [decomp%ysz(1), decomp%ysz(2)])
       call c_f_pointer(a1_p, a1o, [decomp%ysz(1), decomp%ysz(2)])
@@ -419,14 +418,14 @@ contains
 
 #ifdef DOUBLE_PREC
       plan1 = fftw_plan_many_dft(1, decomp%zsz(3), &
-                                 decomp%zsz(1)*decomp%zsz(2), a1, decomp%zsz(3), &
-                                 decomp%zsz(1)*decomp%zsz(2), 1, a1o, decomp%zsz(3), &
-                                 decomp%zsz(1)*decomp%zsz(2), 1, isign, plan_type)
+                                 decomp%zsz(1) * decomp%zsz(2), a1, decomp%zsz(3), &
+                                 decomp%zsz(1) * decomp%zsz(2), 1, a1o, decomp%zsz(3), &
+                                 decomp%zsz(1) * decomp%zsz(2), 1, isign, plan_type)
 #else
       plan1 = fftwf_plan_many_dft(1, decomp%zsz(3), &
-                                  decomp%zsz(1)*decomp%zsz(2), a1, decomp%zsz(3), &
-                                  decomp%zsz(1)*decomp%zsz(2), 1, a1o, decomp%zsz(3), &
-                                  decomp%zsz(1)*decomp%zsz(2), 1, isign, plan_type)
+                                  decomp%zsz(1) * decomp%zsz(2), a1, decomp%zsz(3), &
+                                  decomp%zsz(1) * decomp%zsz(2), 1, a1o, decomp%zsz(3), &
+                                  decomp%zsz(1) * decomp%zsz(2), 1, isign, plan_type)
 #endif
 
       call fftw_free(a1_p)
@@ -471,12 +470,12 @@ contains
 
 #ifdef DOUBLE_PREC
       plan1 = fftw_plan_many_dft_r2c(1, decomp_ph%xsz(1), &
-                                     decomp_ph%xsz(2)*decomp_ph%xsz(3), a1, decomp_ph%xsz(1), 1, &
+                                     decomp_ph%xsz(2) * decomp_ph%xsz(3), a1, decomp_ph%xsz(1), 1, &
                                      decomp_ph%xsz(1), a2, decomp_sp%xsz(1), 1, decomp_sp%xsz(1), &
                                      plan_type)
 #else
       plan1 = fftwf_plan_many_dft_r2c(1, decomp_ph%xsz(1), &
-                                      decomp_ph%xsz(2)*decomp_ph%xsz(3), a1, decomp_ph%xsz(1), 1, &
+                                      decomp_ph%xsz(2) * decomp_ph%xsz(3), a1, decomp_ph%xsz(1), 1, &
                                       decomp_ph%xsz(1), a2, decomp_sp%xsz(1), 1, decomp_sp%xsz(1), &
                                       plan_type)
 #endif
@@ -526,12 +525,12 @@ contains
 
 #ifdef DOUBLE_PREC
       plan1 = fftw_plan_many_dft_c2r(1, decomp_ph%xsz(1), &
-                                     decomp_ph%xsz(2)*decomp_ph%xsz(3), a1, decomp_sp%xsz(1), 1, &
+                                     decomp_ph%xsz(2) * decomp_ph%xsz(3), a1, decomp_sp%xsz(1), 1, &
                                      decomp_sp%xsz(1), a2, decomp_ph%xsz(1), 1, decomp_ph%xsz(1), &
                                      plan_type)
 #else
       plan1 = fftwf_plan_many_dft_c2r(1, decomp_ph%xsz(1), &
-                                      decomp_ph%xsz(2)*decomp_ph%xsz(3), a1, decomp_sp%xsz(1), 1, &
+                                      decomp_ph%xsz(2) * decomp_ph%xsz(3), a1, decomp_sp%xsz(1), 1, &
                                       decomp_sp%xsz(1), a2, decomp_ph%xsz(1), 1, decomp_ph%xsz(1), &
                                       plan_type)
 #endif
@@ -581,14 +580,14 @@ contains
 
 #ifdef DOUBLE_PREC
       plan1 = fftw_plan_many_dft_r2c(1, decomp_ph%zsz(3), &
-                                     decomp_ph%zsz(1)*decomp_ph%zsz(2), a1, decomp_ph%zsz(3), &
-                                     decomp_ph%zsz(1)*decomp_ph%zsz(2), 1, a2, decomp_sp%zsz(3), &
-                                     decomp_sp%zsz(1)*decomp_sp%zsz(2), 1, plan_type)
+                                     decomp_ph%zsz(1) * decomp_ph%zsz(2), a1, decomp_ph%zsz(3), &
+                                     decomp_ph%zsz(1) * decomp_ph%zsz(2), 1, a2, decomp_sp%zsz(3), &
+                                     decomp_sp%zsz(1) * decomp_sp%zsz(2), 1, plan_type)
 #else
       plan1 = fftwf_plan_many_dft_r2c(1, decomp_ph%zsz(3), &
-                                      decomp_ph%zsz(1)*decomp_ph%zsz(2), a1, decomp_ph%zsz(3), &
-                                      decomp_ph%zsz(1)*decomp_ph%zsz(2), 1, a2, decomp_sp%zsz(3), &
-                                      decomp_sp%zsz(1)*decomp_sp%zsz(2), 1, plan_type)
+                                      decomp_ph%zsz(1) * decomp_ph%zsz(2), a1, decomp_ph%zsz(3), &
+                                      decomp_ph%zsz(1) * decomp_ph%zsz(2), 1, a2, decomp_sp%zsz(3), &
+                                      decomp_sp%zsz(1) * decomp_sp%zsz(2), 1, plan_type)
 #endif
 
       call fftw_free(a1_p)
@@ -636,14 +635,14 @@ contains
 
 #ifdef DOUBLE_PREC
       plan1 = fftw_plan_many_dft_c2r(1, decomp_ph%zsz(3), &
-                                     decomp_ph%zsz(1)*decomp_ph%zsz(2), a1, decomp_sp%zsz(3), &
-                                     decomp_sp%zsz(1)*decomp_sp%zsz(2), 1, a2, decomp_ph%zsz(3), &
-                                     decomp_ph%zsz(1)*decomp_ph%zsz(2), 1, plan_type)
+                                     decomp_ph%zsz(1) * decomp_ph%zsz(2), a1, decomp_sp%zsz(3), &
+                                     decomp_sp%zsz(1) * decomp_sp%zsz(2), 1, a2, decomp_ph%zsz(3), &
+                                     decomp_ph%zsz(1) * decomp_ph%zsz(2), 1, plan_type)
 #else
       plan1 = fftwf_plan_many_dft_c2r(1, decomp_ph%zsz(3), &
-                                      decomp_ph%zsz(1)*decomp_ph%zsz(2), a1, decomp_sp%zsz(3), &
-                                      decomp_sp%zsz(1)*decomp_sp%zsz(2), 1, a2, decomp_ph%zsz(3), &
-                                      decomp_ph%zsz(1)*decomp_ph%zsz(2), 1, plan_type)
+                                      decomp_ph%zsz(1) * decomp_ph%zsz(2), a1, decomp_sp%zsz(3), &
+                                      decomp_sp%zsz(1) * decomp_sp%zsz(2), 1, a2, decomp_ph%zsz(3), &
+                                      decomp_ph%zsz(1) * decomp_ph%zsz(2), 1, plan_type)
 #endif
 
 #ifndef OVERWRITE

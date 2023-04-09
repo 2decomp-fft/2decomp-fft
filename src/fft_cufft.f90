@@ -14,6 +14,7 @@
 module decomp_2d_fft
 
    use decomp_2d_constants
+   use decomp_2d_mpi
    use decomp_2d  ! 2D decomposition module
    use iso_c_binding
    use cudafor
@@ -64,7 +65,7 @@ module decomp_2d_fft
       istat = cufftMakePlanMany(plan1, 1, decomp%xsz(1), &
                                 decomp%xsz(1), 1, decomp%xsz(1), &
                                 decomp%xsz(1), 1, decomp%xsz(1), &
-                                cufft_type, decomp%xsz(2)*decomp%xsz(3), worksize)
+                                cufft_type, decomp%xsz(2) * decomp%xsz(3), worksize)
       if (istat /= 0) call decomp_2d_abort(__FILE__, __LINE__, istat, "cufftMakePlanMany")
 
    end subroutine c2c_1m_x_plan
@@ -116,9 +117,9 @@ module decomp_2d_fft
       istat = cufftSetAutoAllocation(plan1, 0)
       if (istat /= 0) call decomp_2d_abort(__FILE__, __LINE__, istat, "cufftSetAutoAllocation")
       istat = cufftMakePlanMany(plan1, 1, decomp%zsz(3), &
-                                decomp%zsz(3), decomp%zsz(1)*decomp%zsz(2), 1, &
-                                decomp%zsz(3), decomp%zsz(1)*decomp%zsz(2), 1, &
-                                cufft_type, decomp%zsz(1)*decomp%zsz(2), worksize)
+                                decomp%zsz(3), decomp%zsz(1) * decomp%zsz(2), 1, &
+                                decomp%zsz(3), decomp%zsz(1) * decomp%zsz(2), 1, &
+                                cufft_type, decomp%zsz(1) * decomp%zsz(2), worksize)
       if (istat /= 0) call decomp_2d_abort(__FILE__, __LINE__, istat, "cufftMakePlanMany")
 
    end subroutine c2c_1m_z_plan
@@ -145,7 +146,7 @@ module decomp_2d_fft
       istat = cufftMakePlanMany(plan1, 1, decomp_ph%xsz(1), &
                                 decomp_ph%xsz(1), 1, decomp_ph%xsz(1), &
                                 decomp_sp%xsz(1), 1, decomp_sp%xsz(1), &
-                                cufft_type, decomp_ph%xsz(2)*decomp_ph%xsz(3), worksize)
+                                cufft_type, decomp_ph%xsz(2) * decomp_ph%xsz(3), worksize)
       if (istat /= 0) call decomp_2d_abort(__FILE__, __LINE__, istat, "cufftMakePlanMany")
 
    end subroutine r2c_1m_x_plan
@@ -172,7 +173,7 @@ module decomp_2d_fft
       istat = cufftMakePlanMany(plan1, 1, decomp_ph%xsz(1), &
                                 decomp_sp%xsz(1), 1, decomp_sp%xsz(1), &
                                 decomp_ph%xsz(1), 1, decomp_ph%xsz(1), &
-                                cufft_type, decomp_ph%xsz(2)*decomp_ph%xsz(3), worksize)
+                                cufft_type, decomp_ph%xsz(2) * decomp_ph%xsz(3), worksize)
       if (istat /= 0) call decomp_2d_abort(__FILE__, __LINE__, istat, "cufftMakePlanMany")
 
    end subroutine c2r_1m_x_plan
@@ -197,9 +198,9 @@ module decomp_2d_fft
       istat = cufftSetAutoAllocation(plan1, 0)
       if (istat /= 0) call decomp_2d_abort(__FILE__, __LINE__, istat, "cufftSetAutoAllocation")
       istat = cufftMakePlanMany(plan1, 1, decomp_ph%zsz(3), &
-                                decomp_ph%zsz(3), decomp_ph%zsz(1)*decomp_ph%zsz(2), 1, &
-                                decomp_sp%zsz(3), decomp_sp%zsz(1)*decomp_sp%zsz(2), 1, &
-                                cufft_type, decomp_ph%zsz(1)*decomp_ph%zsz(2), worksize)
+                                decomp_ph%zsz(3), decomp_ph%zsz(1) * decomp_ph%zsz(2), 1, &
+                                decomp_sp%zsz(3), decomp_sp%zsz(1) * decomp_sp%zsz(2), 1, &
+                                cufft_type, decomp_ph%zsz(1) * decomp_ph%zsz(2), worksize)
       if (istat /= 0) call decomp_2d_abort(__FILE__, __LINE__, istat, "cufftMakePlanMany")
 
    end subroutine r2c_1m_z_plan
@@ -224,9 +225,9 @@ module decomp_2d_fft
       istat = cufftSetAutoAllocation(plan1, 0)
       if (istat /= 0) call decomp_2d_abort(__FILE__, __LINE__, istat, "cufftSetAutoAllocation")
       istat = cufftMakePlanMany(plan1, 1, decomp_ph%zsz(3), &
-                                decomp_sp%zsz(3), decomp_sp%zsz(1)*decomp_sp%zsz(2), 1, &
-                                decomp_ph%zsz(3), decomp_ph%zsz(1)*decomp_ph%zsz(2), 1, &
-                                cufft_type, decomp_ph%zsz(1)*decomp_ph%zsz(2), worksize)
+                                decomp_sp%zsz(3), decomp_sp%zsz(1) * decomp_sp%zsz(2), 1, &
+                                decomp_ph%zsz(3), decomp_ph%zsz(1) * decomp_ph%zsz(2), 1, &
+                                cufft_type, decomp_ph%zsz(1) * decomp_ph%zsz(2), worksize)
       if (istat /= 0) call decomp_2d_abort(__FILE__, __LINE__, istat, "cufftMakePlanMany")
 
    end subroutine c2r_1m_z_plan
@@ -368,6 +369,7 @@ module decomp_2d_fft
 
       end if
 #endif
+      cufft_ws = cufft_ws / sizeof(1._mytype)
       allocate (cufft_workspace(cufft_ws))
       do j = 1, 3
          do i = -1, 2
@@ -408,24 +410,18 @@ module decomp_2d_fft
       integer, intent(IN) :: isign
       integer*4, intent(IN) :: plan1
 
-      complex(mytype), dimension(:, :, :), allocatable :: output
       integer :: istat
 
-      allocate (output, mold=inout)
 #ifdef DOUBLE_PREC
-      !$acc host_data use_device(inout,output)
-      istat = cufftExecZ2Z(plan1, inout, output, isign)
+      !$acc host_data use_device(inout)
+      istat = cufftExecZ2Z(plan1, inout, inout, isign)
       !$acc end host_data
 #else
-      !$acc host_data use_device(inout,output)
-      istat = cufftExecC2C(plan1, inout, output, isign)
+      !$acc host_data use_device(inout)
+      istat = cufftExecC2C(plan1, inout, inout, isign)
       !$acc end host_data
 #endif
       if (istat /= 0) call decomp_2d_abort(__FILE__, __LINE__, istat, "cufftExecC2C/Z2Z")
-      !$acc kernels
-      inout = output
-      !$acc end kernels
-      deallocate (output)
 
    end subroutine c2c_1m_x
 
@@ -438,28 +434,22 @@ module decomp_2d_fft
       integer, intent(IN) :: isign
       integer*4, intent(IN) :: plan1
 
-      complex(mytype), dimension(:, :, :), allocatable :: output
       integer :: s3, k, istat
 
-      allocate (output, mold=inout)
       ! transform on one Z-plane at a time
       s3 = size(inout, 3)
       do k = 1, s3
 #ifdef DOUBLE_PREC
-         !$acc host_data use_device(inout,output)
-         istat = cufftExecZ2Z(plan1, inout(:, :, k), output(:, :, k), isign)
+         !$acc host_data use_device(inout)
+         istat = cufftExecZ2Z(plan1, inout(:, :, k), inout(:, :, k), isign)
          !$acc end host_data
 #else
-         !$acc host_data use_device(inout,output)
-         istat = cufftExecC2C(plan1, inout(:, :, k), output(:, :, k), isign)
+         !$acc host_data use_device(inout)
+         istat = cufftExecC2C(plan1, inout(:, :, k), inout(:, :, k), isign)
          !$acc end host_data
 #endif
          if (istat /= 0) call decomp_2d_abort(__FILE__, __LINE__, istat, "cufftExecC2C/Z2Z")
       end do
-      !$acc kernels
-      inout = output
-      !$acc end kernels
-      deallocate (output)
 
    end subroutine c2c_1m_y
 
@@ -472,25 +462,18 @@ module decomp_2d_fft
       integer, intent(IN) :: isign
       integer*4, intent(IN) :: plan1
 
-      complex(mytype), dimension(:, :, :), allocatable :: output
       integer :: istat
 
-      allocate (output, mold=inout)
-
 #ifdef DOUBLE_PREC
-      !$acc host_data use_device(inout,output)
-      istat = cufftExecZ2Z(plan1, inout, output, isign)
+      !$acc host_data use_device(inout)
+      istat = cufftExecZ2Z(plan1, inout, inout, isign)
       !$acc end host_data
 #else
-      !$acc host_data use_device(inout,output)
-      istat = cufftExecC2C(plan1, inout, output, isign)
+      !$acc host_data use_device(inout)
+      istat = cufftExecC2C(plan1, inout, inout, isign)
       !$acc end host_data
 #endif
       if (istat /= 0) call decomp_2d_abort(__FILE__, __LINE__, istat, "cufftExecC2C/Z2Z")
-      !$acc kernels
-      inout = output
-      !$acc end kernels
-      deallocate (output)
 
    end subroutine c2c_1m_z
 
@@ -604,6 +587,7 @@ module decomp_2d_fft
       if (decomp_profiler_fft) call decomp_profiler_start("fft_c2c")
 #endif
 
+      !$acc data create(wk2_c2c) present(in,out)
       if (format == PHYSICAL_IN_X .AND. isign == DECOMP_2D_FFT_FORWARD .OR. &
           format == PHYSICAL_IN_Z .AND. isign == DECOMP_2D_FFT_BACKWARD) then
 
@@ -612,7 +596,11 @@ module decomp_2d_fft
          call c2c_1m_x(in, isign, plan(isign, 1))
 #else
          allocate (wk1(ph%xsz(1), ph%xsz(2), ph%xsz(3)))
+         !$acc enter data create(wk1) async
+         !$acc wait
+         !$acc kernels default(present)
          wk1 = in
+         !$acc end kernels
          call c2c_1m_x(wk1, isign, plan(isign, 1))
 #endif
 
@@ -654,7 +642,11 @@ module decomp_2d_fft
          call c2c_1m_z(in, isign, plan(isign, 3))
 #else
          allocate (wk1(ph%zsz(1), ph%zsz(2), ph%zsz(3)))
+         !$acc enter data create(wk1) async
+         !$acc wait
+         !$acc kernels default(present)
          wk1 = in
+         !$acc end kernels
          call c2c_1m_z(wk1, isign, plan(isign, 3))
 #endif
 
@@ -684,8 +676,11 @@ module decomp_2d_fft
       end if
 
 #ifndef OVERWRITE
+      !$acc exit data delete(wk1) async
+      !$acc wait
       deallocate (wk1)
 #endif
+      !$acc end data
 
 #ifdef PROFILER
       if (decomp_profiler_fft) call decomp_profiler_end("fft_c2c")
@@ -709,6 +704,7 @@ module decomp_2d_fft
       if (decomp_profiler_fft) call decomp_profiler_start("fft_r2c")
 #endif
 
+      !$acc data create(wk13,wk2_r2c) present(in_r,out_c)
       if (format == PHYSICAL_IN_X) then
 
          ! ===== 1D FFTs in X =====
@@ -736,9 +732,9 @@ module decomp_2d_fft
          !call nvtxStartRange("Z r2c_1m_z")
 #ifdef DEBUG
          dim3d = shape(in_r)
-         do k = 1, dim3d(3), dim3d(3)/8
-            do j = 1, dim3d(2), dim3d(2)/8
-               do i = 1, dim3d(1), dim3d(1)/8
+         do k = 1, dim3d(3), dim3d(3) / 8
+            do j = 1, dim3d(2), dim3d(2) / 8
+               do i = 1, dim3d(1), dim3d(1) / 8
                   print "(i3,1x,i3,1x,i3,1x,e12.5,1x,e12.5)", i, j, k, real(in_r(i, j, k))
                end do
             end do
@@ -757,9 +753,9 @@ module decomp_2d_fft
 #ifdef DEBUG
             write (*, *) 'c2c_1m_y'
             dim3d = shape(wk2_r2c)
-            do k = 1, dim3d(3), dim3d(3)/8
-               do j = 1, dim3d(2), dim3d(2)/8
-                  do i = 1, dim3d(1), dim3d(1)/8
+            do k = 1, dim3d(3), dim3d(3) / 8
+               do j = 1, dim3d(2), dim3d(2) / 8
+                  do i = 1, dim3d(1), dim3d(1) / 8
                      print "(i3,1x,i3,1x,i3,1x,e12.5,1x,e12.5)", i, j, k, real(wk2_r2c(i, j, k)), &
                         aimag(wk2_r2c(i, j, k))
                   end do
@@ -778,9 +774,9 @@ module decomp_2d_fft
 #ifdef DEBUG
             write (*, *) 'c2c_1m_y2'
             dim3d = shape(out_c)
-            do k = 1, dim3d(3), dim3d(3)/8
-               do j = 1, dim3d(2), dim3d(2)/8
-                  do i = 1, dim3d(1), dim3d(1)/8
+            do k = 1, dim3d(3), dim3d(3) / 8
+               do j = 1, dim3d(2), dim3d(2) / 8
+                  do i = 1, dim3d(1), dim3d(1) / 8
                      print "(i3,1x,i3,1x,i3,1x,e12.5,1x,e12.5)", i, j, k, real(out_c(i, j, k)), &
                         aimag(out_c(i, j, k))
                   end do
@@ -803,9 +799,9 @@ module decomp_2d_fft
 #ifdef DEBUG
          write (*, *) 'c2c_1m_x'
          dim3d = shape(out_c)
-         do k = 1, dim3d(3), dim3d(3)/8
-            do j = 1, dim3d(2), dim3d(2)/8
-               do i = 1, dim3d(1), dim3d(1)/8
+         do k = 1, dim3d(3), dim3d(3) / 8
+            do j = 1, dim3d(2), dim3d(2) / 8
+               do i = 1, dim3d(1), dim3d(1) / 8
                   print "(i3,1x,i3,1x,i3,1x,e12.5,1x,e12.5)", i, j, k, real(out_c(i, j, k)), &
                      aimag(out_c(i, j, k))
                end do
@@ -815,6 +811,7 @@ module decomp_2d_fft
          write (*, *)
 #endif
       end if
+      !$acc end data
 
 #ifdef PROFILER
       if (decomp_profiler_fft) call decomp_profiler_end("fft_r2c")
@@ -841,6 +838,7 @@ module decomp_2d_fft
       if (decomp_profiler_fft) call decomp_profiler_start("fft_c2r")
 #endif
 
+      !$acc data create(wk2_r2c,wk13) present(in_c,out_r)
       if (format == PHYSICAL_IN_X) then
 
          ! ===== 1D FFTs in Z =====
@@ -848,7 +846,11 @@ module decomp_2d_fft
          call c2c_1m_z(in_c, 1, plan(2, 3))
 #else
          allocate (wk1(sp%zsz(1), sp%zsz(2), sp%zsz(3)))
+         !$acc enter data create(wk1) async
+         !$acc wait
+         !$acc kernels default(present)
          wk1 = in_c
+         !$acc end kernels
          call c2c_1m_z(wk1, 1, plan(2, 3))
 #endif
 
@@ -872,9 +874,9 @@ module decomp_2d_fft
 #ifdef DEBUG
          write (*, *) 'Back Init c2c_1m_x line 788'
          dim3d = shape(in_c)
-         do k = 1, dim3d(3), dim3d(3)/8
-            do j = 1, dim3d(2), dim3d(2)/8
-               do i = 1, dim3d(1), dim3d(1)/8
+         do k = 1, dim3d(3), dim3d(3) / 8
+            do j = 1, dim3d(2), dim3d(2) / 8
+               do i = 1, dim3d(1), dim3d(1) / 8
                   print "(i3,1x,i3,1x,i3,1x,e12.5,1x,e12.5)", i, j, k, real(in_c(i, j, k)), &
                      aimag(in_c(i, j, k))
                end do
@@ -889,9 +891,9 @@ module decomp_2d_fft
 #ifdef DEBUG
          write (*, *) 'Back c2c_1m_x overwrite line 804'
          dim3d = shape(in_c)
-         do k = 1, dim3d(3), dim3d(3)/8
-            do j = 1, dim3d(2), dim3d(2)/8
-               do i = 1, dim3d(1), dim3d(1)/8
+         do k = 1, dim3d(3), dim3d(3) / 8
+            do j = 1, dim3d(2), dim3d(2) / 8
+               do i = 1, dim3d(1), dim3d(1) / 8
                   print "(i3,1x,i3,1x,i3,1x,e12.5,1x,e12.5)", i, j, k, real(in_c(i, j, k)), &
                      aimag(in_c(i, j, k))
                end do
@@ -902,14 +904,18 @@ module decomp_2d_fft
 #endif
 #else
          allocate (wk1(sp%xsz(1), sp%xsz(2), sp%xsz(3)))
+         !$acc enter data create(wk1) async
+         !$acc wait
+         !$acc kernels default(present)
          wk1 = in_c
+         !$acc end kernels
          call c2c_1m_x(wk1, 1, plan(2, 1))
 #ifdef DEBUG
          write (*, *) 'Back2 c2c_1m_x line 821'
          dim3d = shape(wk1)
-         do k = 1, dim3d(3), dim3d(1)/8
-            do j = 1, dim3d(2), dim3d(2)/8
-               do i = 1, dim3d(1), dim3d(1)/8
+         do k = 1, dim3d(3), dim3d(1) / 8
+            do j = 1, dim3d(2), dim3d(2) / 8
+               do i = 1, dim3d(1), dim3d(1) / 8
                   print "(i3,1x,i3,1x,i3,1x,e12.5,1x,e12.5)", i, j, k, real(wk1(i, j, k)), &
                      aimag(wk1(i, j, k))
                end do
@@ -931,9 +937,9 @@ module decomp_2d_fft
 #ifdef DEBUG
             write (*, *) 'Back c2c_1m_y line 844'
             dim3d = shape(wk2_r2c)
-            do k = 1, dim3d(3), dim3d(3)/8
-               do j = 1, dim3d(2), dim3d(2)/8
-                  do i = 1, dim3d(1), dim3d(1)/8
+            do k = 1, dim3d(3), dim3d(3) / 8
+               do j = 1, dim3d(2), dim3d(2) / 8
+                  do i = 1, dim3d(1), dim3d(1) / 8
                      print "(i3,1x,i3,1x,i3,1x,e12.5,1x,e12.5)", i, j, k, real(wk2_r2c(i, j, k)), &
                         aimag(wk2_r2c(i, j, k))
                   end do
@@ -948,9 +954,9 @@ module decomp_2d_fft
 #ifdef DEBUG
             write (*, *) 'Back2 c2c_1m_y line 860'
             dim3d = shape(in_c)
-            do k = 1, dim3d(3), dim3d(3)/8
-               do j = 1, dim3d(2), dim3d(2)/8
-                  do i = 1, dim3d(1), dim3d(1)/8
+            do k = 1, dim3d(3), dim3d(3) / 8
+               do j = 1, dim3d(2), dim3d(2) / 8
+                  do i = 1, dim3d(1), dim3d(1) / 8
                      print "(i3,1x,i3,1x,i3,1x,e12.5,1x,e12.5)", i, j, k, real(in_c(i, j, k)), &
                         aimag(in_c(i, j, k))
                   end do
@@ -964,9 +970,9 @@ module decomp_2d_fft
 #ifdef DEBUG
             write (*, *) 'Back3 c2c_1m_y line 875'
             dim3d = shape(wk1)
-            do k = 1, dim3d(3), dim3d(3)/8
-               do j = 1, dim3d(2), dim3d(2)/8
-                  do i = 1, dim3d(1), dim3d(1)/8
+            do k = 1, dim3d(3), dim3d(3) / 8
+               do j = 1, dim3d(2), dim3d(2) / 8
+                  do i = 1, dim3d(1), dim3d(1) / 8
                      print "(i3,1x,i3,1x,i3,1x,e12.5,1x,e12.5)", i, j, k, real(wk1(i, j, k)), &
                         aimag(wk1(i, j, k))
                   end do
@@ -991,9 +997,9 @@ module decomp_2d_fft
 #ifdef DEBUG
          write (*, *) 'Back2 after tr_y2z'
          dim3d = shape(wk13)
-         do k = 1, dim3d(3), dim3d(3)/8
-            do j = 1, dim3d(2), dim3d(2)/8
-               do i = 1, dim3d(1), dim3d(1)/8
+         do k = 1, dim3d(3), dim3d(3) / 8
+            do j = 1, dim3d(2), dim3d(2) / 8
+               do i = 1, dim3d(1), dim3d(1) / 8
                   print "(i3,1x,i3,1x,i3,1x,e12.5,1x,e12.5)", i, j, k, real(wk13(i, j, k)), &
                      aimag(wk13(i, j, k))
                end do
@@ -1006,9 +1012,9 @@ module decomp_2d_fft
 #ifdef DEBUG
          write (*, *) 'Back2 c2r_1m_z out_r line 902'
          dim3d = shape(out_r)
-         do k = 1, dim3d(3), dim3d(3)/8
-            do j = 1, dim3d(2), dim3d(2)/8
-               do i = 1, dim3d(1), dim3d(1)/8
+         do k = 1, dim3d(3), dim3d(3) / 8
+            do j = 1, dim3d(2), dim3d(2) / 8
+               do i = 1, dim3d(1), dim3d(1) / 8
                   print "(i3,1x,i3,1x,i3,1x,e12.5,1x,e12.5)", i, j, k, real(out_r(i, j, k))
                end do
             end do
@@ -1020,8 +1026,11 @@ module decomp_2d_fft
       end if
 
 #ifndef OVERWRITE
+      !$acc exit data delete(wk1) async
+      !$acc wait
       deallocate (wk1)
 #endif
+      !$acc end data
 
 #ifdef PROFILER
       if (decomp_profiler_fft) call decomp_profiler_end("fft_c2r")

@@ -19,6 +19,9 @@
      integer, intent(IN) :: level      ! levels of halo cells required
      real(mytype), dimension(:, :, :), intent(IN) :: in
      real(mytype), allocatable, dimension(:, :, :), intent(OUT) :: out
+#if defined(_GPU)
+     attributes(device) :: out
+#endif
      logical, optional :: opt_global
      integer, intent(in), optional :: opt_pencil
 
@@ -33,6 +36,9 @@
      integer, intent(IN) :: level      ! levels of halo cells required
      real(mytype), dimension(:, :, :), intent(IN) :: in
      real(mytype), allocatable, dimension(:, :, :), intent(OUT) :: out
+#if defined(_GPU)
+     attributes(device) :: out
+#endif
      TYPE(DECOMP_INFO), intent(in) :: decomp
      logical, optional :: opt_global
      integer, intent(in), optional :: opt_pencil
@@ -41,6 +47,8 @@
 
      ! starting/ending index of array with halo cells
      integer :: xs, ys, zs, xe, ye, ze
+     ! additional start end
+     integer :: ist, ien, jst, jen, kst, ken
 
      integer :: i, j, k, s1, s2, s3, ierror
      integer :: data_type
@@ -68,6 +76,9 @@
      integer, intent(IN) :: level      ! levels of halo cells required
      complex(mytype), dimension(:, :, :), intent(IN) :: in
      complex(mytype), allocatable, dimension(:, :, :), intent(OUT) :: out
+#if defined(_GPU)
+     attributes(device) :: out
+#endif
      logical, optional :: opt_global
      integer, intent(in), optional :: opt_pencil
 
@@ -82,6 +93,9 @@
      integer, intent(IN) :: level      ! levels of halo cells required
      complex(mytype), dimension(:, :, :), intent(IN) :: in
      complex(mytype), allocatable, dimension(:, :, :), intent(OUT) :: out
+#if defined(_GPU)
+     attributes(device) :: out
+#endif
      TYPE(DECOMP_INFO), intent(in) :: decomp
      logical, optional :: opt_global
      integer, intent(in), optional :: opt_pencil
@@ -90,6 +104,8 @@
 
      ! starting/ending index of array with halo cells
      integer :: xs, ys, zs, xe, ye, ze
+     ! additional start end
+     integer :: ist, ien, jst, jen, kst, ken
 
      integer :: i, j, k, s1, s2, s3, ierror
      integer :: data_type

@@ -114,40 +114,55 @@
                             'Invalid data passed to update_halo')
     end if
     allocate (out(xs:xe, ys:ye, zs:ze))
-!    out = -1.0_mytype ! fill the halo for debugging
 
+    !    out = -1.0_mytype ! fill the halo for debugging
+
+    !$acc enter data create(requests,neighbour)
     ! copy input data to output
     if (global) then
        ! using global coordinate
        ! note the input array passed in always has index starting from 1
        ! need to work out the corresponding global index
        if (ipencil == 1) then
-          do k = decomp%xst(3), decomp%xen(3)
-             do j = decomp%xst(2), decomp%xen(2)
+          kst = decomp%xst(3); ken = decomp%xen(3)
+          jst = decomp%xst(2); jen = decomp%xen(2)
+          !$acc kernels default(present)
+          do k = kst, ken
+             do j = jst, jen
                 do i = 1, s1  ! x all local
                    out(i, j, k) = in(i, j - decomp%xst(2) + 1, k - decomp%xst(3) + 1)
                 end do
              end do
           end do
+          !$acc end kernels
        else if (ipencil == 2) then
-          do k = decomp%yst(3), decomp%yen(3)
+          kst = decomp%yst(3); ken = decomp%yen(3)
+          ist = decomp%yst(1); ien = decomp%yen(1)
+          !$acc kernels default(present)
+          do k = kst, ken
              do j = 1, s2  ! y all local
-                do i = decomp%yst(1), decomp%yen(1)
+                do i = ist, ien
                    out(i, j, k) = in(i - decomp%yst(1) + 1, j, k - decomp%yst(3) + 1)
                 end do
              end do
           end do
+          !$acc end kernels
        else if (ipencil == 3) then
+          jst = decomp%zst(2); jen = decomp%zen(2)
+          ist = decomp%xst(1); ien = decomp%xen(1)
+          !$acc kernels default(present)
           do k = 1, s3  ! z all local
-             do j = decomp%zst(2), decomp%zen(2)
-                do i = decomp%zst(1), decomp%zen(1)
+             do j = jst, jen
+                do i = ist, ien
                    out(i, j, k) = in(i - decomp%zst(1) + 1, j - decomp%zst(2) + 1, k)
                 end do
              end do
           end do
+          !$acc end kernels
        end if
     else
        ! not using global coordinate
+       !$acc kernels default(present)
        do k = 1, s3
           do j = 1, s2
              do i = 1, s1
@@ -155,6 +170,8 @@
              end do
           end do
        end do
+       !$acc end kernels
+       !!! istat = cudaMemcpy(out,in,s1*s2*s3,cudaMemcpyDeviceToDevice)
     end if
 
     ! If needed, define MPI derived data type to pack halo data,
@@ -165,7 +182,7 @@
     if (ipencil == 1) then
 
 #ifdef HALO_DEBUG
-       if (nrank == 4) then
+       if (nrank == 0) then
           write (*, *) 'X-pencil input'
           write (*, *) '=============='
           write (*, *) 'Data on a y-z plane is shown'
@@ -186,9 +203,9 @@
        else
           tag_n = coord(1) + 1
        end if
-       icount = s3 + 2*level
-       ilength = level*s1
-       ijump = s1*(s2 + 2*level)
+       icount = s3 + 2 * level
+       ilength = level * s1
+       ijump = s1 * (s2 + 2 * level)
        call MPI_TYPE_VECTOR(icount, ilength, ijump, &
                             data_type, halo12, ierror)
        if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_TYPE_VECTOR")
@@ -219,7 +236,7 @@
        call MPI_TYPE_FREE(halo12, ierror)
        if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_TYPE_FREE")
 #ifdef HALO_DEBUG
-       if (nrank == 4) then
+       if (nrank == 0) then
           write (*, *) 'After exchange in Y'
           do j = ye, ys, -1
              write (*, '(10F4.0)') (out(1, j, k), k=zs, ze)
@@ -237,7 +254,7 @@
        else
           tag_t = coord(2) + 1
        end if
-       icount = (s1*(s2 + 2*level))*level
+       icount = (s1 * (s2 + 2 * level)) * level
        ! receive from bottom
        call MPI_IRECV(out(xs, ys, zs), icount, data_type, &
                       neighbour(1, 6), tag_b, DECOMP_2D_COMM_CART_X, &
@@ -261,7 +278,7 @@
        call MPI_WAITALL(4, requests, status, ierror)
        if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_WAITALL")
 #ifdef HALO_DEBUG
-       if (nrank == 4) then
+       if (nrank == 0) then
           write (*, *) 'After exchange in Z'
           do j = ye, ys, -1
              write (*, '(10F4.0)') (out(1, j, k), k=zs, ze)
@@ -274,7 +291,7 @@
     else if (ipencil == 2) then
 
 #ifdef HALO_DEBUG
-       if (nrank == 4) then
+       if (nrank == 0) then
           write (*, *) 'Y-pencil input'
           write (*, *) '=============='
           write (*, *) 'Data on a x-z plane is shown'
@@ -292,9 +309,9 @@
        else
           tag_e = coord(1) + 1
        end if
-       icount = s2*(s3 + 2*level)
+       icount = s2 * (s3 + 2 * level)
        ilength = level
-       ijump = s1 + 2*level
+       ijump = s1 + 2 * level
        call MPI_TYPE_VECTOR(icount, ilength, ijump, &
                             data_type, halo21, ierror)
        if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_TYPE_VECTOR")
@@ -325,7 +342,7 @@
        call MPI_TYPE_FREE(halo21, ierror)
        if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_TYPE_FREE")
 #ifdef HALO_DEBUG
-       if (nrank == 4) then
+       if (nrank == 0) then
           write (*, *) 'After exchange in X'
           do i = xe, xs, -1
              write (*, '(10F4.0)') (out(i, 1, k), k=zs, ze)
@@ -346,7 +363,7 @@
        else
           tag_t = coord(2) + 1
        end if
-       icount = (s2*(s1 + 2*level))*level
+       icount = (s2 * (s1 + 2 * level)) * level
        ! receive from bottom
        call MPI_IRECV(out(xs, ys, zs), icount, data_type, &
                       neighbour(2, 6), tag_b, DECOMP_2D_COMM_CART_Y, &
@@ -370,7 +387,7 @@
        call MPI_WAITALL(4, requests, status, ierror)
        if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_WAITALL")
 #ifdef HALO_DEBUG
-       if (nrank == 4) then
+       if (nrank == 0) then
           write (*, *) 'After exchange in Z'
           do i = xe, xs, -1
              write (*, '(10F4.0)') (out(i, 1, k), k=zs, ze)
@@ -383,7 +400,7 @@
     else if (ipencil == 3) then
 
 #ifdef HALO_DEBUG
-       if (nrank == 4) then
+       if (nrank == 0) then
           write (*, *) 'Z-pencil input'
           write (*, *) '=============='
           write (*, *) 'Data on a x-y plane is shown'
@@ -400,9 +417,9 @@
        else
           tag_e = coord(1) + 1
        end if
-       icount = (s2 + 2*level)*s3
+       icount = (s2 + 2 * level) * s3
        ilength = level
-       ijump = s1 + 2*level
+       ijump = s1 + 2 * level
        call MPI_TYPE_VECTOR(icount, ilength, ijump, &
                             data_type, halo31, ierror)
        if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_TYPE_VECTOR")
@@ -433,7 +450,7 @@
        call MPI_TYPE_FREE(halo31, ierror)
        if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_TYPE_FREE")
 #ifdef HALO_DEBUG
-       if (nrank == 4) then
+       if (nrank == 0) then
           write (*, *) 'After exchange in X'
           do i = xe, xs, -1
              write (*, '(10F4.0)') (out(i, j, 1), j=ys, ye)
@@ -449,8 +466,8 @@
           tag_n = coord(2) + 1
        end if
        icount = s3
-       ilength = level*(s1 + 2*level)
-       ijump = (s1 + 2*level)*(s2 + 2*level)
+       ilength = level * (s1 + 2 * level)
+       ijump = (s1 + 2 * level) * (s2 + 2 * level)
        call MPI_TYPE_VECTOR(icount, ilength, ijump, &
                             data_type, halo32, ierror)
        if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_TYPE_VECTOR")
@@ -481,13 +498,14 @@
        call MPI_TYPE_FREE(halo32, ierror)
        if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_TYPE_FREE")
 #ifdef HALO_DEBUG
-       if (nrank == 4) then
+       if (nrank == 0) then
           write (*, *) 'After exchange in Y'
           do i = xe, xs, -1
              write (*, '(10F4.0)') (out(i, j, 1), j=ys, ye)
           end do
        end if
 #endif
+       !$acc exit data delete(neighbour,requests)
 
        ! *** top/bottom ***
        ! all data in local memory already, no halo exchange

@@ -13,6 +13,7 @@
 submodule(decomp_2d_fft) d2d_fft_log
 
    use decomp_2d_constants
+   use decomp_2d_mpi
    use decomp_2d
 
    implicit none
@@ -54,12 +55,13 @@ contains
          write (io_unit, *) ''
 #ifdef OVERWRITE
          if (D2D_FFT_BACKEND == D2D_FFT_BACKEND_GENERIC) then
-            call decomp_2d_warning(D2D_FFT_BACKEND, "Selected FFT backend does not support overwrite")
-         else if (D2D_FFT_BACKEND == D2D_FFT_BACKEND_FFTW3 .or. &
+            write (io_unit, *) 'OVERWRITE is supported but transforms are not performed in-place'
+            write (io_unit, *) ''
+         else if (D2D_FFT_BACKEND == D2D_FFT_BACKEND_CUFFT .or. &
+                  D2D_FFT_BACKEND == D2D_FFT_BACKEND_FFTW3 .or. &
                   D2D_FFT_BACKEND == D2D_FFT_BACKEND_FFTW3_F03 .or. &
-                  D2D_FFT_BACKEND == D2D_FFT_BACKEND_CUFFT .or. &
                   D2D_FFT_BACKEND == D2D_FFT_BACKEND_MKL) then
-            write (io_unit, *) 'OVERWRITE support limited to c2C and c2r transforms'
+            write (io_unit, *) 'OVERWRITE is supported but in-place transforms is limited to complex transforms'
             write (io_unit, *) ''
          end if
 #endif

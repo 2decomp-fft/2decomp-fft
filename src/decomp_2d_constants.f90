@@ -14,7 +14,36 @@
 
 module decomp_2d_constants
 
+   use mpi
+   use, intrinsic :: iso_fortran_env, only: real32, real64
+#if defined(_GPU) && defined(_NCCL)
+   use nccl
+#endif
+
    implicit none
+
+   !private
+
+#ifdef DOUBLE_PREC
+   integer, parameter, public :: mytype = KIND(0._real64)
+   integer, parameter, public :: real_type = MPI_DOUBLE_PRECISION
+   integer, parameter, public :: real2_type = MPI_2DOUBLE_PRECISION
+   integer, parameter, public :: complex_type = MPI_DOUBLE_COMPLEX
+#ifdef SAVE_SINGLE
+   integer, parameter, public :: mytype_single = KIND(0._real32)
+   integer, parameter, public :: real_type_single = MPI_REAL
+#else
+   integer, parameter, public :: mytype_single = KIND(0._real64)
+   integer, parameter, public :: real_type_single = MPI_DOUBLE_PRECISION
+#endif
+#else
+   integer, parameter, public :: mytype = KIND(0._real32)
+   integer, parameter, public :: real_type = MPI_REAL
+   integer, parameter, public :: real2_type = MPI_2REAL
+   integer, parameter, public :: complex_type = MPI_COMPLEX
+   integer, parameter, public :: mytype_single = KIND(0._real32)
+   integer, parameter, public :: real_type_single = MPI_REAL
+#endif
 
    !
    ! Output for the log can be changed by the external code before calling decomp_2d_init
@@ -80,6 +109,13 @@ module decomp_2d_constants
    !
    integer, parameter, public :: PHYSICAL_IN_X = 1 ! Forward is input in X, output in Z
    integer, parameter, public :: PHYSICAL_IN_Z = 3 ! Forward is input in Z, output in X
+
+   !
+   ! Major and minor version number
+   !
+   integer, parameter :: D2D_MAJOR = 2
+   integer, parameter :: D2D_MINOR = 0
+   logical, parameter :: D2D_RELEASE = .false.
 
 end module decomp_2d_constants
 

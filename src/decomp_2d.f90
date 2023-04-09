@@ -18,10 +18,13 @@ module decomp_2d
    use, intrinsic :: iso_fortran_env, only: real32, real64
    use factor
    use decomp_2d_constants
+   use decomp_2d_mpi
 #if defined(_GPU)
    use cudafor
+   use decomp_2d_cumpi
 #if defined(_NCCL)
    use nccl
+   use decomp_2d_nccl
 #endif
 #endif
 
@@ -29,35 +32,8 @@ module decomp_2d
 
    private        ! Make everything private unless declared public
 
-#ifdef DOUBLE_PREC
-   integer, parameter, public :: mytype = KIND(0._real64)
-   integer, parameter, public :: real_type = MPI_DOUBLE_PRECISION
-   integer, parameter, public :: real2_type = MPI_2DOUBLE_PRECISION
-   integer, parameter, public :: complex_type = MPI_DOUBLE_COMPLEX
-#ifdef SAVE_SINGLE
-   integer, parameter, public :: mytype_single = KIND(0._real32)
-   integer, parameter, public :: real_type_single = MPI_REAL
-#else
-   integer, parameter, public :: mytype_single = KIND(0._real64)
-   integer, parameter, public :: real_type_single = MPI_DOUBLE_PRECISION
-#endif
-#else
-   integer, parameter, public :: mytype = KIND(0._real32)
-   integer, parameter, public :: real_type = MPI_REAL
-   integer, parameter, public :: real2_type = MPI_2REAL
-   integer, parameter, public :: complex_type = MPI_COMPLEX
-   integer, parameter, public :: mytype_single = KIND(0._real32)
-   integer, parameter, public :: real_type_single = MPI_REAL
-#endif
-
-   integer, save, public :: mytype_bytes
-
    ! some key global variables
    integer, save, public :: nx_global, ny_global, nz_global  ! global size
-
-   integer, save, public :: nrank = -1 ! local MPI rank
-   integer, save, public :: nproc = -1 ! total number of processors
-   integer, save, public :: decomp_2d_comm = MPI_COMM_NULL ! MPI communicator
 
    ! parameters for 2D Cartesian topology
    integer, save, dimension(2) :: dims, coord
@@ -104,34 +80,6 @@ module decomp_2d
    integer(kind(D2D_DEBUG_LEVEL_OFF)), public, save :: decomp_debug = D2D_DEBUG_LEVEL_OFF
 #endif
 
-#if defined(_GPU)
-#if defined(_NCCL)
-   integer, save :: row_rank, col_rank
-#endif
-#endif
-
-#ifdef SHM
-   ! derived type to store shared-memory info
-   TYPE, public :: SMP_INFO
-      integer MPI_COMM          ! SMP associated with this communicator
-      integer NODE_ME           ! rank in this communicator
-      integer NCPU              ! size of this communicator
-      integer SMP_COMM          ! communicator for SMP-node masters
-      integer CORE_COMM         ! communicator for cores on SMP-node
-      integer SMP_ME            ! SMP-node id starting from 1 ... NSMP
-      integer NSMP              ! number of SMP-nodes in this communicator
-      integer CORE_ME           ! core id starting from 1 ... NCORE
-      integer NCORE             ! number of cores on this SMP-node
-      integer MAXCORE           ! maximum no. cores on any SMP-node
-      integer N_SND             ! size of SMP shared memory buffer
-      integer N_RCV             ! size of SMP shared memory buffer
-      integer(8) SND_P          ! SNDBUF address (cray pointer), for real
-      integer(8) RCV_P          ! RCVBUF address (cray pointer), for real
-      integer(8) SND_P_c        ! for complex
-      integer(8) RCV_P_c        ! for complex
-   END TYPE SMP_INFO
-#endif
-
    ! derived type to store decomposition info for a given global data size
    TYPE, public :: DECOMP_INFO
       ! staring/ending index and size of data held by current processor
@@ -159,22 +107,6 @@ module decomp_2d
       ! evenly distributed data
       logical :: even
 
-#ifdef SHM
-      ! For shared-memory implementation
-
-      ! one instance of this derived type for each communicator
-      ! shared moemory info, such as which MPI rank belongs to which node
-      TYPE(SMP_INFO) :: ROW_INFO, COL_INFO
-
-      ! shared send/recv buffers for ALLTOALLV
-      integer, allocatable, dimension(:) :: x1cnts_s, y1cnts_s, &
-                                            y2cnts_s, z2cnts_s
-      integer, allocatable, dimension(:) :: x1disp_s, y1disp_s, &
-                                            y2disp_s, z2disp_s
-      ! A copy of original buffer displacement (will be overwriten)
-      integer, allocatable, dimension(:) :: x1disp_o, y1disp_o, &
-                                            y2disp_o, z2disp_o
-#endif
    END TYPE DECOMP_INFO
 
    ! main (default) decomposition information for global size nx*ny*nz
@@ -194,18 +126,6 @@ module decomp_2d
    real(mytype), allocatable, dimension(:) :: work1_r, work2_r
    complex(mytype), allocatable, dimension(:) :: work1_c, work2_c
 
-#if defined(_GPU)
-   real(mytype), allocatable, dimension(:), device :: work1_r_d, work2_r_d
-   complex(mytype), allocatable, dimension(:), device :: work1_c_d, work2_c_d
-
-#if defined(_NCCL)
-   integer col_comm_size, row_comm_size
-   integer, allocatable, dimension(:) :: local_to_global_col, local_to_global_row
-   type(ncclUniqueId) :: nccl_uid_2decomp
-   type(ncclComm) :: nccl_comm_2decomp
-   integer(kind=cuda_stream_kind) :: cuda_stream_2decomp
-#endif
-#endif
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
    ! To define smaller arrays using every several mesh points
    integer, save, dimension(3), public :: xszS, yszS, zszS, xstS, ystS, zstS, xenS, yenS, zenS
@@ -241,9 +161,9 @@ module decomp_2d
              init_coarser_mesh_statV, fine_to_coarseV, &
              init_coarser_mesh_statP, fine_to_coarseP, &
              alloc_x, alloc_y, alloc_z, &
-             update_halo, decomp_2d_abort, &
-             decomp_2d_warning, get_decomp_info, &
-             decomp_mpi_comm_free, get_decomp_dims, &
+             update_halo, &
+             get_decomp_info, &
+             get_decomp_dims, &
              d2d_listing_get_unit, d2d_listing_close_unit
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -273,30 +193,30 @@ module decomp_2d
    end interface decomp_2d_finalize
 
    interface transpose_x_to_y
-      module procedure transpose_x_to_y_real
+      module procedure transpose_x_to_y_real_long
       module procedure transpose_x_to_y_real_short
-      module procedure transpose_x_to_y_complex
+      module procedure transpose_x_to_y_complex_long
       module procedure transpose_x_to_y_complex_short
    end interface transpose_x_to_y
 
    interface transpose_y_to_z
-      module procedure transpose_y_to_z_real
+      module procedure transpose_y_to_z_real_long
       module procedure transpose_y_to_z_real_short
-      module procedure transpose_y_to_z_complex
+      module procedure transpose_y_to_z_complex_long
       module procedure transpose_y_to_z_complex_short
    end interface transpose_y_to_z
 
    interface transpose_z_to_y
-      module procedure transpose_z_to_y_real
+      module procedure transpose_z_to_y_real_long
       module procedure transpose_z_to_y_real_short
-      module procedure transpose_z_to_y_complex
+      module procedure transpose_z_to_y_complex_long
       module procedure transpose_z_to_y_complex_short
    end interface transpose_z_to_y
 
    interface transpose_y_to_x
-      module procedure transpose_y_to_x_real
+      module procedure transpose_y_to_x_real_long
       module procedure transpose_y_to_x_real_short
-      module procedure transpose_y_to_x_complex
+      module procedure transpose_y_to_x_complex_long
       module procedure transpose_y_to_x_complex_short
    end interface transpose_y_to_x
 
@@ -327,20 +247,6 @@ module decomp_2d
       module procedure alloc_z_complex
       module procedure alloc_z_complex_short
    end interface alloc_z
-
-   interface decomp_2d_abort
-      module procedure decomp_2d_abort_basic
-      module procedure decomp_2d_abort_file_line
-#if defined(_GPU) && defined(_NCCL)
-      module procedure decomp_2d_abort_nccl_basic
-      module procedure decomp_2d_abort_nccl_file_line
-#endif
-   end interface decomp_2d_abort
-
-   interface decomp_2d_warning
-      module procedure decomp_2d_warning_basic
-      module procedure decomp_2d_warning_file_line
-   end interface decomp_2d_warning
 
    interface
 
@@ -407,26 +313,6 @@ module decomp_2d
 contains
 
 #include "decomp_2d_init_fin.f90"
-
-   !
-   ! Small wrapper to free a MPI communicator
-   !
-   subroutine decomp_mpi_comm_free(mpi_comm)
-
-      implicit none
-
-      integer, intent(inout) :: mpi_comm
-      integer :: ierror
-
-      ! Return if no MPI comm to free
-      if (mpi_comm == MPI_COMM_NULL) return
-
-      ! Free the provided MPI communicator
-      call MPI_COMM_FREE(mpi_comm, ierror)
-      if (ierror /= 0) call decomp_2d_warning(__FILE__, __LINE__, ierror, "MPI_COMM_FREE")
-      mpi_comm = MPI_COMM_NULL
-
-   end subroutine decomp_mpi_comm_free
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
    ! Return the default decomposition object
@@ -514,21 +400,16 @@ contains
                 decomp%y2disp(0:dims(2) - 1), decomp%z2disp(0:dims(2) - 1))
       call prepare_buffer(decomp)
 
-#ifdef SHM
-      ! prepare shared-memory information if required
-      call decomp_info_init_shm(decomp)
-#endif
-
       ! allocate memory for the MPI_ALLTOALL(V) buffers
       ! define the buffers globally for performance reason
 
-      buf_size = max(decomp%xsz(1)*decomp%xsz(2)*decomp%xsz(3), &
-                     max(decomp%ysz(1)*decomp%ysz(2)*decomp%ysz(3), &
-                         decomp%zsz(1)*decomp%zsz(2)*decomp%zsz(3)))
+      buf_size = max(decomp%xsz(1) * decomp%xsz(2) * decomp%xsz(3), &
+                     max(decomp%ysz(1) * decomp%ysz(2) * decomp%ysz(3), &
+                         decomp%zsz(1) * decomp%zsz(2) * decomp%zsz(3)))
 #ifdef EVEN
       ! padded alltoall optimisation may need larger buffer space
       buf_size = max(buf_size, &
-                     max(decomp%x1count*dims(1), decomp%y2count*dims(2)))
+                     max(decomp%x1count * dims(1), decomp%y2count * dims(2)))
 #endif
 
       ! check if additional memory is required
@@ -536,34 +417,7 @@ contains
       if (buf_size > decomp_buf_size) then
          decomp_buf_size = buf_size
 #if defined(_GPU)
-         if (allocated(work1_r_d)) deallocate (work1_r_d)
-         if (allocated(work2_r_d)) deallocate (work2_r_d)
-         if (allocated(work1_c_d)) deallocate (work1_c_d)
-         if (allocated(work2_c_d)) deallocate (work2_c_d)
-         allocate (work1_r_d(buf_size), STAT=status)
-         if (status /= 0) then
-            errorcode = 2
-            call decomp_2d_abort(__FILE__, __LINE__, errorcode, &
-                                 'Out of memory when allocating 2DECOMP workspace')
-         end if
-         allocate (work1_c_d(buf_size), STAT=status)
-         if (status /= 0) then
-            errorcode = 2
-            call decomp_2d_abort(__FILE__, __LINE__, errorcode, &
-                                 'Out of memory when allocating 2DECOMP workspace')
-         end if
-         allocate (work2_r_d(buf_size), STAT=status)
-         if (status /= 0) then
-            errorcode = 2
-            call decomp_2d_abort(__FILE__, __LINE__, errorcode, &
-                                 'Out of memory when allocating 2DECOMP workspace')
-         end if
-         allocate (work2_c_d(buf_size), STAT=status)
-         if (status /= 0) then
-            errorcode = 2
-            call decomp_2d_abort(__FILE__, __LINE__, errorcode, &
-                                 'Out of memory when allocating 2DECOMP workspace')
-         end if
+         call decomp_2d_cumpi_init(buf_size)
 #endif
          if (allocated(work1_r)) deallocate (work1_r)
          if (allocated(work2_r)) deallocate (work2_r)
@@ -620,21 +474,6 @@ contains
       if (allocated(decomp%y2disp)) deallocate (decomp%y2disp)
       if (allocated(decomp%z2disp)) deallocate (decomp%z2disp)
 
-#ifdef SHM
-      if (allocated(decomp%x1disp_o)) deallocate (decomp%x1disp_o)
-      if (allocated(decomp%y1disp_o)) deallocate (decomp%y1disp_o)
-      if (allocated(decomp%y2disp_o)) deallocate (decomp%y2disp_o)
-      if (allocated(decomp%z2disp_o)) deallocate (decomp%z2disp_o)
-      if (allocated(decomp%x1cnts_s)) deallocate (decomp%x1cnts_s)
-      if (allocated(decomp%y1cnts_s)) deallocate (decomp%y1cnts_s)
-      if (allocated(decomp%y2cnts_s)) deallocate (decomp%y2cnts_s)
-      if (allocated(decomp%z2cnts_s)) deallocate (decomp%z2cnts_s)
-      if (allocated(decomp%x1disp_s)) deallocate (decomp%x1disp_s)
-      if (allocated(decomp%y1disp_s)) deallocate (decomp%y1disp_s)
-      if (allocated(decomp%y2disp_s)) deallocate (decomp%y2disp_s)
-      if (allocated(decomp%z2disp_s)) deallocate (decomp%z2disp_s)
-#endif
-
       return
    end subroutine decomp_info_finalize
 
@@ -663,39 +502,39 @@ contains
 
       do i = 1, 3
          if (from1) then
-            xstS(i) = (xstart(i) + skip(i) - 1)/skip(i)
+            xstS(i) = (xstart(i) + skip(i) - 1) / skip(i)
             if (mod(xstart(i) + skip(i) - 1, skip(i)) /= 0) xstS(i) = xstS(i) + 1
-            xenS(i) = (xend(i) + skip(i) - 1)/skip(i)
+            xenS(i) = (xend(i) + skip(i) - 1) / skip(i)
          else
-            xstS(i) = xstart(i)/skip(i)
+            xstS(i) = xstart(i) / skip(i)
             if (mod(xstart(i), skip(i)) /= 0) xstS(i) = xstS(i) + 1
-            xenS(i) = xend(i)/skip(i)
+            xenS(i) = xend(i) / skip(i)
          end if
          xszS(i) = xenS(i) - xstS(i) + 1
       end do
 
       do i = 1, 3
          if (from1) then
-            ystS(i) = (ystart(i) + skip(i) - 1)/skip(i)
+            ystS(i) = (ystart(i) + skip(i) - 1) / skip(i)
             if (mod(ystart(i) + skip(i) - 1, skip(i)) /= 0) ystS(i) = ystS(i) + 1
-            yenS(i) = (yend(i) + skip(i) - 1)/skip(i)
+            yenS(i) = (yend(i) + skip(i) - 1) / skip(i)
          else
-            ystS(i) = ystart(i)/skip(i)
+            ystS(i) = ystart(i) / skip(i)
             if (mod(ystart(i), skip(i)) /= 0) ystS(i) = ystS(i) + 1
-            yenS(i) = yend(i)/skip(i)
+            yenS(i) = yend(i) / skip(i)
          end if
          yszS(i) = yenS(i) - ystS(i) + 1
       end do
 
       do i = 1, 3
          if (from1) then
-            zstS(i) = (zstart(i) + skip(i) - 1)/skip(i)
+            zstS(i) = (zstart(i) + skip(i) - 1) / skip(i)
             if (mod(zstart(i) + skip(i) - 1, skip(i)) /= 0) zstS(i) = zstS(i) + 1
-            zenS(i) = (zend(i) + skip(i) - 1)/skip(i)
+            zenS(i) = (zend(i) + skip(i) - 1) / skip(i)
          else
-            zstS(i) = zstart(i)/skip(i)
+            zstS(i) = zstart(i) / skip(i)
             if (mod(zstart(i), skip(i)) /= 0) zstS(i) = zstS(i) + 1
-            zenS(i) = zend(i)/skip(i)
+            zenS(i) = zend(i) / skip(i)
          end if
          zszS(i) = zenS(i) - zstS(i) + 1
       end do
@@ -728,39 +567,39 @@ contains
 
       do i = 1, 3
          if (from1) then
-            xstV(i) = (xstart(i) + skip(i) - 1)/skip(i)
+            xstV(i) = (xstart(i) + skip(i) - 1) / skip(i)
             if (mod(xstart(i) + skip(i) - 1, skip(i)) /= 0) xstV(i) = xstV(i) + 1
-            xenV(i) = (xend(i) + skip(i) - 1)/skip(i)
+            xenV(i) = (xend(i) + skip(i) - 1) / skip(i)
          else
-            xstV(i) = xstart(i)/skip(i)
+            xstV(i) = xstart(i) / skip(i)
             if (mod(xstart(i), skip(i)) /= 0) xstV(i) = xstV(i) + 1
-            xenV(i) = xend(i)/skip(i)
+            xenV(i) = xend(i) / skip(i)
          end if
          xszV(i) = xenV(i) - xstV(i) + 1
       end do
 
       do i = 1, 3
          if (from1) then
-            ystV(i) = (ystart(i) + skip(i) - 1)/skip(i)
+            ystV(i) = (ystart(i) + skip(i) - 1) / skip(i)
             if (mod(ystart(i) + skip(i) - 1, skip(i)) /= 0) ystV(i) = ystV(i) + 1
-            yenV(i) = (yend(i) + skip(i) - 1)/skip(i)
+            yenV(i) = (yend(i) + skip(i) - 1) / skip(i)
          else
-            ystV(i) = ystart(i)/skip(i)
+            ystV(i) = ystart(i) / skip(i)
             if (mod(ystart(i), skip(i)) /= 0) ystV(i) = ystV(i) + 1
-            yenV(i) = yend(i)/skip(i)
+            yenV(i) = yend(i) / skip(i)
          end if
          yszV(i) = yenV(i) - ystV(i) + 1
       end do
 
       do i = 1, 3
          if (from1) then
-            zstV(i) = (zstart(i) + skip(i) - 1)/skip(i)
+            zstV(i) = (zstart(i) + skip(i) - 1) / skip(i)
             if (mod(zstart(i) + skip(i) - 1, skip(i)) /= 0) zstV(i) = zstV(i) + 1
-            zenV(i) = (zend(i) + skip(i) - 1)/skip(i)
+            zenV(i) = (zend(i) + skip(i) - 1) / skip(i)
          else
-            zstV(i) = zstart(i)/skip(i)
+            zstV(i) = zstart(i) / skip(i)
             if (mod(zstart(i), skip(i)) /= 0) zstV(i) = zstV(i) + 1
-            zenV(i) = zend(i)/skip(i)
+            zenV(i) = zend(i) / skip(i)
          end if
          zszV(i) = zenV(i) - zstV(i) + 1
       end do
@@ -793,39 +632,39 @@ contains
 
       do i = 1, 3
          if (from1) then
-            xstP(i) = (xstart(i) + skip(i) - 1)/skip(i)
+            xstP(i) = (xstart(i) + skip(i) - 1) / skip(i)
             if (mod(xstart(i) + skip(i) - 1, skip(i)) /= 0) xstP(i) = xstP(i) + 1
-            xenP(i) = (xend(i) + skip(i) - 1)/skip(i)
+            xenP(i) = (xend(i) + skip(i) - 1) / skip(i)
          else
-            xstP(i) = xstart(i)/skip(i)
+            xstP(i) = xstart(i) / skip(i)
             if (mod(xstart(i), skip(i)) /= 0) xstP(i) = xstP(i) + 1
-            xenP(i) = xend(i)/skip(i)
+            xenP(i) = xend(i) / skip(i)
          end if
          xszP(i) = xenP(i) - xstP(i) + 1
       end do
 
       do i = 1, 3
          if (from1) then
-            ystP(i) = (ystart(i) + skip(i) - 1)/skip(i)
+            ystP(i) = (ystart(i) + skip(i) - 1) / skip(i)
             if (mod(ystart(i) + skip(i) - 1, skip(i)) /= 0) ystP(i) = ystP(i) + 1
-            yenP(i) = (yend(i) + skip(i) - 1)/skip(i)
+            yenP(i) = (yend(i) + skip(i) - 1) / skip(i)
          else
-            ystP(i) = ystart(i)/skip(i)
+            ystP(i) = ystart(i) / skip(i)
             if (mod(ystart(i), skip(i)) /= 0) ystP(i) = ystP(i) + 1
-            yenP(i) = yend(i)/skip(i)
+            yenP(i) = yend(i) / skip(i)
          end if
          yszP(i) = yenP(i) - ystP(i) + 1
       end do
 
       do i = 1, 3
          if (from1) then
-            zstP(i) = (zstart(i) + skip(i) - 1)/skip(i)
+            zstP(i) = (zstart(i) + skip(i) - 1) / skip(i)
             if (mod(zstart(i) + skip(i) - 1, skip(i)) /= 0) zstP(i) = zstP(i) + 1
-            zenP(i) = (zend(i) + skip(i) - 1)/skip(i)
+            zenP(i) = (zend(i) + skip(i) - 1) / skip(i)
          else
-            zstP(i) = zstart(i)/skip(i)
+            zstP(i) = zstart(i) / skip(i)
             if (mod(zstart(i), skip(i)) /= 0) zstP(i) = zstP(i) + 1
-            zenP(i) = zend(i)/skip(i)
+            zenP(i) = zend(i) / skip(i)
          end if
          zszP(i) = zenP(i) - zstP(i) + 1
       end do
@@ -853,7 +692,7 @@ contains
             do k = xstS(3), xenS(3)
                do j = xstS(2), xenS(2)
                   do i = xstS(1), xenS(1)
-                     wk(i, j, k) = wk2((i - 1)*iskipS + 1, (j - 1)*jskipS + 1, (k - 1)*kskipS + 1)
+                     wk(i, j, k) = wk2((i - 1) * iskipS + 1, (j - 1) * jskipS + 1, (k - 1) * kskipS + 1)
                   end do
                end do
             end do
@@ -861,7 +700,7 @@ contains
             do k = xstS(3), xenS(3)
                do j = xstS(2), xenS(2)
                   do i = xstS(1), xenS(1)
-                     wk(i, j, k) = wk2(i*iskipS, j*jskipS, k*kskipS)
+                     wk(i, j, k) = wk2(i * iskipS, j * jskipS, k * kskipS)
                   end do
                end do
             end do
@@ -875,7 +714,7 @@ contains
             do k = ystS(3), yenS(3)
                do j = ystS(2), yenS(2)
                   do i = ystS(1), yenS(1)
-                     wk(i, j, k) = wk2((i - 1)*iskipS + 1, (j - 1)*jskipS + 1, (k - 1)*kskipS + 1)
+                     wk(i, j, k) = wk2((i - 1) * iskipS + 1, (j - 1) * jskipS + 1, (k - 1) * kskipS + 1)
                   end do
                end do
             end do
@@ -883,7 +722,7 @@ contains
             do k = ystS(3), yenS(3)
                do j = ystS(2), yenS(2)
                   do i = ystS(1), yenS(1)
-                     wk(i, j, k) = wk2(i*iskipS, j*jskipS, k*kskipS)
+                     wk(i, j, k) = wk2(i * iskipS, j * jskipS, k * kskipS)
                   end do
                end do
             end do
@@ -897,7 +736,7 @@ contains
             do k = zstS(3), zenS(3)
                do j = zstS(2), zenS(2)
                   do i = zstS(1), zenS(1)
-                     wk(i, j, k) = wk2((i - 1)*iskipS + 1, (j - 1)*jskipS + 1, (k - 1)*kskipS + 1)
+                     wk(i, j, k) = wk2((i - 1) * iskipS + 1, (j - 1) * jskipS + 1, (k - 1) * kskipS + 1)
                   end do
                end do
             end do
@@ -905,7 +744,7 @@ contains
             do k = zstS(3), zenS(3)
                do j = zstS(2), zenS(2)
                   do i = zstS(1), zenS(1)
-                     wk(i, j, k) = wk2(i*iskipS, j*jskipS, k*kskipS)
+                     wk(i, j, k) = wk2(i * iskipS, j * jskipS, k * kskipS)
                   end do
                end do
             end do
@@ -938,7 +777,7 @@ contains
             do k = xstV(3), xenV(3)
                do j = xstV(2), xenV(2)
                   do i = xstV(1), xenV(1)
-                     wk(i, j, k) = wk2((i - 1)*iskipV + 1, (j - 1)*jskipV + 1, (k - 1)*kskipV + 1)
+                     wk(i, j, k) = wk2((i - 1) * iskipV + 1, (j - 1) * jskipV + 1, (k - 1) * kskipV + 1)
                   end do
                end do
             end do
@@ -946,7 +785,7 @@ contains
             do k = xstV(3), xenV(3)
                do j = xstV(2), xenV(2)
                   do i = xstV(1), xenV(1)
-                     wk(i, j, k) = wk2(i*iskipV, j*jskipV, k*kskipV)
+                     wk(i, j, k) = wk2(i * iskipV, j * jskipV, k * kskipV)
                   end do
                end do
             end do
@@ -960,7 +799,7 @@ contains
             do k = ystV(3), yenV(3)
                do j = ystV(2), yenV(2)
                   do i = ystV(1), yenV(1)
-                     wk(i, j, k) = wk2((i - 1)*iskipV + 1, (j - 1)*jskipV + 1, (k - 1)*kskipV + 1)
+                     wk(i, j, k) = wk2((i - 1) * iskipV + 1, (j - 1) * jskipV + 1, (k - 1) * kskipV + 1)
                   end do
                end do
             end do
@@ -968,7 +807,7 @@ contains
             do k = ystV(3), yenV(3)
                do j = ystV(2), yenV(2)
                   do i = ystV(1), yenV(1)
-                     wk(i, j, k) = wk2(i*iskipV, j*jskipV, k*kskipV)
+                     wk(i, j, k) = wk2(i * iskipV, j * jskipV, k * kskipV)
                   end do
                end do
             end do
@@ -982,7 +821,7 @@ contains
             do k = zstV(3), zenV(3)
                do j = zstV(2), zenV(2)
                   do i = zstV(1), zenV(1)
-                     wk(i, j, k) = wk2((i - 1)*iskipV + 1, (j - 1)*jskipV + 1, (k - 1)*kskipV + 1)
+                     wk(i, j, k) = wk2((i - 1) * iskipV + 1, (j - 1) * jskipV + 1, (k - 1) * kskipV + 1)
                   end do
                end do
             end do
@@ -990,7 +829,7 @@ contains
             do k = zstV(3), zenV(3)
                do j = zstV(2), zenV(2)
                   do i = zstV(1), zenV(1)
-                     wk(i, j, k) = wk2(i*iskipV, j*jskipV, k*kskipV)
+                     wk(i, j, k) = wk2(i * iskipV, j * jskipV, k * kskipV)
                   end do
                end do
             end do
@@ -1023,7 +862,7 @@ contains
             do k = xstP(3), xenP(3)
                do j = xstP(2), xenP(2)
                   do i = xstP(1), xenP(1)
-                     wk(i, j, k) = wk2((i - 1)*iskipP + 1, (j - 1)*jskipP + 1, (k - 1)*kskipP + 1)
+                     wk(i, j, k) = wk2((i - 1) * iskipP + 1, (j - 1) * jskipP + 1, (k - 1) * kskipP + 1)
                   end do
                end do
             end do
@@ -1031,7 +870,7 @@ contains
             do k = xstP(3), xenP(3)
                do j = xstP(2), xenP(2)
                   do i = xstP(1), xenP(1)
-                     wk(i, j, k) = wk2(i*iskipP, j*jskipP, k*kskipP)
+                     wk(i, j, k) = wk2(i * iskipP, j * jskipP, k * kskipP)
                   end do
                end do
             end do
@@ -1045,7 +884,7 @@ contains
             do k = ystP(3), yenP(3)
                do j = ystP(2), yenP(2)
                   do i = ystP(1), yenP(1)
-                     wk(i, j, k) = wk2((i - 1)*iskipP + 1, (j - 1)*jskipP + 1, (k - 1)*kskipP + 1)
+                     wk(i, j, k) = wk2((i - 1) * iskipP + 1, (j - 1) * jskipP + 1, (k - 1) * kskipP + 1)
                   end do
                end do
             end do
@@ -1053,7 +892,7 @@ contains
             do k = ystP(3), yenP(3)
                do j = ystP(2), yenP(2)
                   do i = ystP(1), yenP(1)
-                     wk(i, j, k) = wk2(i*iskipP, j*jskipP, k*kskipP)
+                     wk(i, j, k) = wk2(i * iskipP, j * jskipP, k * kskipP)
                   end do
                end do
             end do
@@ -1067,7 +906,7 @@ contains
             do k = zstP(3), zenP(3)
                do j = zstP(2), zenP(2)
                   do i = zstP(1), zenP(1)
-                     wk(i, j, k) = wk2((i - 1)*iskipP + 1, (j - 1)*jskipP + 1, (k - 1)*kskipP + 1)
+                     wk(i, j, k) = wk2((i - 1) * iskipP + 1, (j - 1) * jskipP + 1, (k - 1) * kskipP + 1)
                   end do
                end do
             end do
@@ -1075,7 +914,7 @@ contains
             do k = zstP(3), zenP(3)
                do j = zstP(2), zenP(2)
                   do i = zstP(1), zenP(1)
-                     wk(i, j, k) = wk2(i*iskipP, j*jskipP, k*kskipP)
+                     wk(i, j, k) = wk2(i * iskipP, j * jskipP, k * kskipP)
                   end do
                end do
             end do
@@ -1166,8 +1005,8 @@ contains
       integer data1, proc, st(0:proc - 1), en(0:proc - 1), sz(0:proc - 1)
       integer i, size1, nl, nu
 
-      size1 = data1/proc
-      nu = data1 - size1*proc
+      size1 = data1 / proc
+      nu = data1 - size1 * proc
       nl = proc - nu
       st(0) = 1
       sz(0) = size1
@@ -1243,8 +1082,8 @@ contains
       ! MPI_ALLTOALLV buffer information
 
       do i = 0, dims(1) - 1
-         decomp%x1cnts(i) = decomp%x1dist(i)*decomp%xsz(2)*decomp%xsz(3)
-         decomp%y1cnts(i) = decomp%ysz(1)*decomp%y1dist(i)*decomp%ysz(3)
+         decomp%x1cnts(i) = decomp%x1dist(i) * decomp%xsz(2) * decomp%xsz(3)
+         decomp%y1cnts(i) = decomp%ysz(1) * decomp%y1dist(i) * decomp%ysz(3)
          if (i == 0) then
             decomp%x1disp(i) = 0  ! displacement is 0-based index
             decomp%y1disp(i) = 0
@@ -1255,8 +1094,8 @@ contains
       end do
 
       do i = 0, dims(2) - 1
-         decomp%y2cnts(i) = decomp%ysz(1)*decomp%y2dist(i)*decomp%ysz(3)
-         decomp%z2cnts(i) = decomp%zsz(1)*decomp%zsz(2)*decomp%z2dist(i)
+         decomp%y2cnts(i) = decomp%ysz(1) * decomp%y2dist(i) * decomp%ysz(3)
+         decomp%z2cnts(i) = decomp%zsz(1) * decomp%zsz(2) * decomp%z2dist(i)
          if (i == 0) then
             decomp%y2disp(i) = 0  ! displacement is 0-based index
             decomp%z2disp(i) = 0
@@ -1278,344 +1117,16 @@ contains
       ! For unevenly distributed data, pad smaller messages. Note the
       ! last blocks along pencils always get assigned more mesh points
       ! for X <=> Y transposes
-      decomp%x1count = decomp%x1dist(dims(1) - 1)* &
-                       decomp%y1dist(dims(1) - 1)*decomp%xsz(3)
+      decomp%x1count = decomp%x1dist(dims(1) - 1) * &
+                       decomp%y1dist(dims(1) - 1) * decomp%xsz(3)
       decomp%y1count = decomp%x1count
       ! for Y <=> Z transposes
-      decomp%y2count = decomp%y2dist(dims(2) - 1)* &
-                       decomp%z2dist(dims(2) - 1)*decomp%zsz(1)
+      decomp%y2count = decomp%y2dist(dims(2) - 1) * &
+                       decomp%z2dist(dims(2) - 1) * decomp%zsz(1)
       decomp%z2count = decomp%y2count
 
       return
    end subroutine prepare_buffer
-
-#ifdef SHM
-
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-   !  Generate shared-memory information
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-   subroutine decomp_info_init_shm(decomp)
-
-      implicit none
-
-      TYPE(DECOMP_INFO), intent(INOUT) :: decomp
-
-      ! a copy of old displacement array (will be overwritten by shm code)
-      allocate (decomp%x1disp_o(0:dims(1) - 1), decomp%y1disp_o(0:dims(1) - 1), &
-                decomp%y2disp_o(0:dims(2) - 1), decomp%z2disp_o(0:dims(2) - 1))
-      decomp%x1disp_o = decomp%x1disp
-      decomp%y1disp_o = decomp%y1disp
-      decomp%y2disp_o = decomp%y2disp
-      decomp%z2disp_o = decomp%z2disp
-
-      call prepare_shared_buffer(decomp%ROW_INFO, DECOMP_2D_COMM_ROW, decomp)
-      call prepare_shared_buffer(decomp%COL_INFO, DECOMP_2D_COMM_COL, decomp)
-
-      return
-   end subroutine decomp_info_init_shm
-
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-   ! For shared-memory implementation, prepare send/recv shared buffer
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-   subroutine prepare_shared_buffer(C, MPI_COMM, decomp)
-
-      implicit none
-
-      TYPE(SMP_INFO) :: C
-      INTEGER :: MPI_COMM
-      TYPE(DECOMP_INFO) :: decomp
-
-      INTEGER, ALLOCATABLE :: KTBL(:, :), NARY(:, :), KTBLALL(:, :)
-      INTEGER MYSMP, MYCORE, COLOR
-
-      integer :: ierror
-
-      C%MPI_COMM = MPI_COMM
-      CALL MPI_COMM_SIZE(MPI_COMM, C%NCPU, ierror)
-      if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_COMM_SIZE")
-      CALL MPI_COMM_RANK(MPI_COMM, C%NODE_ME, ierror)
-      if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_CART_RANK")
-      C%SMP_COMM = MPI_COMM_NULL
-      C%CORE_COMM = MPI_COMM_NULL
-      C%SMP_ME = 0
-      C%NCORE = 0
-      C%CORE_ME = 0
-      C%MAXCORE = 0
-      C%NSMP = 0
-      C%N_SND = 0
-      C%N_RCV = 0
-      C%SND_P = 0
-      C%RCV_P = 0
-      C%SND_P_c = 0
-      C%RCV_P_c = 0
-
-      ! get smp-node map for this communicator and set up smp communicators
-      CALL GET_SMP_MAP(C%MPI_COMM, C%NSMP, MYSMP, &
-                       C%NCORE, MYCORE, C%MAXCORE)
-      C%SMP_ME = MYSMP + 1
-      C%CORE_ME = MYCORE + 1
-      ! - set up inter/intra smp-node communicators
-      COLOR = MYCORE
-      IF (COLOR > 0) COLOR = MPI_UNDEFINED
-      CALL MPI_Comm_split(C%MPI_COMM, COLOR, MYSMP, C%SMP_COMM, ierror)
-      if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_COMM_SPLIT")
-      CALL MPI_Comm_split(C%MPI_COMM, MYSMP, MYCORE, C%CORE_COMM, ierror)
-      if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_COMM_SPLIT")
-      ! - allocate work space
-      ALLOCATE (KTBL(C%MAXCORE, C%NSMP), NARY(C%NCPU, C%NCORE))
-      ALLOCATE (KTBLALL(C%MAXCORE, C%NSMP))
-      ! - set up smp-node/core to node_me lookup table
-      KTBL = 0
-      KTBL(C%CORE_ME, C%SMP_ME) = C%NODE_ME + 1
-      CALL MPI_ALLREDUCE(KTBL, KTBLALL, C%NSMP*C%MAXCORE, MPI_INTEGER, &
-                         MPI_SUM, MPI_COMM, ierror)
-      if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_ALLREDUCE")
-      KTBL = KTBLALL
-      !  IF (SUM(KTBL) /= C%NCPU*(C%NCPU+1)/2) &
-      !       CALL MPI_ABORT(...
-
-      ! compute offsets in shared SNDBUF and RCVBUF
-      CALL MAPSET_SMPSHM(C, KTBL, NARY, decomp)
-
-      DEALLOCATE (KTBL, NARY)
-
-      return
-   end subroutine prepare_shared_buffer
-
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-   ! Use Ian Bush's FreeIPC to generate shared-memory information
-   !  - system independent solution
-   !  - replacing David Tanqueray's implementation in alloc_shm.c
-   !    (old C code renamed to get_smp_map2)
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-   subroutine get_smp_map(comm, nnodes, my_node, ncores, my_core, maxcor)
-
-      use FIPC_module
-
-      implicit none
-
-      integer, intent(IN) :: comm
-      integer, intent(OUT) :: nnodes, my_node, ncores, my_core, maxcor
-
-      integer :: intra_comm, extra_comm
-      integer :: ierror
-
-      call FIPC_init(comm, ierror)
-      if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "FIPC_init")
-
-      ! intra_comm: communicator for processes on this shared memory node
-      ! extra_comm: communicator for all rank 0 on each shared memory node
-      call FIPC_ctxt_intra_comm(FIPC_ctxt_world, intra_comm, ierror)
-      if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "FIPC_ctxt_intra_comm")
-      call FIPC_ctxt_extra_comm(FIPC_ctxt_world, extra_comm, ierror)
-      if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "FIPC_ctxt_extra_comm")
-
-      call MPI_COMM_SIZE(intra_comm, ncores, ierror)
-      if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_COMM_SIZE")
-      call MPI_COMM_RANK(intra_comm, my_core, ierror)
-      if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_COMM_RANK")
-
-      ! only rank 0 on each shared memory node member of extra_comm
-      ! for others extra_comm = MPI_COMM_NULL
-      if (extra_comm /= MPI_COMM_NULL) then
-         call MPI_COMM_SIZE(extra_comm, nnodes, ierror)
-         if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_COMM_SIZE")
-         call MPI_COMM_RANK(extra_comm, my_node, ierror)
-         if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_COMM_RANK")
-      end if
-
-      ! other ranks share the same information as their leaders
-      call MPI_BCAST(nnodes, 1, MPI_INTEGER, 0, intra_comm, ierror)
-      if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_BCAST")
-      call MPI_BCAST(my_node, 1, MPI_INTEGER, 0, intra_comm, ierror)
-      if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_BCAST")
-
-      ! maxcor
-      call MPI_ALLREDUCE(ncores, maxcor, 1, MPI_INTEGER, MPI_MAX, &
-                         decomp_2d_comm, ierror)
-      if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_ALLREDUCE")
-
-      call FIPC_finalize(ierror)
-      if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "FIPC_finalize")
-
-      return
-
-   end subroutine get_smp_map
-
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-   ! Set up smp-node based shared memory maps
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-   SUBROUTINE MAPSET_SMPSHM(C, KTBL, NARY, decomp)
-
-      IMPLICIT NONE
-
-      TYPE(SMP_INFO) C
-      INTEGER KTBL(C%MAXCORE, C%NSMP)
-      INTEGER NARY(C%NCPU, C%NCORE)
-      TYPE(DECOMP_INFO) :: decomp
-
-      INTEGER i, j, k, l, N, PTR, BSIZ, ierror, status, seed
-      character*16 s
-
-      BSIZ = C%N_SND
-
-      ! a - SNDBUF
-      IF (C%MPI_COMM == DECOMP_2D_COMM_COL) THEN
-         ALLOCATE (decomp%x1cnts_s(C%NSMP), decomp%x1disp_s(C%NSMP + 1), &
-                   stat=status)
-         CALL MPI_Allgather(decomp%x1cnts, C%NCPU, MPI_INTEGER, &
-                            NARY, C%NCPU, MPI_INTEGER, C%CORE_COMM, ierror)
-         if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_ALLGATHER")
-         PTR = 0
-         DO i = 1, C%NSMP
-            decomp%x1disp_s(i) = PTR
-            N = 0
-            DO j = 1, C%MAXCORE
-               k = KTBL(j, i)
-               IF (k > 0) then
-                  DO l = 1, C%NCORE
-                     IF (l == C%CORE_ME) decomp%x1disp_o(k - 1) = PTR
-                     N = N + NARY(k, l)
-                     PTR = PTR + NARY(k, l)
-                  END DO
-               END IF
-            END DO
-            decomp%x1cnts_s(i) = N
-         END DO
-         decomp%x1disp_s(C%NSMP + 1) = PTR
-         IF (PTR > BSIZ) BSIZ = PTR
-
-      ELSE IF (C%MPI_COMM == DECOMP_2D_COMM_ROW) THEN
-         ALLOCATE (decomp%y2cnts_s(C%NSMP), decomp%y2disp_s(C%NSMP + 1), &
-                   stat=status)
-         CALL MPI_Allgather(decomp%y2cnts, C%NCPU, MPI_INTEGER, &
-                            NARY, C%NCPU, MPI_INTEGER, C%CORE_COMM, ierror)
-         if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_ALLGATHER")
-         PTR = 0
-         DO i = 1, C%NSMP
-            decomp%y2disp_s(i) = PTR
-            N = 0
-            DO j = 1, C%MAXCORE
-               k = KTBL(j, i)
-               IF (k > 0) then
-                  DO l = 1, C%NCORE
-                     IF (l == C%CORE_ME) decomp%y2disp_o(k - 1) = PTR
-                     N = N + NARY(k, l)
-                     PTR = PTR + NARY(k, l)
-                  END DO
-               END IF
-            END DO
-            decomp%y2cnts_s(i) = N
-         END DO
-         decomp%y2disp_s(C%NSMP + 1) = PTR
-         IF (PTR > BSIZ) BSIZ = PTR
-      END IF
-
-      ! b - RCVBUF
-
-      IF (C%MPI_COMM == DECOMP_2D_COMM_COL) THEN
-         ALLOCATE (decomp%y1cnts_s(C%NSMP), decomp%y1disp_s(C%NSMP + 1), &
-                   stat=status)
-         CALL MPI_Allgather(decomp%y1cnts, C%NCPU, MPI_INTEGER, &
-                            NARY, C%NCPU, MPI_INTEGER, C%CORE_COMM, ierror)
-         if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_ALLGATHER")
-         PTR = 0
-         DO i = 1, C%NSMP
-            decomp%y1disp_s(i) = PTR
-            N = 0
-            DO j = 1, C%NCORE
-               DO l = 1, C%MAXCORE
-                  k = KTBL(l, i)
-                  IF (k > 0) then
-                     IF (j == C%CORE_ME) decomp%y1disp_o(k - 1) = PTR
-                     N = N + NARY(k, j)
-                     PTR = PTR + NARY(k, j)
-                  END IF
-               END DO
-            END DO
-            decomp%y1cnts_s(i) = N
-         END DO
-         decomp%y1disp_s(C%NSMP + 1) = PTR
-         IF (PTR > BSIZ) BSIZ = PTR
-
-      ELSE IF (C%MPI_COMM == DECOMP_2D_COMM_ROW) THEN
-         ALLOCATE (decomp%z2cnts_s(C%NSMP), decomp%z2disp_s(C%NSMP + 1), &
-                   stat=status)
-         CALL MPI_Allgather(decomp%z2cnts, C%NCPU, MPI_INTEGER, &
-                            NARY, C%NCPU, MPI_INTEGER, C%CORE_COMM, ierror)
-         if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_ALLGATHER")
-         PTR = 0
-         DO i = 1, C%NSMP
-            decomp%z2disp_s(i) = PTR
-            N = 0
-            DO j = 1, C%NCORE
-               DO l = 1, C%MAXCORE
-                  k = KTBL(l, i)
-                  IF (k > 0) then
-                     IF (j == C%CORE_ME) decomp%z2disp_o(k - 1) = PTR
-                     N = N + NARY(k, j)
-                     PTR = PTR + NARY(k, j)
-                  END IF
-               END DO
-            END DO
-            decomp%z2cnts_s(i) = N
-         END DO
-         decomp%z2disp_s(C%NSMP + 1) = PTR
-         IF (PTR > BSIZ) BSIZ = PTR
-
-      END IF
-
-      ! check buffer size and (re)-allocate buffer space if necessary
-      IF (BSIZ > C%N_SND) then
-         IF (C%SND_P /= 0) CALL DEALLOC_SHM(C%SND_P, C%CORE_COMM)
-         ! make sure each rank has unique keys to get shared memory
-         !IF (C%MPI_COMM==DECOMP_2D_COMM_COL) THEN
-         !   seed = nrank+nproc*0+1 ! has to be non-zero
-         !ELSE IF (C%MPI_COMM==DECOMP_2D_COMM_ROW) THEN
-         !   seed = nrank+nproc*1+1
-         !END IF
-         status = 1
-         !CALL ALLOC_SHM(C%SND_P, BSIZ, real_type, C%CORE_COMM, status, &
-         !     seed)
-         CALL ALLOC_SHM(C%SND_P, BSIZ, real_type, C%CORE_COMM, status)
-         C%N_SND = BSIZ
-
-         IF (C%RCV_P /= 0) CALL DEALLOC_SHM(C%RCV_P, C%CORE_COMM)
-         status = 1
-         CALL ALLOC_SHM(C%RCV_P, BSIZ, real_type, C%CORE_COMM, status)
-         C%N_RCV = BSIZ
-
-         IF (C%SND_P_c /= 0) CALL DEALLOC_SHM(C%SND_P_c, C%CORE_COMM)
-         status = 1
-         CALL ALLOC_SHM(C%SND_P_c, BSIZ, complex_type, C%CORE_COMM, status)
-         C%N_SND = BSIZ
-
-         IF (C%RCV_P_c /= 0) CALL DEALLOC_SHM(C%RCV_P_c, C%CORE_COMM)
-         status = 1
-         CALL ALLOC_SHM(C%RCV_P_c, BSIZ, complex_type, C%CORE_COMM, status)
-         C%N_RCV = BSIZ
-
-      END IF
-
-      RETURN
-   END SUBROUTINE MAPSET_SMPSHM
-
-#endif
-
-#ifdef OCC
-   ! For non-blocking communication code, progress the comminication stack
-   subroutine transpose_test(handle)
-
-      implicit none
-
-      integer :: handle, ierror
-
-      call NBC_TEST(handle, ierror)
-      if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "NBC_TEST")
-
-      return
-   end subroutine transpose_test
-#endif
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
    ! Transposition routines
@@ -1631,169 +1142,8 @@ contains
 #include "halo.f90"
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-   ! Error handling
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-   subroutine decomp_2d_abort_basic(errorcode, msg)
-
-      use iso_fortran_env, only: error_unit
-
-      implicit none
-
-      integer, intent(IN) :: errorcode
-      character(len=*), intent(IN) :: msg
-
-      integer :: ierror
-
-      if (nrank == 0) then
-         write (*, *) '2DECOMP&FFT ERROR - errorcode: ', errorcode
-         write (*, *) 'ERROR MESSAGE: '//msg
-         write (error_unit, *) '2DECOMP&FFT ERROR - errorcode: ', errorcode
-         write (error_unit, *) 'ERROR MESSAGE: '//msg
-      end if
-      call MPI_ABORT(decomp_2d_comm, errorcode, ierror)
-
-   end subroutine decomp_2d_abort_basic
-
-   subroutine decomp_2d_abort_file_line(file, line, errorcode, msg)
-
-      use iso_fortran_env, only: error_unit
-
-      implicit none
-
-      integer, intent(IN) :: errorcode, line
-      character(len=*), intent(IN) :: msg, file
-
-      integer :: ierror
-
-      if (nrank == 0) then
-         write (*, *) '2DECOMP&FFT ERROR'
-         write (*, *) '  errorcode:     ', errorcode
-         write (*, *) '  error in file  '//file
-         write (*, *) '           line  ', line
-         write (*, *) '  error message: '//msg
-         write (error_unit, *) '2DECOMP&FFT ERROR'
-         write (error_unit, *) '  errorcode:     ', errorcode
-         write (error_unit, *) '  error in file  '//file
-         write (error_unit, *) '           line  ', line
-         write (error_unit, *) '  error message: '//msg
-      end if
-      call MPI_ABORT(decomp_2d_comm, errorcode, ierror)
-
-   end subroutine decomp_2d_abort_file_line
-
-#if defined(_GPU) && defined(_NCCL)
-   !
-   ! This is based on the file "nccl.h" in nvhpc 22.1
-   !
-   function _ncclresult_to_integer(errorcode)
-
-      implicit none
-
-      type(ncclresult), intent(IN) :: errorcode
-      integer :: _ncclresult_to_integer
-
-      if (errorcode == ncclSuccess) then
-         _ncclresult_to_integer = 0
-      elseif (errorcode == ncclUnhandledCudaError) then
-         _ncclresult_to_integer = 1
-      elseif (errorcode == ncclSystemError) then
-         _ncclresult_to_integer = 2
-      elseif (errorcode == ncclInternalError) then
-         _ncclresult_to_integer = 3
-      elseif (errorcode == ncclInvalidArgument) then
-         _ncclresult_to_integer = 4
-      elseif (errorcode == ncclInvalidUsage) then
-         _ncclresult_to_integer = 5
-      elseif (errorcode == ncclNumResults) then
-         _ncclresult_to_integer = 6
-      else
-         _ncclresult_to_integer = -1
-         call decomp_2d_warning(__FILE__, __LINE__, _ncclresult_to_integer, &
-                                "NCCL error handling needs some update")
-      end if
-
-   end function _ncclresult_to_integer
-
-   !
-   ! Small wrapper for basic NCCL errors
-   !
-   subroutine decomp_2d_abort_nccl_basic(errorcode, msg)
-
-      implicit none
-
-      type(ncclresult), intent(IN) :: errorcode
-      character(len=*), intent(IN) :: msg
-
-      call decomp_2d_abort(_ncclresult_to_integer(errorcode), &
-                           msg//" "//ncclGetErrorString(errorcode))
-
-   end subroutine decomp_2d_abort_nccl_basic
-
-   !
-   ! Small wrapper for NCCL errors
-   !
-   subroutine decomp_2d_abort_nccl_file_line(file, line, errorcode, msg)
-
-      implicit none
-
-      type(ncclresult), intent(IN) :: errorcode
-      integer, intent(in) :: line
-      character(len=*), intent(IN) :: msg, file
-
-      call decomp_2d_abort(file, &
-                           line, &
-                           _ncclresult_to_integer(errorcode), &
-                           msg//" "//ncclGetErrorString(errorcode))
-
-   end subroutine decomp_2d_abort_nccl_file_line
-#endif
-
-   subroutine decomp_2d_warning_basic(errorcode, msg)
-
-      use iso_fortran_env, only: error_unit
-
-      implicit none
-
-      integer, intent(IN) :: errorcode
-      character(len=*), intent(IN) :: msg
-
-      if (nrank == 0) then
-         write (*, *) '2DECOMP&FFT WARNING - errorcode: ', errorcode
-         write (*, *) 'ERROR MESSAGE: '//msg
-         write (error_unit, *) '2DECOMP&FFT WARNING - errorcode: ', errorcode
-         write (error_unit, *) 'ERROR MESSAGE: '//msg
-      end if
-
-   end subroutine decomp_2d_warning_basic
-
-   subroutine decomp_2d_warning_file_line(file, line, errorcode, msg)
-
-      use iso_fortran_env, only: error_unit
-
-      implicit none
-
-      integer, intent(IN) :: errorcode, line
-      character(len=*), intent(IN) :: msg, file
-
-      if (nrank == 0) then
-         write (*, *) '2DECOMP&FFT WARNING'
-         write (*, *) '  errorcode:     ', errorcode
-         write (*, *) '  error in file  '//file
-         write (*, *) '           line  ', line
-         write (*, *) '  error message: '//msg
-         write (error_unit, *) '2DECOMP&FFT WARNING'
-         write (error_unit, *) '  errorcode:     ', errorcode
-         write (error_unit, *) '  error in file  '//file
-         write (error_unit, *) '           line  ', line
-         write (error_unit, *) '  error message: '//msg
-      end if
-
-   end subroutine decomp_2d_warning_file_line
-
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
    ! Utility routines to help allocate 3D arrays
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 #include "alloc.f90"
 
 end module decomp_2d
-

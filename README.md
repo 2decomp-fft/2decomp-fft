@@ -244,7 +244,7 @@ make -j
 make -j check
 make install
 ```
-Please note that the resulting build is not compatible with CMake (https://github.com/FFTW/fftw3/issues/130). As a workaround, one can open the file `xxxxxxx/fftw3/fftw-3.3.10_bld/lib/cmake/fftw3/FFTW3Config.cmake` and comment the line `include ("${CMAKE_CURRENT_LIST_DIR}/FFTW3LibraryDepends.cmake")`.
+Please note that the resulting build is not compatible with CMake (https://github.com/FFTW/fftw3/issues/130). As a workaround, one can open the file `/path/to/fftw3/install/lib/cmake/fftw3/FFTW3Config.cmake` and comment the line `include ("${CMAKE_CURRENT_LIST_DIR}/FFTW3LibraryDepends.cmake")`.
 
 To build `2decomp&fft` against fftw3, one can provide the package configuration for fftw3 in the `PKG_CONFIG_PATH` environment variable, this should be found under `/path/to/fftw3/install/lib/pkgconfig`. One can also provide the option `-DFFTW_ROOT=/path/to/fftw3/install`. Then either specify on the command line when configuring the build
 ```

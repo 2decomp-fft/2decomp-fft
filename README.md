@@ -194,11 +194,11 @@ This variable is automatically added in debug and dev builds. Extra information 
 
 #### DOUBLE_PREC
 
-When this variable is not present, the library uses single precision. When it is present, the library uses double precision
+When this variable is not present, the library uses single precision. When it is present, the library uses double precision. This preprocessor variable is driven by the CMake on/off variable `DOUBLE_PRECISION`.
 
 #### SAVE_SINGLE
 
-This variable is valid for double precision builds only. When it is present, snapshots are written in single precision.
+This variable is valid for double precision builds only. When it is present, snapshots are written in single precision. This preprocessor variable is driven by the CMake on/off variable `SINGLE_PRECISION_OUTPUT`.
 
 #### PROFILER
 
@@ -210,7 +210,7 @@ This preprocessor variable is not valid for GPU builds. It leads to padded allto
 
 #### OVERWRITE
 
-This variable leads to overwrite the input array when computing FFT. The support of this flag does not always correspond to in-place transforms, depending on the FFT backend selected, as described above.
+This variable leads to overwrite the input array when computing FFT. The support of this flag does not always correspond to in-place transforms, depending on the FFT backend selected, as described above. This preprocessor variable is driven by the CMake on/off variable `ENABLE_INPLACE`.
 
 #### HALO_DEBUG
 

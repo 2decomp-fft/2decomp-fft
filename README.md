@@ -259,14 +259,14 @@ Note the legacy `fftw` interface lacks interface definitions and will fail when 
 
 ### Caliper
 
-The library [caliper](https://github.com/LLNL/Caliper) can be used to profile the execution of the code. The version 2.9.0 was tested and is supported, version 2.8.0 has also been tested and is still expected to work. Please note that one must build caliper and decomp2d against the same C/C++/Fortran compilers and MPI libray. For build instructions, please check [here](https://github.com/LLNL/Caliper#building-and-installing) and [here](https://software.llnl.gov/Caliper/CaliperBasics.html#build-and-install). Below is a suggestion for the compilation of the library using the GNU compilers:
+The library [caliper](https://github.com/LLNL/Caliper) can be used to profile the execution of the code. The version 2.9.1 was tested and is supported, version 2.8.0 has also been tested and is still expected to work. Please note that one must build caliper and decomp2d against the same C/C++/Fortran compilers and MPI libray. For build instructions, please check [here](https://github.com/LLNL/Caliper#building-and-installing) and [here](https://software.llnl.gov/Caliper/CaliperBasics.html#build-and-install). Below is a suggestion for the compilation of the library using the GNU compilers:
 
 ```
 git clone https://github.com/LLNL/Caliper.git caliper_github
 cd caliper_github
-git checkout v2.9.0
+git checkout v2.9.1
 mkdir build && cd build
-cmake -DCMAKE_C_COMPILER=gcc -DCMAKE_CXX_COMPILER=g++ -DCMAKE_Fortran_COMPILER=gfortran -DCMAKE_INSTALL_PREFIX=../../caliper_build_2.9.0 -DWITH_FORTRAN=yes -DWITH_MPI=yes -DBUILD_TESTING=yes ../
+cmake -DCMAKE_C_COMPILER=gcc -DCMAKE_CXX_COMPILER=g++ -DCMAKE_Fortran_COMPILER=gfortran -DCMAKE_INSTALL_PREFIX=../../caliper_build_2.9.1 -DWITH_FORTRAN=yes -DWITH_MPI=yes -DBUILD_TESTING=yes ../
 make -j
 make test
 make install

@@ -194,11 +194,11 @@ This variable is automatically added in debug and dev builds. Extra information 
 
 #### DOUBLE_PREC
 
-When this variable is not present, the library uses single precision. When it is present, the library uses double precision
+When this variable is not present, the library uses single precision. When it is present, the library uses double precision. This preprocessor variable is driven by the CMake on/off variable `DOUBLE_PRECISION`.
 
 #### SAVE_SINGLE
 
-This variable is valid for double precision builds only. When it is present, snapshots are written in single precision.
+This variable is valid for double precision builds only. When it is present, snapshots are written in single precision. This preprocessor variable is driven by the CMake on/off variable `SINGLE_PRECISION_OUTPUT`.
 
 #### PROFILER
 
@@ -210,11 +210,11 @@ This preprocessor variable is not valid for GPU builds. It leads to padded allto
 
 #### OVERWRITE
 
-This variable leads to overwrite the input array when computing FFT. The support of this flag does not always correspond to in-place transforms, depending on the FFT backend selected, as described above.
+This variable leads to overwrite the input array when computing FFT. The support of this flag does not always correspond to in-place transforms, depending on the FFT backend selected, as described above. This preprocessor variable is driven by the CMake on/off variable `ENABLE_INPLACE`.
 
 #### HALO_DEBUG
 
-This variable is used to debug the halo operations.
+This variable is used to debug the halo operations. This preprocessor variable is driven by the CMake on/off variable `HALO_DEBUG`.
 
 #### _GPU
 
@@ -244,10 +244,14 @@ make -j
 make -j check
 make install
 ```
-
-To build `2decomp&fft` against fftw3 first ensure the package configuration for fftw3 is in your `PKG_CONFIG_PATH` environment variable, this should be found under `/path/to/fftw3/install/lib/pkgconfig`, then either specify on the command line when configuring the build
+Please note that the resulting build is not compatible with CMake (https://github.com/FFTW/fftw3/issues/130). As a workaround, one can open the file `/path/to/fftw3/install/lib/cmake/fftw3/FFTW3Config.cmake` and comment the line
 ```
-cmake -S . -B build -DFFT_Choice=<fftw|fftw_f03>
+include ("${CMAKE_CURRENT_LIST_DIR}/FFTW3LibraryDepends.cmake")
+```
+
+To build `2decomp&fft` against fftw3, one can provide the package configuration for fftw3 in the `PKG_CONFIG_PATH` environment variable, this should be found under `/path/to/fftw3/install/lib/pkgconfig`. One can also provide the option `-DFFTW_ROOT=/path/to/fftw3/install`. Then either specify on the command line when configuring the build
+```
+cmake -S . -B build -DFFT_Choice=<fftw|fftw_f03> -DFFTW_ROOT=/path/to/fftw3/install
 ```
 or modify the build configuration using `ccmake`.
 
@@ -255,14 +259,14 @@ Note the legacy `fftw` interface lacks interface definitions and will fail when 
 
 ### Caliper
 
-The library [caliper](https://github.com/LLNL/Caliper) can be used to profile the execution of the code. The version 2.9.0 was tested and is supported, version 2.8.0 has also been tested and is still expected to work. Please note that one must build caliper and decomp2d against the same C/C++/Fortran compilers and MPI libray. For build instructions, please check [here](https://github.com/LLNL/Caliper#building-and-installing) and [here](https://software.llnl.gov/Caliper/CaliperBasics.html#build-and-install). Below is a suggestion for the compilation of the library using the GNU compilers:
+The library [caliper](https://github.com/LLNL/Caliper) can be used to profile the execution of the code. The version 2.9.1 was tested and is supported, version 2.8.0 has also been tested and is still expected to work. Please note that one must build caliper and decomp2d against the same C/C++/Fortran compilers and MPI libray. For build instructions, please check [here](https://github.com/LLNL/Caliper#building-and-installing) and [here](https://software.llnl.gov/Caliper/CaliperBasics.html#build-and-install). Below is a suggestion for the compilation of the library using the GNU compilers:
 
 ```
 git clone https://github.com/LLNL/Caliper.git caliper_github
 cd caliper_github
-git checkout v2.9.0
+git checkout v2.9.1
 mkdir build && cd build
-cmake -DCMAKE_C_COMPILER=gcc -DCMAKE_CXX_COMPILER=g++ -DCMAKE_Fortran_COMPILER=gfortran -DCMAKE_INSTALL_PREFIX=../../caliper_build_2.9.0 -DWITH_FORTRAN=yes -DWITH_MPI=yes -DBUILD_TESTING=yes ../
+cmake -DCMAKE_C_COMPILER=gcc -DCMAKE_CXX_COMPILER=g++ -DCMAKE_Fortran_COMPILER=gfortran -DCMAKE_INSTALL_PREFIX=../../caliper_build_2.9.1 -DWITH_FORTRAN=yes -DWITH_MPI=yes -DBUILD_TESTING=yes ../
 make -j
 make test
 make install

@@ -140,7 +140,7 @@ The external code can use the named variables to check the FFT backend used in a
 
 ### Codes using Makefiles
 
-When building a code that links 2decomp-fft using a Makefile you will need to add the include and link paths as appropriate (`inlude/` and `link/` under the installation directory, respectively).
+When building a code that links 2decomp-fft using a Makefile you will need to add the include and link paths as appropriate (`inlude/` and `lib/` under the installation directory, respectively).
 ```
 DECOMP_ROOT = /path/to/2decomp-fft
 DECOMP_BUILD_DIR = $(DECOMP_ROOT)/build
@@ -167,7 +167,7 @@ In case of 2decomp-fft compiled for GPU with NVHPC, linking against cuFFT is man
 ```
 LIBS += -cudalib=cufft
 ```
-In case of NCCL the follwoing is required 
+In case of NCCL the following is required 
 ```
 LIBS += -cudalib=cufft,nccl 
 ```

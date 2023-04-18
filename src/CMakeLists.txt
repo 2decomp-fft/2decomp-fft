@@ -76,6 +76,7 @@ if (HALO_DEBUG)
 endif()
 
 install(TARGETS decomp2d
+  EXPORT decomp2d-targets
   RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
   LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
   ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR})
@@ -85,3 +86,28 @@ install(DIRECTORY ${CMAKE_Fortran_MODULE_DIRECTORY}/ DESTINATION ${CMAKE_INSTALL
 install(DIRECTORY ${CMAKE_Fortran_MODULE_DIRECTORY}/ DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
   FILES_MATCHING PATTERN "*.smod")
       
+## Packaging
+install(EXPORT decomp2d-targets
+  DESTINATION ${CMAKE_INSTALL_LIBDIR})
+
+configure_file(
+  ${CMAKE_SOURCE_DIR}/cmake/decomp2d-config.cmake.in
+  ${PROJECT_BINARY_DIR}/cmake/decomp2d-config.cmake @ONLY
+)
+configure_file(
+  ${CMAKE_SOURCE_DIR}/cmake/decomp2d-config-version.cmake.in
+  ${PROJECT_BINARY_DIR}/cmake/decomp2d-config-version.cmake
+)
+
+install(FILES
+  ${PROJECT_BINARY_DIR}/cmake/decomp2d-config.cmake
+  ${PROJECT_BINARY_DIR}/cmake/decomp2d-config-version.cmake
+  DESTINATION ${CMAKE_INSTALL_LIBDIR}/decomp2d)
+
+# Make 2decomp usable from build tree.
+export(TARGETS decomp2d
+  FILE ${PROJECT_BINARY_DIR}/decomp2d-targets.cmake)
+configure_file(
+  ${CMAKE_SOURCE_DIR}/cmake/decomp2d-build_config.cmake.in
+  ${PROJECT_BINARY_DIR}/decomp2d-config.cmake @ONLY
+)

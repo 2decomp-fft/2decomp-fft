@@ -1,0 +1,14 @@
+#
+# 2decomp CMake configuration.
+# This is used by other packages to configure themselves against 2decomp&fft.
+#
+
+# Compute installation prefix relative to this file
+get_filename_component(_dir "${CMAKE_CURRENT_LIST_FILE}" PATH)
+get_filename_component(_prefix "${_dir}/../.." ABSOLUTE)
+
+# Import the targets
+include("${_prefix}/lib/decomp2d-targets.cmake")
+
+set(2decomp_INCLUDE_DIR "${_prefix}/include")
+

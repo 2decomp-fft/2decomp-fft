@@ -140,7 +140,37 @@ The external code can use the named variables to check the FFT backend used in a
 
 ### Codes using Makefiles
 
-When building a code that links 2decomp-fft using a Makefile you will need to add the include and link paths as appropriate (`inlude/` and `link/` under the installation directory, respectively).
+When building a code that links 2decomp-fft using a Makefile you will need to add the include and link paths as appropriate (`inlude/` and `lib/` under the installation directory, respectively).
+```
+DECOMP_ROOT = /path/to/2decomp-fft
+DECOMP_BUILD_DIR = $(DECOMP_ROOT)/build
+DECOMP_INSTALL_DIR ?= $(DECOMP_BUILD_DIR)/opt # Use default unless set by user
+
+INC += -I$(DECOMP_INSTALL_DIR)/include
+
+# Users build/link targets
+LIBS = -L$(DECOMP_INSTALL_DIR)/lib64 -L$(DECOMP_INSTALL_DIR)/lib -ldecomp2d
+
+OBJ = my_exec.o
+
+my_exec: $(OBJ)
+	$(F90) -o $@ $(OBJ) $(LIBS)
+
+```
+In case 2decomp-fft has been compiled with an external FFT, such as FFTW3, `LIBS` should also contain the following 
+```
+FFTW3_PATH=/my_path_to_FFTW/lib
+LIBFFT=-L$(FFTW3_PATH) -lfftw3 -lfftw3f
+LIBS += $(LIBFFT)
+```
+In case of 2decomp-fft compiled for GPU with NVHPC, linking against cuFFT is mandatory 
+```
+LIBS += -cudalib=cufft
+```
+In case of NCCL the following is required 
+```
+LIBS += -cudalib=cufft,nccl 
+```
 It is also possible to drive the build and installation of 2decomp-fft from a Makefile such as in the following example code
 ```
 FC = mpif90
@@ -153,7 +183,7 @@ DECOMP_INSTALL_DIR ?= $(DECOMP_BUILD_DIR)/opt # Use default unless set by user
 INC += -I$(DECOMP_INSTALL_DIR)/include
 
 # Users build/link targets
-LFLAGS += -L$(DECOMP_INSTALL_DIR)/lib -ldecomp.a
+LIBS = -L$(DECOMP_INSTALL_DIR)/lib64 -L$(DECOMP_INSTALL_DIR)/lib -ldecomp2d
 
 # Building libdecomp.a
 $(DECOMP_INSTALL_DIR)/lib/libdecomp.a:

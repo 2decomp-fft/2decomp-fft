@@ -52,7 +52,7 @@ jobs:
     - name: Compile
       run: |
         export FC=mpif90.mpich
-        cmake -S . -B build -DCMAKE_BUILD_TYPE=Dev -DBUILD_TESTING=On
+        cmake -S . -B build -DCMAKE_BUILD_TYPE=Dev -DBUILD_TESTING=ON
         cmake --build build --verbose
 
   bld_nvidia:

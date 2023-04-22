@@ -79,7 +79,10 @@ include(fft)
 add_subdirectory(src)
 
 # Add tests
-add_subdirectory(examples)
+option(BUILD_TESTING "Build with tests" OFF)
+if (${BUILD_TESTING})
+  add_subdirectory(examples)
+endif (${BUILD_TESTING})
 
 # Add a prettify target
 add_custom_target(format sh ${CMAKE_SOURCE_DIR}/scripts/format.sh

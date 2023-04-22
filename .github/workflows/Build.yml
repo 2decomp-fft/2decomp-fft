@@ -30,11 +30,11 @@ jobs:
     - name: Compile
       run: |
         export FC=mpif90
-        cmake -S . -B build -DCMAKE_BUILD_TYPE=dev
+        cmake -S . -B build -DCMAKE_BUILD_TYPE=dev -DBUILD_TESTING=ON
         cmake --build build --target decomp2d
 
     - name: Examples
       run: |
         export FC=mpif90
-        cmake -S . -B build -DCMAKE_BUILD_TYPE=dev
+        cmake -S . -B build -DCMAKE_BUILD_TYPE=dev -DBUILD_TESTING=ON
         cmake --build build

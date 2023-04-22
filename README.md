@@ -57,7 +57,8 @@ cmake --build $path_to_build_directory --target clean
 ## Testing and examples
 
 ### CMake
-
+By default build of the test is deactivated. To activate the testing the option `-DBUILD_TESTING=ON` can be added or 
+alternativey the option can be activated in the GUI interface `ccmake`.
 After building the library can be tested by running
 ```
 ctest --test-dir $path_to_build_directory

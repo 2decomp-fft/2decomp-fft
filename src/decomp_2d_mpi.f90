@@ -114,7 +114,7 @@ contains
 
       ! Free the provided MPI communicator
       call MPI_COMM_FREE(mpi_comm, ierror)
-!      if (ierror /= 0) call decomp_2d_warning(__FILE__, __LINE__, ierror, "MPI_COMM_FREE")
+      if (ierror /= 0) call decomp_2d_warning(__FILE__, __LINE__, ierror, "MPI_COMM_FREE")
       mpi_comm = MPI_COMM_NULL
 
    end subroutine decomp_2d_mpi_comm_free

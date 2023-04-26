@@ -309,3 +309,9 @@ Following this the `2decomp-fft` build can be configured to use Caliper profilin
 cmake -S . -B -DENABLE_PROFILER=caliper
 ```
 or by modifying the configuration to set `ENABLE_PROFILER=caliper` via `ccmake`.
+
+### Versioning
+
+The development of `2decomp&fft` occurs on Github, with release versions on the `main` branch.
+New features will be implemented on the `develop` branch and merged into `main` once a new release is ready.
+For example, starting from `v2.0.0` the `main` branch will only be updated to receive fixes giving `v2.0.1`, etc. until the next release (either `v2.1.0` or `v3.0.0` depending on the magnitude of the change is ready).

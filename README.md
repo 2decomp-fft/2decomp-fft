@@ -306,6 +306,6 @@ make install
 After installing Caliper ensure to set `caliper_DIR=/path/to/caliper/install/share/cmake/caliper`.
 Following this the `2decomp-fft` build can be configured to use Caliper profiling as
 ```
-cmake -S . -B -DENABLE_PROFILING=caliper
+cmake -S . -B -DENABLE_PROFILER=caliper
 ```
-or by modifying the configuration to set `ENABLE_PROFILING=caliper` via `ccmake`.
+or by modifying the configuration to set `ENABLE_PROFILER=caliper` via `ccmake`.

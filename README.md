@@ -63,7 +63,7 @@ After building the library can be tested by running
 ```
 ctest --test-dir $path_to_build_directory
 ```
-which uses the `ctest` utility. By default tests are performed in serial, but more than 1 rank can be used by setting `MPIEXEC_MAX_NUMPROCS` under `ccmake` utility.  
+which uses the `ctest` utility. By default tests are performed in serial, but more than 1 rank can be used by setting `MPIEXEC_MAX_NUMPROCS` under `ccmake` utility.
 It is also possible to specify the decomposition by setting `PROW` and `PCOL` parameters at the configure stage or using `ccmake`. 
 Consequently, the configure stage is forcing the number of MPI tasks `MPIEXEC_MAX_NUMPROCS` to be equal to the product of PROW times PCOL. 
 Mesh resolution can also be imposed using the parameters `NX`, `NY` and `NZ`. 
@@ -81,6 +81,8 @@ To properly configure for GPU build the following needs to be used
 ```
 cmake -S $path_to_sources -B $path_to_build_directory -DBUILD_TARGET=gpu
 ```
+Note, further configuration can be performed using `ccmake`, however the initial configuration of GPU builds must include the `-DBUILD_TARGET=gpu` flag as shown above.
+
 By default CUDA aware MPI will be used together with `cuFFT` for the FFT library. The configure will automatically look for the GPU architecture available on the system. If you are building on a HPC system please use a computing node for the installation. Useful variables to be added are 
 
  - `-DENABLE_NCCL=yes` to activate the NCCL collectives

@@ -50,12 +50,22 @@ if (MPI_FOUND)
 endif (MPI_FOUND)
 
 if(FFTW_FOUND)
-  message(STATUS "FFTW_DOUBLE     : ${FFTW_DOUBLE_LIB}")
-  message(STATUS "FFTW_SINGLE     : ${FFTW_FLOAT_LIB}")
+  if (FFTW_DOUBLE_LIB_FOUND)
+    message(STATUS "FFTW_DOUBLE     : ${FFTW_DOUBLE_LIB}")
+    target_link_libraries(decomp2d PRIVATE ${FFTW_DOUBLE_LIB})
+  endif (FFTW_DOUBLE_LIB_FOUND)
+  if (FFTW_FLOAT_LIB_FOUND)
+    message(STATUS "FFTW_SINGLE     : ${FFTW_FLOAT_LIB}")
+    target_link_libraries(decomp2d PRIVATE ${FFTW_FLOAT_LIB})
+  endif (FFTW_FLOAT_LIB_FOUND)
+  if (NOT (FFTW_DOUBLE_LIB_FOUND OR FFTW_FLOAT_LIB_FOUND))
+    message(FATAL_ERROR "CMake step for FFTW failed")
+  endif (NOT (FFTW_DOUBLE_LIB_FOUND OR FFTW_FLOAT_LIB_FOUND))
   target_include_directories(decomp2d PRIVATE ${FFTW_INCLUDE_DIRS})
 elseif(MKL_FOUND)
   target_compile_options(decomp2d PUBLIC $<TARGET_PROPERTY:MKL::MKL,INTERFACE_COMPILE_OPTIONS>)
   target_include_directories(decomp2d PUBLIC $<TARGET_PROPERTY:MKL::MKL,INTERFACE_INCLUDE_DIRECTORIES>)
+  target_link_libraries(decomp2d PUBLIC $<LINK_ONLY:MKL::MKL>)
 endif(FFTW_FOUND)
 
 if (ENABLE_PROFILER)
@@ -71,6 +81,7 @@ if (HALO_DEBUG)
 endif()
 
 install(TARGETS decomp2d
+  EXPORT decomp2d-targets
   RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
   LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
   ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR})
@@ -80,3 +91,28 @@ install(DIRECTORY ${CMAKE_Fortran_MODULE_DIRECTORY}/ DESTINATION ${CMAKE_INSTALL
 install(DIRECTORY ${CMAKE_Fortran_MODULE_DIRECTORY}/ DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
   FILES_MATCHING PATTERN "*.smod")
       
+## Packaging
+install(EXPORT decomp2d-targets
+  DESTINATION ${CMAKE_INSTALL_LIBDIR})
+
+configure_file(
+  ${CMAKE_SOURCE_DIR}/cmake/decomp2d-config.cmake.in
+  ${PROJECT_BINARY_DIR}/cmake/decomp2d-config.cmake @ONLY
+)
+configure_file(
+  ${CMAKE_SOURCE_DIR}/cmake/decomp2d-config-version.cmake.in
+  ${PROJECT_BINARY_DIR}/cmake/decomp2d-config-version.cmake
+)
+
+install(FILES
+  ${PROJECT_BINARY_DIR}/cmake/decomp2d-config.cmake
+  ${PROJECT_BINARY_DIR}/cmake/decomp2d-config-version.cmake
+  DESTINATION ${CMAKE_INSTALL_LIBDIR}/decomp2d)
+
+# Make 2decomp usable from build tree.
+export(TARGETS decomp2d
+  FILE ${PROJECT_BINARY_DIR}/decomp2d-targets.cmake)
+configure_file(
+  ${CMAKE_SOURCE_DIR}/cmake/decomp2d-build_config.cmake.in
+  ${PROJECT_BINARY_DIR}/decomp2d-config.cmake @ONLY
+)

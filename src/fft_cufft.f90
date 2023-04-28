@@ -278,7 +278,6 @@ module decomp_2d_fft
       else if (format == PHYSICAL_IN_Z) then
 
          ! For C2C transforms
-         write (*, *) 'Create the plans'
          call c2c_1m_z_plan(plan(-1, 3), ph, CUFFT_Z2Z, ws)
          cufft_ws = max(cufft_ws, ws)
          call c2c_1m_y_plan(plan(-1, 2), ph, CUFFT_Z2Z, ws)
@@ -339,7 +338,6 @@ module decomp_2d_fft
       else if (format == PHYSICAL_IN_Z) then
 
          ! For C2C transforms
-         write (*, *) 'Create the plans on rank ', nproc
          call c2c_1m_z_plan(plan(-1, 3), ph, CUFFT_C2C, ws)
          cufft_ws = max(cufft_ws, ws)
          call c2c_1m_y_plan(plan(-1, 2), ph, CUFFT_C2C, ws)

@@ -57,7 +57,8 @@ cmake --build $path_to_build_directory --target clean
 ## Testing and examples
 
 ### CMake
-
+By default build of the test is deactivated. To activate the testing the option `-DBUILD_TESTING=ON` can be added or 
+alternativey the option can be activated in the GUI interface `ccmake`.
 After building the library can be tested by running
 ```
 ctest --test-dir $path_to_build_directory
@@ -140,7 +141,37 @@ The external code can use the named variables to check the FFT backend used in a
 
 ### Codes using Makefiles
 
-When building a code that links 2decomp-fft using a Makefile you will need to add the include and link paths as appropriate (`inlude/` and `link/` under the installation directory, respectively).
+When building a code that links 2decomp-fft using a Makefile you will need to add the include and link paths as appropriate (`inlude/` and `lib/` under the installation directory, respectively).
+```
+DECOMP_ROOT = /path/to/2decomp-fft
+DECOMP_BUILD_DIR = $(DECOMP_ROOT)/build
+DECOMP_INSTALL_DIR ?= $(DECOMP_BUILD_DIR)/opt # Use default unless set by user
+
+INC += -I$(DECOMP_INSTALL_DIR)/include
+
+# Users build/link targets
+LIBS = -L$(DECOMP_INSTALL_DIR)/lib64 -L$(DECOMP_INSTALL_DIR)/lib -ldecomp2d
+
+OBJ = my_exec.o
+
+my_exec: $(OBJ)
+	$(F90) -o $@ $(OBJ) $(LIBS)
+
+```
+In case 2decomp-fft has been compiled with an external FFT, such as FFTW3, `LIBS` should also contain the following 
+```
+FFTW3_PATH=/my_path_to_FFTW/lib
+LIBFFT=-L$(FFTW3_PATH) -lfftw3 -lfftw3f
+LIBS += $(LIBFFT)
+```
+In case of 2decomp-fft compiled for GPU with NVHPC, linking against cuFFT is mandatory 
+```
+LIBS += -cudalib=cufft
+```
+In case of NCCL the following is required 
+```
+LIBS += -cudalib=cufft,nccl 
+```
 It is also possible to drive the build and installation of 2decomp-fft from a Makefile such as in the following example code
 ```
 FC = mpif90
@@ -153,7 +184,7 @@ DECOMP_INSTALL_DIR ?= $(DECOMP_BUILD_DIR)/opt # Use default unless set by user
 INC += -I$(DECOMP_INSTALL_DIR)/include
 
 # Users build/link targets
-LFLAGS += -L$(DECOMP_INSTALL_DIR)/lib -ldecomp.a
+LIBS = -L$(DECOMP_INSTALL_DIR)/lib64 -L$(DECOMP_INSTALL_DIR)/lib -ldecomp2d
 
 # Building libdecomp.a
 $(DECOMP_INSTALL_DIR)/lib/libdecomp.a:
@@ -194,11 +225,11 @@ This variable is automatically added in debug and dev builds. Extra information 
 
 #### DOUBLE_PREC
 
-When this variable is not present, the library uses single precision. When it is present, the library uses double precision
+When this variable is not present, the library uses single precision. When it is present, the library uses double precision. This preprocessor variable is driven by the CMake on/off variable `DOUBLE_PRECISION`.
 
 #### SAVE_SINGLE
 
-This variable is valid for double precision builds only. When it is present, snapshots are written in single precision.
+This variable is valid for double precision builds only. When it is present, snapshots are written in single precision. This preprocessor variable is driven by the CMake on/off variable `SINGLE_PRECISION_OUTPUT`.
 
 #### PROFILER
 
@@ -210,11 +241,11 @@ This preprocessor variable is not valid for GPU builds. It leads to padded allto
 
 #### OVERWRITE
 
-This variable leads to overwrite the input array when computing FFT. The support of this flag does not always correspond to in-place transforms, depending on the FFT backend selected, as described above.
+This variable leads to overwrite the input array when computing FFT. The support of this flag does not always correspond to in-place transforms, depending on the FFT backend selected, as described above. This preprocessor variable is driven by the CMake on/off variable `ENABLE_INPLACE`.
 
 #### HALO_DEBUG
 
-This variable is used to debug the halo operations.
+This variable is used to debug the halo operations. This preprocessor variable is driven by the CMake on/off variable `HALO_DEBUG`.
 
 #### _GPU
 
@@ -244,10 +275,14 @@ make -j
 make -j check
 make install
 ```
-
-To build `2decomp&fft` against fftw3 first ensure the package configuration for fftw3 is in your `PKG_CONFIG_PATH` environment variable, this should be found under `/path/to/fftw3/install/lib/pkgconfig`, then either specify on the command line when configuring the build
+Please note that the resulting build is not compatible with CMake (https://github.com/FFTW/fftw3/issues/130). As a workaround, one can open the file `/path/to/fftw3/install/lib/cmake/fftw3/FFTW3Config.cmake` and comment the line
 ```
-cmake -S . -B build -DFFT_Choice=<fftw|fftw_f03>
+include ("${CMAKE_CURRENT_LIST_DIR}/FFTW3LibraryDepends.cmake")
+```
+
+To build `2decomp&fft` against fftw3, one can provide the package configuration for fftw3 in the `PKG_CONFIG_PATH` environment variable, this should be found under `/path/to/fftw3/install/lib/pkgconfig`. One can also provide the option `-DFFTW_ROOT=/path/to/fftw3/install`. Then either specify on the command line when configuring the build
+```
+cmake -S . -B build -DFFT_Choice=<fftw|fftw_f03> -DFFTW_ROOT=/path/to/fftw3/install
 ```
 or modify the build configuration using `ccmake`.
 
@@ -255,14 +290,14 @@ Note the legacy `fftw` interface lacks interface definitions and will fail when 
 
 ### Caliper
 
-The library [caliper](https://github.com/LLNL/Caliper) can be used to profile the execution of the code. The version 2.9.0 was tested and is supported, version 2.8.0 has also been tested and is still expected to work. Please note that one must build caliper and decomp2d against the same C/C++/Fortran compilers and MPI libray. For build instructions, please check [here](https://github.com/LLNL/Caliper#building-and-installing) and [here](https://software.llnl.gov/Caliper/CaliperBasics.html#build-and-install). Below is a suggestion for the compilation of the library using the GNU compilers:
+The library [caliper](https://github.com/LLNL/Caliper) can be used to profile the execution of the code. The version 2.9.1 was tested and is supported, version 2.8.0 has also been tested and is still expected to work. Please note that one must build caliper and decomp2d against the same C/C++/Fortran compilers and MPI libray. For build instructions, please check [here](https://github.com/LLNL/Caliper#building-and-installing) and [here](https://software.llnl.gov/Caliper/CaliperBasics.html#build-and-install). Below is a suggestion for the compilation of the library using the GNU compilers:
 
 ```
 git clone https://github.com/LLNL/Caliper.git caliper_github
 cd caliper_github
-git checkout v2.9.0
+git checkout v2.9.1
 mkdir build && cd build
-cmake -DCMAKE_C_COMPILER=gcc -DCMAKE_CXX_COMPILER=g++ -DCMAKE_Fortran_COMPILER=gfortran -DCMAKE_INSTALL_PREFIX=../../caliper_build_2.9.0 -DWITH_FORTRAN=yes -DWITH_MPI=yes -DBUILD_TESTING=yes ../
+cmake -DCMAKE_C_COMPILER=gcc -DCMAKE_CXX_COMPILER=g++ -DCMAKE_Fortran_COMPILER=gfortran -DCMAKE_INSTALL_PREFIX=../../caliper_build_2.9.1 -DWITH_FORTRAN=yes -DWITH_MPI=yes -DBUILD_TESTING=yes ../
 make -j
 make test
 make install
@@ -271,6 +306,6 @@ make install
 After installing Caliper ensure to set `caliper_DIR=/path/to/caliper/install/share/cmake/caliper`.
 Following this the `2decomp-fft` build can be configured to use Caliper profiling as
 ```
-cmake -S . -B -DENABLE_PROFILING=caliper
+cmake -S . -B -DENABLE_PROFILER=caliper
 ```
-or by modifying the configuration to set `ENABLE_PROFILING=caliper` via `ccmake`.
+or by modifying the configuration to set `ENABLE_PROFILER=caliper` via `ccmake`.

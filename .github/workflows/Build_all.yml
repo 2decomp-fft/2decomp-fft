@@ -30,7 +30,7 @@ jobs:
     - name: Compile
       run: |
         export FC=mpif90.openmpi
-        cmake -S . -B build -DCMAKE_BUILD_TYPE=Dev
+        cmake -S . -B build -DCMAKE_BUILD_TYPE=Dev -DBUILD_TESTING=ON
         cmake --build build --verbose
 
   bld_gnu_mpich:
@@ -52,7 +52,7 @@ jobs:
     - name: Compile
       run: |
         export FC=mpif90.mpich
-        cmake -S . -B build -DCMAKE_BUILD_TYPE=Dev
+        cmake -S . -B build -DCMAKE_BUILD_TYPE=Dev -DBUILD_TESTING=ON
         cmake --build build --verbose
 
   bld_nvidia:
@@ -112,7 +112,7 @@ jobs:
       run: |
         source /opt/intel/oneapi/setvars.sh
         export FC=mpiifort
-        cmake -S . -B build -DCMAKE_BUILD_TYPE=Dev
+        cmake -S . -B build -DCMAKE_BUILD_TYPE=Dev -DBUILD_TESTING=ON
         cmake --build build
 
     # Runs a set of commands using the runners shell
@@ -121,7 +121,7 @@ jobs:
         source /opt/intel/oneapi/setvars.sh
         export FC=mpiifort
         export MKL_DIR=${MKLROOT}/lib/cmake/mkl
-        cmake -S . -B build -DCMAKE_BUILD_TYPE=Dev -DFFT_Choice=mkl
+        cmake -S . -B build -DCMAKE_BUILD_TYPE=Dev -DFFT_Choice=mkl -DBUILD_TESTING=ON
         cmake --build build --target clean
         cmake --build build
 
@@ -144,13 +144,14 @@ jobs:
     - name: Regular FFTW3
       run: |
         export FC=mpif90
-        cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug -DFFT_Choice=fftw
+        cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug -DFFT_Choice=fftw -DBUILD_TESTING=ON
         cmake --build build --verbose
+        cmake --build build --target clean
 
     - name: New FFTW3
       run: |
         export FC=mpif90
-        cmake -S . -B build -DCMAKE_BUILD_TYPE=Dev -DFFT_Choice=fftw_f03
+        cmake -S . -B build -DCMAKE_BUILD_TYPE=Dev -DFFT_Choice=fftw_f03 -DBUILD_TESTING=ON
         cmake --build build --verbose
 
   bld_caliper:
@@ -181,5 +182,5 @@ jobs:
     - name: Compile
       run: |
         export caliper_DIR=./Caliper-2.8.0_bld/share/cmake/caliper
-        FC=mpif90 cmake -S . -B build -DENABLE_PROFILER=caliper
+        FC=mpif90 cmake -S . -B build -DENABLE_PROFILER=caliper -DBUILD_TESTING=ON
         cmake --build build --verbose

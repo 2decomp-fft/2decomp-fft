@@ -85,6 +85,7 @@ By default CUDA aware MPI will be used together with `cuFFT` for the FFT library
 
  - `-DENABLE_NCCL=yes` to activate the NCCL collectives
  - `-DENABLE_MANAGED=yes` to activate the automatic memory management form the NVHPC compiler
+ - `-DSET_CUDA_ARCH=XY` to set the CUDA compute architecture (default is CC70, Volta V100)
 If you are getting the following error
 ```
 -- The CUDA compiler identification is unknown  

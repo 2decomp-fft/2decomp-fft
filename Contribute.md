@@ -12,6 +12,8 @@ Otherwise, follow the steps below.
 
 Firstly, try to reproduce the error with a debug build of the library, a small problem size and a small number of MPI ranks.
 It makes bug-hunting much easier.
+Please note that for a debug build, the log contains all the environment variables.
+Use it to hunt the bug but think twice before sharing it as it can expose sensitive and personal information.
 Unfortunately, it is not always possible.
 At least, please try to reproduce the bug on another machine with another compiler.
 
@@ -25,7 +27,7 @@ The programs available in the examples section are a good starting point for a m
 
 At this stage, you probably did your best to simplify the problem at hand.
 Open a issue and select the bug report template.
-Provide a meaningful title and do your best to complete all the sections of the template and provide the version of the library, the version of the compiler, the version of the MPI / FFT library, ...
+Provide a meaningful title, do your best to complete all the sections of the template and provide the version of the compiler, the version of the MPI / FFT library, ...
 If you think you have a fix for the bug, please expose it inside the issue.
 It is recommended to wait for feedback before opening a pull-request.
 

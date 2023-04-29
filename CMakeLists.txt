@@ -1,7 +1,9 @@
 cmake_minimum_required(VERSION 3.12)                        
 cmake_policy(SET CMP0074 NEW)
 
-project(2decomp LANGUAGES Fortran)
+project(decomp2d
+  LANGUAGES Fortran)
+set(version 2.0.0)
 enable_testing()
 
 
@@ -77,7 +79,10 @@ include(fft)
 add_subdirectory(src)
 
 # Add tests
-add_subdirectory(examples)
+option(BUILD_TESTING "Build with tests" OFF)
+if (${BUILD_TESTING})
+  add_subdirectory(examples)
+endif (${BUILD_TESTING})
 
 # Add a prettify target
 add_custom_target(format sh ${CMAKE_SOURCE_DIR}/scripts/format.sh

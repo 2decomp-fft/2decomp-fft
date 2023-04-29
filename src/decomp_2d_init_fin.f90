@@ -15,6 +15,8 @@
   !   INPUT:
   !     nx, ny, nz   - global data dimension
   !     p_row, p_col - 2D processor grid
+  !     periodic_bc  - optional, periodicity flag for halo operations
+  !     comm         - optional, MPI communicator, default MPI_COMM_WORLD
   !   OUTPUT:
   !     all internal data structures initialised properly
   !     library ready to use

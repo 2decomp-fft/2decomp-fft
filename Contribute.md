@@ -12,9 +12,9 @@ Otherwise, follow the steps below.
 
 Firstly, try to reproduce the error with a debug build of the library, a small problem size and a small number of MPI ranks.
 It makes bug-hunting much easier.
+Unfortunately, it is not always possible.
 Please note that for a debug build, the log contains all the environment variables.
 Use it to hunt the bug but think twice before sharing it as it can expose sensitive and personal information.
-Unfortunately, it is not always possible.
 At least, please try to reproduce the bug on another machine with another compiler.
 
 Secondly, if you have modified the source code of the 2decomp library, you must reproduce the bug without the modifications in 2decomp.

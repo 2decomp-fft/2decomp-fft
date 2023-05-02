@@ -247,7 +247,7 @@ This variable is automatically added when selecting the profiler. It activates t
 
 #### EVEN
 
-This preprocessor variable is not valid for GPU builds. It leads to padded alltoall operations.
+This preprocessor variable is not valid for GPU builds. It leads to padded alltoall operations. This preprocessor variable is driven by the CMake on/off variable `EVEN`.
 
 #### OVERWRITE
 

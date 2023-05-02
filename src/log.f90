@@ -291,11 +291,13 @@ contains
       write (io_unit, *) '   y1disp : ', d2d%y1disp
       write (io_unit, *) '   y2disp : ', d2d%y2disp
       write (io_unit, *) '   z2disp : ', d2d%z2disp
+#ifdef EVEN
       write (io_unit, *) '   x1count : ', d2d%x1count
       write (io_unit, *) '   y1count : ', d2d%y1count
       write (io_unit, *) '   y2count : ', d2d%y2count
       write (io_unit, *) '   z2count : ', d2d%z2count
       write (io_unit, *) '   even : ', d2d%even
+#endif
 #endif
 
    end subroutine decomp_info_print

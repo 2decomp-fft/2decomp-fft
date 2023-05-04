@@ -33,6 +33,38 @@ jobs:
         cmake -S . -B build -DCMAKE_BUILD_TYPE=Dev -DBUILD_TESTING=ON
         cmake --build build --verbose
 
+    # Runs a set of commands using the runners shell
+    - name: Single precision
+      run: |
+        export FC=mpif90.openmpi
+        cmake -S . -B build -DCMAKE_BUILD_TYPE=Dev -DBUILD_TESTING=ON -DDOUBLE_PRECISION=OFF
+        cmake --build build --target clean
+        cmake --build build --verbose
+
+    # Runs a set of commands using the runners shell
+    - name: Double precision with single precision IO
+      run: |
+        export FC=mpif90.openmpi
+        cmake -S . -B build -DCMAKE_BUILD_TYPE=Dev -DBUILD_TESTING=ON -DSINGLE_PRECISION_OUTPUT=ON
+        cmake --build build --target clean
+        cmake --build build --verbose
+
+    # Runs a set of commands using the runners shell
+    - name: Padded alltoall transpose operations
+      run: |
+        export FC=mpif90.openmpi
+        cmake -S . -B build -DCMAKE_BUILD_TYPE=Dev -DBUILD_TESTING=ON -DEVEN=ON
+        cmake --build build --target clean
+        cmake --build build --verbose
+
+    # Runs a set of commands using the runners shell
+    - name: Padded alltoall transpose operations
+      run: |
+        export FC=mpif90.openmpi
+        cmake -S . -B build -DCMAKE_BUILD_TYPE=Dev -DBUILD_TESTING=ON -DHALO_DEBUG=ON
+        cmake --build build --target clean
+        cmake --build build --verbose
+
   bld_gnu_mpich:
     # The type of runner that the job will run on
     runs-on: ubuntu-latest
@@ -80,7 +112,7 @@ jobs:
     # Runs a set of commands using the runners shell
     - name: CPU version
       run: |
-        PATH=$TMP:$PATH FC=mpif90 cmake -S . -B build -DCMAKE_BUILD_TYPE=Dev
+        PATH=$TMP:$PATH FC=mpif90 cmake -S . -B build -DCMAKE_BUILD_TYPE=Dev -DBUILD_TESTING=ON
         PATH=$TMP:$PATH cmake --build build --verbose
 
 ###    - name: GPU version
@@ -144,7 +176,7 @@ jobs:
     - name: Regular FFTW3
       run: |
         export FC=mpif90
-        cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug -DFFT_Choice=fftw -DBUILD_TESTING=ON
+        cmake -S . -B build -DCMAKE_BUILD_TYPE=Dev -DFFT_Choice=fftw -DBUILD_TESTING=ON
         cmake --build build --verbose
         cmake --build build --target clean
 
@@ -185,5 +217,5 @@ jobs:
     - name: Compile
       run: |
         export caliper_DIR=${HOME}/Caliper-2.8.0_bld/share/cmake/caliper
-        FC=mpif90 cmake -S . -B build -DENABLE_PROFILER=caliper -DBUILD_TESTING=ON
+        FC=mpif90 cmake -S . -B build -DCMAKE_BUILD_TYPE=Dev -DENABLE_PROFILER=caliper -DBUILD_TESTING=ON
         cmake --build build --verbose

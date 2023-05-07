@@ -58,7 +58,7 @@ jobs:
         cmake --build build --verbose
 
     # Runs a set of commands using the runners shell
-    - name: Padded alltoall transpose operations
+    - name: Debug flag for halo operations
       run: |
         export FC=mpif90.openmpi
         cmake -S . -B build -DCMAKE_BUILD_TYPE=Dev -DBUILD_TESTING=ON -DHALO_DEBUG=ON

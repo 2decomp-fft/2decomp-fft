@@ -6,6 +6,7 @@ The library 2decomp is a Fortran library compatible with the Fortran 2008 standa
 It requires a MPI library compatible with MPI-2.0 with extended Fortran support.
 The following [optional libraries](#optional-dependencies) can be used :
 
+- ADIOS2, version 2.9.0 was tested
 - FFTW3, version 3.3.10 was tested
 - Intel oneMKL (oneAPI Math Kernel Library), version 2023.0.0 was tested
 - Nvidia GPU-related libraries, NVHPC version 22.7 and CUDA version 11.8 were tested
@@ -229,6 +230,10 @@ Before calling `decomp_2d_init`, the external code can modify the variable `deco
 
 ### List of preprocessor variables
 
+#### ADIOS2
+
+This variable is automatically added in builds with the adios2 IO backend.
+
 #### DEBUG
 
 This variable is automatically added in debug and dev builds. Extra information is printed when it is present.
@@ -271,6 +276,26 @@ The code is formatted using the `fprettify` program (available via `pip`), to en
 It is recommended that you should format the code before making a pull request.
 
 ## Optional dependencies
+
+### ADIOS2
+
+The library [adios2](https://adios2.readthedocs.io/en/latest/) can be used as a backend for IO. The version 2.9.0 was tested, is supported and can be downloaded [here](https://github.com/ornladios/ADIOS2/archive/refs/tags/v2.9.0.tar.gz). Below are build instructions for the library. However, it is recommended to use the one provided by the administrators of the computing centre if available.
+
+```
+wget https://github.com/ornladios/ADIOS2/archive/refs/tags/v2.9.0.tar.gz
+tar xzf v2.9.0.tar.gz
+mkdir 2.9.0_tmp && cd 2.9.0_tmp
+CC=mpicc CXX=mpicxx FC=mpif90 cmake -S ../ADIOS2-2.9.0 -DCMAKE_INSTALL_PREFIX=../2.9.0_bld
+make -j
+make -j test
+make -j install
+```
+
+To build `2decomp&fft` with the adios2 IO backend, one can provide the package configuration for adios2 in the `PKG_CONFIG_PATH` environment variable, this should be found under `/path/to/adios2/install/lib/cmake/adios2`. One can also provide the option `-Dadios2_DIR=/path/to/adios2/install/lib/cmake/adios2`. Then either specify on the command line when configuring the build
+```
+cmake -S . -B ./build -DIO_BACKEND=adios2 -Dadios2_DIR=/path/to/adios2/install/lib/cmake/adios2
+```
+or modify the build configuration using `ccmake`. Please note that the support for ADIOS2 is not complete. Currently, for a given IO operation, when the ADIOS2 backend is not supported, the MPI backend is used.
 
 ### FFTW
 

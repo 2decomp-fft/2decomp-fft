@@ -74,9 +74,15 @@ if (ENABLE_PROFILER)
     target_link_libraries(decomp2d PRIVATE caliper)
   endif()
 endif()
+
 if (HALO_DEBUG)
   target_compile_definitions(decomp2d PUBLIC -DHALO_DEBUG)
 endif()
+
+if (IO_BACKEND MATCHES "adios2")
+  add_definitions("-DADIOS2")
+  target_link_libraries(decomp2d PRIVATE adios2::fortran_mpi adios2::fortran)
+endif (IO_BACKEND MATCHES "adios2")
 
 install(TARGETS decomp2d
   EXPORT decomp2d-targets

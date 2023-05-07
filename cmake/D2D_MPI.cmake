@@ -1,6 +1,13 @@
 # MPI CMakeLists
 
 find_package(MPI REQUIRED)
+
+# adios2 IO backend requires C and C++ MPI components
+if (IO_BACKEND MATCHES "adios2")
+    enable_language(C CXX)
+    find_package(MPI REQUIRED COMPONENTS C CXX)
+endif (IO_BACKEND MATCHES "adios2")
+
 # Stop if there is no MPI_Fortran_Compiler
 if (MPI_Fortran_COMPILER)
     message(STATUS "MPI_Fortran_COMPILER found: ${MPI_Fortran_COMPILER}")

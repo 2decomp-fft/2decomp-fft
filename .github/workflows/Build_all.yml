@@ -186,7 +186,7 @@ jobs:
         FC=mpif90 cmake -S . -B build -DENABLE_PROFILER=caliper -DBUILD_TESTING=ON
         cmake --build build --verbose
 
-  bld_adios:
+  bld_adios2:
     # The type of runner that the job will run on
     runs-on: ubuntu-latest                                                          
    
@@ -202,14 +202,14 @@ jobs:
         sudo apt-get install -y gfortran openmpi-bin libopenmpi-dev cmake gcc g++
 
     # Runs a set of commands using the runners shell
-    - name: Compile caliper
+    - name: Compile adios2
       run: | 
         echo ${PWD}
         echo ${HOME}
         wget --no-check-certificate https://github.com/ornladios/ADIOS2/archive/refs/tags/v2.9.0.tar.gz
         tar xzf v2.9.0.tar.gz
         mkdir adios2_2.9.0_tmp && cd adios2_2.9.0_tmp
-        CC=mpicc CXX=mpicxx FC=mpif90 cmake -S ../ADIOS2-2.9.0 -DCMAKE_INSTALL_PREFIX=${HOME}/adios2_2.9.0_bld
+        CC=mpicc CXX=mpicxx FC=mpif90 cmake -S ../ADIOS2-2.9.0 -DCMAKE_INSTALL_PREFIX=${HOME}/adios2_2.9.0_bld -DBUILD_SHARED_LIBS=on -DADIOS2_BUILD_EXAMPLES=off -DBUILD_TESTING=off -DCMAKE_BUILD_TYPE=Debug -DADIOS2_USE_MPI=on -DADIOS2_USE_ZeroMQ=off -DADIOS2_USE_HDF5=off -DADIOS2_USE_Python=off -DADIOS2_USE_Fortran=on -DADIOS2_USE_SST=off -DADIOS2_USE_BZip2=off -DADIOS2_USE_ZFP=off -DADIOS2_USE_SZ=off -DADIOS2_USE_MGARD=off -DADIOS2_USE_PNG=off -DADIOS2_USE_IME=off
         make -j && make -j install
         cd ../
 

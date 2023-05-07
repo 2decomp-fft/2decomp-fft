@@ -185,19 +185,3 @@ jobs:
         export caliper_DIR=${HOME}/Caliper-2.8.0_bld/share/cmake/caliper
         FC=mpif90 cmake -S . -B build -DENABLE_PROFILER=caliper -DBUILD_TESTING=ON
         cmake --build build --verbose
-
-  bld_adios2:
-    # The type of runner that the job will run on
-    runs-on: ubuntu-latest
-    container:
-      image: ornladios/adios2:release_29-ubuntu-bionic
-   
-    # Steps represent a sequence of tasks that will be executed as part of the job
-    steps:
-    # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
-    - uses: actions/checkout@v3
-   
-    - name: Compile             
-      run: |
-        FC=mpif90 cmake -S . -B build -DIO_BACKEND=adios2 -DBUILD_TESTING=ON
-        cmake --build build --verbose

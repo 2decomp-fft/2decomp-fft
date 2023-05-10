@@ -26,11 +26,11 @@ program fft_c2c_x
    type(decomp_info), pointer :: ph => null()
    complex(mytype), allocatable, dimension(:, :, :) :: in, out
 
-   real(mytype) :: dr, di, error, err_all, n1, flops
+   real(mytype) :: dr, di, error, err_all
    integer :: ierror, i, j, k, m
    integer :: xst1, xst2, xst3
    integer :: xen1, xen2, xen3
-   double precision :: t1, t2, t3, t4
+   double precision :: n1, flops, t1, t2, t3, t4
 
    call MPI_INIT(ierror)
    ! To resize the domain we need to know global number of ranks
@@ -160,14 +160,14 @@ program fft_c2c_x
       write (*, *) '===== c2c interface ====='
       write (*, *) 'error / mesh point: ', err_all
       write (*, *) 'time (sec): ', t1, t3
-      n1 = real(nx, mytype) * real(ny, mytype) * real(nz, mytype)
-      n1 = n1**(1._mytype / 3._mytype)
+      n1 = real(nx) * real(ny) * real(nz)
+      n1 = n1**(1.d0 / 3.d0)
       ! 5n*log(n) flops per 1D FFT of size n using Cooley-Tukey algorithm
-      flops = 5._mytype * n1 * log(n1) / log(2.0_mytype)
+      flops = 5.d0 * n1 * log(n1) / log(2.d0)
       ! 3 sets of 1D FFTs for 3 directions, each having n^2 1D FFTs
-      flops = flops * 3._mytype * n1**2
-      flops = 2._mytype * flops / ((t1 + t3) / real(NTEST, mytype))
-      write (*, *) 'GFLOPS : ', flops / 1000._mytype**3
+      flops = flops * 3.d0 * n1**2
+      flops = 2.d0 * flops / ((t1 + t3) / real(NTEST))
+      write (*, *) 'GFLOPS : ', flops / 1000.d0**3
    end if
    !$acc end data
 

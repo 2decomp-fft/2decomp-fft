@@ -2,6 +2,15 @@
 
 ## Building
 
+The library 2decomp is a Fortran library compatible with the Fortran 2008 standard.
+It requires a MPI library compatible with MPI-2.0 with extended Fortran support.
+The following [optional libraries](#optional-dependencies) can be used :
+
+- FFTW3, version 3.3.10 was tested
+- Intel oneMKL (oneAPI Math Kernel Library), version 2023.0.0 was tested
+- Nvidia GPU-related libraries, NVHPC version 22.7 and CUDA version 11.8 were tested
+- Caliper, version 2.9.1 was tested
+
 ### CMake
 
 The build system is driven by `cmake`. It is good practice to directly point to the MPI Fortran wrapper that you would like to use to guarantee consistency between Fortran compiler and MPI. This can be done by setting the default Fortran environmental variable 
@@ -238,7 +247,7 @@ This variable is automatically added when selecting the profiler. It activates t
 
 #### EVEN
 
-This preprocessor variable is not valid for GPU builds. It leads to padded alltoall operations.
+This preprocessor variable is not valid for GPU builds. It leads to padded alltoall operations. This preprocessor variable is driven by the CMake on/off variable `EVEN`.
 
 #### OVERWRITE
 

@@ -1,6 +1,6 @@
 # MPI CMakeLists
 
-find_package(MPI REQUIRED)
+find_package(MPI REQUIRED COMPONENTS Fortran)
 
 # adios2 IO backend requires C and C++ MPI components
 if (IO_BACKEND MATCHES "adios2")

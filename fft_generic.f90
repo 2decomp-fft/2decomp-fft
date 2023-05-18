@@ -58,7 +58,12 @@ module decomp_2d_fft
 
     implicit none
 
-    deallocate(buf,scratch)
+    if (allocated(buf)) then
+      deallocate(buf)
+    end if
+    if (allocated(scratch)) then
+      deallocate(scratch)
+    end if
 
     return
   end subroutine finalize_fft_engine

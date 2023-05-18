@@ -193,7 +193,8 @@ module decomp_2d
        init_coarser_mesh_statP,fine_to_coarseP,&
        alloc_x, alloc_y, alloc_z, &
        update_halo, decomp_2d_abort, &
-       decomp_2d_warning, get_decomp_info
+       decomp_2d_warning, get_decomp_info, get_decomp_dims, &
+       distribute
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   ! These are routines to perform global data transpositions
@@ -534,6 +535,14 @@ contains
 
     return
   end subroutine get_decomp_info
+
+  function get_decomp_dims()
+    implicit none
+
+    integer, dimension(2) :: get_decomp_dims
+
+    get_decomp_dims(:) = dims(:)
+  end function
 
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!

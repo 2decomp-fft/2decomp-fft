@@ -126,4 +126,4 @@ $(OBJDECOMP) : $(OBJDIR)/%.o : ./%.f90
 .PHONY: clean
 
 clean:
-	rm -f $(OBJDECOMP) $(DECOMPINC)/*.mod $(LIBDECOMP)
+	rm -f $(OBJDECOMP) $(DECOMPINC)/*.mod $(DECOMPINC)/*.smod $(LIBDECOMP)

@@ -1,86 +1,140 @@
 program io_read
 
-  use mpi
-
-  use decomp_2d
-  use decomp_2d_io
-
-  implicit none
-
-  integer, parameter :: nx=17, ny=13, nz=11
-  ! use different number of processes
-  integer :: p_row=0, p_col=0
-
-#ifdef COMPLEX_TEST
-  complex(mytype), dimension(nx,ny,nz) :: data1
-
-  complex(mytype), allocatable, dimension(:,:,:) :: u1b, u2b, u3b
-#else
-  real(mytype), dimension(nx,ny,nz) :: data1
-
-  real(mytype), allocatable, dimension(:,:,:) :: u1b, u2b, u3b
+   use mpi
+   use decomp_2d_constants
+   use decomp_2d_mpi
+   use decomp_2d
+   use decomp_2d_io
+#if defined(_GPU)
+   use cudafor
+   use openacc
 #endif
 
-  real(mytype), parameter :: eps = 1.0E-7_mytype
- 
-  integer :: i,j,k, m, ierror
-  
-  call MPI_INIT(ierror)
-  call MPI_COMM_SIZE(MPI_COMM_WORLD, nproc, ierror)
-  call MPI_COMM_RANK(MPI_COMM_WORLD, nrank, ierror)
-  call decomp_2d_init(nx,ny,nz,p_row,p_col)
+   implicit none
 
-  ! ***** global data *****
-  m = 1
-  do k=1,nz
-     do j=1,ny
-        do i=1,nx
+   integer, parameter :: nx_base = 17, ny_base = 13, nz_base = 11
+   integer :: nx, ny, nz
+   integer :: p_row = 0, p_col = 0
+   integer :: resize_domain
+   integer :: nranks_tot
+   integer :: nargin, arg, FNLength, status, DecInd
+   character(len=80) :: InputFN
+
 #ifdef COMPLEX_TEST
-           data1(i,j,k) = cmplx(real(m,mytype), real(nx*ny*nz-m,mytype)) 
+   complex(mytype), allocatable, dimension(:, :, :) :: data1
+
+   complex(mytype), allocatable, dimension(:, :, :) :: u1b, u2b, u3b
 #else
-           data1(i,j,k) = real(m,mytype)
+   real(mytype), allocatable, dimension(:, :, :) :: data1
+
+   real(mytype), allocatable, dimension(:, :, :) :: u1b, u2b, u3b
 #endif
-           m = m+1
-        end do
-     end do
-  end do
 
-  allocate(u1b(xstart(1):xend(1), xstart(2):xend(2), xstart(3):xend(3)))
-  allocate(u2b(ystart(1):yend(1), ystart(2):yend(2), ystart(3):yend(3)))
-  allocate(u3b(zstart(1):zend(1), zstart(2):zend(2), zstart(3):zend(3)))
+   real(mytype), parameter :: eps = 1.0E-7_mytype
 
-  ! read back to different arrays
-  call decomp_2d_read_one(1,u1b,'.','u1.dat','test',reduce_prec=.false.)
-  call decomp_2d_read_one(2,u2b,'.','u2.dat','test',reduce_prec=.false.)
-  call decomp_2d_read_one(3,u3b,'.','u3.dat','test',reduce_prec=.false.)
+   integer :: i, j, k, m, ierror
 
-  ! Check against the global data array
-  do k=xstart(3),xend(3)
-    do j=xstart(2),xend(2)
-      do i=xstart(1),xend(1)
-        if (abs((data1(i,j,k)-u1b(i,j,k))) > eps) stop 4
+   call MPI_INIT(ierror)
+   ! To resize the domain we need to know global number of ranks
+   ! This operation is also done as part of decomp_2d_init
+   call MPI_COMM_SIZE(MPI_COMM_WORLD, nranks_tot, ierror)
+   resize_domain = int(nranks_tot / 4) + 1
+   nx = nx_base * resize_domain
+   ny = ny_base * resize_domain
+   nz = nz_base * resize_domain
+   ! Now we can check if user put some inputs
+   ! Handle input file like a boss -- GD
+   nargin = command_argument_count()
+   if ((nargin == 0) .or. (nargin == 2) .or. (nargin == 5)) then
+      do arg = 1, nargin
+         call get_command_argument(arg, InputFN, FNLength, status)
+         read (InputFN, *, iostat=status) DecInd
+         if (arg == 1) then
+            p_row = DecInd
+         elseif (arg == 2) then
+            p_col = DecInd
+         elseif (arg == 3) then
+            nx = DecInd
+         elseif (arg == 4) then
+            ny = DecInd
+         elseif (arg == 5) then
+            nz = DecInd
+         end if
       end do
-    end do
-  end do
+   else
+      ! nrank not yet computed we need to avoid write
+      ! for every rank
+      call MPI_COMM_RANK(MPI_COMM_WORLD, nrank, ierror)
+      if (nrank == 0) then
+         print *, "This Test takes no inputs or 2 inputs as"
+         print *, "  1) p_row (default=0)"
+         print *, "  2) p_col (default=0)"
+         print *, "or 5 inputs as"
+         print *, "  1) p_row (default=0)"
+         print *, "  2) p_col (default=0)"
+         print *, "  3) nx "
+         print *, "  4) ny "
+         print *, "  5) nz "
+         print *, "Number of inputs is not correct and the defult settings"
+         print *, "will be used"
+      end if
+   end if
 
-  do k=ystart(3),yend(3)
-    do j=ystart(2),yend(2)
-      do i=ystart(1),yend(1)
-        if (abs((data1(i,j,k)-u2b(i,j,k))) > eps) stop 5
-      end do
-    end do
-  end do
-  
-  do k=zstart(3),zend(3)
-    do j=zstart(2),zend(2)
-      do i=zstart(1),zend(1)
-        if (abs((data1(i,j,k)-u3b(i,j,k))) > eps) stop 6
-      end do
-    end do
-  end do
+   call decomp_2d_init(nx, ny, nz, p_row, p_col)
 
-  call decomp_2d_finalize 
-  call MPI_FINALIZE(ierror)
-  deallocate(u1b,u2b,u3b)
+   ! ***** global data *****
+   allocate (data1(nx, ny, nz))
+   m = 1
+   do k = 1, nz
+      do j = 1, ny
+         do i = 1, nx
+#ifdef COMPLEX_TEST
+            data1(i, j, k) = cmplx(real(m, mytype), real(nx * ny * nz - m, mytype))
+#else
+            data1(i, j, k) = real(m, mytype)
+#endif
+            m = m + 1
+         end do
+      end do
+   end do
+
+   call alloc_x(u1b, opt_global=.true.)
+   call alloc_y(u2b, opt_global=.true.)
+   call alloc_z(u3b, opt_global=.true.)
+
+   ! read back to different arrays
+   call decomp_2d_read_one(1, u1b, '.', 'u1.dat', 'test', reduce_prec=.false.)
+   call decomp_2d_read_one(2, u2b, '.', 'u2.dat', 'test', reduce_prec=.false.)
+   call decomp_2d_read_one(3, u3b, '.', 'u3.dat', 'test', reduce_prec=.false.)
+
+   ! Check against the global data array
+   do k = xstart(3), xend(3)
+      do j = xstart(2), xend(2)
+         do i = xstart(1), xend(1)
+            if (abs((data1(i, j, k) - u1b(i, j, k))) > eps) stop 4
+         end do
+      end do
+   end do
+
+   do k = ystart(3), yend(3)
+      do j = ystart(2), yend(2)
+         do i = ystart(1), yend(1)
+            if (abs((data1(i, j, k) - u2b(i, j, k))) > eps) stop 5
+         end do
+      end do
+   end do
+
+   do k = zstart(3), zend(3)
+      do j = zstart(2), zend(2)
+         do i = zstart(1), zend(1)
+            if (abs((data1(i, j, k) - u3b(i, j, k))) > eps) stop 6
+         end do
+      end do
+   end do
+
+   deallocate (u1b, u2b, u3b)
+   deallocate (data1)
+   call decomp_2d_finalize
+   call MPI_FINALIZE(ierror)
 
 end program io_read

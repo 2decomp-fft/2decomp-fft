@@ -1,0 +1,3 @@
+include("@PROJECT_BINARY_DIR@/decomp2d-targets.cmake")
+
+set(decomp2d_INCLUDE_DIRS "@CMAKE_Fortran_MODULE_DIRECTORY@")

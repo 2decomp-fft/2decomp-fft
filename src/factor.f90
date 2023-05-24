@@ -1,7 +1,7 @@
 !!!=======================================================================
 !!! This is part of the 2DECOMP&FFT library
-!!! 
-!!! 2DECOMP&FFT is a software framework for general-purpose 2D (pencil) 
+!!!
+!!! 2DECOMP&FFT is a software framework for general-purpose 2D (pencil)
 !!! decomposition. It also implements a highly scalable distributed
 !!! three-dimensional Fast Fourier Transform (FFT).
 !!!
@@ -13,80 +13,80 @@
 !!! A few utility routines to find factors of integer numbers
 module factor
 
-  implicit none
+   implicit none
 
-  private
+   private
 
-  public :: findfactor
-  public :: primefactors
-  
+   public :: findfactor
+   public :: primefactors
+
 contains
-  
-  subroutine findfactor(num, factors, nfact)
-    
-    implicit none
 
-    integer, intent(IN) :: num
-    integer, intent(OUT), dimension(*) :: factors
-    integer, intent(OUT) :: nfact
-    integer :: i, m
+   subroutine findfactor(num, factors, nfact)
 
-    ! find the factors <= sqrt(num)
-    m = int(sqrt(real(num)))
-    nfact = 1
-    do i=1,m
-       if (num/i*i == num) then
-          factors(nfact) = i
-          nfact = nfact + 1
-       end if
-    end do
-    nfact = nfact - 1
+      implicit none
 
-    ! derive those > sqrt(num)
-    if (factors(nfact)**2/=num) then
-       do i=nfact+1, 2*nfact
-          factors(i) = num / factors(2*nfact-i+1)
-       end do
-       nfact = nfact * 2
-    else
-       do i=nfact+1, 2*nfact-1
-          factors(i) = num / factors(2*nfact-i)
-       end do
-       nfact = nfact * 2 - 1
-    endif
-       
-    return
+      integer, intent(IN) :: num
+      integer, intent(OUT), dimension(*) :: factors
+      integer, intent(OUT) :: nfact
+      integer :: i, m
 
-  end subroutine findfactor
+      ! find the factors <= sqrt(num)
+      m = int(sqrt(real(num)))
+      nfact = 1
+      do i = 1, m
+         if (num / i * i == num) then
+            factors(nfact) = i
+            nfact = nfact + 1
+         end if
+      end do
+      nfact = nfact - 1
 
-  subroutine primefactors(num, factors, nfact)
+      ! derive those > sqrt(num)
+      if (factors(nfact)**2 /= num) then
+         do i = nfact + 1, 2 * nfact
+            factors(i) = num / factors(2 * nfact - i + 1)
+         end do
+         nfact = nfact * 2
+      else
+         do i = nfact + 1, 2 * nfact - 1
+            factors(i) = num / factors(2 * nfact - i)
+         end do
+         nfact = nfact * 2 - 1
+      end if
 
-    implicit none
-  
-    integer, intent(IN) :: num
-    integer, intent(OUT), dimension(*) :: factors
-    integer, intent(INOUT) :: nfact
+      return
 
-    integer :: i, n
-    
-    i = 2  
-    nfact = 1
-    n = num 
-    do
-       if (mod(n,i) == 0) then
-          factors(nfact) = i
-          nfact = nfact + 1
-          n = n / i
-       else
-          i = i + 1
-       end if
-       if (n == 1) then
-          nfact = nfact - 1
-          exit
-       end if
-    end do
-    
-    return
+   end subroutine findfactor
 
-  end subroutine primefactors
+   subroutine primefactors(num, factors, nfact)
+
+      implicit none
+
+      integer, intent(IN) :: num
+      integer, intent(OUT), dimension(*) :: factors
+      integer, intent(INOUT) :: nfact
+
+      integer :: i, n
+
+      i = 2
+      nfact = 1
+      n = num
+      do
+         if (mod(n, i) == 0) then
+            factors(nfact) = i
+            nfact = nfact + 1
+            n = n / i
+         else
+            i = i + 1
+         end if
+         if (n == 1) then
+            nfact = nfact - 1
+            exit
+         end if
+      end do
+
+      return
+
+   end subroutine primefactors
 end module

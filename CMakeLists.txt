@@ -1,47 +1,10 @@
-cmake_minimum_required(VERSION 3.9)
+cmake_minimum_required(VERSION 3.12)                        
+cmake_policy(SET CMP0074 NEW)
 
-project(2decomp-fft Fortran)
-
-if (NOT CMAKE_BUILD_TYPE)
-    message(STATUS "No build type selected, default to Release")
-    set(CMAKE_BUILD_TYPE "Release" CACHE STRING "Build type (default Release)" FORCE)
-endif()
-
-find_package(MPI REQUIRED)
-
-if(CMAKE_Fortran_COMPILER_ID MATCHES "GNU")
-    set(CMAKE_Fortran_FLAGS "-g -fbacktrace -fdefault-real-8 -ffree-line-length-none -ffpe-trap=invalid,zero,overflow -fallow-argument-mismatch -cpp")
-    set(CMAKE_Fortran_FLAGS_DEBUG "-O0 -finit-real=nan -fcheck=all -Wextra -Wconversion -pedantic")
-    set(CMAKE_Fortran_FLAGS_RELEASE "-O3")
-elseif(CMAKE_Fortran_COMPILER_ID MATCHES "Intel")
-    # FIXME: `-heap-arrays 10` required as using Intel Fortran
-    # means they are stored on the stack (by default), whereas GNU Fortran stores
-    # them on the heap (https://github.com/uDALES/u-dales/issues/13).
-    set(CMAKE_Fortran_FLAGS "-g -traceback -r8 -fpe0 -heap-arrays 10")
-    set(CMAKE_Fortran_FLAGS_DEBUG "-O0 -init=snan -CB -check all")
-    set(CMAKE_Fortran_FLAGS_RELEASE "-O3")
-elseif(CMAKE_Fortran_COMPILER_ID MATCHES "Cray")
-    # https://pubs.cray.com/content/S-3901/8.5/cray-fortran-reference-manual-85
-    set(CMAKE_Fortran_FLAGS "-eF -N 1023 -M 296")
-    set(CMAKE_Fortran_FLAGS_DEBUG "-G2 -en")
-    set(CMAKE_Fortran_FLAGS_RELEASE "-g -O3")
-else()
-    message(FATAL_ERROR "Only GNU, Intel, and Cray Fortran compilers are supported")
-endif()
-
-file(GLOB files_decomp src/factor.f90 src/decomp_2d.f90 src/log.f90 src/glassman.f90)
-
-#if(${FFT_Choice} MATCHES "generic")
-#  file(GLOB files_fft src/fft_generic.f90)
-#endif(${FFT_Choice} MATCHES "generic")
-
-if(FFTW_FOUND)
-  message (STATUS "Compiling using FFTW3")
-  file(GLOB files_fft src/fft_fftw3.f90)
-else(FFTW_FOUND)
-  message (STATUS "Compiling using Generic FFT")
-   file(GLOB files_fft src/fft_generic.f90)
-endif(FFTW_FOUND)
+project(decomp2d
+  LANGUAGES Fortran)
+set(version 2.0.0)
+enable_testing()
 
 option(DOUBLE_PRECISION "Build 2decomp_fft with double precision" ON)
 if (DOUBLE_PRECISION)
@@ -53,23 +16,101 @@ if (SINGLE_PRECISION_OUTPUT)
   add_definitions("-DSAVE_SINGLE")
 endif()
 
-set(SRCFILES ${files_decomp} ${files_fft})
+set(BUILD_TARGET "mpi" CACHE STRING "Target for acceleration (mpi (default) or gpu)")
+set_property(CACHE BUILD_TARGET PROPERTY STRINGS mpi gpu)
 
-add_library(2decomp-fft STATIC ${SRCFILES})
-if (MPI_FOUND)
-  target_link_libraries(2decomp-fft PRIVATE MPI::MPI_Fortran)
-endif (MPI_FOUND)
+if (BUILD_TARGET MATCHES "gpu")
+  option(ENABLE_OPENACC "Allow user to activate/deactivate OpenACC support" ON)
+  option(ENABLE_CUDA "Allow user to activate/deactivate CUDA support" ON)
+  option(ENABLE_MANAGED "Allow user to activate/deactivate automatic memory managment from NVHPC" OFF)
+  option(ENABLE_NCCL "Allow user to activate/deactivate Collective Comunication NCCL" OFF)
 
-if(FFTW_FOUND)
-  target_include_directories(2decomp-fft PRIVATE ${FFTW_INCLUDE_DIRS})
-  #target_include_directories(2decomp-fft PRIVATE ${PKG_FFTW_LIBRARY_DIRS})
-endif(FFTW_FOUND)
+  if (ENABLE_CUDA)
+    message(STATUS "Before enable CUDA")
+    enable_language(CUDA)
+    message(STATUS "After enable CUDA")
+  endif()
 
-#install(TARGETS decomp2d
-#        RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
-#        LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-#        ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
-#)
+endif(BUILD_TARGET MATCHES "gpu")
 
-#add_subdirectory(examples)
-#include_directories(examples)
+set (ENABLE_PROFILER "OFF" CACHE STRING "Activate/select the profiler")
+set_property(CACHE ENABLE_PROFILER PROPERTY STRINGS OFF caliper)
+option(ENABLE_INPLACE "Enable in-place operation of FFT" OFF)
+option(HALO_DEBUG "Enable halo debugging options" OFF)
+option(EVEN "Padded alltoall transpose operations" OFF)
+option(BUILD_SHARED_LIBS "Set ON to build a shared library" OFF)
+
+set(AUTHOR "Stefano Rolfo;Charles Moulinec;Paul Bartholomew")
+set(AUTHOR_DETAILS "stefano.rolfo@stfc.ac.uk;charles.moulinec@stfc.ac.uk;p.bartholomew@epcc.ed.ac.uk")
+set(DESCRIPTION "Building 2decomp&fft using cmake")
+
+message(STATUS "building ${PROJECT_NAME}")
+
+include(GNUInstallDirs)
+set(LIBRARY_OUTPUT_PATH ${PROJECT_BINARY_DIR}/${CMAKE_INSTALL_LIBDIR})
+set(EXECUTABLE_OUTPUT_PATH ${PROJECT_BINARY_DIR}/${CMAKE_INSTALL_BINDIR})
+set(CMAKE_Fortran_MODULE_DIRECTORY ${PROJECT_BINARY_DIR}/${CMAKE_INSTALL_INCLUDEDIR})
+if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
+  set(CMAKE_INSTALL_PREFIX "${PROJECT_BINARY_DIR}/opt" CACHE PATH "..." FORCE)
+endif()
+
+# Add support for CMAKE_DEPENDENT_OPTION
+INCLUDE(CMakeDependentOption)
+INCLUDE(CMakeParseArguments)
+
+# make sure that the default is a RELEASE
+if (NOT CMAKE_BUILD_TYPE)
+  set (CMAKE_BUILD_TYPE RELEASE CACHE STRING
+      "Choose the type of build, options are: None Dev Debug Release."
+      FORCE)
+endif (NOT CMAKE_BUILD_TYPE)
+
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake" "${CMAKE_SOURCE_DIR}/cmake/compilers" "${CMAKE_SOURCE_DIR}/cmake/fft")
+
+if (BUILD_TARGET MATCHES "gpu")
+  include(D2D_GPU)
+endif (BUILD_TARGET MATCHES "gpu")
+
+include(D2D_MPI)
+
+include(D2D_Compilers)
+include(D2D_Profilers)
+
+# FFT options
+if (BUILD_TARGET MATCHES "gpu")
+  set(FFT_Choice "cufft" CACHE STRING "FFT for XCompact3d project (with GPU cufft is the default)")
+else ()
+  set(FFT_Choice "generic" CACHE STRING "FFT for XCompact3d project (generic is the default)")
+endif (BUILD_TARGET MATCHES "gpu")
+set_property(CACHE FFT_Choice PROPERTY STRINGS generic fftw fftw_f03 mkl cufft)
+include(fft)
+
+# Create a static library for the fft
+add_subdirectory(src)
+
+# Add tests
+option(BUILD_TESTING "Build with tests" OFF)
+if (${BUILD_TESTING})
+  add_subdirectory(examples)
+endif (${BUILD_TESTING})
+
+# Add a prettify target
+add_custom_target(format sh ${CMAKE_SOURCE_DIR}/scripts/format.sh
+  WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
+
+# # Create an example dir with all input.i3d example files
+# option(BUILD_TESTING "Build with tests" ON)
+# set(test_dir "${PROJECT_BINARY_DIR}/Test")
+# message(STATUS "Before test main ${test_dir}")
+# if (${BUILD_TESTING})
+#   file(MAKE_DIRECTORY ${test_dir})
+#   include(CTest)
+#   message(STATUS "MPI INCL ALSO FOUND: ${MPI_INCLUDE_PATH}")
+#   message(STATUS "MPI EXEC: ${MPIEXEC_EXECUTABLE}")
+#   file(MAKE_DIRECTORY ${test_dir}/App)
+#   add_test(NAME TestAPP COMMAND ${MPIEXEC_EXECUTABLE} -n ${MPIEXEC_MAX_NUMPROCS} ${CMAKE_INSTALL_PREFIX}/bin/xcompact3d WORKING_DIRECTORY ${test_dir}/App)
+#   #if (PFUNIT_FOUND)
+#   #  file(MAKE_DIRECTORY ${test_dir}/Verif_x_00)
+#   #  add_test(NAME Test_dx_00 COMMAND ${MPIEXEC_EXECUTABLE} -n ${MPIEXEC_MAX_NUMPROCS} ${CMAKE_INSTALL_PREFIX}/bin/verif_x_00 WORKING_DIRECTORY ${test_dir}/Verif_x_00)
+#   #endif (PFUNIT_FOUND)
+# endif()

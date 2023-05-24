@@ -1,0 +1,5 @@
+#
+# Versioning file for 2decomp&fft
+#
+
+set(PACKAGE_VERSION "@version@")

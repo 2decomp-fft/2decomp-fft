@@ -24,11 +24,17 @@ jobs:
     - name: Install requirements
       run: |
         sudo apt-get update
-        sudo apt-get install -y gfortran openmpi-bin libopenmpi-dev
+        sudo apt-get install -y gfortran openmpi-bin libopenmpi-dev cmake
 
     # Runs a set of commands using the runners shell
     - name: Compile
-      run: make BUILD=dev
+      run: |
+        export FC=mpif90
+        cmake -S . -B build -DCMAKE_BUILD_TYPE=dev -DBUILD_TESTING=ON
+        cmake --build build --target decomp2d
 
     - name: Examples
-      run: make examples
+      run: |
+        export FC=mpif90
+        cmake -S . -B build -DCMAKE_BUILD_TYPE=dev -DBUILD_TESTING=ON
+        cmake --build build

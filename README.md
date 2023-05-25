@@ -3,6 +3,7 @@
 This README contains basic instructions for building and installing the `2decomp&fft` library, more
 detailed instructions can be found in [INSTALL.md](INSTALL.md).
 
+
 ## Building
 
 The build system is driven by `cmake`. It is good practice to directly point to the MPI Fortran wrapper that you would like to use to guarantee consistency between Fortran compiler and MPI. This can be done by setting the default Fortran environmental variable 
@@ -64,6 +65,7 @@ During the configure stage users should ensure that the number of MPI tasks `MPI
 Mesh resolution can also be imposed using the parameters `NX`, `NY` and `NZ`. 
 
 For the GPU implementation please be aware that it is based on a single MPI rank per GPU. Therefore, to test multiple GPUs, use the maximum number of available GPUs on the system/node and not the maximum number of MPI tasks. 
+
 
 ## Profiling
 
@@ -145,7 +147,7 @@ This variable is automatically added when selecting the profiler. It activates t
 
 #### EVEN
 
-This preprocessor variable is not valid for GPU builds. It leads to padded alltoall operations.
+This preprocessor variable is not valid for GPU builds. It leads to padded alltoall operations. This preprocessor variable is driven by the CMake on/off variable `EVEN`.
 
 #### OVERWRITE
 

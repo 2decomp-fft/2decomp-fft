@@ -73,6 +73,14 @@ if (ENABLE_INPLACE)
   add_definitions("-DOVERWRITE")
 endif ()
 
+# Padded MPI alltoall transpose operations (invalid for GPU)
+if (EVEN)
+  if (BUILD_TARGET MATCHES "gpu")
+    message(FATAL_ERROR "The GPU build is not compatible with padded alltoall")
+  endif ()
+  add_definitions("-DEVEN")
+endif ()
+
 execute_process(
   COMMAND git describe --tag --long --always
   WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}

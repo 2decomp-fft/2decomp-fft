@@ -100,12 +100,12 @@ module decomp_2d
       integer, allocatable, dimension(:) :: &
          x1disp, y1disp, y2disp, z2disp
 
-      ! buffer counts for MPI_ALLTOALL: either for evenly distributed data
-      ! or for padded-alltoall
+#ifdef EVEN
+      ! buffer counts for MPI_ALLTOALL for padded-alltoall
       integer :: x1count, y1count, y2count, z2count
-
       ! evenly distributed data
       logical :: even
+#endif
 
    END TYPE DECOMP_INFO
 
@@ -398,13 +398,6 @@ contains
                               'min(ny,nz) >= p_col')
       end if
 
-      if (mod(nx, dims(1)) == 0 .and. mod(ny, dims(1)) == 0 .and. &
-          mod(ny, dims(2)) == 0 .and. mod(nz, dims(2)) == 0) then
-         decomp%even = .true.
-      else
-         decomp%even = .false.
-      end if
-
       ! distribute mesh points
       allocate (decomp%x1dist(0:dims(1) - 1), decomp%y1dist(0:dims(1) - 1), &
                 decomp%y2dist(0:dims(2) - 1), decomp%z2dist(0:dims(2) - 1))
@@ -431,10 +424,18 @@ contains
       buf_size = max(decomp%xsz(1) * decomp%xsz(2) * decomp%xsz(3), &
                      max(decomp%ysz(1) * decomp%ysz(2) * decomp%ysz(3), &
                          decomp%zsz(1) * decomp%zsz(2) * decomp%zsz(3)))
+
 #ifdef EVEN
       ! padded alltoall optimisation may need larger buffer space
       buf_size = max(buf_size, &
                      max(decomp%x1count * dims(1), decomp%y2count * dims(2)))
+      ! evenly distributed data ?
+      if (mod(nx, dims(1)) == 0 .and. mod(ny, dims(1)) == 0 .and. &
+          mod(ny, dims(2)) == 0 .and. mod(nz, dims(2)) == 0) then
+         decomp%even = .true.
+      else
+         decomp%even = .false.
+      end if
 #endif
 
       ! check if additional memory is required
@@ -1131,7 +1132,7 @@ contains
       end do
 
       ! MPI_ALLTOALL buffer information
-
+#ifdef EVEN
       ! For evenly distributed data, following is an easier implementation.
       ! But it should be covered by the more general formulation below.
       !decomp%x1count = decomp%xsz(1)*decomp%xsz(2)*decomp%xsz(3)/dims(1)
@@ -1149,8 +1150,8 @@ contains
       decomp%y2count = decomp%y2dist(dims(2) - 1) * &
                        decomp%z2dist(dims(2) - 1) * decomp%zsz(1)
       decomp%z2count = decomp%y2count
+#endif
 
-      return
    end subroutine prepare_buffer
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!

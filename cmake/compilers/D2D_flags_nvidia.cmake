@@ -19,9 +19,9 @@ if (BUILD_TARGET MATCHES "gpu")
     set(D2D_FFLAGS "${D2D_FFLAGS} -cuda")
     # Add Compute Capabilities and memory managemnt 
     if (ENABLE_MANAGED)
-      set(D2D_FFLAGS "${D2D_FFLAGS} -gpu=cc${CUDA_ARCH_FIRST},managed,lineinfo")
+	    set(D2D_FFLAGS "${D2D_FFLAGS} -gpu=cc${CUDA_ARCH_COMP},managed,lineinfo")
     else (ENABLE_MANAGED)
-      set(D2D_FFLAGS "${D2D_FFLAGS} -gpu=cc${CUDA_ARCH_FIRST},lineinfo")
+	    set(D2D_FFLAGS "${D2D_FFLAGS} -gpu=cc${CUDA_ARCH_COMP},lineinfo")
     endif(ENABLE_MANAGED)
     # Add NCCL cuFFT
     if (ENABLE_NCCL)

@@ -12,7 +12,10 @@
 ! This file contains the routines that transpose data from Z to Y pencil
 submodule(decomp_2d) d2d_transpose_z_to_y
 
+#ifdef NVHPC
+   ! FIXME : Nvidia compiler does not compile the submodule without this
    use decomp_2d_constants, only: mytype
+#endif
 
    implicit none
 

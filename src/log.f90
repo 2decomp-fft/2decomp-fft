@@ -116,7 +116,7 @@ contains
       integer :: io_unit
       integer :: version, subversion, ierror
 #ifdef DEBUG
-      character(len=64) :: fname
+      character(len=512) :: fname
 #endif
 
       ! Output log if needed

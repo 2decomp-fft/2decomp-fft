@@ -12,6 +12,8 @@
 ! This file contains the routines that transpose data from Y to X pencil
 submodule(decomp_2d) d2d_transpose_y_to_x
 
+   use decomp_2d_constants, only: mytype
+     
    implicit none
 
 contains

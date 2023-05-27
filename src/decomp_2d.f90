@@ -193,87 +193,31 @@ module decomp_2d
    end interface decomp_2d_finalize
 
    interface transpose_x_to_y
-      module subroutine transpose_x_to_y_real_long(src, dst, decomp)
-         real(mytype), dimension(:, :, :), intent(IN) :: src
-         real(mytype), dimension(:, :, :), intent(OUT) :: dst
-         TYPE(DECOMP_INFO), intent(IN) :: decomp
-      end subroutine transpose_x_to_y_real_long
-      module subroutine transpose_x_to_y_real_short(src, dst)
-         real(mytype), dimension(:, :, :), intent(IN) :: src
-         real(mytype), dimension(:, :, :), intent(OUT) :: dst
-      end subroutine transpose_x_to_y_real_short
-      module subroutine transpose_x_to_y_complex_long(src, dst, decomp)
-         complex(mytype), dimension(:, :, :), intent(IN) :: src
-         complex(mytype), dimension(:, :, :), intent(OUT) :: dst
-         TYPE(DECOMP_INFO), intent(IN) :: decomp
-      end subroutine transpose_x_to_y_complex_long
-      module subroutine transpose_x_to_y_complex_short(src, dst)
-         complex(mytype), dimension(:, :, :), intent(IN) :: src
-         complex(mytype), dimension(:, :, :), intent(OUT) :: dst
-      end subroutine transpose_x_to_y_complex_short
+      module procedure transpose_x_to_y_real_long
+      module procedure transpose_x_to_y_real_short
+      module procedure transpose_x_to_y_complex_long
+      module procedure transpose_x_to_y_complex_short
    end interface transpose_x_to_y
 
    interface transpose_y_to_z
-      module subroutine transpose_y_to_z_real_long(src, dst, decomp)
-         real(mytype), dimension(:, :, :), intent(IN) :: src
-         real(mytype), dimension(:, :, :), intent(OUT) :: dst
-         TYPE(DECOMP_INFO), intent(IN) :: decomp
-      end subroutine transpose_y_to_z_real_long
-      module subroutine transpose_y_to_z_real_short(src, dst)
-         real(mytype), dimension(:, :, :), intent(IN) :: src
-         real(mytype), dimension(:, :, :), intent(OUT) :: dst
-      end subroutine transpose_y_to_z_real_short
-      module subroutine transpose_y_to_z_complex_long(src, dst, decomp)
-         complex(mytype), dimension(:, :, :), intent(IN) :: src
-         complex(mytype), dimension(:, :, :), intent(OUT) :: dst
-         TYPE(DECOMP_INFO), intent(IN) :: decomp
-      end subroutine transpose_y_to_z_complex_long
-      module subroutine transpose_y_to_z_complex_short(src, dst)
-         complex(mytype), dimension(:, :, :), intent(IN) :: src
-         complex(mytype), dimension(:, :, :), intent(OUT) :: dst
-      end subroutine transpose_y_to_z_complex_short
+      module procedure transpose_y_to_z_real_long
+      module procedure transpose_y_to_z_real_short
+      module procedure transpose_y_to_z_complex_long
+      module procedure transpose_y_to_z_complex_short
    end interface transpose_y_to_z
 
    interface transpose_z_to_y
-      module subroutine transpose_z_to_y_real_long(src, dst, decomp)
-         real(mytype), dimension(:, :, :), intent(IN) :: src
-         real(mytype), dimension(:, :, :), intent(OUT) :: dst
-         TYPE(DECOMP_INFO), intent(IN) :: decomp
-      end subroutine transpose_z_to_y_real_long
-      module subroutine transpose_z_to_y_real_short(src, dst)
-         real(mytype), dimension(:, :, :), intent(IN) :: src
-         real(mytype), dimension(:, :, :), intent(OUT) :: dst
-      end subroutine transpose_z_to_y_real_short
-      module subroutine transpose_z_to_y_complex_long(src, dst, decomp)
-         complex(mytype), dimension(:, :, :), intent(IN) :: src
-         complex(mytype), dimension(:, :, :), intent(OUT) :: dst
-         TYPE(DECOMP_INFO), intent(IN) :: decomp
-      end subroutine transpose_z_to_y_complex_long
-      module subroutine transpose_z_to_y_complex_short(src, dst)
-         complex(mytype), dimension(:, :, :), intent(IN) :: src
-         complex(mytype), dimension(:, :, :), intent(OUT) :: dst
-      end subroutine transpose_z_to_y_complex_short
+      module procedure transpose_z_to_y_real_long
+      module procedure transpose_z_to_y_real_short
+      module procedure transpose_z_to_y_complex_long
+      module procedure transpose_z_to_y_complex_short
    end interface transpose_z_to_y
 
    interface transpose_y_to_x
-      module subroutine transpose_y_to_x_real_long(src, dst, decomp)
-         real(mytype), dimension(:, :, :), intent(IN) :: src
-         real(mytype), dimension(:, :, :), intent(OUT) :: dst
-         TYPE(DECOMP_INFO), intent(IN) :: decomp
-      end subroutine transpose_y_to_x_real_long
-      module subroutine transpose_y_to_x_real_short(src, dst)
-         real(mytype), dimension(:, :, :), intent(IN) :: src
-         real(mytype), dimension(:, :, :), intent(OUT) :: dst
-      end subroutine transpose_y_to_x_real_short
-      module subroutine transpose_y_to_x_complex_long(src, dst, decomp)
-         complex(mytype), dimension(:, :, :), intent(IN) :: src
-         complex(mytype), dimension(:, :, :), intent(OUT) :: dst
-         TYPE(DECOMP_INFO), intent(IN) :: decomp
-      end subroutine transpose_y_to_x_complex_long
-      module subroutine transpose_y_to_x_complex_short(src, dst)
-         complex(mytype), dimension(:, :, :), intent(IN) :: src
-         complex(mytype), dimension(:, :, :), intent(OUT) :: dst
-      end subroutine transpose_y_to_x_complex_short
+      module procedure transpose_y_to_x_real_long
+      module procedure transpose_y_to_x_real_short
+      module procedure transpose_y_to_x_complex_long
+      module procedure transpose_y_to_x_complex_short
    end interface transpose_y_to_x
 
    interface update_halo
@@ -1184,6 +1128,14 @@ contains
 #endif
 
    end subroutine prepare_buffer
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+   ! Transposition routines
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+#include "transpose_x_to_y.f90"
+#include "transpose_y_to_z.f90"
+#include "transpose_z_to_y.f90"
+#include "transpose_y_to_x.f90"
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
    ! Halo cell support

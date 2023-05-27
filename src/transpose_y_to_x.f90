@@ -10,8 +10,13 @@
 !=======================================================================
 
 ! This file contains the routines that transpose data from Y to X pencil
+submodule(decomp_2d) d2d_transpose_y_to_x
 
-  subroutine transpose_y_to_x_real_short(src, dst)
+  implicit none
+
+contains
+
+  module subroutine transpose_y_to_x_real_short(src, dst)
 
      implicit none
 
@@ -22,7 +27,7 @@
 
   end subroutine transpose_y_to_x_real_short
 
-  subroutine transpose_y_to_x_real_long(src, dst, decomp)
+  module subroutine transpose_y_to_x_real_long(src, dst, decomp)
 
      implicit none
 
@@ -129,7 +134,7 @@
      return
   end subroutine transpose_y_to_x_real
 
-  subroutine transpose_y_to_x_complex_short(src, dst)
+  module subroutine transpose_y_to_x_complex_short(src, dst)
 
      implicit none
 
@@ -140,7 +145,7 @@
 
   end subroutine transpose_y_to_x_complex_short
 
-  subroutine transpose_y_to_x_complex_long(src, dst, decomp)
+  module subroutine transpose_y_to_x_complex_long(src, dst, decomp)
 
      implicit none
 
@@ -454,3 +459,5 @@
 
      return
   end subroutine mem_merge_yx_complex
+
+end submodule d2d_transpose_y_to_x

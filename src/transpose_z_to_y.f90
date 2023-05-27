@@ -10,8 +10,13 @@
 !=======================================================================
 
 ! This file contains the routines that transpose data from Z to Y pencil
+submodule(decomp_2d) d2d_transpose_z_to_y
 
-  subroutine transpose_z_to_y_real_short(src, dst)
+  implicit none
+
+contains
+
+  module subroutine transpose_z_to_y_real_short(src, dst)
 
      implicit none
 
@@ -22,7 +27,7 @@
 
   end subroutine transpose_z_to_y_real_short
 
-  subroutine transpose_z_to_y_real_long(src, dst, decomp)
+  module subroutine transpose_z_to_y_real_long(src, dst, decomp)
 
      implicit none
 
@@ -147,7 +152,7 @@
      return
   end subroutine transpose_z_to_y_real
 
-  subroutine transpose_z_to_y_complex_short(src, dst)
+  module subroutine transpose_z_to_y_complex_short(src, dst)
 
      implicit none
 
@@ -158,7 +163,7 @@
 
   end subroutine transpose_z_to_y_complex_short
 
-  subroutine transpose_z_to_y_complex_long(src, dst, decomp)
+  module subroutine transpose_z_to_y_complex_long(src, dst, decomp)
 
      implicit none
 
@@ -473,3 +478,5 @@
 
      return
   end subroutine mem_merge_zy_complex
+
+end submodule d2d_transpose_z_to_y

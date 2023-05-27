@@ -3,11 +3,7 @@ file(GLOB files_decomp factor.f90
 		       decomp_2d_mpi.f90
 	               decomp_2d.f90
 		       log.f90
-		       io.f90
-		       transpose_x_to_y.f90
-		       transpose_y_to_x.f90
-		       transpose_y_to_z.f90
-		       transpose_z_to_y.f90)
+		       io.f90)
 include_directories(${CMAKE_SOURCE_DIR}/src)
 
 if(${BUILD_TARGET} MATCHES "gpu")

@@ -139,3 +139,104 @@ clean-decomp:
 	cmake --build $(DECOMP_BUILD_DIR) --target clean
 	rm -f $(DECOMP_INSTALL_DIR)/lib/libdecomp.a
 ```
+
+## Profiling
+
+Profiling can be activated via `cmake` configuration, the recommended approach is to run the initial configuration as follows:
+```
+export caliper_DIR=/path/to/caliper/install/share/cmake/caliper
+export CXX=mpicxx
+cmake -S $path_to_sources -B $path_to_build_directory -DENABLE_PROFILER=caliper
+```
+where `ENABLE_PROFILER` is set to the profiling tool desired, currently supported values are: `caliper`.
+Note that when using `caliper` a C++ compiler is required as indicated in the above command line.
+
+## Miscellaneous
+
+### List of preprocessor variables
+
+#### DEBUG
+
+This variable is automatically added in debug and dev builds. Extra information is printed when it is present.
+
+#### DOUBLE_PREC
+
+When this variable is not present, the library uses single precision. When it is present, the library uses double precision. This preprocessor variable is driven by the CMake on/off variable `DOUBLE_PRECISION`.
+
+#### SAVE_SINGLE
+
+This variable is valid for double precision builds only. When it is present, snapshots are written in single precision. This preprocessor variable is driven by the CMake on/off variable `SINGLE_PRECISION_OUTPUT`.
+
+#### PROFILER
+
+This variable is automatically added when selecting the profiler. It activates the profiling sections of the code.
+
+#### EVEN
+
+This preprocessor variable is not valid for GPU builds. It leads to padded alltoall operations. This preprocessor variable is driven by the CMake on/off variable `EVEN`.
+
+#### OVERWRITE
+
+This variable leads to overwrite the input array when computing FFT. The support of this flag does not always correspond to in-place transforms, depending on the FFT backend selected, as described above. This preprocessor variable is driven by the CMake on/off variable `ENABLE_INPLACE`.
+
+#### HALO_DEBUG
+
+This variable is used to debug the halo operations. This preprocessor variable is driven by the CMake on/off variable `HALO_DEBUG`.
+
+#### _GPU
+
+This variable is automatically added in GPU builds.
+
+#### _NCCL
+
+This variable is valid only for GPU builds. The NVIDIA Collective Communication Library (NCCL) implements multi-GPU and multi-node communication primitives optimized for NVIDIA GPUs and Networking.
+
+## Optional dependencies
+
+### FFTW
+
+The library [fftw](http://www.fftw.org/index.html) can be used as a backend for the FFT engine. The version 3.3.10 was tested, is supported and can be downloaded [here](http://www.fftw.org/download.html). Please note that one should build fftw and decomp2d against the same compilers. For build instructions, please check [here](http://www.fftw.org/fftw3_doc/Installation-on-Unix.html). Below is a suggestion for the compilation of the library in double precision (add `--enable-single` for a single precision build):
+
+```
+wget http://www.fftw.org/fftw-3.3.10.tar.gz
+tar xzf fftw-3.3.10.tar.gz
+mkdir fftw-3.3.10_tmp && cd fftw-3.3.10_tmp
+../fftw-3.3.10/configure --prefix=xxxxxxx/fftw3/fftw-3.3.10_bld --enable-shared
+make -j
+make -j check
+make install
+```
+Please note that the resulting build is not compatible with CMake (https://github.com/FFTW/fftw3/issues/130). As a workaround, one can open the file `/path/to/fftw3/install/lib/cmake/fftw3/FFTW3Config.cmake` and comment the line
+```
+include ("${CMAKE_CURRENT_LIST_DIR}/FFTW3LibraryDepends.cmake")
+```
+
+To build `2decomp&fft` against fftw3, one can provide the package configuration for fftw3 in the `PKG_CONFIG_PATH` environment variable, this should be found under `/path/to/fftw3/install/lib/pkgconfig`. One can also provide the option `-DFFTW_ROOT=/path/to/fftw3/install`. Then either specify on the command line when configuring the build
+```
+cmake -S . -B build -DFFT_Choice=<fftw|fftw_f03> -DFFTW_ROOT=/path/to/fftw3/install
+```
+or modify the build configuration using `ccmake`.
+
+Note the legacy `fftw` interface lacks interface definitions and will fail when stricter compilation flags are used (e.g. when `-DCMAKE_BUILD_TYPE=Dev`) for this it is recommended to use `fftw_f03` which provides proper interfaces.
+
+### Caliper
+
+The library [caliper](https://github.com/LLNL/Caliper) can be used to profile the execution of the code. The version 2.9.1 was tested and is supported, version 2.8.0 has also been tested and is still expected to work. Please note that one must build caliper and decomp2d against the same C/C++/Fortran compilers and MPI libray. For build instructions, please check [here](https://github.com/LLNL/Caliper#building-and-installing) and [here](https://software.llnl.gov/Caliper/CaliperBasics.html#build-and-install). Below is a suggestion for the compilation of the library using the GNU compilers:
+
+```
+git clone https://github.com/LLNL/Caliper.git caliper_github
+cd caliper_github
+git checkout v2.9.1
+mkdir build && cd build
+cmake -DCMAKE_C_COMPILER=gcc -DCMAKE_CXX_COMPILER=g++ -DCMAKE_Fortran_COMPILER=gfortran -DCMAKE_INSTALL_PREFIX=../../caliper_build_2.9.1 -DWITH_FORTRAN=yes -DWITH_MPI=yes -DBUILD_TESTING=yes ../
+make -j
+make test
+make install
+```
+
+After installing Caliper ensure to set `caliper_DIR=/path/to/caliper/install/share/cmake/caliper`.
+Following this the `2decomp-fft` build can be configured to use Caliper profiling as
+```
+cmake -S . -B -DENABLE_PROFILER=caliper
+```
+or by modifying the configuration to set `ENABLE_PROFILER=caliper` via `ccmake`.

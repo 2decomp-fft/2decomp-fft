@@ -107,6 +107,9 @@ module decomp_2d
       logical :: even
 #endif
 
+     ! number of halo cells in each direction (index 1,2,3), for each pencil (x,y,z)
+     integer, dimension(3) :: xlevel, ylevel, zlevel
+
    END TYPE DECOMP_INFO
 
    ! main (default) decomposition information for global size nx*ny*nz
@@ -162,6 +165,7 @@ module decomp_2d
              init_coarser_mesh_statP, fine_to_coarseP, &
              alloc_x, alloc_y, alloc_z, &
              update_halo, &
+             exchange_halo_x, exchange_halo_y, exchange_halo_z, &
              get_decomp_info, &
              get_decomp_dims, &
              d2d_listing_get_unit, d2d_listing_close_unit
@@ -219,6 +223,21 @@ module decomp_2d
       module procedure transpose_y_to_x_complex_long
       module procedure transpose_y_to_x_complex_short
    end interface transpose_y_to_x
+
+   interface exchange_halo_x
+      module procedure exchange_halo_x_real
+      module procedure exchange_halo_x_complex
+   end interface exchange_halo_x
+
+   interface exchange_halo_y
+      module procedure exchange_halo_y_real
+      module procedure exchange_halo_y_complex
+   end interface exchange_halo_y
+
+   interface exchange_halo_z
+      module procedure exchange_halo_z_real
+      module procedure exchange_halo_z_complex
+   end interface exchange_halo_z
 
    interface update_halo
       module procedure update_halo_real
@@ -385,6 +404,11 @@ contains
                      decomp%yst, decomp%yen, decomp%ysz)
       call partition(nx, ny, nz, (/2, 3, 1/), &
                      decomp%zst, decomp%zen, decomp%zsz)
+
+      ! set halo levels to zero by default
+      decomp%xlevel = 0
+      decomp%ylevel = 0
+      decomp%zlevel = 0
 
       ! prepare send/receive buffer displacement and count for ALLTOALL(V)
       allocate (decomp%x1cnts(0:dims(1) - 1), decomp%y1cnts(0:dims(1) - 1), &

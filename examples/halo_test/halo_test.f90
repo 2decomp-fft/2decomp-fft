@@ -142,13 +142,13 @@ contains
 #endif
 
       ! initialise u,v,w with random numbers in X-pencil
-      call alloc_x(u1, global)
-      call alloc_x(v1, global)
-      call alloc_x(w1, global)
-      call alloc_x(div, global)
-      call alloc_x(div1, global)
-      call alloc_x(div2, global)
-      call alloc_x(div3, global)
+      call alloc_x(u1, opt_global=global)
+      call alloc_x(v1, opt_global=global)
+      call alloc_x(w1, opt_global=global)
+      call alloc_x(div, opt_global=global)
+      call alloc_x(div1, opt_global=global)
+      call alloc_x(div2, opt_global=global)
+      call alloc_x(div3, opt_global=global)
 
       call random_seed(size=n)
       allocate (seed(n))
@@ -159,15 +159,15 @@ contains
       call random_number(w1)
 
       ! Working array used more than once
-      call alloc_y(u2, global)
-      call alloc_y(v2, global)
-      call alloc_y(w2, global)
-      call alloc_y(wk2, global)
+      call alloc_y(u2, opt_global=global)
+      call alloc_y(v2, opt_global=global)
+      call alloc_y(w2, opt_global=global)
+      call alloc_y(wk2, opt_global=global)
 
-      call alloc_z(u3, global)
-      call alloc_z(v3, global)
-      call alloc_z(w3, global)
-      call alloc_z(wk3, global)
+      call alloc_z(u3, opt_global=global)
+      call alloc_z(v3, opt_global=global)
+      call alloc_z(w3, opt_global=global)
+      call alloc_z(wk3, opt_global=global)
 
       all_pass = .true.
 

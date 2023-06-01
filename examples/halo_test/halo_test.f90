@@ -27,9 +27,9 @@ program halo_test
    integer :: nargin, arg, FNLength, status, DecInd
    character(len=80) :: InputFN
 
-   real(mytype), allocatable, dimension(:, :, :) :: u1, v1, w1, div1
-   real(mytype), allocatable, dimension(:, :, :) :: u2, v2, w2, div2
-   real(mytype), allocatable, dimension(:, :, :) :: u3, v3, w3, div3
+   real(mytype), allocatable, dimension(:, :, :) :: u1, v1, w1
+   real(mytype), allocatable, dimension(:, :, :) :: u2, v2, w2
+   real(mytype), allocatable, dimension(:, :, :) :: u3, v3, w3
    real(mytype), allocatable, dimension(:, :, :) :: div, wk2, wk3
 
    integer :: i, j, k, ierror, n
@@ -146,9 +146,6 @@ contains
       call alloc_x(v1, global)
       call alloc_x(w1, global)
       call alloc_x(div, global)
-      call alloc_x(div1, global)
-      call alloc_x(div2, global)
-      call alloc_x(div3, global)
 
       call random_seed(size=n)
       allocate (seed(n))
@@ -293,6 +290,7 @@ contains
 
       implicit none
 
+      real(mytype), allocatable, dimension(:, :, :) :: div1
       real(mytype), allocatable, dimension(:, :, :) :: vh, wh
 #if defined(_GPU)
       attributes(device) :: vh, wh
@@ -306,6 +304,8 @@ contains
       integer :: ifirst, ilast ! I loop start/end
       integer :: jfirst, jlast ! J loop start/end
       integer :: kfirst, klast ! K loop start/end
+
+      call alloc_x(div1, global)
 
       ! Expected sizes
       nx_expected = nx
@@ -351,7 +351,7 @@ contains
       ! Compute error
       call check_err(div1, div, "X")
 
-      deallocate (vh, wh)
+      deallocate (vh, wh, div1)
 
    end subroutine test_div_haloX
 
@@ -361,6 +361,8 @@ contains
    subroutine test_div_haloY()
 
       implicit none
+
+      real(mytype), allocatable, dimension(:, :, :) :: div2
       real(mytype), allocatable, dimension(:, :, :) :: uh, wh
 #if defined(_GPU)
       attributes(device) :: uh, wh
@@ -375,6 +377,8 @@ contains
       integer :: jfirst, jlast ! J loop start/end
       integer :: kfirst, klast ! K loop start/end
 
+      call alloc_x(div2, global)
+      
       ! Expected sizes
       nx_expected = ysize(1) + 2
       ny_expected = ny
@@ -418,7 +422,7 @@ contains
       ! Compute error
       call check_err(div2, div, "Y")
 
-      deallocate (uh, wh)
+      deallocate (uh, wh, div2)
 
    end subroutine test_div_haloY
 
@@ -428,6 +432,9 @@ contains
    subroutine test_div_haloZ()
 
       implicit none
+
+      real(mytype), allocatable, dimension(:, :, :) :: div3
+      
       real(mytype), allocatable, dimension(:, :, :) :: uh, vh
 #if defined(_GPU)
       attributes(device) :: vh, uh
@@ -441,6 +448,8 @@ contains
       integer :: ifirst, ilast ! I loop start/end
       integer :: jfirst, jlast ! J loop start/end
       integer :: kfirst, klast ! K loop start/end
+
+      call alloc_x(div3, global)
 
       ! Expected sizes
       nx_expected = zsize(1) + 2
@@ -486,7 +495,7 @@ contains
       ! Compute error
       call check_err(div3, div, "Z")
 
-      deallocate (uh, vh)
+      deallocate (uh, vh, div3)
    end subroutine test_div_haloZ
    !=====================================================================
    ! Check the difference between halo and transpose divergence

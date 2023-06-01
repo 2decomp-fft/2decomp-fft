@@ -349,7 +349,7 @@ contains
       !$acc end kernels
 
       ! Compute error
-      call check_err(div1, "X")
+      call check_err(div1, div, "X")
 
       deallocate (vh, wh)
 
@@ -416,7 +416,7 @@ contains
       call transpose_y_to_x(wk2, div2)
 
       ! Compute error
-      call check_err(div2, "Y")
+      call check_err(div2, div, "Y")
 
       deallocate (uh, wh)
 
@@ -484,18 +484,19 @@ contains
       call transpose_y_to_x(wk2, div3)
 
       ! Compute error
-      call check_err(div3, "Z")
+      call check_err(div3, div, "Z")
 
       deallocate (uh, vh)
    end subroutine test_div_haloZ
    !=====================================================================
    ! Check the difference between halo and transpose divergence
    !=====================================================================
-   subroutine check_err(divh, pencil)
+   subroutine check_err(divh, divref, pencil)
 
       implicit none
 
       real(mytype), dimension(:, :, :), intent(in) :: divh
+      real(mytype), dimension(:, :, :), intent(in) :: divref
       character(len=*), intent(in) :: pencil
       real(mytype), dimension(:, :, :), allocatable :: tmp
       real(mytype) :: divmag, error
@@ -509,11 +510,11 @@ contains
       allocate (tmp(size(divh, 1), size(divh, 2), size(divh, 3)))
 
       !$acc kernels default(present)
-      tmp(2:xlast, 2:ylast, 2:zlast) = divh(2:xlast, 2:ylast, 2:zlast) - div1(2:xlast, 2:ylast, 2:zlast)
+      tmp(2:xlast, 2:ylast, 2:zlast) = divh(2:xlast, 2:ylast, 2:zlast) - divref(2:xlast, 2:ylast, 2:zlast)
       !$acc end kernels
       error = mag(tmp)
       !$acc kernels default(present)
-      tmp(2:xlast, 2:ylast, 2:zlast) = div1(2:xlast, 2:ylast, 2:zlast)
+      tmp(2:xlast, 2:ylast, 2:zlast) = divref(2:xlast, 2:ylast, 2:zlast)
       !$acc end kernels
       divmag = mag(tmp)
 

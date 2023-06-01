@@ -103,7 +103,7 @@ program halo_test
    end if
 
    call initialise()
-   !$acc data copyin(u1,v1,w1) create(u2,v2,w2,u3,v3,w3,div1,div2,div3,wk2,wk3) copy(div)
+   !$acc data copyin(u1,v1,w1) create(u2,v2,w2,u3,v3,w3,wk2,wk3) copy(div)
    call test_div_transpose()
    call test_div_haloX()
    call test_div_haloY()
@@ -333,6 +333,7 @@ contains
       call test_halo_size(vh, nx_expected, ny_expected, nz_expected, "X:v")
       call test_halo_size(wh, nx_expected, ny_expected, nz_expected, "X:w")
 
+      !$acc data copy(div1)
       !$acc kernels default(present)
       div1(:, :, :) = 0._mytype
       !$acc end kernels
@@ -350,6 +351,7 @@ contains
 
       ! Compute error
       call check_err(div1, div, "X")
+      !$acc end data
 
       deallocate (vh, wh, div1)
 
@@ -405,6 +407,7 @@ contains
       call test_halo_size(uh, nx_expected, ny_expected, nz_expected, "Y:u")
       call test_halo_size(wh, nx_expected, ny_expected, nz_expected, "Y:w")
 
+      !$acc data copy(div2)
       !$acc kernels default(present)
       do k = kfirst, klast
          do j = jfirst, jlast
@@ -421,6 +424,7 @@ contains
 
       ! Compute error
       call check_err(div2, div, "Y")
+      !$acc end data
 
       deallocate (uh, wh, div2)
 
@@ -477,6 +481,7 @@ contains
       call test_halo_size(uh, nx_expected, ny_expected, nz_expected, "Z:u")
       call test_halo_size(vh, nx_expected, ny_expected, nz_expected, "Z:v")
 
+      !$acc data copy(div3)
       !$acc kernels default(present)
       do j = jfirst, jlast
          do i = ifirst, ilast
@@ -494,6 +499,7 @@ contains
 
       ! Compute error
       call check_err(div3, div, "Z")
+      !$acc end data
 
       deallocate (uh, vh, div3)
    end subroutine test_div_haloZ

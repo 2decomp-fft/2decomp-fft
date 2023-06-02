@@ -125,7 +125,6 @@ contains
 
 #ifdef ADIOS2
       integer :: ierror
-      logical :: adios2_debug_mode
       character(len=80) :: config_file = "adios2_config.xml"
 #endif
 
@@ -134,10 +133,7 @@ contains
       if (decomp_profiler_io) call decomp_profiler_start("io_init")
 #endif
 
-  !! TODO: make this a runtime-option
-      adios2_debug_mode = .true.
-
-      call adios2_init(adios, trim(config_file), decomp_2d_comm, adios2_debug_mode, ierror)
+      call adios2_init(adios, trim(config_file), decomp_2d_comm, ierror)
       if (ierror /= 0) then
          call decomp_2d_abort(__FILE__, __LINE__, ierror, &
                               "Error initialising ADIOS2 - is "//trim(config_file)//" present and valid?")

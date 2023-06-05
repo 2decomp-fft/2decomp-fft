@@ -72,15 +72,21 @@ endif(FFTW_FOUND)
 
 if (ENABLE_PROFILER)
   target_compile_definitions(decomp2d PUBLIC -DPROFILER)
-
   if (caliper_FOUND)
     target_include_directories(decomp2d PUBLIC ${caliper_INCLUDE_DIR}/caliper/fortran)
     target_link_libraries(decomp2d PRIVATE caliper)
   endif()
 endif()
+
 if (HALO_DEBUG)
   target_compile_definitions(decomp2d PUBLIC -DHALO_DEBUG)
 endif()
+
+# Fix issue of Nvidia compiler with submodules
+#   (require NVHPC version 23.1 and above)
+if (Fortran_COMPILER_NAME MATCHES "NVHPC")
+  target_compile_definitions(decomp2d PUBLIC -DNVHPC)
+endif (Fortran_COMPILER_NAME MATCHES "NVHPC")
 
 install(TARGETS decomp2d
   EXPORT decomp2d-targets

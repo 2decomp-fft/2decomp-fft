@@ -1,6 +1,5 @@
 #Compilers Flags for NVIDIA
 
-target_compile_definitions(decomp2d PUBLIC -DNVHPC)
 set(D2D_FFLAGS "-cpp -Mfree -Kieee")
 set(D2D_FFLAGS_RELEASE "-O3")
 set(D2D_FFLAGS_DEBUG   "-O0 -g -traceback -Mbounds -Mchkptr -Ktrap=fp")

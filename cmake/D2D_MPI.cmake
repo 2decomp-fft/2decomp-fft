@@ -20,7 +20,8 @@ if (MPI_Fortran_COMPILER)
 
     if (${D2D_MPI_FAMILY} STREQUAL "Unknown")
       execute_process(COMMAND ${MPI_Fortran_COMPILER} "-show"
-	OUTPUT_VARIABLE mpi_show)
+	OUTPUT_VARIABLE mpi_show
+	ERROR_QUIET)
       
       string(FIND "${mpi_show}" "openmpi" pos)
       if(pos GREATER_EQUAL "0")

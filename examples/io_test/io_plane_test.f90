@@ -165,10 +165,10 @@ program io_plane_test
       inquire (iolength=iol) data1(1, 1, 1)
 
       ! X-plane
-      inquire (file='x_pencil-x_plane.dat', exist=found)
+      inquire (file='./out/x_pencil-x_plane.dat', exist=found)
       if (found) then
          allocate (work(1, ny, nz))
-         open (10, FILE='x_pencil-x_plane.dat', FORM='unformatted', &
+         open (10, FILE='./out/x_pencil-x_plane.dat', FORM='unformatted', &
                ACCESS='DIRECT', RECL=iol)
          m = 1
          do k = 1, nz
@@ -187,10 +187,10 @@ program io_plane_test
       end if
 
       ! Y-plane
-      inquire (file='x_pencil-y_plane.dat', exist=found)
+      inquire (file='./out/x_pencil-y_plane.dat', exist=found)
       if (found) then
          allocate (work(nx, 1, nz))
-         open (10, FILE='x_pencil-y_plane.dat', FORM='unformatted', &
+         open (10, FILE='./out/x_pencil-y_plane.dat', FORM='unformatted', &
                ACCESS='DIRECT', RECL=iol)
          m = 1
          do k = 1, nz
@@ -209,10 +209,10 @@ program io_plane_test
       end if
 
       ! Z-plane
-      inquire (file='x_pencil-z_plane.dat', exist=found)
+      inquire (file='./out/x_pencil-z_plane.dat', exist=found)
       if (found) then
          allocate (work(nx, ny, 1))
-         open (10, FILE='x_pencil-z_plane.dat', FORM='unformatted', &
+         open (10, FILE='./out/x_pencil-z_plane.dat', FORM='unformatted', &
                ACCESS='DIRECT', RECL=iol)
          m = 1
          do j = 1, ny

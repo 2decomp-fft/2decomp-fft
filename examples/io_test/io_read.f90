@@ -32,6 +32,8 @@ program io_read
 
    real(mytype), parameter :: eps = 1.0E-7_mytype
 
+   character(len=*), parameter :: io_name = "test-io"
+
    integer :: i, j, k, m, ierror
 
    call MPI_INIT(ierror)
@@ -103,9 +105,9 @@ program io_read
    call alloc_z(u3b, .true.)
 
    ! read back to different arrays
-   call decomp_2d_read_one(1, u1b, '.', 'u1.dat', 'test', reduce_prec=.false.)
-   call decomp_2d_read_one(2, u2b, '.', 'u2.dat', 'test', reduce_prec=.false.)
-   call decomp_2d_read_one(3, u3b, '.', 'u3.dat', 'test', reduce_prec=.false.)
+   call decomp_2d_read_one(1, u1b, 'out', 'u1.dat', io_name, reduce_prec=.false.)
+   call decomp_2d_read_one(2, u2b, 'out', 'u2.dat', io_name, reduce_prec=.false.)
+   call decomp_2d_read_one(3, u3b, 'out', 'u3.dat', io_name, reduce_prec=.false.)
 
    ! Check against the global data array
    do k = xstart(3), xend(3)

@@ -1427,19 +1427,18 @@ contains
       if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "adios2_at_io "//trim(io_name))
       if (io_handle%valid) then
          call adios2_inquire_variable(var_handle, io_handle, varname, ierror)
-         if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "adios2_inquire_variable "//trim(varname))
          if (.not. var_handle%valid) then
-          !! New variable
+            !! New variable
             if (nrank == 0) then
                print *, "Registering variable for IO: ", varname
             end if
 
             ! Need to set the ADIOS2 data type
             if (type == kind(0._real64)) then
-             !! Double
+               !! Double
                data_type = adios2_type_dp
             else if (type == kind(0._real32)) then
-             !! Single
+               !! Single
                data_type = adios2_type_real
             else
                call decomp_2d_abort(__FILE__, __LINE__, -1, "Trying to write unknown data type!")
@@ -1452,6 +1451,11 @@ contains
                call decomp_2d_abort(__FILE__, __LINE__, ierror, &
                                     "adios2_define_variable, ERROR registering variable "//trim(varname))
             end if
+         else
+            ! This probably can't happen, however if the inquiry to a variable returns a NULL
+            ! pointer an exception is returned in ierr. As the point is to check the existence of
+            ! the variable we are already checking if it is valid or not.
+            if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "adios2_inquire_variable "//trim(varname))
          end if
       else
          call decomp_2d_abort(__FILE__, __LINE__, -1, "trying to register variable with invalid IO!")

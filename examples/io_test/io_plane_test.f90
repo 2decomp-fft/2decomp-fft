@@ -36,6 +36,9 @@ program io_plane_test
    integer :: xen1, xen2, xen3
    logical :: found
 
+   character(len=*), parameter :: io_name = "test-io"
+   integer, parameter :: output2D = 0
+   
    call MPI_INIT(ierror)
    ! To resize the domain we need to know global number of ranks
    ! This operation is also done as part of decomp_2d_init
@@ -84,6 +87,18 @@ program io_plane_test
 
    call decomp_2d_init(nx, ny, nz, p_row, p_col)
 
+   call decomp_2d_io_init()
+   call decomp_2d_init_io(io_name)
+   call decomp_2d_register_variable(io_name, "x_pencil-x_plane.dat", 1, 0, 1, mytype)
+   call decomp_2d_register_variable(io_name, "x_pencil-y_plane.dat", 1, 0, 2, mytype)
+   call decomp_2d_register_variable(io_name, "x_pencil-z_plane.dat", 1, 0, 3, mytype)
+   call decomp_2d_register_variable(io_name, "y_pencil-x_plane.dat", 2, 0, 1, mytype)
+   call decomp_2d_register_variable(io_name, "y_pencil-y_plane.dat", 2, 0, 2, mytype)
+   call decomp_2d_register_variable(io_name, "y_pencil-z_plane.dat", 2, 0, 3, mytype)
+   call decomp_2d_register_variable(io_name, "z_pencil-x_plane.dat", 3, 0, 1, mytype)
+   call decomp_2d_register_variable(io_name, "z_pencil-y_plane.dat", 3, 0, 2, mytype)
+   call decomp_2d_register_variable(io_name, "z_pencil-z_plane.dat", 3, 0, 3, mytype)
+
    ! ***** global data *****
    allocate (data1(nx, ny, nz))
    m = 1
@@ -124,17 +139,27 @@ program io_plane_test
    !$acc update self(u3)
    !$acc end data
    ! X-pencil data
-   call decomp_2d_write_plane(1, u1, 1, nx / 2, '.', 'x_pencil-x_plane.dat', 'test')
-   call decomp_2d_write_plane(1, u1, 2, ny / 2, '.', 'x_pencil-y_plane.dat', 'test')
-   call decomp_2d_write_plane(1, u1, 3, nz / 2, '.', 'x_pencil-z_plane.dat', 'test')
+#ifdef ADIOS2
+   call decomp_2d_open_io(io_name, "out", decomp_2d_write_mode)
+   call decomp_2d_start_io(io_name, "out")
+#endif
+   call decomp_2d_write_plane(1, u1, 1, nx / 2, 'out', 'x_pencil-x_plane.dat', io_name)
+   call decomp_2d_write_plane(1, u1, 2, ny / 2, 'out', 'x_pencil-y_plane.dat', io_name)
+   call decomp_2d_write_plane(1, u1, 3, nz / 2, 'out', 'x_pencil-z_plane.dat', io_name)
    ! Y-pencil data
-   call decomp_2d_write_plane(2, u2, 2, ny / 2, '.', 'y_pencil-y_plane.dat', 'test')
-   call decomp_2d_write_plane(2, u2, 1, nx / 2, '.', 'y_pencil-x_plane.dat', 'test')
-   call decomp_2d_write_plane(2, u2, 3, nz / 2, '.', 'y_pencil-z_plane.dat', 'test')
+   call decomp_2d_write_plane(2, u2, 2, ny / 2, 'out', 'y_pencil-y_plane.dat', io_name)
+   call decomp_2d_write_plane(2, u2, 1, nx / 2, 'out', 'y_pencil-x_plane.dat', io_name)
+   call decomp_2d_write_plane(2, u2, 3, nz / 2, 'out', 'y_pencil-z_plane.dat', io_name)
    ! Z-pencil data
-   call decomp_2d_write_plane(3, u3, 1, nx / 2, '.', 'z_pencil-x_plane.dat', 'test')
-   call decomp_2d_write_plane(3, u3, 2, ny / 2, '.', 'z_pencil-y_plane.dat', 'test')
-   call decomp_2d_write_plane(3, u3, 3, nz / 2, '.', 'z_pencil-z_plane.dat', 'test')
+   call decomp_2d_write_plane(3, u3, 1, nx / 2, 'out', 'z_pencil-x_plane.dat', io_name)
+   call decomp_2d_write_plane(3, u3, 2, ny / 2, 'out', 'z_pencil-y_plane.dat', io_name)
+   call decomp_2d_write_plane(3, u3, 3, nz / 2, 'out', 'z_pencil-z_plane.dat', io_name)
+#ifdef ADIOS2
+   call decomp_2d_end_io(io_name, "out")
+   call decomp_2d_close_io(io_name, "out")
+#endif
+
+#ifndef ADIOS2
    ! Attemp to read the files
    if (nrank == 0) then
       inquire (iolength=iol) data1(1, 1, 1)
@@ -206,6 +231,7 @@ program io_plane_test
       end if
 
    end if
+#endif
 
    deallocate (u1, u2, u3)
    deallocate (data1)

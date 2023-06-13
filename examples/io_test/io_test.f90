@@ -40,6 +40,10 @@ program io_test
    integer :: xst1, xst2, xst3
    integer :: xen1, xen2, xen3
 
+#ifndef ADIOS2
+   logical :: dir_exists
+#endif
+
    integer, parameter :: output2D = 0 ! Which plane to write in 2D (0 for 3D)
    
    call MPI_INIT(ierror)
@@ -148,7 +152,7 @@ program io_test
    if (nrank == 0) then
       inquire(file="out", exist=dir_exists)
       if (.not. dir_exists) then
-         call system("mkdir out 2> /dev/null")
+         call execute_command_line("mkdir out 2> /dev/null")
       end if
    end if
 #endif

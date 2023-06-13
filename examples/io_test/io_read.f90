@@ -33,7 +33,10 @@ program io_read
    real(mytype), parameter :: eps = 1.0E-7_mytype
 
    character(len=*), parameter :: io_name = "test-io"
-
+#ifndef ADIOS2
+   logical ::dir_exists
+#endif
+   
    integer :: i, j, k, m, ierror
 
    call MPI_INIT(ierror)
@@ -83,6 +86,15 @@ program io_read
    end if
 
    call decomp_2d_init(nx, ny, nz, p_row, p_col)
+
+#ifndef ADIOS2
+   if (nrank == 0) then
+      inquire(file="out", exist=dir_exists)
+      if (.not. dir_exists) then
+         call decomp_2d_abort(1, "Error, directory 'out' must exist before running io_read test case!")
+      end if
+   end if
+#endif
 
    ! ***** global data *****
    allocate (data1(nx, ny, nz))

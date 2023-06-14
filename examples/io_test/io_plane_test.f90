@@ -37,7 +37,6 @@ program io_plane_test
    logical :: found
 
    character(len=*), parameter :: io_name = "test-io"
-   integer, parameter :: output2D = 0
 
    call MPI_INIT(ierror)
    ! To resize the domain we need to know global number of ranks

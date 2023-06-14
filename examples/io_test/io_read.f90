@@ -36,7 +36,7 @@ program io_read
 #ifndef ADIOS2
    logical ::dir_exists
 #endif
-   
+
    integer :: i, j, k, m, ierror
 
    integer, parameter :: output2D = 0 ! Which plane to write in 2D (0 for 3D)
@@ -91,7 +91,7 @@ program io_read
 
 #ifndef ADIOS2
    if (nrank == 0) then
-      inquire(file="out", exist=dir_exists)
+      inquire (file="out", exist=dir_exists)
       if (.not. dir_exists) then
          call decomp_2d_abort(1, "Error, directory 'out' must exist before running io_read test case!")
       end if

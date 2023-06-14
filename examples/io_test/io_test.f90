@@ -45,7 +45,7 @@ program io_test
 #endif
 
    integer, parameter :: output2D = 0 ! Which plane to write in 2D (0 for 3D)
-   
+
    call MPI_INIT(ierror)
    ! To resize the domain we need to know global number of ranks
    ! This operation is also done as part of decomp_2d_init
@@ -99,7 +99,7 @@ program io_test
    call decomp_2d_register_variable(io_name, "u1.dat", 1, 0, output2D, mytype)
    call decomp_2d_register_variable(io_name, "u2.dat", 2, 0, output2D, mytype)
    call decomp_2d_register_variable(io_name, "u3.dat", 3, 0, output2D, mytype)
-   
+
    ! ***** global data *****
    allocate (data1(nx, ny, nz))
    m = 1
@@ -146,17 +146,17 @@ program io_test
    !$acc update self(u2)
    !$acc update self(u3)
    !$acc end data
-   
+
    ! write to disk
 #ifndef ADIOS2
    if (nrank == 0) then
-      inquire(file="out", exist=dir_exists)
+      inquire (file="out", exist=dir_exists)
       if (.not. dir_exists) then
          call execute_command_line("mkdir out 2> /dev/null")
       end if
    end if
 #endif
-   
+
 #ifdef ADIOS2
    call decomp_2d_open_io(io_name, "out", decomp_2d_write_mode)
    call decomp_2d_start_io(io_name, "out")

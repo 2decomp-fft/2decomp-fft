@@ -1118,7 +1118,7 @@ contains
       end if
 
       if (icoarse == 0) then
-       !! Use full fields
+         ! Use full fields
 
          if (present(opt_decomp)) then
             decomp = opt_decomp
@@ -1242,7 +1242,7 @@ contains
       if (decomp_profiler_io) call decomp_profiler_start("mpiio_write_real_coarse")
 #endif
 
-    !! Set defaults
+      ! Set defaults
       write_reduce_prec = .true.
       if (present(opt_deferred_writes)) then
          deferred_writes = opt_deferred_writes
@@ -1265,7 +1265,7 @@ contains
       end if
       if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_TYPE_SIZE")
 
-    !! Use original MPIIO writers
+      ! Use original MPIIO writers
       if (present(opt_decomp)) then
          call coarse_extents(ipencil, icoarse, sizes, subsizes, starts, opt_decomp)
       else
@@ -1428,17 +1428,17 @@ contains
       if (io_handle%valid) then
          call adios2_inquire_variable(var_handle, io_handle, varname, ierror)
          if (.not. var_handle%valid) then
-            !! New variable
+            ! New variable
             if (nrank == 0) then
                print *, "Registering variable for IO: ", varname
             end if
 
             ! Need to set the ADIOS2 data type
             if (type == kind(0._real64)) then
-               !! Double
+               ! Double
                data_type = adios2_type_dp
             else if (type == kind(0._real32)) then
-               !! Single
+               ! Single
                data_type = adios2_type_real
             else
                call decomp_2d_abort(__FILE__, __LINE__, -1, "Trying to write unknown data type!")
@@ -1828,7 +1828,7 @@ contains
 
       idx = get_io_idx(io_name, io_dir)
       if (idx < 1) then
-       !! New io destination
+         ! New io destination
          if (nreg_io < MAX_IOH) then
             nreg_io = nreg_io + 1
             do idx = 1, MAX_IOH
@@ -1842,7 +1842,7 @@ contains
             names_ptr(idx) = full_name
 
             if (mode == decomp_2d_write_mode) then
-             !! Setup writers
+               ! Setup writers
 #ifndef ADIOS2
                filesize = 0_MPI_OFFSET_KIND
                fh_disp(idx) = 0_MPI_OFFSET_KIND
@@ -1851,7 +1851,7 @@ contains
                access_mode = adios2_mode_write
 #endif
             else if (mode == decomp_2d_read_mode) then
-             !! Setup readers
+               ! Setup readers
 #ifndef ADIOS2
                fh_disp(idx) = 0_MPI_OFFSET_KIND
                access_mode = MPI_MODE_RDONLY
@@ -1871,14 +1871,14 @@ contains
                stop
             end if
 
-          !! Open IO
+            ! Open IO
 #ifndef ADIOS2
             call MPI_FILE_OPEN(decomp_2d_comm, io_dir, &
                                access_mode, MPI_INFO_NULL, &
                                fh_registry(idx), ierror)
             if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_FILE_OPEN")
             if (mode == decomp_2d_write_mode) then
-             !! Guarantee overwriting
+               ! Guarantee overwriting
                call MPI_FILE_SET_SIZE(fh_registry(idx), filesize, ierror)
                if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_FILE_SET_SIZE")
             end if

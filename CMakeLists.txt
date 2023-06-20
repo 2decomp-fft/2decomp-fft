@@ -5,6 +5,8 @@ project(decomp2d
   LANGUAGES Fortran)
 set(version 2.0.0)
 enable_testing()
+# Can be useful to also activate CXX, sometimes is needed by packages
+enable_language(CXX)
 
 
 set(BUILD_TARGET "mpi" CACHE STRING "Target for acceleration (mpi (default) or gpu)")

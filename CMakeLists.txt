@@ -6,7 +6,7 @@ project(decomp2d
 set(version 2.0.0)
 enable_testing()
 # Can be useful to also activate CXX, sometimes is needed by packages
-enable_language(CXX)
+enable_language(C CXX)
 
 
 set(BUILD_TARGET "mpi" CACHE STRING "Target for acceleration (mpi (default) or gpu)")

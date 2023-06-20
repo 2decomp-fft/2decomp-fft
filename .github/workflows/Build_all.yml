@@ -204,8 +204,6 @@ jobs:
     # Runs a set of commands using the runners shell
     - name: Compile caliper
       run: |
-        echo ${PWD}
-        echo ${HOME}
         wget --no-check-certificate https://github.com/LLNL/Caliper/archive/refs/tags/v2.8.0.tar.gz
         tar xzf v2.8.0.tar.gz && cd Caliper-2.8.0
         mkdir build && cd build

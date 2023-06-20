@@ -32,7 +32,14 @@ program io_read
 
    real(mytype), parameter :: eps = 1.0E-7_mytype
 
+   character(len=*), parameter :: io_name = "test-io"
+#ifndef ADIOS2
+   logical ::dir_exists
+#endif
+
    integer :: i, j, k, m, ierror
+
+   integer, parameter :: output2D = 0 ! Which plane to write in 2D (0 for 3D)
 
    call MPI_INIT(ierror)
    ! To resize the domain we need to know global number of ranks
@@ -82,6 +89,21 @@ program io_read
 
    call decomp_2d_init(nx, ny, nz, p_row, p_col)
 
+#ifndef ADIOS2
+   if (nrank == 0) then
+      inquire (file="out", exist=dir_exists)
+      if (.not. dir_exists) then
+         call decomp_2d_abort(1, "Error, directory 'out' must exist before running io_read test case!")
+      end if
+   end if
+#endif
+
+   call decomp_2d_io_init()
+   call decomp_2d_init_io(io_name)
+   call decomp_2d_register_variable(io_name, "u1.dat", 1, 0, output2D, mytype)
+   call decomp_2d_register_variable(io_name, "u2.dat", 2, 0, output2D, mytype)
+   call decomp_2d_register_variable(io_name, "u3.dat", 3, 0, output2D, mytype)
+
    ! ***** global data *****
    allocate (data1(nx, ny, nz))
    m = 1
@@ -103,9 +125,17 @@ program io_read
    call alloc_z(u3b, .true.)
 
    ! read back to different arrays
-   call decomp_2d_read_one(1, u1b, '.', 'u1.dat', 'test', reduce_prec=.false.)
-   call decomp_2d_read_one(2, u2b, '.', 'u2.dat', 'test', reduce_prec=.false.)
-   call decomp_2d_read_one(3, u3b, '.', 'u3.dat', 'test', reduce_prec=.false.)
+#ifdef ADIOS2
+   call decomp_2d_open_io(io_name, "out", decomp_2d_read_mode)
+   call decomp_2d_start_io(io_name, "out")
+#endif
+   call decomp_2d_read_one(1, u1b, 'out', 'u1.dat', io_name, reduce_prec=.false.)
+   call decomp_2d_read_one(2, u2b, 'out', 'u2.dat', io_name, reduce_prec=.false.)
+   call decomp_2d_read_one(3, u3b, 'out', 'u3.dat', io_name, reduce_prec=.false.)
+#ifdef ADIOS2
+   call decomp_2d_end_io(io_name, "out")
+   call decomp_2d_close_io(io_name, "out")
+#endif
 
    ! Check against the global data array
    do k = xstart(3), xend(3)

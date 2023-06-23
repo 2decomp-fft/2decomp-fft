@@ -5,6 +5,10 @@ project(decomp2d
   LANGUAGES Fortran)
 set(version 2.0.0)
 enable_testing()
+if (IO_BACKEND MATCHES "adios2")
+  # Can be useful to also activate CXX, sometimes is needed by packages
+  enable_language(C CXX)
+endif (IO_BACKEND MATCHES "adios2")
 
 
 set(BUILD_TARGET "mpi" CACHE STRING "Target for acceleration (mpi (default) or gpu)")
@@ -30,6 +34,8 @@ option(ENABLE_INPLACE "Enable in-place operation of FFT" OFF)
 option(HALO_DEBUG "Enable halo debugging options" OFF)
 option(EVEN "Padded alltoall transpose operations" OFF)
 option(BUILD_SHARED_LIBS "Set ON to build a shared library" OFF)
+set (IO_BACKEND "mpi" CACHE STRING "Default IO backend (mpi (default) or adios2)")
+set_property(CACHE IO_BACKEND PROPERTY STRINGS mpi adios2)
 
 set(AUTHOR "Stefano Rolfo;Charles Moulinec;Paul Bartholomew")
 set(AUTHOR_DETAILS "stefano.rolfo@stfc.ac.uk;charles.moulinec@stfc.ac.uk;p.bartholomew@epcc.ed.ac.uk")

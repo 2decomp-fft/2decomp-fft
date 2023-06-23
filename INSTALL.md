@@ -164,16 +164,18 @@ Note that when using `caliper` a C++ compiler is required as indicated in the ab
 ## Miscellaneous
 
 ### Compiling with Intel oneAPI
+
 In order to compile with the MKL libraries the following environmental variable needs to be set up
 ```
 export MKL_DIR=${MKLROOT}/lib/cmake/mkl
 ```
-and activate set the `FFT_Choice=mkl`
-To use the new IntelLLVM compiler you can 
+and select the MKL backend by setting `FFT_Choice=mkl`.
+
+To use the new IntelLLVM compiler specify it as the Fortran compiler using
 ```
 export export FC="mpiifort -fc=ifx"
 ```
-and in case of compilatio with ADIOS2 also the `C` and `CXX` compilers needs to be set-up
+and when building with ADIOS2 support you must also specify the `C` and `CXX` compilers
 ```
 export CXX="mpiicpc -cxx=icpx"
 export CC="mpiicc -cc=icx"

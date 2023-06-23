@@ -32,7 +32,9 @@ contains
       integer :: i, m
 
       ! find the factors <= sqrt(num)
-      m = int(sqrt(real(num)))
+      ! Cast the int as double to make sure of the correct result of sqrt
+      ! IntelLLVM got an issue with 1.0 but not with 1.d0 
+      m = int(sqrt(real(num,8)))
       nfact = 1
       do i = 1, m
          if (num / i * i == num) then

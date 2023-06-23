@@ -34,7 +34,7 @@ program io_read
 
    character(len=*), parameter :: io_name = "test-io"
 #ifndef ADIOS2
-   logical ::file_exists
+   logical ::file_exists1, file_exists2, file_exists3
 #endif
 
    integer :: i, j, k, m, ierror
@@ -91,9 +91,11 @@ program io_read
 
 #ifndef ADIOS2
    if (nrank == 0) then
-      inquire (file="out/u1.dat", exist=file_exists)
-      if (.not. file_exists) then
-         call decomp_2d_abort(1, "Error, directory 'out' must exist before running io_read test case!")
+      inquire (file="out/u1.dat", exist=file_exists1)
+      inquire (file="out/u2.dat", exist=file_exists2)
+      inquire (file="out/u3.dat", exist=file_exists3)
+      if (.not. (file_exists1 .and. file_exists2 .and. file_exists3)) then
+         call decomp_2d_abort(1, "Error, data 'out/u<1,2,3>.dat' must exist before running io_read test case!")
       end if
    end if
 #endif

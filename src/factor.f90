@@ -37,7 +37,6 @@ contains
       m = int(sqrt(real(num,8)))
       nfact = 1
       do i = 1, m
-         print *, 'Resu if ',i,(num / i * i)
          if (num / i * i == num) then
             factors(nfact) = i
             nfact = nfact + 1

@@ -70,9 +70,6 @@ endif (BUILD_TARGET MATCHES "gpu")
 
 include(D2D_MPI)
 
-include(D2D_Compilers)
-include(D2D_Profilers)
-
 # FFT options
 if (BUILD_TARGET MATCHES "gpu")
   set(FFT_Choice "cufft" CACHE STRING "FFT for XCompact3d project (with GPU cufft is the default)")
@@ -80,6 +77,10 @@ else ()
   set(FFT_Choice "generic" CACHE STRING "FFT for XCompact3d project (generic is the default)")
 endif (BUILD_TARGET MATCHES "gpu")
 set_property(CACHE FFT_Choice PROPERTY STRINGS generic fftw fftw_f03 mkl cufft)
+
+# Set now compilers flags
+include(D2D_Compilers)
+include(D2D_Profilers)
 include(fft)
 
 # Create a static library for the fft

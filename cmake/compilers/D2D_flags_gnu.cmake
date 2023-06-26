@@ -14,6 +14,6 @@ if (((${D2D_MPI_FAMILY} STREQUAL "MPICH") OR (${D2D_MPI_FAMILY} STREQUAL "Unknow
 else()
   set(D2D_FFLAGS_DEV     "${D2D_FFLAGS_DEBUG} -Wall -Wpedantic -Wno-unused-function -Werror -Wno-integer-division")
 endif()
-if (${D2D_MPI_FAMILY} STREQUAL "OMPI")
+if ((${D2D_MPI_FAMILY} STREQUAL "OMPI") AND (${FFT_Choice} MATCHES "generic"))
   set(D2D_FFLAGS_DEV     "${D2D_FFLAGS_DEV} -Wimplicit-procedure -Wimplicit-interface")
 endif()

@@ -192,7 +192,8 @@
      call decomp_info_finalize(decomp_main)
 
      decomp_buf_size = 0
-     deallocate (work1_r, work2_r, work1_c, work2_c)
+     nullify (work1_r, work2_r, work1_c, work2_c)
+     deallocate (work1, work2)
 #if defined(_GPU)
      call decomp_2d_cumpi_fin()
 #if defined(_NCCL)

@@ -23,7 +23,8 @@ jobs:
       run: |
         env
         ls -ltr ~/.bashrc
-        #module avail 
+        source ~/.bashrc
+        module avail 
         #module load nvhpc
         #module list
 

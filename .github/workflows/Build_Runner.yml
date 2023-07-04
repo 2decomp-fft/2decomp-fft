@@ -32,7 +32,8 @@ jobs:
         source ~/.bashrc
         source ~/.profile_github
         echo $LMOD_CMD
-        module avail 
+        module avail
+        module load CMake 
         module load nvhpc
         export FC=mpif90
         cmake -S . -B build -DBUILD_TESTING=ON

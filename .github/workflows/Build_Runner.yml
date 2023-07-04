@@ -29,9 +29,12 @@ jobs:
       run: |
         #env
         ls -ltr ~/.bashrc
-        source /etc/profile 
+        echo "Start source" 
+        source /etc/profile
+        echo "Ok source profile" 
         source ~/.profile
-        module avail 
+        echo "Ok source local .profile" 
+        #module avail 
         #cd ~
         #ls *
         #. ./.bashrc

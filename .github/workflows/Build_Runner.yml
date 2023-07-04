@@ -4,7 +4,7 @@ name: Runner_test
 
 defaults:
   run:
-    shell: bash -ieo pipefail {0}
+    shell: bash 
 
 # Controls when the action will run. Triggers the workflow on pull request
 # events but only for the master branch

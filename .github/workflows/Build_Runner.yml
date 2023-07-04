@@ -23,7 +23,6 @@ jobs:
       run: |
         env
         ls -ltr ~/.bashrc
-        source ~/.bashrc
         cd ~
         ls *
         . ./.bashrc

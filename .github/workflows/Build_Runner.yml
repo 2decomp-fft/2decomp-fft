@@ -2,6 +2,10 @@
 
 name: Runner_test
 
+defaults:
+  run:
+    shell: bash -ieo pipefail {0}
+
 # Controls when the action will run. Triggers the workflow on pull request
 # events but only for the master branch
 on: [push, fork]

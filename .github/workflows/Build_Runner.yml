@@ -20,6 +20,8 @@ jobs:
     steps:
     # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
     - uses: actions/checkout@v3
+      with: 
+        clean: true
 
     # Run and Compile NHHPC for CPU
     - name: Compile NHVHPC CPU
@@ -27,8 +29,6 @@ jobs:
         ls -ltr ~/.bashrc
         source ~/.bashrc
         source ~/.profile_github
-        echo $LMOD_CMD
-        module avail
         module load CMake 
         module load nvhpc
         export FC=mpif90
@@ -39,6 +39,26 @@ jobs:
         cmake -S . -B build -DNX=128 -DNY=128 -DNX=128 -DMPIEXEC_MAX_NUMPROCS=4
         cmake --build build -j 4
         cmake --install build 
+        ctest --test-dir build
+        rm -rf build  
+    
+    # Run and Compile NHHPC for GPU & NCCL
+    - name: Compile NHVHPC GPU NCCL
+      run: |
+        ls -ltr ~/.bashrc
+        source ~/.bashrc
+        source ~/.profile_github
+        module load CMake 
+        module load nvhpc
+        export FC=mpif90
+        cmake -S . -B build -DBUILD_TESTING=ON -DBUILD_TARGET=gpu -DENABLE_NCCL=yes
+        cmake --build build -j 4
+        cmake --install build 
         ctest --test-dir build 
+        cmake -S . -B build -DNX=128 -DNY=128 -DNX=128
+        cmake --build build -j 4
+        cmake --install build 
+        ctest --test-dir build
+        rm -rf build  
 
 

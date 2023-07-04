@@ -26,7 +26,10 @@ jobs:
     - name: Install requirements
       run: |
         sudo apt-get update
-        sudo apt-get install -y gfortran openmpi-bin libopenmpi-dev cmake
+        sudo apt-get install -y gfortran 
+        sudo apt-get install -y openmpi-bin 
+        sudo apt-get install -y libopenmpi-dev 
+        sudo apt-get install -y cmake
         #env
         #ls -ltr ~/.bashrc
         #cd ~

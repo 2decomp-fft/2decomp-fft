@@ -27,6 +27,7 @@ jobs:
         cd ~
         ls *
         . ./.bashrc
+        cd -
         #module avail 
         #module load nvhpc
         #module list

@@ -37,7 +37,8 @@ jobs:
         module load nvhpc
         export FC=mpif90
         cmake -S . -B build -DBUILD_TESTING=ON
-        cmake --build build --target decomp2d
+        cmake --build build -j 4
+        cmake --install build 
         ctest --test-dir build 
 
         ## Runs a set of commands using the runners shell

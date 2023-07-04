@@ -29,6 +29,7 @@ jobs:
       run: |
         #env
         ls -ltr ~/.bashrc
+        source /etc/bash.bashrc 
         source ~/.bashrc
         module avail 
         #cd ~

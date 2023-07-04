@@ -29,8 +29,8 @@ jobs:
       run: |
         #env
         ls -ltr ~/.bashrc
-        source /etc/bash.bashrc 
-        source ~/.bashrc
+        source /etc/profile 
+        source ~/.profile
         module avail 
         #cd ~
         #ls *

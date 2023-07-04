@@ -32,6 +32,7 @@ jobs:
         echo "Start source" 
         source ~/.bashrc
         echo "Ok source profile" 
+        echo "Ok source profile" 
         source ~/.profile_github
         echo "Ok source local .profile" 
         echo $LMOD_CMD

@@ -29,21 +29,13 @@ jobs:
       run: |
         #env
         ls -ltr ~/.bashrc
-        echo "Start source" 
         source ~/.bashrc
-        echo "Ok source profile" 
-        echo "Ok source profile" 
         source ~/.profile_github
-        echo "Ok source local .profile" 
         echo $LMOD_CMD
-        #module avail 
-        #cd ~
-        #ls *
-        #. ./.bashrc
-        #cd -
-        #module avail 
-        #module load nvhpc
-        #module list
+        module avail 
+        module avail 
+        module load nvhpc
+        module list
 
     # Runs a set of commands using the runners shell
     - name: Compile

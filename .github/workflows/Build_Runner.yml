@@ -27,13 +27,15 @@ jobs:
     # Runs a single command using the runners shell
     - name: Install requirements
       run: |
-        sudo apt-get update
-        sudo apt-get install -y gfortran 
-        sudo apt-get install -y openmpi-bin 
-        sudo apt-get install -y libopenmpi-dev 
-        sudo apt-get install -y cmake
+              #sudo apt-get update
+              #sudo apt-get install -y gfortran 
+              #sudo apt-get install -y openmpi-bin 
+              #sudo apt-get install -y libopenmpi-dev 
+              #sudo apt-get install -y cmake
         #env
-        #ls -ltr ~/.bashrc
+        ls -ltr ~/.bashrc
+        source ~/.bashrc
+        module avail 
         #cd ~
         #ls *
         #. ./.bashrc

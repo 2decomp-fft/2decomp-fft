@@ -24,7 +24,10 @@ jobs:
         env
         ls -ltr ~/.bashrc
         source ~/.bashrc
-        module avail 
+        cd ~
+        ls *
+        . ./.bashrc
+        #module avail 
         #module load nvhpc
         #module list
 

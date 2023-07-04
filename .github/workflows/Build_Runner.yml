@@ -25,7 +25,7 @@ jobs:
 
 
     # Runs a single command using the runners shell
-    - name: Install requirements
+    - name: Compile NHVHPC
       run: |
         #env
         ls -ltr ~/.bashrc
@@ -34,20 +34,17 @@ jobs:
         echo $LMOD_CMD
         module avail 
         module load nvhpc
-        module list
-
-    # Runs a set of commands using the runners shell
-    - name: Compile
-      run: |
-        module avail 
-        module load nvhpc
         export FC=mpif90
         cmake -S . -B build -DBUILD_TESTING=ON
         cmake --build build --target decomp2d
-        cmake --install build 
+        ctest --test-dir build 
 
-        #sudo apt-get update
-        #sudo apt-get install -y gfortran 
-        #sudo apt-get install -y openmpi-bin 
-        #sudo apt-get install -y libopenmpi-dev 
-        #sudo apt-get install -y cmake
+        ## Runs a set of commands using the runners shell
+        #- name: Compile
+        #  run: |
+
+        #    #sudo apt-get update
+        #    #sudo apt-get install -y gfortran 
+        #    #sudo apt-get install -y openmpi-bin 
+        #    #sudo apt-get install -y libopenmpi-dev 
+        #    #sudo apt-get install -y cmake

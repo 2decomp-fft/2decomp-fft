@@ -29,12 +29,12 @@ jobs:
       run: |
         #env
         ls -ltr ~/.bashrc
-        echo $LMOD_CMD
         echo "Start source" 
-        source /etc/profile
+        source ~/.bashrc
         echo "Ok source profile" 
-        source ~/.profile
+        source ~/.profile_github
         echo "Ok source local .profile" 
+        echo $LMOD_CMD
         #module avail 
         #cd ~
         #ls *

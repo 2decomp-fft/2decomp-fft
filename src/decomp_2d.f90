@@ -442,8 +442,8 @@ contains
             call decomp_2d_abort(__FILE__, __LINE__, errorcode, &
                                  'Out of memory when allocating 2DECOMP workspace')
          end if
-         call c_f_pointer(c_loc(work1), work1_r, [2 * buf_size])
-         call c_f_pointer(c_loc(work2), work2_r, [2 * buf_size])
+         call c_f_pointer(c_loc(work1), work1_r, [buf_size])
+         call c_f_pointer(c_loc(work2), work2_r, [buf_size])
          call c_f_pointer(c_loc(work1), work1_c, [buf_size])
          call c_f_pointer(c_loc(work2), work2_c, [buf_size])
       end if

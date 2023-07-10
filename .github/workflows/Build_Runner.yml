@@ -45,7 +45,7 @@ jobs:
     # Run and Compile NHHPC for CPU with ADIOS2
     # Need to fix issue with latest NVHPC and ADIOS
     # Need to revert to 23.1
-    - name: Compile NHVHPC CPU
+    - name: Compile NHVHPC CPU & ADIOS2
       run: |
         ls -ltr ~/.bashrc
         source ~/.bashrc
@@ -54,7 +54,7 @@ jobs:
         module load nvhpc/23.1
         export FC=mpif90
         export CC=mpicc
-        export CXX=mpixcc
+        export CXX=mpicxx
         cmake -S . -B build -DBUILD_TESTING=ON -DIO_BACKEND=adios2 -Dadios2_DIR=~/GIT_Work/ADIOS2/build_install_nvhpc_cpu/opt/lib/cmake/adios2
         cmake --build build -j 4
         cmake --install build 

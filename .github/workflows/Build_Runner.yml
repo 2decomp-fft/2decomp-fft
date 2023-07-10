@@ -12,7 +12,7 @@ on: [push, fork]
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
   # This workflow contains a job called "bld_gnu_ompi"
-  bld_nvhpc_ompi:
+  Full_CI_workflow:
     # The type of runner that the job will run on
     runs-on: [self-hosted, linux, x64]
 
@@ -161,7 +161,7 @@ jobs:
         rm -rf build  
     
     # Run and Compile with GCC openMPI and FFTW
-    - name: Compile GNU_Dev openMPI FFTW_F03 CPU
+    - name: Compile GNU_Dev openMPI FFTW_F03 ADIOS2 CPU
       run: |
         ls -ltr ~/.bashrc
         source ~/.bashrc
@@ -169,7 +169,9 @@ jobs:
         module load CMake 
         module load foss
         export FC=mpif90
-        cmake -S . -B build -DCMAKE_BUILD_TYPE=Dev -DBUILD_TESTING=ON -DFFT_Choice=fftw_f03
+        export CC=mpicc
+        export CXX=mpicxx
+        cmake -S . -B build -DCMAKE_BUILD_TYPE=Dev -DBUILD_TESTING=ON -DIO_BACKEND=adios2 -Dadios2_DIR=~/GIT_Work/ADIOS2/build_install_gcc12_cpu/opt/lib/cmake/adios2 -DFFT_Choice=fftw_f03
         cmake --build build -j 4
         cmake --install build 
         ctest --test-dir build 

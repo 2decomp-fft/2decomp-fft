@@ -42,6 +42,48 @@ jobs:
         ctest --test-dir build
         rm -rf build  
     
+    # Run and Compile NHHPC for CPU with ADIOS2
+    # Need to fix issue with latest NVHPC and ADIOS
+    # Need to revert to 23.1
+    - name: Compile NHVHPC CPU
+      run: |
+        ls -ltr ~/.bashrc
+        source ~/.bashrc
+        source ~/.profile_github
+        module load CMake 
+        module load nvhpc/23.1
+        export FC=mpif90
+        export CC=mpicc
+        export CXX=mpixcc
+        cmake -S . -B build -DBUILD_TESTING=ON -DIO_BACKEND=adios2 -Dadios2_DIR=~/GIT_Work/ADIOS2/build_install_nvhpc_cpu/opt/lib/cmake/adios2
+        cmake --build build -j 4
+        cmake --install build 
+        ctest --test-dir build 
+        cmake -S . -B build -DNX=128 -DNY=128 -DNX=128 -DMPIEXEC_MAX_NUMPROCS=4
+        cmake --build build -j 4
+        cmake --install build 
+        ctest --test-dir build
+        rm -rf build  
+    
+    # Run and Compile NHHPC for GPU & cuMPI
+    - name: Compile NHVHPC GPU cuMPI
+      run: |
+        ls -ltr ~/.bashrc
+        source ~/.bashrc
+        source ~/.profile_github
+        module load CMake 
+        module load nvhpc
+        export FC=mpif90
+        cmake -S . -B build -DBUILD_TESTING=ON -DBUILD_TARGET=gpu -DENABLE_NCCL=no
+        cmake --build build -j 4
+        cmake --install build 
+        ctest --test-dir build 
+        cmake -S . -B build -DNX=128 -DNY=128 -DNX=128
+        cmake --build build -j 4
+        cmake --install build 
+        ctest --test-dir build
+        rm -rf build  
+    
     # Run and Compile NHHPC for GPU & NCCL
     - name: Compile NHVHPC GPU NCCL
       run: |
@@ -52,6 +94,25 @@ jobs:
         module load nvhpc
         export FC=mpif90
         cmake -S . -B build -DBUILD_TESTING=ON -DBUILD_TARGET=gpu -DENABLE_NCCL=yes
+        cmake --build build -j 4
+        cmake --install build 
+        ctest --test-dir build 
+        cmake -S . -B build -DNX=128 -DNY=128 -DNX=128
+        cmake --build build -j 4
+        cmake --install build 
+        ctest --test-dir build
+        rm -rf build  
+    
+    # Run and Compile NHHPC for GPU & NCCL & Memory Managment
+    - name: Compile NHVHPC GPU NCCL MemManag
+      run: |
+        ls -ltr ~/.bashrc
+        source ~/.bashrc
+        source ~/.profile_github
+        module load CMake 
+        module load nvhpc
+        export FC=mpif90
+        cmake -S . -B build -DBUILD_TESTING=ON -DBUILD_TARGET=gpu -DENABLE_NCCL=yes -DENABLE_MANAGED=yes
         cmake --build build -j 4
         cmake --install build 
         ctest --test-dir build 

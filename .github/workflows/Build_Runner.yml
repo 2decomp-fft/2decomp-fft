@@ -158,6 +158,28 @@ jobs:
         cmake --build build -j 4
         cmake --install build 
         ctest --test-dir build
+        rm -rf build
+
+    # Run and Compile with GCC openMPI and FFTW
+    - name: Compile GNU openMPI FFTW_F03 Caliper CPU
+      run: |
+        ls -ltr ~/.bashrc
+        source ~/.bashrc
+        source ~/.profile_github
+        module load CMake 
+        module load foss
+        export FC=mpif90
+        export CC=mpicc
+        export CXX=mpicxx
+        export caliper_DIR=~/GIT_Work/caliper_github/build_gnu/opt/share/cmake/caliper/
+        cmake -S . -B build -DBUILD_TESTING=ON -DFFT_Choice=fftw_f03 -DENABLE_PROFILER=caliper
+        cmake --build build -j 4
+        cmake --install build 
+        ctest --test-dir build 
+        cmake -S . -B build -DNX=128 -DNY=128 -DNX=128 -DMPIEXEC_MAX_NUMPROCS=4
+        cmake --build build -j 4
+        cmake --install build 
+        ctest --test-dir build
         rm -rf build  
     
     # Run and Compile with GCC openMPI and FFTW

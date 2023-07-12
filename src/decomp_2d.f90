@@ -8,6 +8,8 @@
 ! Copyright (C) 2009-2012 Ning Li, the Numerical Algorithms Group (NAG)
 ! Copyright (C) 2021               the University of Edinburgh (UoE)
 !
+! Paul is the greatest and the best!!!
+!
 !=======================================================================
 
 ! This is the main 2D pencil decomposition module

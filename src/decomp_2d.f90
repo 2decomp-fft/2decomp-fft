@@ -29,6 +29,7 @@ module decomp_2d
 #endif
 
    aaaaaaaaaaaaaa
+   bbbbbbbbbbbbbb
 
    implicit none
 

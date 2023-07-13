@@ -23,7 +23,7 @@ jobs:
       with: 
         clean: true
 
-    # Run and Compile NHHPC for CPU
+    # Configure-Build-Run-Run on 4 cores 
     - name: Compile NHVHPC CPU
       run: |
         ls -ltr ~/.bashrc
@@ -65,7 +65,7 @@ jobs:
         ctest --test-dir build
         rm -rf build  
     
-    # Run and Compile NHHPC for GPU & cuMPI
+    # Configure-Build-Run-Run on 4 cores 
     - name: Compile NHVHPC GPU cuMPI
       run: |
         ls -ltr ~/.bashrc
@@ -84,7 +84,7 @@ jobs:
         ctest --test-dir build
         rm -rf build  
     
-    # Run and Compile NHHPC for GPU & NCCL
+    # Configure-Build-Run 
     - name: Compile NHVHPC GPU NCCL
       run: |
         ls -ltr ~/.bashrc
@@ -103,7 +103,7 @@ jobs:
         ctest --test-dir build
         rm -rf build  
     
-    # Run and Compile NHHPC for GPU & NCCL & Memory Managment
+    # Configure-Build-Run 
     - name: Compile NHVHPC GPU NCCL MemManag
       run: |
         ls -ltr ~/.bashrc
@@ -122,7 +122,7 @@ jobs:
         ctest --test-dir build
         rm -rf build  
 
-    # Run and Compile with GCC openMPI and FFTW
+    # Configure-Build-Run-Run on 4 cores 
     - name: Compile GNU openMPI FFTW CPU
       run: |
         ls -ltr ~/.bashrc
@@ -141,7 +141,7 @@ jobs:
         ctest --test-dir build
         rm -rf build  
 
-    # Run and Compile with GCC openMPI and FFTW
+    # Configure-Build-Run-Run on 4 cores 
     - name: Compile GNU openMPI FFTW_F03 CPU
       run: |
         ls -ltr ~/.bashrc
@@ -160,7 +160,7 @@ jobs:
         ctest --test-dir build
         rm -rf build
 
-    # Run and Compile with GCC openMPI and FFTW
+    # Configure-Build-Run-Run on 4 cores 
     - name: Compile GNU openMPI FFTW_F03 Caliper CPU
       run: |
         ls -ltr ~/.bashrc
@@ -182,7 +182,7 @@ jobs:
         ctest --test-dir build
         rm -rf build  
     
-    # Run and Compile with GCC openMPI and FFTW
+    # Configure-Build-Run-Run on 4 cores 
     - name: Compile GNU_Dev openMPI FFTW_F03 ADIOS2 CPU
       run: |
         ls -ltr ~/.bashrc
@@ -203,7 +203,7 @@ jobs:
         ctest --test-dir build
         rm -rf build  
     
-    # Run and Compile with GCC openMPI and FFTW
+    # Configure-Build-Run-Run on 4 cores 
     - name: Compile Intel MKL CPU
       run: |
         ls -ltr ~/.bashrc
@@ -223,7 +223,7 @@ jobs:
         ctest --test-dir build
         rm -rf build  
     
-    # Run and Compile with GCC openMPI and FFTW
+    # Configure-Build-Run-Run on 4 cores 
     - name: Compile InteilLLVM MKL CPU
       run: |
         ls -ltr ~/.bashrc

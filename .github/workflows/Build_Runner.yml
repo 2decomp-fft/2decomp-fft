@@ -241,4 +241,26 @@ jobs:
         cmake --build build -j 4
         cmake --install build 
         ctest --test-dir build
+        rm -rf build 
+
+    # Configure-Build-Run-Run on 4 cores 
+    - name: Compile InteilLLVM MKL ADIOS2 CPU
+      run: |
+        ls -ltr ~/.bashrc
+        source ~/.bashrc
+        source ~/.profile_github
+        module load CMake 
+        module load intel
+        export export FC="mpiifort -fc=ifx"
+        export CXX="mpiicpc -cxx=icpx"
+        export CC="mpiicc -cc=icx"
+        export MKL_DIR=${MKLROOT}/lib/cmake/mkl
+        cmake -S . -B build -DCMAKE_BUILD_TYPE=Dev -DBUILD_TESTING=ON -DIO_BACKEND=adios2 -Dadios2_DIR=~/GIT_Work/ADIOS2/build_install_ifx_cpu/opt/lib/cmake/adios2 -DFFT_Choice=mkl
+        cmake --build build -j 4
+        cmake --install build 
+        ctest --test-dir build 
+        cmake -S . -B build -DNX=128 -DNY=128 -DNX=128 -DMPIEXEC_MAX_NUMPROCS=4
+        cmake --build build -j 4
+        cmake --install build 
+        ctest --test-dir build
         rm -rf build  

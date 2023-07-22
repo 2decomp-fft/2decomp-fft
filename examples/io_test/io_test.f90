@@ -20,6 +20,8 @@ program io_test
    integer :: nargin, arg, FNLength, status, DecInd
    character(len=80) :: InputFN
 
+   integer :: ierr
+   
 #ifdef COMPLEX_TEST
    complex(mytype), allocatable, dimension(:, :, :) :: data1
 
@@ -157,6 +159,7 @@ program io_test
    end if
 #endif
 
+   ! Standard I/O pattern - file per field
 #ifdef ADIOS2
    call decomp_2d_open_io(io_name, "out", decomp_2d_write_mode)
    call decomp_2d_start_io(io_name, "out")
@@ -183,7 +186,35 @@ program io_test
 #endif
 
    ! compare
-   call check("write solution")
+   call check("file per field")
+
+   ! Checkpoint I/O pattern - multiple fields per file
+   call decomp_2d_open_io(io_name, "checkpoint", decomp_2d_write_mode)
+   call decomp_2d_start_io(io_name, "checkpoint")
+   call decomp_2d_write_one(1, u1, 'checkpoint', 'u1.dat', 0, io_name)
+   call decomp_2d_write_one(2, u2, 'checkpoint', 'u2.dat', 0, io_name)
+   call decomp_2d_write_one(3, u3, 'checkpoint', 'u3.dat', 0, io_name)
+   call decomp_2d_end_io(io_name, "checkpoint")
+   call decomp_2d_close_io(io_name, "checkpoint")
+
+   print *, "Write complete"
+   call MPI_Barrier(MPI_COMM_WORLD, ierr)
+
+   ! read back to different arrays
+   u1b = 0; u2b = 0; u3b = 0
+   call decomp_2d_open_io(io_name, "checkpoint", decomp_2d_read_mode)
+   call decomp_2d_start_io(io_name, "checkpoint")
+   call decomp_2d_read_one(1, u1b, 'checkpoint', 'u1.dat', io_name, reduce_prec=.false.)
+   call decomp_2d_read_one(2, u2b, 'checkpoint', 'u2.dat', io_name, reduce_prec=.false.)
+   call decomp_2d_read_one(3, u3b, 'checkpoint', 'u3.dat', io_name, reduce_prec=.false.)
+   call decomp_2d_end_io(io_name, "checkpoint")
+   call decomp_2d_close_io(io_name, "checkpoint")
+
+   print *, "Read complete"
+   call MPI_Barrier(MPI_COMM_WORLD, ierr)
+
+   ! compare
+   call check("one file, multiple fields")
    
    deallocate (u1, u2, u3)
    deallocate (u1b, u2b, u3b)

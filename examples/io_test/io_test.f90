@@ -37,6 +37,7 @@ program io_test
    real(mytype), parameter :: eps = 1.0E-7_mytype
 
    character(len=*), parameter :: io_name = "test-io"
+   character(len=*), parameter :: io_restart = "restart-io"
 
    integer :: i, j, k, m, ierror
    integer :: xst1, xst2, xst3
@@ -101,6 +102,10 @@ program io_test
    call decomp_2d_register_variable(io_name, "u1.dat", 1, 0, output2D, mytype)
    call decomp_2d_register_variable(io_name, "u2.dat", 2, 0, output2D, mytype)
    call decomp_2d_register_variable(io_name, "u3.dat", 3, 0, output2D, mytype)
+   call decomp_2d_init_io(io_restart)
+   call decomp_2d_register_variable(io_restart, "u1.dat", 1, 0, output2D, mytype)
+   call decomp_2d_register_variable(io_restart, "u2.dat", 2, 0, output2D, mytype)
+   call decomp_2d_register_variable(io_restart, "u3.dat", 3, 0, output2D, mytype)
 
    ! ***** global data *****
    allocate (data1(nx, ny, nz))
@@ -197,22 +202,20 @@ program io_test
    call decomp_2d_end_io(io_name, "checkpoint")
    call decomp_2d_close_io(io_name, "checkpoint")
 
-   print *, "Write complete"
    call MPI_Barrier(MPI_COMM_WORLD, ierr)
 
    ! read back to different arrays
    u1b = 0; u2b = 0; u3b = 0
-   call decomp_2d_open_io(io_name, "checkpoint", decomp_2d_read_mode)
-   call decomp_2d_start_io(io_name, "checkpoint")
-   call decomp_2d_read_one(1, u1b, 'checkpoint', 'u1.dat', io_name, reduce_prec=.false.)
-   call decomp_2d_read_one(2, u2b, 'checkpoint', 'u2.dat', io_name, reduce_prec=.false.)
-   call decomp_2d_read_one(3, u3b, 'checkpoint', 'u3.dat', io_name, reduce_prec=.false.)
-   call decomp_2d_end_io(io_name, "checkpoint")
-   call decomp_2d_close_io(io_name, "checkpoint")
+   call decomp_2d_open_io(io_restart, "checkpoint", decomp_2d_read_mode)
+   call decomp_2d_start_io(io_restart, "checkpoint")
+   call decomp_2d_read_one(1, u1b, 'checkpoint', 'u1.dat', io_restart, reduce_prec=.false.)
+   call decomp_2d_read_one(2, u2b, 'checkpoint', 'u2.dat', io_restart, reduce_prec=.false.)
+   call decomp_2d_read_one(3, u3b, 'checkpoint', 'u3.dat', io_restart, reduce_prec=.false.)
+   call decomp_2d_end_io(io_restart, "checkpoint")
+   call decomp_2d_close_io(io_restart, "checkpoint")
 
-   print *, "Read complete"
    call MPI_Barrier(MPI_COMM_WORLD, ierr)
-
+   
    ! compare
    call check("one file, multiple fields")
    

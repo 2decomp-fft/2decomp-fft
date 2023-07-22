@@ -183,59 +183,84 @@ program io_test
 #endif
 
    ! compare
-   do k = xstart(3), xend(3)
-      do j = xstart(2), xend(2)
-         do i = xstart(1), xend(1)
-            if (abs((u1(i, j, k) - u1b(i, j, k))) > eps) stop 1
-         end do
-      end do
-   end do
-
-   do k = ystart(3), yend(3)
-      do j = ystart(2), yend(2)
-         do i = ystart(1), yend(1)
-            if (abs((u2(i, j, k) - u2b(i, j, k))) > eps) stop 2
-         end do
-      end do
-   end do
-
-   do k = zstart(3), zend(3)
-      do j = zstart(2), zend(2)
-         do i = zstart(1), zend(1)
-            if (abs((u3(i, j, k) - u3b(i, j, k))) > eps) stop 3
-         end do
-      end do
-   end do
-
-   ! Also check against the global data array
-   do k = xstart(3), xend(3)
-      do j = xstart(2), xend(2)
-         do i = xstart(1), xend(1)
-            if (abs(data1(i, j, k) - u1b(i, j, k)) > eps) stop 4
-         end do
-      end do
-   end do
-
-   do k = ystart(3), yend(3)
-      do j = ystart(2), yend(2)
-         do i = ystart(1), yend(1)
-            if (abs((data1(i, j, k) - u2b(i, j, k))) > eps) stop 5
-         end do
-      end do
-   end do
-
-   do k = zstart(3), zend(3)
-      do j = zstart(2), zend(2)
-         do i = zstart(1), zend(1)
-            if (abs((data1(i, j, k) - u3b(i, j, k))) > eps) stop 6
-         end do
-      end do
-   end do
-
+   call check("write solution")
+   
    deallocate (u1, u2, u3)
    deallocate (u1b, u2b, u3b)
    deallocate (data1)
    call decomp_2d_finalize
    call MPI_FINALIZE(ierror)
 
+ contains
+
+   subroutine check(stage)
+
+     character(len=*), intent(in) :: stage
+     
+     integer :: ierr
+     
+     if (nrank == 0) then
+        print *, "Checking "//stage
+     end if
+     call MPI_Barrier(MPI_COMM_WORLD, ierr)
+
+     do k = xstart(3), xend(3)
+        do j = xstart(2), xend(2)
+           do i = xstart(1), xend(1)
+              if (abs((u1(i, j, k) - u1b(i, j, k))) > eps) then
+                 print *, u1(i, j, k), u1b(i, j, k)
+                 stop 1
+              end if
+           end do
+        end do
+     end do
+
+     do k = ystart(3), yend(3)
+        do j = ystart(2), yend(2)
+           do i = ystart(1), yend(1)
+              if (abs((u2(i, j, k) - u2b(i, j, k))) > eps) stop 2
+           end do
+        end do
+     end do
+     
+     do k = zstart(3), zend(3)
+        do j = zstart(2), zend(2)
+           do i = zstart(1), zend(1)
+              if (abs((u3(i, j, k) - u3b(i, j, k))) > eps) stop 3
+           end do
+        end do
+     end do
+
+     ! Also check against the global data array
+     do k = xstart(3), xend(3)
+        do j = xstart(2), xend(2)
+           do i = xstart(1), xend(1)
+              if (abs(data1(i, j, k) - u1b(i, j, k)) > eps) stop 4
+           end do
+        end do
+     end do
+     
+     do k = ystart(3), yend(3)
+        do j = ystart(2), yend(2)
+           do i = ystart(1), yend(1)
+              if (abs((data1(i, j, k) - u2b(i, j, k))) > eps) stop 5
+           end do
+        end do
+     end do
+
+     do k = zstart(3), zend(3)
+        do j = zstart(2), zend(2)
+           do i = zstart(1), zend(1)
+              if (abs((data1(i, j, k) - u3b(i, j, k))) > eps) stop 6
+           end do
+        end do
+     end do
+
+     call MPI_Barrier(MPI_COMM_WORLD, ierr)
+     if (nrank == 0) then
+        print *, "Checking "//stage//" pass!"
+     end if
+     
+   end subroutine check
+   
 end program io_test

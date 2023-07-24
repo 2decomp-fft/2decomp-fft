@@ -449,21 +449,21 @@ contains
 
       call adios2_variable_steps(nsteps, var_handle, ierror)
       if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "adios2_variable_steps")
-      print *, "AVAILABLE steps for ", nsteps
+      ! print *, "AVAILABLE steps for ", nsteps
 
-      print *, "IO_NAME: ", io_name
-      print *, "ENGINE_NAME: ", engine_name
-      print *, "VAR_NAME: ", varname
+      ! print *, "IO_NAME: ", io_name
+      ! print *, "ENGINE_NAME: ", engine_name
+      ! print *, "VAR_NAME: ", varname
       idx = get_io_idx(io_name, engine_name)
-      print *, idx
+      ! print *, idx
       call adios2_get(engine_registry(idx), var_handle, var, adios2_mode_deferred, ierror)
       if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "adios2_get")
 
-      print *, "MAX: ", maxval(var)
+      ! print *, "MAX: ", maxval(var)
 
       call adios2_current_step(curstep, engine_registry(idx), ierror)
       if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "adios2_current_step")
-      print *, "Current step: ", curstep
+      ! print *, "Current step: ", curstep
 
 #ifdef PROFILER
       if (decomp_profiler_io) call decomp_profiler_end("adios2_read_one_real")

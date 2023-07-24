@@ -224,7 +224,7 @@ jobs:
         rm -rf build  
     
     # Configure-Build-Run-Run on 4 cores 
-    - name: Compile InteilLLVM MKL CPU
+    - name: Compile IntelLLVM MKL CPU
       run: |
         ls -ltr ~/.bashrc
         source ~/.bashrc
@@ -244,7 +244,7 @@ jobs:
         rm -rf build 
 
     # Configure-Build-Run-Run on 4 cores 
-    - name: Compile InteilLLVM MKL ADIOS2 CPU
+    - name: Compile IntelLLVM MKL ADIOS2 CPU
       run: |
         ls -ltr ~/.bashrc
         source ~/.bashrc

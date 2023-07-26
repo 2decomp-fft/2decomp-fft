@@ -1,3 +1,4 @@
+!! SPDX-License-Identifier: BSD-3-Clause
 program fft_r2c_z
 
    use decomp_2d

@@ -1,3 +1,4 @@
+!! SPDX-License-Identifier: BSD-3-Clause
 ! Sample application to test the read/write_var sets of routines
 ! in the IO library
 

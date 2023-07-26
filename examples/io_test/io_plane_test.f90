@@ -1,3 +1,4 @@
+!! SPDX-License-Identifier: BSD-3-Clause
 !!
 !! FIXME The issue below is specific to GPU and should be discussed in a dedicated github issue
 !!

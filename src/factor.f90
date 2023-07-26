@@ -1,14 +1,4 @@
-!!!=======================================================================
-!!! This is part of the 2DECOMP&FFT library
-!!!
-!!! 2DECOMP&FFT is a software framework for general-purpose 2D (pencil)
-!!! decomposition. It also implements a highly scalable distributed
-!!! three-dimensional Fast Fourier Transform (FFT).
-!!!
-!!! Copyright (C) 2009-2021 Ning Li, the Numerical Algorithms Group (NAG)
-!!! Copyright (C) 2022-              the Xcompact3d developers
-!!!
-!!!=======================================================================
+!! SPDX-License-Identifier: BSD-3-Clause
 
 !!! A few utility routines to find factors of integer numbers
 module factor

@@ -1,0 +1,75 @@
+%% This BibTeX bibliography file was created using BibDesk.
+%% http://bibdesk.sourceforge.net/
+
+
+%% Created for Stefano Rolfo at 2022-09-27 04:21:31 +0100 
+
+
+%% Saved with string encoding Unicode (UTF-8) 
+
+
+
+@inproceedings{Romero_2022_cuDecomp,
+	abstract = {This paper presents a performance analysis of pencil domain decomposition methodologies for three-dimensional Computational Fluid Dynamics (CFD) codes for turbulence simulations, on several large GPU-accelerated clusters. The performance was assessed for the numerical solution of the Navier-Stokes equations in two codes which require the calculation of Fast-Fourier Transforms (FFT): a tri-periodic pseudo-spectral solver for isotropic turbulence, and a finite-difference solver for canonical turbulent flows, where the FFTs are used in its Poisson solver. Both codes use a newly developed transpose library that automatically determines the optimal domain decomposition and communication backend on each system. We compared the performance across systems with very different node topologies and available network bandwidth, to show how these characteristics impact decomposition selection for best performance. Additionally, we assessed the performance of several communication libraries available on these systems, such as Open-MPI, IBM Spectrum MPI, Cray MPI, the NVIDIA Collective Communication Library (NCCL), and NVSHMEM. Our results show that the optimal combination of communication backend and domain decomposition is highly system-dependent, and that the adaptive decomposition library is key in ensuring efficient resource usage with minimal user effort.},
+	address = {New York, NY, USA},
+	articleno = {14},
+	author = {Romero, Joshua and Costa, Pedro and Fatica, Massimiliano},
+	booktitle = {Proceedings of the Platform for Advanced Scientific Computing Conference},
+	date-added = {2022-09-27 03:55:53 +0100},
+	date-modified = {2022-09-27 04:21:28 +0100},
+	doi = {10.1145/3539781.3539797},
+	isbn = {9781450394109},
+	keywords = {GPU accelerated systems, parallel transpose, direct numerical simulation, computational fluid dynamics},
+	location = {Basel, Switzerland},
+	numpages = {11},
+	publisher = {Association for Computing Machinery},
+	series = {PASC '22},
+	title = {Distributed-Memory Simulations of Turbulent Flows on Modern GPU Systems Using an Adaptive Pencil Decomposition Library},
+	url = {https://doi.org/10.1145/3539781.3539797},
+	year = {2022},
+	bdsk-url-1 = {https://doi.org/10.1145/3539781.3539797}}
+
+@article{ZHU2018199,
+	abstract = {The AFiD code, an open source solver for the incompressible Navier--Stokes equations (http://www.afid.eu), has been ported to GPU clusters to tackle large-scale wall-bounded turbulent flow simulations. The GPU porting has been carried out in CUDA Fortran with the extensive use of kernel loop directives (CUF kernels) in order to have a source code as close as possible to the original CPU version; just a few routines have been manually rewritten. A new transpose scheme has been devised to improve the scaling of the Poisson solver, which is the main bottleneck of incompressible solvers. For large meshes the GPU version of the code shows good strong scaling characteristics, and the wall-clock time per step for the GPU version is an order of magnitude smaller than for the CPU version of the code. Due to the increased performance and efficient use of memory, the GPU version of AFiD can perform simulations in parameter ranges that are unprecedented in thermally-driven wall-bounded turbulence. To verify the accuracy of the code, turbulent Rayleigh--B{\'e}nard convection and plane Couette flow are simulated and the results are in excellent agreement with the experimental and computational data that have been published in literature.
+Program summary
+Program Title: AFiD-GPU Program Files doi: http://dx.doi.org/10.17632/rwjdg7ry66.1 Licensing provisions: MIT Programming language: Fortran 90, CUDA Fortran, MPI External routines: PGI, CUDA Toolkit, FFTW3, HDF5 Nature of problem: Solving the three-dimensional Navier--Stokes equations coupled with a scalar field in a cubic box bounded between two walls and with periodic boundary conditions in the horizontal directions. Solution method: Second order finite difference method for spatial discretization, third order Runge--Kutta scheme in combination with Crank--Nicolson for the implicit terms for time advancement, two dimensional pencil distributed MPI parallelization, GPU accelerated routines. Additional comments including restrictions and unusual features: The code is available and supported on https://github.com/PhysicsofFluids/AFiD_GPU_opensource.},
+	author = {Xiaojue Zhu and Everett Phillips and Vamsi Spandan and John Donners and Gregory Ruetsch and Joshua Romero and Rodolfo Ostilla-M{\'o}nico and Yantao Yang and Detlef Lohse and Roberto Verzicco and Massimiliano Fatica and Richard J.A.M. Stevens},
+	date-added = {2022-09-27 03:54:12 +0100},
+	date-modified = {2022-09-27 03:54:12 +0100},
+	doi = {https://doi.org/10.1016/j.cpc.2018.03.026},
+	issn = {0010-4655},
+	journal = {Computer Physics Communications},
+	keywords = {GPU, Parallelization, Turbulent flow, Finite-difference scheme, Rayleigh--B{\'e}nard convection, Plane Couette flow},
+	pages = {199-210},
+	title = {AFiD-GPU: A versatile Navier--Stokes solver for wall-bounded turbulent flows on GPU clusters},
+	url = {https://www.sciencedirect.com/science/article/pii/S0010465518300985},
+	volume = {229},
+	year = {2018},
+	bdsk-url-1 = {https://www.sciencedirect.com/science/article/pii/S0010465518300985},
+	bdsk-url-2 = {https://doi.org/10.1016/j.cpc.2018.03.026}}
+
+@article{BARTHOLOMEW2020100550,
+	abstract = {Xcompact3D is a Fortran 90--95 open-source framework designed for fast and accurate simulations of turbulent flows, targeting CPU-based supercomputers. It is an evolution of the flow solver Incompact3D which was initially designed in France in the mid-90's for serial processors to solve the incompressible Navier--Stokes equations. Incompact3D was then ported to parallel High Performance Computing (HPC) systems in the early 2010's. Very recently the capabilities of Incompact3D have been extended so that it can now tackle more flow regimes (from incompressible flows to compressible flows at low Mach numbers), resulting in the design of a new user-friendly framework called Xcompact3D. The present manuscript presents an overview of Xcompact3D with a particular focus on its functionalities, its ready-to-run simulations and a few case studies to demonstrate its impact.},
+	author = {Paul Bartholomew and Georgios Deskos and Ricardo A.S. Frantz and Felipe N. Schuch and Eric Lamballais and Sylvain Laizet},
+	date-added = {2022-09-27 03:52:38 +0100},
+	date-modified = {2022-09-27 03:52:38 +0100},
+	doi = {https://doi.org/10.1016/j.softx.2020.100550},
+	issn = {2352-7110},
+	journal = {SoftwareX},
+	keywords = {High-order finite-difference, Turbulence, Cartesian mesh, High Performance Computing, Computational Fluid Dynamics},
+	pages = {100550},
+	title = {Xcompact3D: An open-source framework for solving turbulence problems on a Cartesian mesh},
+	url = {https://www.sciencedirect.com/science/article/pii/S2352711019303620},
+	volume = {12},
+	year = {2020},
+	bdsk-url-1 = {https://www.sciencedirect.com/science/article/pii/S2352711019303620},
+	bdsk-url-2 = {https://doi.org/10.1016/j.softx.2020.100550}}
+
+@inproceedings{li_2010_2decomp,
+	author = {Li, Ning and Laizet, Sylvain},
+	booktitle = {Cray user group 2010 conference},
+	date-added = {2022-09-27 03:48:20 +0100},
+	date-modified = {2022-09-27 03:48:49 +0100},
+	pages = {1--13},
+	title = {2decomp \& fft-a highly scalable 2d decomposition library and fft interface},
+	year = {2010}}

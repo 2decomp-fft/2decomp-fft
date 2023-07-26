@@ -1,3 +1,4 @@
+!! SPDX-License-Identifier: BSD-3-Clause
 program io_test
 
    use mpi

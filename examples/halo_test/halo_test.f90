@@ -1,3 +1,4 @@
+!! SPDX-License-Identifier: BSD-3-Clause
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 ! This example calculates the divergence of a random field using
 !   (1) global transposition

@@ -1,6 +1,6 @@
-# 2decomp-fft
+# 2DECOMP&FFT
 
-This README contains basic instructions for building and installing the `2decomp&fft` library, more
+This README contains basic instructions for building and installing the 2DECOMP&FFT library, more
 detailed instructions can be found in [INSTALL.md](INSTALL.md).
 
 ## Building
@@ -17,11 +17,12 @@ for many users a configuration line
 ```
 cmake -S . -B build
 ```
-run from the `2decomp&fft` root directory will be sufficient.
+run from the 2DECOMP&FFT root directory will be sufficient.
 If the build directory does not exist it will be generated and it will contain the configuration files.
-By default a `RELEASE` build will built for CPU using MPI and the `generic` FFT backend included with `2decomp&fft`, please see [INSTALL.md](INSTALL.md) for instructions on changing the build, including debugging builds, building for GPUs and selecting external FFT libraries.
+By default a ``RELEASE`` build will built for CPU using MPI and the ``generic`` FFT backend included 
+with 2DECOMP&FFT, please see [INSTALL.md](INSTALL.md) for instructions on changing the build, including debugging builds, building for GPUs and selecting external FFT libraries.
 
-Once the build system has been configured, you can build `2decomp&fft` by running
+Once the build system has been configured, you can build 2DECOMP&FFT by running
 ```
 cmake --build $path_to_build_directory -j <nproc>
 ```
@@ -47,27 +48,33 @@ The library can perform multi GPU offoloading using the NVHPC compiler suite for
 The implementation is based on CUDA-aware MPI and NVIDIA Collective Communication Library (NCCL).
 The FFT is based on cuFFT.
 
-For details of how to configure `2decomp&fft` for GPU offload, see the GPU compilation section in
+For details of how to configure 2DECOMP&FFT for GPU offload, see the GPU compilation section in
 [INSTALL.md](INSTALL.md).
 
 ## Testing and examples
 
-By default building of the tests is deactivated. To activate the testing the option `-DBUILD_TESTING=ON` can be added or 
+By default building of the tests is deactivated. 
+To activate the testing the option `-DBUILD_TESTING=ON` can be added or 
 alternativey the option can be activated in the GUI interface `ccmake`.
 After building the library can be tested by running
 ```
 ctest --test-dir $path_to_build_directory
 ```
-which uses the `ctest` utility. By default tests are performed in serial, but more than 1 rank can be used by setting `MPIEXEC_MAX_NUMPROCS` under `ccmake` utility.
-It is also possible to specify the decomposition by setting `PROW` and `PCOL` parameters at the configure stage or using `ccmake`. 
-During the configure stage users should ensure that the number of MPI tasks `MPIEXEC_MAX_NUMPROCS` is equal to the product of PROW times PCOL. 
+which uses the `ctest` utility. By default tests are performed in serial, 
+but more than 1 rank can be used by setting `MPIEXEC_MAX_NUMPROCS` under `ccmake` utility.
+It is also possible to specify the decomposition by setting 
+`PROW` and `PCOL` parameters at the configure stage or using `ccmake`. 
+During the configure stage users should ensure that the number of MPI tasks `MPIEXEC_MAX_NUMPROCS` 
+is equal to the product of PROW times PCOL. 
 Mesh resolution can also be imposed using the parameters `NX`, `NY` and `NZ`. 
 
-For the GPU implementation please be aware that it is based on a single MPI rank per GPU. Therefore, to test multiple GPUs, use the maximum number of available GPUs on the system/node and not the maximum number of MPI tasks. 
+For the GPU implementation please be aware that it is based on a single MPI rank per GPU. 
+Therefore, to test multiple GPUs, use the maximum number of available GPUs 
+on the system/node and not the maximum number of MPI tasks. 
 
 ## Profiling
 
-The `2decomp&fft` library has integrated profiling support via external libraries, see the Profiling
+The 2DECOMP&FFT library has integrated profiling support via external libraries, see the Profiling
 section of [INSTALL.md](INSTALL.md) for instructions on configuring a profiling build.
 Currently, support for profiling is provided by the `caliper` library.
 
@@ -83,7 +90,10 @@ Each input allow activation / deactivation of the profiling as follows :
 
 ## FFT backends
 
-The library provides a built-in FFT engine and supports various FFT backends : FFTW, Intel oneMKL, Nvidia cuFFT. The FFT engine selected during compilation is available through the variable `D2D_FFT_BACKEND` defined in the module `decomp_2d_fft`. The expected value is defined by the integer constants
+The library provides a built-in FFT engine and supports various FFT backends : 
+FFTW, Intel oneMKL, Nvidia cuFFT. 
+The FFT engine selected during compilation is available through the variable `D2D_FFT_BACKEND` 
+defined in the module `decomp_2d_fft`. The expected value is defined by the integer constants
 ```
 integer, parameter, public :: D2D_FFT_BACKEND_GENERIC = 0   ! Built-in engine
 integer, parameter, public :: D2D_FFT_BACKEND_FFTW3 = 1     ! FFTW
@@ -105,7 +115,8 @@ The external code can use the named variables to check the FFT backend used in a
 
 ### Print the log to a file or to stdout
 
-Before calling `decomp_2d_init`, the external code can modify the variable `decomp_log` to change the output for the log. The expected value is defined by the integer constants
+Before calling `decomp_2d_init`, the external code can modify the variable `decomp_log` 
+to change the output for the log. The expected value is defined by the integer constants
 ```
 integer, parameter, public :: D2D_LOG_QUIET = 0       ! No logging output
 integer, parameter, public :: D2D_LOG_STDOUT = 1      ! Root rank logs output to stdout
@@ -118,17 +129,24 @@ The default value used is `D2D_LOG_TOFILE` for the default build and `D2D_LOG_TO
 
 ### Change the debug level for debug builds
 
-Before calling `decomp_2d_init`, the external code can modify the variable `decomp_debug` to change the debug level. The user can also modify this variable using the environment variable `DECOMP_2D_DEBUG`. Please note that the environment variable is processed only for debug builds. The expected value for the variable `decomp_debug` is some integer between 0 and 6, bounds included.
+Before calling `decomp_2d_init`, the external code can modify the variable `decomp_debug` 
+to change the debug level. The user can also modify this variable using the environment 
+variable `DECOMP_2D_DEBUG`. Please note that the environment variable is processed only for debug builds.
+The expected value for the variable `decomp_debug` is some integer between 0 and 6, bounds included.
 
 ### Code formatting
 
-The code is formatted using the `fprettify` program (available via `pip`), to ensure consistency of use there is a script file `scripts/format.sh` which will run `fprettify` across the 2decomp&fft source, you can also use the `format` build target to run the script.
+The code is formatted using the `fprettify` program (available via `pip`), 
+to ensure consistency of use there is a script file `scripts/format.sh` 
+which will run `fprettify` across the 2decomp&fft source, 
+you can also use the `format` build target to run the script.
 It is recommended that you should format the code before making a pull request.
 
 ### Versioning
 
-The development of `2decomp&fft` occurs on Github, with release versions on the `main` branch.
-New features will be implemented on the `develop` branch and merged into `main` once a new release
+The development of 2DECOMP&FFT occurs on Github, with release versions on the `main` branch.
+New features will be implemented on the `dev` branch 
+and merged into `main` once a new release
 is ready.
 For example, starting from `v2.0.0` the `main` branch will only be updated to receive fixes giving
 `v2.0.1`, etc. until the next release (either `v2.1.0` or `v3.0.0` depending on the magnitude of the

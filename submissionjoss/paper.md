@@ -45,27 +45,27 @@ to build large-scale parallel applications.
 It is designed for applications using three-dimensional structured mesh 
 and spatially implicit numerical algorithms. At the foundation it implements 
 a general-purpose 2D pencil decomposition for data distribution. 
-It includes a highly scalable and efficient interface to perform three-dimensional Fast Fourier Transforms (FFTs).
+It includes a highly scalable and efficient interface to perform three-dimensional Fast Fourier Transforms (FFTs). 
 
 
 # Statement of need
 
 The 2DECOMP&FFT library [@li_2010_2decomp] is a software framework written 
 in Fortran targeting large-scale 
-parallel applications. 
+parallel applications on structured meshes. It was originally designed for CPU hardware and is now used by many research groups worldwide. 
 The library is based on a 2D-pencil decomposition for data distribution 
-on distributed memory systems. The library is at the core of many CFD solver such as 
-Xcompact3d [@BARTHOLOMEW2020100550], 
-where it has been shown to scale up to hundreds of thousands of cores. 
-2DECOMP&FFT mainly relies on MPI, but it offers a user-friendly 
+on distributed memory systems. The library is at the core of many CFD solvers such as 
+Xcompact3d [@BARTHOLOMEW2020100550], with excellent strong scaling performance up to hundreds of thousands of CPU cores. 
+2DECOMP&FFT mainly relies on MPI, and it offers a user-friendly 
 interface that hides the complexity of the communication. 
 Indeed, the library offers also a very efficient and flexible 3D tool 
-to perform Fast Fourier Transform (FFT) that also 
-exposes other popular FFT libraries like FFTW. 
+to perform Fast Fourier Transform (FFT) using popular FFT libraries like FFTW. 
+
+The first version of the library was released in 2010 as a tar.gz package, with a Makefile approach and could only make use of CPUs. The new version of the library can now leverage NVIDIA GPUs, modern CPUs and various compilers. It has CMAKE capabilities as well as a proper continuous integration framework with automated tests. The new library should now be even more appealing to the scientific community and can easily be implemented as an independant library for use by other software. 
 
 # Acknowledgements
 
-The library was initially designed thanks to several projects funded under the 
+The first version of the library was initially designed thanks to several projects funded under the 
 HECToR Distributed Computational Science and Engineering (CSE) Service operated by NAG Ltd. 
 The new library has been designed thanks to the support of EPSRC via the CCP Turbulence (EP/T026170/1).
 

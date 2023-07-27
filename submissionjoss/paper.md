@@ -51,12 +51,12 @@ perform three-dimensional distributed Fast Fourier Transforms.
 
 # Statement of need
 
-The 2DECOMP&FFT library li_2010_2decomp is a software framework written 
+The 2DECOMP&FFT library [@li_2010_2decomp] is a software framework written 
 in Fortran targeting large-scale 
 parallel applications. 
 The library is based on a 2D-pencil decomposition for data distribution 
 on distributed memory systems. The library is at the core of many CFD solver such as 
-Xcompact3d BARTHOLOMEW2020100550, 
+Xcompact3d [@BARTHOLOMEW2020100550], 
 where it has been shown to scale up to hundreds of thousands of cores. 
 2DECOMP&FFT mainly relies on MPI, but it offers a user-friendly 
 interface that hides the complexity of the communication. 

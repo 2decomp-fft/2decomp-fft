@@ -34,7 +34,7 @@ affiliations:
  - name: Imperial College London, Department of Aeronautics, London, UK
    index: 5
 date: 31 July 2023
-# bibliography: submissionjoss/paper.bib
+bibliography: submissionjoss/paper.bib
 
 ---
 

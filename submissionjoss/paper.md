@@ -45,8 +45,7 @@ to build large-scale parallel applications.
 It is designed for applications using three-dimensional structured mesh 
 and spatially implicit numerical algorithms. At the foundation it implements 
 a general-purpose 2D pencil decomposition for data distribution. 
-On top it provides a highly scalable and efficient interface to 
-perform three-dimensional distributed Fast Fourier Transforms. 
+It includes a highly scalable and efficient interface to perform three-dimensional Fast Fourier Transforms (FFTs).
 
 
 # Statement of need

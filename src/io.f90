@@ -28,6 +28,7 @@ module decomp_2d_io
 
    integer, parameter, public :: decomp_2d_write_mode = 1, decomp_2d_read_mode = 2, &
                                  decomp_2d_append_mode = 3
+   integer, parameter, public :: d2d_real = 1, d2d_complex = 2
    integer, parameter :: MAX_IOH = 10 ! How many live IO things should we handle?
    character(len=*), parameter :: io_sep = "::"
    integer, save :: nreg_io = 0
@@ -1724,7 +1725,7 @@ contains
 
    end subroutine mpiio_write_complex_coarse
 
-   subroutine decomp_2d_register_variable(io_name, varname, ipencil, icoarse, iplane, type, opt_decomp, opt_nplanes)
+   subroutine decomp_2d_register_variable(io_name, varname, ipencil, icoarse, iplane, var_kind, var_type, opt_decomp, opt_nplanes)
 
       use, intrinsic :: iso_fortran_env, only: real32, real64
 
@@ -1733,7 +1734,8 @@ contains
       integer, intent(IN) :: ipencil !(x-pencil=1; y-pencil=2; z-pencil=3)
       integer, intent(IN) :: icoarse !(nstat=1; nvisu=2)
       character(len=*), intent(in) :: io_name
-      integer, intent(in) :: type
+      integer, intent(in) :: var_kind
+      integer, intent(in) :: var_type
       integer, intent(in) :: iplane
       type(decomp_info), intent(in), optional :: opt_decomp
       integer, intent(in), optional :: opt_nplanes
@@ -1780,14 +1782,28 @@ contains
             end if
 
             ! Need to set the ADIOS2 data type
-            if (type == kind(0._real64)) then
-               ! Double
-               data_type = adios2_type_dp
-            else if (type == kind(0._real32)) then
-               ! Single
-               data_type = adios2_type_real
+            if (var_kind == d2d_real) then
+               if (var_type == kind(0._real64)) then
+                  ! Double
+                  data_type = adios2_type_dp
+               else if (var_type == kind(0._real32)) then
+                  ! Single
+                  data_type = adios2_type_real
+               else
+                  call decomp_2d_abort(__FILE__, __LINE__, -1, "Trying to write unknown data type!")
+               end if
+            else if (var_kind == d2d_complex) then
+               if (var_type == kind(cmplx(1.0, kind=real64))) then
+                  ! Double
+                  data_type = adios2_type_complex_dp
+               else if (var_type == kind(cmplx(1.0, kind=real32))) then
+                  ! Single
+                  data_type = adios2_type_complex
+               else
+                  call decomp_2d_abort(__FILE__, __LINE__, -1, "Trying to write unknown data type!")
+               end if
             else
-               call decomp_2d_abort(__FILE__, __LINE__, -1, "Trying to write unknown data type!")
+                  call decomp_2d_abort(__FILE__, __LINE__, -1, "Trying to write unknown data kind!")
             end if
 
             call adios2_define_variable(var_handle, io_handle, varname, data_type, &

@@ -27,11 +27,15 @@ program io_test
 
    complex(mytype), allocatable, dimension(:, :, :) :: u1, u2, u3
    complex(mytype), allocatable, dimension(:, :, :) :: u1b, u2b, u3b
+
+   integer, parameter :: data_type = d2d_complex
 #else
    real(mytype), allocatable, dimension(:, :, :) :: data1
 
    real(mytype), allocatable, dimension(:, :, :) :: u1, u2, u3
    real(mytype), allocatable, dimension(:, :, :) :: u1b, u2b, u3b
+
+   integer, parameter :: data_type = d2d_real
 #endif
 
    real(mytype), parameter :: eps = 1.0E-7_mytype
@@ -99,13 +103,13 @@ program io_test
 
    call decomp_2d_io_init()
    call decomp_2d_init_io(io_name)
-   call decomp_2d_register_variable(io_name, "u1.dat", 1, 0, output2D, mytype)
-   call decomp_2d_register_variable(io_name, "u2.dat", 2, 0, output2D, mytype)
-   call decomp_2d_register_variable(io_name, "u3.dat", 3, 0, output2D, mytype)
+   call decomp_2d_register_variable(io_name, "u1.dat", 1, 0, output2D, data_type, mytype)
+   call decomp_2d_register_variable(io_name, "u2.dat", 2, 0, output2D, data_type, mytype)
+   call decomp_2d_register_variable(io_name, "u3.dat", 3, 0, output2D, data_type, mytype)
    call decomp_2d_init_io(io_restart)
-   call decomp_2d_register_variable(io_restart, "u1.dat", 1, 0, output2D, mytype)
-   call decomp_2d_register_variable(io_restart, "u2.dat", 2, 0, output2D, mytype)
-   call decomp_2d_register_variable(io_restart, "u3.dat", 3, 0, output2D, mytype)
+   call decomp_2d_register_variable(io_restart, "u1.dat", 1, 0, output2D, data_type, mytype)
+   call decomp_2d_register_variable(io_restart, "u2.dat", 2, 0, output2D, data_type, mytype)
+   call decomp_2d_register_variable(io_restart, "u3.dat", 3, 0, output2D, data_type, mytype)
 
    ! ***** global data *****
    allocate (data1(nx, ny, nz))

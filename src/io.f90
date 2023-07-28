@@ -64,6 +64,7 @@ module decomp_2d_io
       module procedure write_one_real
       module procedure write_one_complex
       module procedure mpiio_write_real_coarse
+      module procedure mpiio_write_complex_coarse
       module procedure mpiio_write_real_probe
    end interface decomp_2d_write_one
 
@@ -388,30 +389,153 @@ contains
 
    end subroutine read_one_real
 
-   subroutine read_one_complex(ipencil, var, filename, opt_decomp)
+   subroutine read_one_complex(ipencil, var, dirname, varname, io_name, opt_decomp, reduce_prec)
 
       implicit none
 
       integer, intent(IN) :: ipencil
       complex(mytype), contiguous, dimension(:, :, :), intent(INOUT) :: var
-      character(len=*), intent(IN) :: filename
+      character(len=*), intent(IN) :: varname, dirname, io_name
       TYPE(DECOMP_INFO), intent(IN), optional :: opt_decomp
+      logical, intent(in), optional :: reduce_prec
 
+      logical :: read_reduce_prec
+
+      integer :: idx
+#ifndef ADIOS2
       TYPE(DECOMP_INFO) :: decomp
-      integer(kind=MPI_OFFSET_KIND) :: disp
       integer, dimension(3) :: sizes, subsizes, starts
-      integer :: ierror, newtype, fh, data_type
-
-#ifdef PROFILER
-      if (decomp_profiler_io) call decomp_profiler_start("io_read_one_cplx")
+      complex(mytype_single), allocatable, dimension(:, :, :) :: varsingle
+      integer :: data_type
+      logical :: dir_exists
+      integer :: disp_bytes
+      integer :: ierror, newtype
+      character(len=:), allocatable :: full_io_name
+      logical :: opened_new
 #endif
 
-      data_type = complex_type
+#ifdef PROFILER
+      if (decomp_profiler_io) call decomp_profiler_start("io_read_one_complex")
+#endif
 
-#include "io_read_one.inc"
+      read_reduce_prec = .true.
+
+      idx = get_io_idx(io_name, dirname)
+#ifndef ADIOS2
+      opened_new = .false.
+      if (idx < 1) then
+         ! Check file exists
+         full_io_name = trim(dirname)//"/"//trim(varname)
+         if (nrank == 0) then
+            inquire (file=full_io_name, exist=dir_exists)
+            if (.not. dir_exists) then
+               print *, "ERROR: cannot read from", full_io_name, " directory doesn't exist!"
+               stop
+            end if
+         end if
+
+         call decomp_2d_open_io(io_name, full_io_name, decomp_2d_read_mode)
+         idx = get_io_idx(io_name, full_io_name)
+         opened_new = .true.
+      else
+         full_io_name = "" ! Ensure string is not unset
+      end if
+
+      if (present(reduce_prec)) then
+         if (.not. reduce_prec) then
+            read_reduce_prec = .false.
+         end if
+      end if
+      if (read_reduce_prec) then
+         data_type = complex_type_single
+      else
+         data_type = complex_type
+      end if
+      call MPI_TYPE_SIZE(data_type, disp_bytes, ierror)
+      if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_TYPE_SIZE")
+
+      if (present(opt_decomp)) then
+         decomp = opt_decomp
+      else
+         call get_decomp_info(decomp)
+      end if
+
+      ! determine subarray parameters
+      sizes(1) = decomp%xsz(1)
+      sizes(2) = decomp%ysz(2)
+      sizes(3) = decomp%zsz(3)
+
+      if (ipencil == 1) then
+         subsizes(1) = decomp%xsz(1)
+         subsizes(2) = decomp%xsz(2)
+         subsizes(3) = decomp%xsz(3)
+         starts(1) = decomp%xst(1) - 1  ! 0-based index
+         starts(2) = decomp%xst(2) - 1
+         starts(3) = decomp%xst(3) - 1
+      else if (ipencil == 2) then
+         subsizes(1) = decomp%ysz(1)
+         subsizes(2) = decomp%ysz(2)
+         subsizes(3) = decomp%ysz(3)
+         starts(1) = decomp%yst(1) - 1
+         starts(2) = decomp%yst(2) - 1
+         starts(3) = decomp%yst(3) - 1
+      else if (ipencil == 3) then
+         subsizes(1) = decomp%zsz(1)
+         subsizes(2) = decomp%zsz(2)
+         subsizes(3) = decomp%zsz(3)
+         starts(1) = decomp%zst(1) - 1
+         starts(2) = decomp%zst(2) - 1
+         starts(3) = decomp%zst(3) - 1
+      else
+         call decomp_2d_abort(-1, "IO/read_one_complex : Wrong value for ipencil")
+      end if
+
+      associate (fh => fh_registry(idx), &
+                 disp => fh_disp(idx))
+         call MPI_TYPE_CREATE_SUBARRAY(3, sizes, subsizes, starts, &
+                                       MPI_ORDER_FORTRAN, data_type, newtype, ierror)
+         if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_TYPE_CREATE_SUBARRAY")
+         call MPI_TYPE_COMMIT(newtype, ierror)
+         if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_TYPE_COMMIT")
+         call MPI_FILE_SET_VIEW(fh, disp, data_type, &
+                                newtype, 'native', MPI_INFO_NULL, ierror)
+         if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_FILE_SET_VIEW")
+         if (read_reduce_prec) then
+            allocate (varsingle(xstV(1):xenV(1), xstV(2):xenV(2), xstV(3):xenV(3)))
+            call MPI_FILE_READ_ALL(fh, varsingle, &
+                                   subsizes(1) * subsizes(2) * subsizes(3), &
+                                   data_type, MPI_STATUS_IGNORE, ierror)
+            if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_FILE_READ_ALL")
+            var = cmplx(varsingle, kind=mytype)
+            deallocate (varsingle)
+         else
+            call MPI_FILE_READ_ALL(fh, var, &
+                                   subsizes(1) * subsizes(2) * subsizes(3), &
+                                   data_type, MPI_STATUS_IGNORE, ierror)
+            if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_FILE_READ_ALL")
+         end if
+         call MPI_TYPE_FREE(newtype, ierror)
+         if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_TYPE_FREE")
+
+         disp = disp + int(sizes(1), kind=MPI_OFFSET_KIND) &
+                * int(sizes(2), kind=MPI_OFFSET_KIND) &
+                * int(sizes(3), kind=MPI_OFFSET_KIND) &
+                * int(disp_bytes, kind=MPI_OFFSET_KIND)
+      end associate
+
+      if (opened_new) then
+         call decomp_2d_close_io(io_name, full_io_name)
+         deallocate (full_io_name)
+      end if
+#else
+      call adios2_read_one_complex(var, dirname, varname, io_name)
+
+      associate (pncl => ipencil, opdcmp => opt_decomp, rdprec => reduce_prec) ! Silence unused arguments
+      end associate
+#endif
 
 #ifdef PROFILER
-      if (decomp_profiler_io) call decomp_profiler_end("io_read_one_cplx")
+      if (decomp_profiler_io) call decomp_profiler_end("io_read_one_complex")
 #endif
 
    end subroutine read_one_complex
@@ -1377,6 +1501,180 @@ contains
 #endif
 
    end subroutine mpiio_write_real_coarse
+
+   subroutine mpiio_write_complex_coarse(ipencil, var, dirname, varname, icoarse, io_name, opt_decomp, reduce_prec, opt_deferred_writes)
+
+     ! USE param
+     ! USE variables
+
+     implicit none
+
+     integer, intent(IN) :: ipencil !(x-pencil=1; y-pencil=2; z-pencil=3)
+     integer, intent(IN) :: icoarse !(nstat=1; nvisu=2)
+     complex(mytype), contiguous, dimension(:, :, :), intent(IN) :: var
+     character(len=*), intent(in) :: dirname, varname, io_name
+     type(decomp_info), intent(in), optional :: opt_decomp
+     logical, intent(in), optional :: reduce_prec
+     logical, intent(in), optional :: opt_deferred_writes
+
+     logical :: write_reduce_prec
+     logical :: deferred_writes
+
+     integer :: ierror
+     integer :: idx
+     logical :: opened_new
+#ifdef ADIOS2
+     type(adios2_io) :: io_handle
+     type(adios2_variable) :: var_handle
+     integer :: write_mode
+#else
+     complex(mytype_single), allocatable, dimension(:, :, :) :: varsingle
+     integer, dimension(3) :: sizes, subsizes, starts
+     integer :: newtype
+     logical :: dir_exists
+     integer :: disp_bytes
+     character(len=:), allocatable :: full_io_name
+#endif
+
+#ifdef PROFILER
+     if (decomp_profiler_io) call decomp_profiler_start("mpiio_write_complex_coarse")
+#endif
+
+     ! Set defaults
+     write_reduce_prec = .true.
+     if (present(opt_deferred_writes)) then
+        deferred_writes = opt_deferred_writes
+     else
+        deferred_writes = .true.
+     end if
+
+     opened_new = .false.
+     idx = get_io_idx(io_name, dirname)
+#ifndef ADIOS2
+     if (present(reduce_prec)) then
+        if (.not. reduce_prec) then
+           write_reduce_prec = .false.
+        end if
+     end if
+     if (write_reduce_prec) then
+        call MPI_TYPE_SIZE(complex_type_single, disp_bytes, ierror)
+     else
+        call MPI_TYPE_SIZE(complex_type, disp_bytes, ierror)
+     end if
+     if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_TYPE_SIZE")
+
+     ! Use original MPIIO writers
+     if (present(opt_decomp)) then
+        call coarse_extents(ipencil, icoarse, sizes, subsizes, starts, opt_decomp)
+     else
+        call coarse_extents(ipencil, icoarse, sizes, subsizes, starts)
+     end if
+     if (write_reduce_prec) then
+        allocate (varsingle(xstV(1):xenV(1), xstV(2):xenV(2), xstV(3):xenV(3)))
+        varsingle = cmplx(var, kind=mytype_single)
+     end if
+
+     if (write_reduce_prec) then
+        call MPI_TYPE_CREATE_SUBARRAY(3, sizes, subsizes, starts, &
+             MPI_ORDER_FORTRAN, complex_type_single, newtype, ierror)
+     else
+        call MPI_TYPE_CREATE_SUBARRAY(3, sizes, subsizes, starts, &
+             MPI_ORDER_FORTRAN, complex_type, newtype, ierror)
+     end if
+     if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_TYPE_CREATE_SUBARRAY")
+     call MPI_TYPE_COMMIT(newtype, ierror)
+     if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_TYPE_COMMIT")
+
+     if (idx < 1) then
+        ! Create folder if needed
+        if (nrank == 0) then
+           inquire (file=dirname, exist=dir_exists)
+           if (.not. dir_exists) then
+              call execute_command_line("mkdir "//dirname//" 2> /dev/null", wait=.true.)
+           end if
+        end if
+        full_io_name = trim(dirname)//"/"//trim(varname)
+        call decomp_2d_open_io(io_name, full_io_name, decomp_2d_write_mode)
+        idx = get_io_idx(io_name, full_io_name)
+        opened_new = .true.
+     else
+        full_io_name = "" ! Ensure string is set
+     end if
+
+     if (write_reduce_prec) then
+        call MPI_FILE_SET_VIEW(fh_registry(idx), fh_disp(idx), complex_type_single, &
+             newtype, 'native', MPI_INFO_NULL, ierror)
+        if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_FILE_SET_VIEW")
+        call MPI_FILE_WRITE_ALL(fh_registry(idx), varsingle, &
+             subsizes(1) * subsizes(2) * subsizes(3), &
+             complex_type_single, MPI_STATUS_IGNORE, ierror)
+     else
+        call MPI_FILE_SET_VIEW(fh_registry(idx), fh_disp(idx), complex_type, &
+             newtype, 'native', MPI_INFO_NULL, ierror)
+        if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_FILE_SET_VIEW")
+        call MPI_FILE_WRITE_ALL(fh_registry(idx), var, &
+             subsizes(1) * subsizes(2) * subsizes(3), &
+             complex_type, MPI_STATUS_IGNORE, ierror)
+     end if
+     if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_FILE_WRITE_ALL")
+
+     fh_disp(idx) = fh_disp(idx) + int(sizes(1), kind=MPI_OFFSET_KIND) &
+          * int(sizes(2), kind=MPI_OFFSET_KIND) &
+          * int(sizes(3), kind=MPI_OFFSET_KIND) &
+          * int(disp_bytes, kind=MPI_OFFSET_KIND)
+
+     if (opened_new) then
+        call decomp_2d_close_io(io_name, full_io_name)
+        deallocate (full_io_name)
+     end if
+
+     call MPI_TYPE_FREE(newtype, ierror)
+     if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_TYPE_FREE")
+     if (write_reduce_prec) then
+        deallocate (varsingle)
+     end if
+#else
+     if (.not. engine_live(idx)) then
+        call decomp_2d_abort(__FILE__, __LINE__, -1, "ERROR: Engine is not live!")
+     end if
+     
+     call adios2_at_io(io_handle, adios, io_name, ierror)
+     if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "adios2_at_io "//trim(io_name))
+     call adios2_inquire_variable(var_handle, io_handle, varname, ierror)
+     if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "adios2_inquire_variable "//trim(varname))
+     if (.not. var_handle%valid) then
+        call decomp_2d_abort(__FILE__, __LINE__, -1, &
+             "ERROR: trying to write variable before registering! "//trim(varname))
+     end if
+
+     if (idx < 1) then
+        call decomp_2d_abort(__FILE__, __LINE__, idx, &
+             "You haven't opened "//trim(io_name)//":"//trim(dirname))
+     end if
+
+     if (deferred_writes) then
+        write_mode = adios2_mode_deferred
+     else
+        write_mode = adios2_mode_sync
+     end if
+
+     if (engine_registry(idx)%valid) then
+        call adios2_put(engine_registry(idx), var_handle, var, write_mode, ierror)
+        if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "adios2_put")
+     else
+        call decomp_2d_abort(__FILE__, __LINE__, -1, &
+             "ERROR: decomp2d thinks engine is live, but adios2 engine object is not valid")
+     end if
+
+     associate (crs => icoarse, pncl => ipencil, opdcmp => opt_decomp, rdprec => reduce_prec) ! Silence unused arguments
+     end associate
+#endif
+
+#ifdef PROFILER
+     if (decomp_profiler_io) call decomp_profiler_end("mpiio_write_real_coarse")
+#endif
+
+   end subroutine mpiio_write_complex_coarse
 
    subroutine decomp_2d_register_variable(io_name, varname, ipencil, icoarse, iplane, type, opt_decomp, opt_nplanes)
 

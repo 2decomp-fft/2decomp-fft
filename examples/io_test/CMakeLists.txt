@@ -6,11 +6,17 @@ file(GLOB files_bench io_bench.f90)
 
 include_directories(${CMAKE_SOURCE_DIR}/src)
 
+set(TEST_COMPLEX_IO "NO" CACHE STRING "Test IO using REAL (default) or COMPLEX numbers")
+set_property(CACHE TEST_COMPLEX_IO PROPERTY STRINGS NO YES)
+
 add_executable(io_test ${files_test})
 add_executable(io_read ${files_read})
 add_executable(io_var_test ${files_var_test})
 add_executable(io_plane_test ${files_plane_test})
 add_executable(io_bench ${files_bench})
+if (TEST_COMPLEX_IO)
+  add_compile_definitions(COMPLEX_TEST)
+endif ()
 
 target_link_libraries(io_test PRIVATE decomp2d)
 target_link_libraries(io_read PRIVATE decomp2d)

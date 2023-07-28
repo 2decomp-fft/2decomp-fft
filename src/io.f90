@@ -596,6 +596,54 @@ contains
    end subroutine adios2_read_one_real
 #endif
 
+#ifdef ADIOS2
+   subroutine adios2_read_one_complex(var, engine_name, varname, io_name)
+
+      implicit none
+
+      character(len=*), intent(in) :: engine_name
+      character(len=*), intent(in) :: io_name
+      character(len=*), intent(in) :: varname
+      complex(mytype), contiguous, dimension(:, :, :), intent(out) :: var
+
+      integer :: ierror
+      type(adios2_io) :: io_handle
+      type(adios2_variable) :: var_handle
+      integer :: idx
+
+      integer(kind=8) :: nsteps
+      integer(kind=8) :: curstep
+
+#ifdef PROFILER
+      if (decomp_profiler_io) call decomp_profiler_start("adios2_read_one_complex")
+#endif
+
+      call adios2_at_io(io_handle, adios, io_name, ierror)
+      if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "adios2_at_io "//trim(io_name))
+      call adios2_inquire_variable(var_handle, io_handle, varname, ierror)
+      if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "adios2_inquire_variable "//trim(varname))
+      if (.not. var_handle%valid) then
+         call decomp_2d_abort(__FILE__, __LINE__, -1, &
+                              "ERROR: trying to read variable without registering first! "//trim(varname))
+      end if
+
+      call adios2_variable_steps(nsteps, var_handle, ierror)
+      if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "adios2_variable_steps")
+
+      idx = get_io_idx(io_name, engine_name)
+      call adios2_get(engine_registry(idx), var_handle, var, adios2_mode_deferred, ierror)
+      if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "adios2_get")
+
+      call adios2_current_step(curstep, engine_registry(idx), ierror)
+      if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "adios2_current_step")
+
+#ifdef PROFILER
+      if (decomp_profiler_io) call decomp_profiler_end("adios2_read_one_complex")
+#endif
+
+    end subroutine adios2_read_one_complex
+#endif
+
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
    ! Write a 3D array as part of a big MPI-IO file, starting from
    !  displacement 'disp'; 'disp' will be updated after the writing

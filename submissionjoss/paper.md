@@ -40,7 +40,7 @@ bibliography: paper.bib
 
 # Summary
 
-The 2DECOMP&FFT library is a software framework written in modern Fortran to build large-scale parallel applications. It is designed for applications using three-dimensional structured mesh and spatially implicit numerical algorithms. It is based on a general-purpose 2D pencil decomposition for data distribution. It includes a highly scalable and efficient interface to perform three-dimensional Fast Fourier Transforms (FFTs). The library has been designed to be user-friendly, with a clean application programming interface hiding most communication details from application developers, and portable (modern CPUs and NVIDIA GPUs; support for AMD and Intel GPUs to follow).
+The 2DECOMP&FFT library is a software framework written in modern Fortran to build large-scale parallel applications. It is designed for applications using three-dimensional structured mesh and spatially implicit numerical algorithms. It is based on a general-purpose 2D pencil decomposition for data distribution. It includes a highly scalable and efficient interface to perform three-dimensional Fast Fourier Transforms (FFTs). The library has been designed to be user-friendly, with a clean application programming interface hiding most communication details from application developers, and portable with support for modern CPUs and NVIDIA GPUs (support for AMD and Intel GPUs to follow).
 
 
 # Statement of need

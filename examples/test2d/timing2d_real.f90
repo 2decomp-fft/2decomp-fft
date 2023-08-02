@@ -49,7 +49,7 @@ program timing2d_real
    ! Now we can check if user put some inputs
    ! Handle input file like a boss -- GD
    nargin = command_argument_count()
-   if ((nargin == 0) .or. (nargin == 2) .or. (nargin == 5)) then
+   if ((nargin == 0) .or. (nargin == 2) .or. (nargin == 5) .or. (nargin == 6)) then
       do arg = 1, nargin
          call get_command_argument(arg, InputFN, FNLength, status)
          read (InputFN, *, iostat=status) DecInd
@@ -63,6 +63,8 @@ program timing2d_real
             ny = DecInd
          elseif (arg == 5) then
             nz = DecInd
+         elseif (arg == 6) then
+            niter = DecInd
          end if
       end do
    else
@@ -73,12 +75,13 @@ program timing2d_real
          print *, "This Test takes no inputs or 2 inputs as"
          print *, "  1) p_row (default=0)"
          print *, "  2) p_col (default=0)"
-         print *, "or 5 inputs as"
+         print *, "or 5-6 inputs as"
          print *, "  1) p_row (default=0)"
          print *, "  2) p_col (default=0)"
          print *, "  3) nx "
          print *, "  4) ny "
          print *, "  5) nz "
+         print *, "  6) n iterations (optional)"
          print *, "Number of inputs is not correct and the defult settings"
          print *, "will be used"
       end if
@@ -147,6 +150,10 @@ program timing2d_real
    t4 = 0.d0
    t6 = 0.d0
    t8 = 0.d0
+   call transpose_x_to_y(u1, u2)
+   call transpose_y_to_z(u2, u3)
+   call transpose_z_to_y(u3, u2)
+   call transpose_y_to_x(u2, u1)
    do iter = 1, niter
       !!!!!!!!!!!!!!!!!!!!!!!
       ! x-pensil ==> y-pensil
@@ -258,16 +265,16 @@ program timing2d_real
 
    call MPI_ALLREDUCE(t2, t1, 1, MPI_DOUBLE_PRECISION, MPI_SUM, &
                       MPI_COMM_WORLD, ierror)
-   t1 = t1 / dble(nproc)
+   t1 = t1 / dble(nproc) / dble(niter)
    call MPI_ALLREDUCE(t4, t3, 1, MPI_DOUBLE_PRECISION, MPI_SUM, &
                       MPI_COMM_WORLD, ierror)
-   t3 = t3 / dble(nproc)
+   t3 = t3 / dble(nproc) / dble(niter)
    call MPI_ALLREDUCE(t6, t5, 1, MPI_DOUBLE_PRECISION, MPI_SUM, &
                       MPI_COMM_WORLD, ierror)
-   t5 = t5 / dble(nproc)
+   t5 = t5 / dble(nproc) / dble(niter) 
    call MPI_ALLREDUCE(t8, t7, 1, MPI_DOUBLE_PRECISION, MPI_SUM, &
                       MPI_COMM_WORLD, ierror)
-   t7 = t7 / dble(nproc)
+   t7 = t7 / dble(nproc) / dble(niter) 
    t8 = t1 + t3 + t5 + t7
    if (nrank == 0) then
       write (*, *) 'Time X->Y ', t1

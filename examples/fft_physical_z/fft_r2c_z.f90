@@ -22,7 +22,7 @@ program fft_r2c_z
    integer :: nargin, arg, FNLength, status, DecInd
    character(len=80) :: InputFN
 
-   integer, parameter :: ntest = 10  ! repeat test this times
+   integer :: ntest = 10  ! repeat test this times
 
    type(decomp_info), pointer :: ph => null(), sp => null()
    complex(mytype), allocatable, dimension(:, :, :) :: out
@@ -45,7 +45,7 @@ program fft_r2c_z
    ! Now we can check if user put some inputs
    ! Handle input file like a boss -- GD
    nargin = command_argument_count()
-   if ((nargin == 0) .or. (nargin == 2) .or. (nargin == 5)) then
+   if ((nargin == 0) .or. (nargin == 2) .or. (nargin == 5) .or. (nargin == 6)) then
       do arg = 1, nargin
          call get_command_argument(arg, InputFN, FNLength, status)
          read (InputFN, *, iostat=status) DecInd
@@ -59,6 +59,8 @@ program fft_r2c_z
             ny = DecInd
          elseif (arg == 5) then
             nz = DecInd
+         elseif (arg == 6) then
+            ntest = DecInd
          end if
       end do
    else
@@ -69,12 +71,13 @@ program fft_r2c_z
          print *, "This Test takes no inputs or 2 inputs as"
          print *, "  1) p_row (default=0)"
          print *, "  2) p_col (default=0)"
-         print *, "or 5 inputs as"
+         print *, "or 5-6 inputs as"
          print *, "  1) p_row (default=0)"
          print *, "  2) p_col (default=0)"
          print *, "  3) nx "
          print *, "  4) ny "
          print *, "  5) nz "
+         print *, "  6) n iterations (optional)"
          print *, "Number of inputs is not correct and the defult settings"
          print *, "will be used"
       end if
@@ -110,6 +113,12 @@ program fft_r2c_z
    t2 = 0.d0
    t4 = 0.d0
    !$acc data copyin(in_r) copy(out)
+   ! First iterations out of the counting loop
+   call decomp_2d_fft_3d(in_r, out)
+   call decomp_2d_fft_3d(out, in_r)
+   !$acc kernels
+   in_r = in_r / (real(nx, mytype) * real(ny, mytype) * real(nz, mytype))
+   !$acc end kernels
    do m = 1, ntest
 
       ! 3D r2c FFT
@@ -122,8 +131,9 @@ program fft_r2c_z
       call decomp_2d_fft_3d(out, in_r)
       t4 = t4 + MPI_WTIME() - t3
 
+      ! normalisation - note 2DECOMP&FFT doesn't normalise
       !$acc kernels
-      in_r = in_r / real(nx, mytype) / real(ny, mytype) / real(nz, mytype)
+      in_r = in_r / (real(nx, mytype) * real(ny, mytype) * real(nz, mytype))
       !$acc end kernels
 
    end do
@@ -133,10 +143,10 @@ program fft_r2c_z
 
    call MPI_ALLREDUCE(t2, t1, 1, MPI_DOUBLE_PRECISION, MPI_SUM, &
                       MPI_COMM_WORLD, ierror)
-   t1 = t1 / dble(nproc)
+   t1 = t1 / dble(nproc) / dble(ntest)
    call MPI_ALLREDUCE(t4, t3, 1, MPI_DOUBLE_PRECISION, MPI_SUM, &
                       MPI_COMM_WORLD, ierror)
-   t3 = t3 / dble(nproc)
+   t3 = t3 / dble(nproc) / dble(ntest)
 
    ! checking accuracy
    error = 0._mytype

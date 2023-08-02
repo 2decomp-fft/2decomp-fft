@@ -618,7 +618,7 @@ contains
 
          all_pass = .false.
       else
-         write (*, *) trim(rank_lbl), " ", tag, ":PASS"
+         !write (*, *) trim(rank_lbl), " ", tag, ":PASS"
       end if
 
    end subroutine test_halo_size

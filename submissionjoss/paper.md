@@ -10,7 +10,7 @@ authors:
     orcid: 0000-0001-6325-7629
     corresponding: true # (This is how to denote the corresponding author)
     affiliation: 1 # (Multiple affiliations must be quoted)
-  - name: C\'edric Flageul
+  - name: Cédric Flageul
     equal-contrib: true # (This is how you can denote equal contributions between multiple authors)
     affiliation: 2
   - name: Paul Bartholomew
@@ -25,7 +25,7 @@ authors:
 affiliations:
  - name: STFC Daresbury Laboratory, Scientific Computing Department, UKRI, UK 
    index: 1
- - name: Universit\'e de Poitiers, CNRS,ISAE-ENSMA, CNRS, PPRIME, Poitiers, France 
+ - name: PPRIME institute, Curiosity Group, Université de Poitiers, CNRS, ISAE-ENSMA, Poitiers, France
    index: 2
  - name: The University of Edinburgh, EPCC, Edinburgh, UK
    index: 3
@@ -40,13 +40,13 @@ bibliography: paper.bib
 
 # Summary
 
-The 2DECOMP&FFT library is a software framework written in modern Fortran to build large-scale parallel applications. It is designed for applications using three-dimensional structured mesh and spatially implicit numerical algorithms. It is based on a general-purpose 2D pencil decomposition for data distribution. It includes a highly scalable and efficient interface to perform three-dimensional Fast Fourier Transforms (FFTs). The library has been designed to be user-friendly, with a clean application programming interface hiding most communication details from application developers, and portable with support for modern CPUs and NVIDIA GPUs (support for AMD and Intel GPUs to follow).
+The 2DECOMP&FFT library is a software framework written in modern Fortran to build large-scale parallel applications. It is designed for applications using three-dimensional structured mesh and spatially implicit numerical algorithms. It is based on a general-purpose 2D pencil decomposition for data distribution and data Input Output (I/O). It includes a highly scalable and efficient interface to perform three-dimensional Fast Fourier Transforms (FFTs). The library has been designed to be user-friendly, with a clean application programming interface hiding most communication details from application developers, and portable with support for modern CPUs and NVIDIA GPUs (support for AMD and Intel GPUs to follow).
 
 
 # Statement of need
 
 The 2DECOMP&FFT library [@li_2010_2decomp] is a software framework written in Fortran targeting large-scale parallel applications on structured meshes. It was originally designed for CPU hardware and is now used by many research groups worldwide. The library is based on a 2D-pencil decomposition for data distribution on distributed memory systems and is used as the core of many CFD solvers such as Xcompact3d [@BARTHOLOMEW2020100550], with excellent strong scaling performance up to hundreds of thousands of CPU cores. 
-2DECOMP&FFT mainly relies on MPI, and it offers a user-friendly interface that hides the complexity of the communication. The library also offers also a very efficient and flexible 3D tool to perform Fast Fourier Transform (FFT) using popular FFT libraries like FFTW. 
+2DECOMP&FFT mainly relies on MPI, and it offers a user-friendly interface that hides the complexity of the communication. The library also offers also a very efficient and flexible 3D tool to perform Fast Fourier Transform (FFT) using popular FFT libraries like FFTW. I/O can be performed using MPI I/O or ADIOS2 [@godoy2020adios].
 
 The first version of the library was released in 2010 as a tar.gz package, with a Makefile approach, and could only make use of CPUs. It has not been modified since its release. The new version of the library can now leverage NVIDIA GPUs, modern CPUs and various compilers. It has CMAKE capabilities as well as a proper continuous integration framework with automated tests. The new library was designed to be more appealing to the scientific community,  and can now be easily implemented as an independant library for use by other software. 
 

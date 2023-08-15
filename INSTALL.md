@@ -302,6 +302,18 @@ Note the legacy `fftw` interface lacks interface definitions
 and will fail when stricter compilation flags are used (e.g. when `-DCMAKE_BUILD_TYPE=Dev`) 
 for this it is recommended to use `fftw_f03` which provides proper interfaces.
 
+#### Vendor FFTW
+
+Some vendors supply an FFTW library optimised for their systems.
+These can be used via the same FFTW interfaces described above, linking etc. may be performed automatically by some compilers, however the `-DFFTW_ROOT` variable can also used if the system fails to find the vendor FFTW.
+An example of configuring `2decomp&fft` against a vendor FFTW using AMD AOCL is
+```
+cmake -S . -B build -DFFT_Choice=fftw_f03 -DFFTW_ROOT=${AOCL_ROOT}
+```
+where `${AOCL_ROOT}` is the AOCL installation directory.
+Linking against other vendor's libraries should work similarly.
+On Cray systems using the Cray compiler wrappers the FFTW library (when selected) should be picked up automatically when the `cray-fftw` module is loaded.
+
 ### Caliper
 
 The library [caliper](https://github.com/LLNL/Caliper) can be used to profile the execution of the code. 

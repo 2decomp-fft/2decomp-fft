@@ -381,7 +381,7 @@ contains
       integer :: kfirst, klast ! K loop start/end
 
       call alloc_x(div2, global)
-      
+
       ! Expected sizes
       nx_expected = ysize(1) + 2
       ny_expected = ny
@@ -439,7 +439,7 @@ contains
       implicit none
 
       real(mytype), allocatable, dimension(:, :, :) :: div3
-      
+
       real(mytype), allocatable, dimension(:, :, :) :: uh, vh
 #if defined(_GPU)
       attributes(device) :: vh, uh

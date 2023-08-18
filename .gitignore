@@ -33,3 +33,16 @@
 
 # Cmake
 build
+
+# Log files
+*.log
+
+# Intel MKL FFT
+src/mkl_dfti.f90
+obj
+
+Makefile.settings
+
+# emacs
+.dir-locals.el
+TAGS

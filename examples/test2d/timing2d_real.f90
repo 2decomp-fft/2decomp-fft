@@ -154,7 +154,7 @@ program timing2d_real
    t2 = MPI_WTIME() - t1
    call MPI_ALLREDUCE(t2, t1, 1, MPI_DOUBLE_PRECISION, MPI_SUM, &
                       MPI_COMM_WORLD, ierror)
-   t1 = t1 / dble(nproc) 
+   t1 = t1 / dble(nproc)
    ! Init the total times
    t2 = 0.d0
    t4 = 0.d0
@@ -280,10 +280,10 @@ program timing2d_real
    t3 = t3 / dble(nproc) / dble(niter)
    call MPI_ALLREDUCE(t6, t5, 1, MPI_DOUBLE_PRECISION, MPI_SUM, &
                       MPI_COMM_WORLD, ierror)
-   t5 = t5 / dble(nproc) / dble(niter) 
+   t5 = t5 / dble(nproc) / dble(niter)
    call MPI_ALLREDUCE(t8, t7, 1, MPI_DOUBLE_PRECISION, MPI_SUM, &
                       MPI_COMM_WORLD, ierror)
-   t7 = t7 / dble(nproc) / dble(niter) 
+   t7 = t7 / dble(nproc) / dble(niter)
    t8 = t1 + t3 + t5 + t7
    if (nrank == 0) then
       write (*, *) 'Avg Time X->Y ', t1

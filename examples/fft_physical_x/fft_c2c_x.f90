@@ -119,19 +119,19 @@ program fft_c2c_x
    t4 = MPI_WTIME() - t3
    call MPI_ALLREDUCE(t2, t1, 1, MPI_DOUBLE_PRECISION, MPI_SUM, &
                       MPI_COMM_WORLD, ierror)
-   t1 = t1 / dble(nproc) 
+   t1 = t1 / dble(nproc)
    call MPI_ALLREDUCE(t4, t3, 1, MPI_DOUBLE_PRECISION, MPI_SUM, &
                       MPI_COMM_WORLD, ierror)
-   t3 = t3 / dble(nproc) 
+   t3 = t3 / dble(nproc)
    if (nrank == 0) then
       write (*, *) '===== c2c interface ====='
       write (*, *) 'It 0 time (sec): ', t1, t3
-   endif
+   end if
    ! Init the time
    t2 = 0.d0
    t4 = 0.d0
    !$acc kernels
-   in = in / real(nx, mytype) / real(ny, mytype) / real(nz, mytype)
+   in = in / (real(nx, mytype) * real(ny, mytype) * real(nz, mytype))
    !$acc end kernels
    do m = 1, ntest
 
@@ -147,7 +147,7 @@ program fft_c2c_x
 
       ! normalisation - note 2DECOMP&FFT doesn't normalise
       !$acc kernels
-      in = in / real(nx, mytype) / real(ny, mytype) / real(nz, mytype)
+      in = in / (real(nx, mytype) * real(ny, mytype) * real(nz, mytype))
       !$acc end kernels
 
    end do
@@ -179,7 +179,7 @@ program fft_c2c_x
    end do
    !$acc end loop
    call MPI_ALLREDUCE(error, err_all, 1, real_type, MPI_SUM, MPI_COMM_WORLD, ierror)
-   err_all = err_all / real(nx, mytype) / real(ny, mytype) / real(nz, mytype)
+   err_all = err_all / (real(nx, mytype) * real(ny, mytype) * real(nz, mytype))
 
    if (nrank == 0) then
       write (*, *) 'error / mesh point: ', err_all
@@ -190,7 +190,7 @@ program fft_c2c_x
       flops = 5.d0 * n1 * log(n1) / log(2.d0)
       ! 3 sets of 1D FFTs for 3 directions, each having n^2 1D FFTs
       flops = flops * 3.d0 * n1**2
-      flops = 2.d0 * flops / (t1 + t3) 
+      flops = 2.d0 * flops / (t1 + t3)
       write (*, *) 'GFLOPS : ', flops / 1000.d0**3
       write (*, *) '   '
       write (*, *) 'fft_c2c_x completed '

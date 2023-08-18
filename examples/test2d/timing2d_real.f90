@@ -146,14 +146,23 @@ program timing2d_real
 
    ! call decomp_2d_write_one(1,u1,'u1.dat')
 
-   t2 = 0.d0
-   t4 = 0.d0
-   t6 = 0.d0
-   t8 = 0.d0
+   t1 = MPI_WTIME()
    call transpose_x_to_y(u1, u2)
    call transpose_y_to_z(u2, u3)
    call transpose_z_to_y(u3, u2)
    call transpose_y_to_x(u2, u1)
+   t2 = MPI_WTIME() - t1
+   call MPI_ALLREDUCE(t2, t1, 1, MPI_DOUBLE_PRECISION, MPI_SUM, &
+                      MPI_COMM_WORLD, ierror)
+   t1 = t1 / dble(nproc) 
+   ! Init the total times
+   t2 = 0.d0
+   t4 = 0.d0
+   t6 = 0.d0
+   t8 = 0.d0
+   if (nrank == 0) then
+      write (*, *) 'Tot time it 0 ', t1
+   end if
    do iter = 1, niter
       !!!!!!!!!!!!!!!!!!!!!!!
       ! x-pensil ==> y-pensil
@@ -277,11 +286,11 @@ program timing2d_real
    t7 = t7 / dble(nproc) / dble(niter) 
    t8 = t1 + t3 + t5 + t7
    if (nrank == 0) then
-      write (*, *) 'Time X->Y ', t1
-      write (*, *) 'Time Y->Z ', t3
-      write (*, *) 'Time Z->Y ', t5
-      write (*, *) 'Time Y->X ', t7
-      write (*, *) 'Time TOT  ', t8
+      write (*, *) 'Avg Time X->Y ', t1
+      write (*, *) 'Avg Time Y->Z ', t3
+      write (*, *) 'Avg Time Z->Y ', t5
+      write (*, *) 'Avg Time Y->X ', t7
+      write (*, *) 'Avg Time TOT  ', t8
    end if
 
    if (nrank == 0) then

@@ -109,12 +109,27 @@ program fft_r2c_x
       end do
    end do
 
-   t2 = 0.d0
-   t4 = 0.d0
    !$acc data copyin(in_r) copy(out)
    ! First iterations out of the counting loop
+   t1 = MPI_WTIME()
    call decomp_2d_fft_3d(in_r, out)
+   t2 = MPI_WTIME() - t1
+   t3 = MPI_WTIME()
    call decomp_2d_fft_3d(out, in_r)
+   t4 = MPI_WTIME() - t3
+   call MPI_ALLREDUCE(t2, t1, 1, MPI_DOUBLE_PRECISION, MPI_SUM, &
+                      MPI_COMM_WORLD, ierror)
+   t1 = t1 / dble(nproc) 
+   call MPI_ALLREDUCE(t4, t3, 1, MPI_DOUBLE_PRECISION, MPI_SUM, &
+                      MPI_COMM_WORLD, ierror)
+   t3 = t3 / dble(nproc) 
+   if (nrank == 0) then
+      write (*, *) '===== r2c/c2r interface ====='
+      write (*, *) 'It 0 time (sec): ', t1, t3
+   endif
+   ! Init the time
+   t2 = 0.d0
+   t4 = 0.d0
    !$acc kernels
    in_r = in_r / (real(nx, mytype) * real(ny, mytype) * real(nz, mytype))
    !$acc end kernels
@@ -161,12 +176,14 @@ program fft_r2c_x
    end do
    !$acc end loop
    call MPI_ALLREDUCE(error, err_all, 1, real_type, MPI_SUM, MPI_COMM_WORLD, ierror)
-   err_all = err_all / real(nx, mytype) / real(ny, mytype) / real(nz, mytype)
+   err_all = err_all / (real(nx, mytype)*real(ny, mytype)*real(nz, mytype))
 
    if (nrank == 0) then
-      write (*, *) '===== r2c/c2r interface ====='
       write (*, *) 'error / mesh point: ', err_all
       write (*, *) 'time (sec): ', t1, t3
+      write (*, *) '   '
+      write (*, *) 'fft_r2c_x completed '
+      write (*, *) '   '
    end if
    !$acc end data
 

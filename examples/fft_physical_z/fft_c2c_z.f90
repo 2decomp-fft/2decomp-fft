@@ -110,12 +110,27 @@ program fft_c2c_z
       end do
    end do
 
-   t2 = 0.d0
-   t4 = 0.d0
    !$acc data copyin(in) copy(out)
    ! First iterations out of the counting loop
+   t1 = MPI_WTIME()
    call decomp_2d_fft_3d(in, out, DECOMP_2D_FFT_FORWARD)
+   t2 = MPI_WTIME() - t1
+   t3 = MPI_WTIME()
    call decomp_2d_fft_3d(out, in, DECOMP_2D_FFT_BACKWARD)
+   t4 = MPI_WTIME() - t3
+   call MPI_ALLREDUCE(t2, t1, 1, MPI_DOUBLE_PRECISION, MPI_SUM, &
+                      MPI_COMM_WORLD, ierror)
+   t1 = t1 / dble(nproc) 
+   call MPI_ALLREDUCE(t4, t3, 1, MPI_DOUBLE_PRECISION, MPI_SUM, &
+                      MPI_COMM_WORLD, ierror)
+   t3 = t3 / dble(nproc) 
+   if (nrank == 0) then
+      write (*, *) '===== c2c interface ====='
+      write (*, *) 'It 0 time (sec): ', t1, t3
+   endif
+   ! Init the time
+   t2 = 0.d0
+   t4 = 0.d0
    !$acc kernels
    in = in / real(nx, mytype) / real(ny, mytype) / real(nz, mytype)
    !$acc end kernels
@@ -168,9 +183,8 @@ program fft_c2c_z
    err_all = err_all / real(nx, mytype) / real(ny, mytype) / real(nz, mytype)
 
    if (nrank == 0) then
-      write (*, *) '===== c2c interface ====='
       write (*, *) 'error / mesh point: ', err_all
-      write (*, *) 'time (sec): ', t1, t3
+      write (*, *) 'Avg time (sec): ', t1, t3
       n1 = real(nx) * real(ny) * real(nz)
       n1 = n1**(1.d0 / 3.d0)
       ! 5n*log(n) flops per 1D FFT of size n using Cooley-Tukey algorithm
@@ -179,6 +193,8 @@ program fft_c2c_z
       flops = flops * 3.d0 * n1**2
       flops = 2.d0 * flops / (t1 + t3) 
       write (*, *) 'GFLOPS : ', flops / 1000.d0**3
+      write (*, *) '   '
+      write (*, *) 'fft_c2c_z completed '
    end if
    !$acc end data
 

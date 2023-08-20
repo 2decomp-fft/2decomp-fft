@@ -126,7 +126,9 @@ program fft_physical_x
    t3 = t3 / dble(nproc)
    if (nrank == 0) then
       write (*, *) '===== c2c interface ====='
-      write (*, *) 'It 0 time (sec): ', t1, t3
+      write (*, *) 'First iteration with dedicated timer'
+      write (*, *) '     time (sec): ', t1, t3
+      write (*, *) ''
    end if
    ! Init the time
    t2 = 0.d0

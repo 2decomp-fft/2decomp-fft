@@ -617,8 +617,6 @@ contains
          write (*, *) trim(rank_lbl), " ", "+ Got:      ", nx, " ", ny, " ", nz, " "
 
          all_pass = .false.
-      else
-         write (*, *) trim(rank_lbl), " ", tag, ":PASS"
       end if
 
    end subroutine test_halo_size

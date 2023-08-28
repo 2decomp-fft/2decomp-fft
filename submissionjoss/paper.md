@@ -92,7 +92,7 @@ The new version of the library can now leverage NVIDIA GPUs, modern CPUs and var
 (GNU, Intel, NVHPC, CRAY). 
 It has CMAKE capabilities as well as a proper continuous integration framework with automated tests. 
 The new library was designed to be more appealing to the scientific community,  
-and can now be easily implemented as an independant library for use by other software. 
+and can now be easily implemented as an independent library for use by other software. 
 
 # Acknowledgements
 

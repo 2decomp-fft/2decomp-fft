@@ -1,5 +1,5 @@
 ---
-title: 'The new version of 2DECOMP&FFT'
+title: 'The new version of the 2DECOMP&FFT library'
 tags:
   - Fortran
   - FFT

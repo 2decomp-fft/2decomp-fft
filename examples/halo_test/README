@@ -9,7 +9,5 @@ results are to be expected regardless of the communication algorithm. The
 computation is based on an explicit finite difference method so clearly using 
 the halo-cell support API is more efficient.
 
-To run: use 12 MPI processes.
-
 What to expect: the output using different communication algorithms should be 
 exactly the same.

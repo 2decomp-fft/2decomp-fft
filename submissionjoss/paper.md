@@ -73,8 +73,8 @@ The library also offers also a very efficient and flexible 3D tool to perform
 Fast Fourier Transform (FFT) for distrubuted memory systems. However, 2DECOMP&FFT is mainly designed to perform 
 management and communication and the actual computation of the 1D FFT is delegated to 3rd-parly libraries. 
 The supported FFT backends are: FFTW [@FFTW05], the Intel Math Kernel Library (MKL) and the CUDA FFT (cuFFT) 
-which is used for FFT on NVIDIA GPUs. A Generic backend, based on the 
-Glassman's general N Fast Fourier Transform [@ferguson1979simple], 
+which is used for FFT on NVIDIA GPUs. A Generic FFT backend, based on the 
+Glassman's general N Fast Fourier Transform [@FERGUSON1982401], 
 is also available to make the library more portable.   
 
 While 2DECOMP&FFT library has been design with high order compact schemes in mind, it is possible 

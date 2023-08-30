@@ -14,13 +14,13 @@ authors:
     equal-contrib: true # (This is how you can denote equal contributions between multiple authors)
     affiliation: 2
   - name: Paul Bartholomew
-    corresponding: true # (This is how to denote the corresponding author)
+    equal-contrib: true # (This is how you can denote equal contributions between multiple authors)
     affiliation: 3
   - name: Filippo Spiga
-    corresponding: true # (This is how to denote the corresponding author)
+    equal-contrib: true # (This is how you can denote equal contributions between multiple authors)
     affiliation: 4
   - name: Sylvain Laizet
-    corresponding: true # (This is how to denote the corresponding author)
+    equal-contrib: true # (This is how you can denote equal contributions between multiple authors)
     affiliation: 5
 affiliations:
  - name: STFC Daresbury Laboratory, Scientific Computing Department, UKRI, UK 

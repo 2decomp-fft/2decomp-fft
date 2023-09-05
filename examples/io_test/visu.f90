@@ -101,10 +101,19 @@ contains
 
     call decomp_2d_io_init()
     call decomp_2d_init_io(io_name)
+#ifndef COMPLEX_TEST
     call decomp_2d_register_variable(io_name, "u1.dat", 1, 0, output2D, mytype)
     call decomp_2d_register_variable(io_name, "u2.dat", 2, 0, output2D, mytype)
     call decomp_2d_register_variable(io_name, "u3.dat", 3, 0, output2D, mytype)
-    
+#else
+    call decomp_2d_register_variable(io_name, "u1_re.dat", 1, 0, output2D, mytype)
+    call decomp_2d_register_variable(io_name, "u2_re.dat", 2, 0, output2D, mytype)
+    call decomp_2d_register_variable(io_name, "u3_re.dat", 3, 0, output2D, mytype)
+    call decomp_2d_register_variable(io_name, "u1_im.dat", 1, 0, output2D, mytype)
+    call decomp_2d_register_variable(io_name, "u2_im.dat", 2, 0, output2D, mytype)
+    call decomp_2d_register_variable(io_name, "u3_im.dat", 3, 0, output2D, mytype)
+#endif
+
   end subroutine init_example
 
   subroutine init_data()
@@ -124,8 +133,28 @@ contains
           end do
        end do
     end do
-    call transpose_x_to_y(u1, u2)
-    call transpose_y_to_z(u2, u3)
+    do k = 1, ysize(3)
+       do j = 1, ysize(2)
+          do i = 1, ysize(1)
+#ifndef COMPLEX_TEST
+             u2(i, j, k) = real(nrank, mytype)
+#else
+             u2(i, j, k) = cmplx(real(nrank, mytype), -real(nrank, mytype))
+#endif
+          end do
+       end do
+    end do
+    do k = 1, zsize(3)
+       do j = 1, zsize(2)
+          do i = 1, zsize(1)
+#ifndef COMPLEX_TEST
+             u3(i, j, k) = real(nrank, mytype)
+#else
+             u3(i, j, k) = cmplx(real(nrank, mytype), -real(nrank, mytype))
+#endif
+          end do
+       end do
+    end do
     
   end subroutine init_data
 
@@ -146,9 +175,20 @@ contains
     call decomp_2d_open_io(io_name, "out", decomp_2d_write_mode)
     call decomp_2d_start_io(io_name, "out")
 #endif
+
+#ifndef COMPLEX_TEST
     call decomp_2d_write_one(1, u1, 'out', 'u1.dat', 0, io_name)
     call decomp_2d_write_one(2, u2, 'out', 'u2.dat', 0, io_name)
     call decomp_2d_write_one(3, u3, 'out', 'u3.dat', 0, io_name)
+#else
+    call decomp_2d_write_one(1, real(u1, mytype), 'out', 'u1_re.dat', 0, io_name)
+    call decomp_2d_write_one(2, real(u1, mytype), 'out', 'u2_re.dat', 0, io_name)
+    call decomp_2d_write_one(3, real(u1, mytype), 'out', 'u3_re.dat', 0, io_name)
+    call decomp_2d_write_one(1, aimag(u1, mytype), 'out', 'u1_im.dat', 0, io_name)
+    call decomp_2d_write_one(2, aimag(u2, mytype), 'out', 'u2_im.dat', 0, io_name)
+    call decomp_2d_write_one(3, aimag(u3, mytype), 'out', 'u3_im.dat', 0, io_name)
+#endif
+
 #ifdef ADIOS2
     call decomp_2d_end_io(io_name, "out")
     call decomp_2d_close_io(io_name, "out")
@@ -205,8 +245,15 @@ contains
        write(ioxdmf, *)'       <Geometry Reference="/Xdmf/Domain/Geometry[1]"/>'
 
        do varctr = 1, 3
+#ifndef COMPLEX_TEST
           write(varname, "(A, I0)") "u", varctr
           write(filename, '(A, I0, A)') "./out/u", varctr, ".dat"
+#else
+          write(varname, "(A, I0, A)") "u", varctr, "_re"
+          write(filename, '(A, I0, A)') "./out/u", varctr, "_re.dat"
+          write(varname, "(A, I0, A)") "u", varctr, "_im"
+          write(filename, '(A, I0, A)') "./out/u", varctr, "_im.dat"
+#endif
           write(ioxdmf,*)'       <Attribute Name="'//trim(varname)//'" Center="Node">'
 #ifndef ADIOS2
           write(ioxdmf,*)'          <DataItem Format="Binary"'

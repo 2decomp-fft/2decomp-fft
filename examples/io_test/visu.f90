@@ -24,7 +24,7 @@ program visu
 #endif
 
   integer, parameter :: output2D = 0 ! Which plane to write in 2D (0 for 3D)
-   character(len=*), parameter :: io_name = "visu-io"
+  character(len=*), parameter :: io_name = "visu-io"
 #ifndef ADIOS2
   logical :: dir_exists
 #endif
@@ -169,6 +169,7 @@ contains
 
     integer :: varctr
     character(len=16) :: filename
+    character(len=2) :: varname
     
     if (nrank == 0) then
        OPEN(newunit=ioxdmf, file="./out.xdmf")
@@ -199,20 +200,22 @@ contains
        write(ioxdmf,*)'        </DataItem>'
        write(ioxdmf,*)'    </Geometry>'
 
-        write(ioxdmf, *)'    <Grid Name="main" GridType="Uniform">'
-       write(ioxdmf, *)'        <Topology Reference="/Xdmf/Domain/Topology[1]"/>'
-       write(ioxdmf, *)'        <Geometry Reference="/Xdmf/Domain/Geometry[1]"/>'
+       write(ioxdmf, *)'   <Grid Name="1" GridType="Uniform">'
+       write(ioxdmf, *)'       <Topology Reference="/Xdmf/Domain/Topology[1]"/>'
+       write(ioxdmf, *)'       <Geometry Reference="/Xdmf/Domain/Geometry[1]"/>'
 
        do varctr = 1, 3
+          write(varname, "(A, I0)") "u", varctr
           write(filename, '(A, I0, A)') "./out/u", varctr, ".dat"
-          write(ioxdmf,*)'        <Attribute Name="'//trim(varname)//'" Center="Node">'
+          write(ioxdmf,*)'       <Attribute Name="'//trim(varname)//'" Center="Node">'
 #ifndef ADIOS2
-          write(ioxdmf,*)'           <DataItem Format="Binary"'
+          write(ioxdmf,*)'          <DataItem Format="Binary"'
 #else
-          write(ioxdmf,*)'           <DataItem Format="HDF"'
+          write(ioxdmf,*)'          <DataItem Format="HDF"'
 #endif
 
 #ifdef DOUBLE_PREC
+          print *, "Double precision build"
 #ifdef SAVE_SINGLE
           if (output2D.eq.0) then
              precision = 4

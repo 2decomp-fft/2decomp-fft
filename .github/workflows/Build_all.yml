@@ -27,7 +27,7 @@ jobs:
         sudo apt-get install -y gfortran openmpi-bin libopenmpi-dev cmake
 
     # Runs a set of commands using the runners shell
-    - name: Compile
+    - name: Double precision
       run: |
         export FC=mpif90.openmpi
         cmake -S . -B build -DCMAKE_BUILD_TYPE=Dev -DBUILD_TESTING=ON
@@ -63,6 +63,14 @@ jobs:
         export FC=mpif90.openmpi
         rm -rf ./build
         cmake -S . -B build -DCMAKE_BUILD_TYPE=Dev -DBUILD_TESTING=ON -DHALO_DEBUG=ON
+        cmake --build build --verbose
+
+    # Runs a set of commands using the runners shell
+    - name: Overwrite flag for the FFT backends
+      run: |
+        export FC=mpif90.openmpi
+        rm -rf ./build
+        cmake -S . -B build -DCMAKE_BUILD_TYPE=Dev -DBUILD_TESTING=ON -DENABLE_INPLACE=ON
         cmake --build build --verbose
 
   bld_gnu_mpich:
@@ -142,7 +150,7 @@ jobs:
         sudo apt-get install -y intel-oneapi-common-vars intel-oneapi-compiler-fortran intel-oneapi-mkl intel-oneapi-mkl-devel intel-oneapi-mpi intel-oneapi-mpi-devel cmake
 
     # Runs a set of commands using the runners shell
-    - name: Compile
+    - name: Generic FFT backend
       run: |
         source /opt/intel/oneapi/setvars.sh
         export FC=mpiifort
@@ -150,13 +158,23 @@ jobs:
         cmake --build build --verbose
 
     # Runs a set of commands using the runners shell
-    - name: Compile
+    - name: MKL FFT backend
       run: |
         source /opt/intel/oneapi/setvars.sh
         export FC=mpiifort
         export MKL_DIR=${MKLROOT}/lib/cmake/mkl
         rm -rf ./build
         cmake -S . -B build -DCMAKE_BUILD_TYPE=Dev -DFFT_Choice=mkl -DBUILD_TESTING=ON
+        cmake --build build --verbose
+
+    # Runs a set of commands using the runners shell
+    - name: MKL FFT backend inplace
+      run: |
+        source /opt/intel/oneapi/setvars.sh
+        export FC=mpiifort
+        export MKL_DIR=${MKLROOT}/lib/cmake/mkl
+        rm -rf ./build
+        cmake -S . -B build -DCMAKE_BUILD_TYPE=Dev -DFFT_Choice=mkl -DBUILD_TESTING=ON -DENABLE_INPLACE=on
         cmake --build build --verbose
 
   bld_fftw3:
@@ -181,11 +199,25 @@ jobs:
         cmake -S . -B build -DCMAKE_BUILD_TYPE=Dev -DFFT_Choice=fftw -DBUILD_TESTING=ON
         cmake --build build --verbose
 
+    # Runs a set of commands using the runners shell
+    - name: Regular FFTW3 inplace
+      run: |
+        export FC=mpif90
+        cmake -S . -B build -DCMAKE_BUILD_TYPE=Dev -DFFT_Choice=fftw -DBUILD_TESTING=ON -DENABLE_INPLACE=on
+        cmake --build build --verbose
+
     - name: New FFTW3
       run: |
         export FC=mpif90
         rm -rf ./build
         cmake -S . -B build -DCMAKE_BUILD_TYPE=Dev -DFFT_Choice=fftw_f03 -DBUILD_TESTING=ON
+        cmake --build build --verbose
+
+    - name: New FFTW3 inplace
+      run: |
+        export FC=mpif90
+        rm -rf ./build
+        cmake -S . -B build -DCMAKE_BUILD_TYPE=Dev -DFFT_Choice=fftw_f03 -DBUILD_TESTING=ON -DENABLE_INPLACE=on
         cmake --build build --verbose
 
   bld_caliper:

@@ -1,13 +1,4 @@
-!=======================================================================
-! This is part of the 2DECOMP&FFT library
-!
-! 2DECOMP&FFT is a software framework for general-purpose 2D (pencil)
-! decomposition. It also implements a highly scalable distributed
-! three-dimensional Fast Fourier Transform (FFT).
-!
-! Copyright (C) 2009-2021 Ning Li, the Numerical Algorithms Group (NAG)
-!
-!=======================================================================
+!! SPDX-License-Identifier: BSD-3-Clause
 
 ! This file contains the routines that transpose data from Z to Y pencil
 
@@ -33,6 +24,10 @@
      integer :: istat, nsize
 #endif
 
+#ifdef PROFILER
+     if (decomp_profiler_transpose) call decomp_profiler_start("transp_z_y_r")
+#endif
+
      if (dims(2) == 1) then
 #if defined(_GPU)
         nsize = product(decomp%zsz)
@@ -46,6 +41,10 @@
      else
         call transpose_z_to_y_real(src, dst, decomp)
      end if
+
+#ifdef PROFILER
+     if (decomp_profiler_transpose) call decomp_profiler_end("transp_z_y_r")
+#endif
 
   end subroutine transpose_z_to_y_real_long
 
@@ -63,10 +62,6 @@
 
      integer :: s1, s2, s3, d1, d2, d3
      integer :: ierror
-
-#ifdef PROFILER
-     if (decomp_profiler_transpose) call decomp_profiler_start("transp_z_y_r")
-#endif
 
      s1 = SIZE(src, 1)
      s2 = SIZE(src, 2)
@@ -140,11 +135,6 @@
                             decomp%y2dist, decomp)
 #endif
 
-#ifdef PROFILER
-     if (decomp_profiler_transpose) call decomp_profiler_end("transp_z_y_r")
-#endif
-
-     return
   end subroutine transpose_z_to_y_real
 
   subroutine transpose_z_to_y_complex_short(src, dst)
@@ -169,6 +159,10 @@
      integer :: istat, nsize
 #endif
 
+#ifdef PROFILER
+     if (decomp_profiler_transpose) call decomp_profiler_start("transp_z_y_c")
+#endif
+
      if (dims(2) == 1) then
 #if defined(_GPU)
         nsize = product(decomp%zsz)
@@ -182,6 +176,10 @@
      else
         call transpose_z_to_y_complex(src, dst, decomp)
      end if
+
+#ifdef PROFILER
+     if (decomp_profiler_transpose) call decomp_profiler_end("transp_z_y_c")
+#endif
 
   end subroutine transpose_z_to_y_complex_long
 
@@ -199,10 +197,6 @@
 
      integer :: s1, s2, s3, d1, d2, d3
      integer :: ierror
-
-#ifdef PROFILER
-     if (decomp_profiler_transpose) call decomp_profiler_start("transp_z_y_c")
-#endif
 
      s1 = SIZE(src, 1)
      s2 = SIZE(src, 2)
@@ -278,11 +272,6 @@
                                decomp%y2dist, decomp)
 #endif
 
-#ifdef PROFILER
-     if (decomp_profiler_transpose) call decomp_profiler_end("transp_z_y_c")
-#endif
-
-     return
   end subroutine transpose_z_to_y_complex
 
   ! pack/unpack ALLTOALL(V) buffers

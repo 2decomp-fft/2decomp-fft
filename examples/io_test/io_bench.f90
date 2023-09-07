@@ -1,3 +1,4 @@
+!! SPDX-License-Identifier: BSD-3-Clause
 program io_bench
 
    use decomp_2d_constants
@@ -80,7 +81,12 @@ program io_bench
    call decomp_2d_write_one(1, u1, 'io.dat')
    t2 = MPI_WTIME()
 
-   if (nrank == 0) write (*, *) 'I/O time: ', t2 - t1
+   if (nrank == 0) then
+      write (*, *) 'I/O time: ', t2 - t1
+      write (*, *) '   '
+      write (*, *) 'IO_bench completed '
+      write (*, *) '   '
+   end if
 
    deallocate (u1)
    call decomp_2d_finalize

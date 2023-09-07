@@ -1,3 +1,4 @@
+!! SPDX-License-Identifier: BSD-3-Clause
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 ! This example calculates the divergence of a random field using
 !   (1) global transposition
@@ -380,7 +381,7 @@ contains
       integer :: kfirst, klast ! K loop start/end
 
       call alloc_x(div2, global)
-      
+
       ! Expected sizes
       nx_expected = ysize(1) + 2
       ny_expected = ny
@@ -438,7 +439,7 @@ contains
       implicit none
 
       real(mytype), allocatable, dimension(:, :, :) :: div3
-      
+
       real(mytype), allocatable, dimension(:, :, :) :: uh, vh
 #if defined(_GPU)
       attributes(device) :: vh, uh
@@ -616,8 +617,6 @@ contains
          write (*, *) trim(rank_lbl), " ", "+ Got:      ", nx, " ", ny, " ", nz, " "
 
          all_pass = .false.
-      else
-         write (*, *) trim(rank_lbl), " ", tag, ":PASS"
       end if
 
    end subroutine test_halo_size

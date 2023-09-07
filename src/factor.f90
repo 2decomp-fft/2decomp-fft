@@ -1,14 +1,4 @@
-!!!=======================================================================
-!!! This is part of the 2DECOMP&FFT library
-!!!
-!!! 2DECOMP&FFT is a software framework for general-purpose 2D (pencil)
-!!! decomposition. It also implements a highly scalable distributed
-!!! three-dimensional Fast Fourier Transform (FFT).
-!!!
-!!! Copyright (C) 2009-2021 Ning Li, the Numerical Algorithms Group (NAG)
-!!! Copyright (C) 2022-              the Xcompact3d developers
-!!!
-!!!=======================================================================
+!! SPDX-License-Identifier: BSD-3-Clause
 
 !!! A few utility routines to find factors of integer numbers
 module factor
@@ -33,8 +23,8 @@ contains
 
       ! find the factors <= sqrt(num)
       ! Cast the int as double to make sure of the correct result of sqrt
-      ! IntelLLVM got an issue with 1.0 but not with 1.d0 
-      m = int(sqrt(real(num,8)))
+      ! IntelLLVM got an issue with 1.0 but not with 1.d0
+      m = int(sqrt(num * 1.d0))
       nfact = 1
       do i = 1, m
          if (num / i * i == num) then

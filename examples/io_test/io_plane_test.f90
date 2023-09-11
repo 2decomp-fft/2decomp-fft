@@ -197,6 +197,9 @@ program io_plane_test
       end if
 
    end if
+#else
+   associate (fnd => found, io => iol, wk => work)
+   end associate
 #endif
 
    deallocate (u1, u2, u3)

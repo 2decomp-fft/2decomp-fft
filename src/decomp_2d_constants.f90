@@ -1,14 +1,4 @@
-!=======================================================================
-! This is part of the 2DECOMP&FFT library
-!
-! 2DECOMP&FFT is a software framework for general-purpose 2D (pencil)
-! decomposition. It also implements a highly scalable distributed
-! three-dimensional Fast Fourier Transform (FFT).
-!
-! Copyright (C) 2009-2012 Ning Li, the Numerical Algorithms Group (NAG)
-! Copyright (C) 2021               the University of Edinburgh (UoE)
-!
-!=======================================================================
+!! SPDX-License-Identifier: BSD-3-Clause
 
 ! Constants for the 2decomp&fft library
 
@@ -126,7 +116,7 @@ module decomp_2d_constants
    ! Major and minor version number
    !
    integer, parameter :: D2D_MAJOR = 2
-   integer, parameter :: D2D_MINOR = 0
+   integer, parameter :: D2D_MINOR = 1
    logical, parameter :: D2D_RELEASE = .false.
 
 end module decomp_2d_constants

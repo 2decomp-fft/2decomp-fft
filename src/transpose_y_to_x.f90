@@ -1,13 +1,4 @@
-!=======================================================================
-! This is part of the 2DECOMP&FFT library
-!
-! 2DECOMP&FFT is a software framework for general-purpose 2D (pencil)
-! decomposition. It also implements a highly scalable distributed
-! three-dimensional Fast Fourier Transform (FFT).
-!
-! Copyright (C) 2009-2021 Ning Li, the Numerical Algorithms Group (NAG)
-!
-!=======================================================================
+!! SPDX-License-Identifier: BSD-3-Clause
 
 ! This file contains the routines that transpose data from Y to X pencil
 
@@ -33,6 +24,10 @@
      integer :: istat, nsize
 #endif
 
+#ifdef PROFILER
+     if (decomp_profiler_transpose) call decomp_profiler_start("transp_y_x_r")
+#endif
+
      if (dims(1) == 1) then
 #if defined(_GPU)
         nsize = product(decomp%ysz)
@@ -47,6 +42,10 @@
         call transpose_y_to_x_real(src, dst, decomp)
      end if
 
+#ifdef PROFILER
+     if (decomp_profiler_transpose) call decomp_profiler_end("transp_y_x_r")
+#endif
+
   end subroutine transpose_y_to_x_real_long
 
   subroutine transpose_y_to_x_real(src, dst, decomp)
@@ -59,10 +58,6 @@
 
      integer :: s1, s2, s3, d1, d2, d3
      integer :: ierror
-
-#ifdef PROFILER
-     if (decomp_profiler_transpose) call decomp_profiler_start("transp_y_x_r")
-#endif
 
      s1 = SIZE(src, 1)
      s2 = SIZE(src, 2)
@@ -122,11 +117,6 @@
                             decomp%x1dist, decomp)
 #endif
 
-#ifdef PROFILER
-     if (decomp_profiler_transpose) call decomp_profiler_end("transp_y_x_r")
-#endif
-
-     return
   end subroutine transpose_y_to_x_real
 
   subroutine transpose_y_to_x_complex_short(src, dst)
@@ -150,6 +140,11 @@
 #if defined(_GPU)
      integer :: istat, nsize
 #endif
+
+#ifdef PROFILER
+     if (decomp_profiler_transpose) call decomp_profiler_start("transp_y_x_c")
+#endif
+
      if (dims(1) == 1) then
 #if defined(_GPU)
         nsize = product(decomp%ysz)
@@ -164,6 +159,10 @@
         call transpose_y_to_x_complex(src, dst, decomp)
      end if
 
+#ifdef PROFILER
+     if (decomp_profiler_transpose) call decomp_profiler_end("transp_y_x_c")
+#endif
+
   end subroutine transpose_y_to_x_complex_long
 
   subroutine transpose_y_to_x_complex(src, dst, decomp)
@@ -176,10 +175,6 @@
 
      integer :: s1, s2, s3, d1, d2, d3
      integer :: ierror
-
-#ifdef PROFILER
-     if (decomp_profiler_transpose) call decomp_profiler_start("transp_y_x_c")
-#endif
 
      s1 = SIZE(src, 1)
      s2 = SIZE(src, 2)
@@ -240,11 +235,6 @@
                                decomp%x1dist, decomp)
 #endif
 
-#ifdef PROFILER
-     if (decomp_profiler_transpose) call decomp_profiler_end("transp_y_x_c")
-#endif
-
-     return
   end subroutine transpose_y_to_x_complex
 
   subroutine mem_split_yx_real(in, n1, n2, n3, out, iproc, dist, decomp)

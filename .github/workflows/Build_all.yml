@@ -3,10 +3,10 @@
 name: Build_all
 
 # Controls when the action will run. Triggers the workflow on push
-# events but only for the master branch
+# events but only for the master branch and the dev branch
 on:
   push:
-    branches: [ main ]
+    branches: [ main, dev ]
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
@@ -27,7 +27,7 @@ jobs:
         sudo apt-get install -y gfortran openmpi-bin libopenmpi-dev cmake
 
     # Runs a set of commands using the runners shell
-    - name: Compile
+    - name: Double precision
       run: |
         export FC=mpif90.openmpi
         cmake -S . -B build -DCMAKE_BUILD_TYPE=Dev -DBUILD_TESTING=ON
@@ -65,6 +65,14 @@ jobs:
         cmake -S . -B build -DCMAKE_BUILD_TYPE=Dev -DBUILD_TESTING=ON -DHALO_DEBUG=ON
         cmake --build build --verbose
 
+    # Runs a set of commands using the runners shell
+    - name: Overwrite flag for the FFT backends
+      run: |
+        export FC=mpif90.openmpi
+        rm -rf ./build
+        cmake -S . -B build -DCMAKE_BUILD_TYPE=Dev -DBUILD_TESTING=ON -DENABLE_INPLACE=ON
+        cmake --build build --verbose
+
   bld_gnu_mpich:
     # The type of runner that the job will run on
     runs-on: ubuntu-latest
@@ -91,7 +99,8 @@ jobs:
     # The type of runner that the job will run on
     runs-on: ubuntu-latest
     env:
-      TMP: /opt/nvidia/hpc_sdk/Linux_x86_64/22.7/comm_libs/mpi/bin:/opt/nvidia/hpc_sdk/Linux_x86_64/22.7/compilers/bin
+      TMP: /opt/nvidia/hpc_sdk/Linux_x86_64/23.5/comm_libs/mpi/bin:/opt/nvidia/hpc_sdk/Linux_x86_64/23.5/compilers/bin
+###      TMP: /opt/nvidia/hpc_sdk/Linux_x86_64/22.7/comm_libs/mpi/bin:/opt/nvidia/hpc_sdk/Linux_x86_64/22.7/compilers/bin
 
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
@@ -106,7 +115,8 @@ jobs:
     - name: install
       run: |
         sudo apt-get update  -y
-        sudo apt-get install -y nvhpc-22-7
+        sudo apt-get install -y nvhpc-23-5
+###        sudo apt-get install -y nvhpc-22-7
 ###        sudo apt-get install -y nvhpc-22-7-cuda-multi
 
     # Runs a set of commands using the runners shell
@@ -140,7 +150,7 @@ jobs:
         sudo apt-get install -y intel-oneapi-common-vars intel-oneapi-compiler-fortran intel-oneapi-mkl intel-oneapi-mkl-devel intel-oneapi-mpi intel-oneapi-mpi-devel cmake
 
     # Runs a set of commands using the runners shell
-    - name: Compile
+    - name: Generic FFT backend
       run: |
         source /opt/intel/oneapi/setvars.sh
         export FC=mpiifort
@@ -148,13 +158,23 @@ jobs:
         cmake --build build --verbose
 
     # Runs a set of commands using the runners shell
-    - name: Compile
+    - name: MKL FFT backend
       run: |
         source /opt/intel/oneapi/setvars.sh
         export FC=mpiifort
         export MKL_DIR=${MKLROOT}/lib/cmake/mkl
         rm -rf ./build
         cmake -S . -B build -DCMAKE_BUILD_TYPE=Dev -DFFT_Choice=mkl -DBUILD_TESTING=ON
+        cmake --build build --verbose
+
+    # Runs a set of commands using the runners shell
+    - name: MKL FFT backend inplace
+      run: |
+        source /opt/intel/oneapi/setvars.sh
+        export FC=mpiifort
+        export MKL_DIR=${MKLROOT}/lib/cmake/mkl
+        rm -rf ./build
+        cmake -S . -B build -DCMAKE_BUILD_TYPE=Dev -DFFT_Choice=mkl -DBUILD_TESTING=ON -DENABLE_INPLACE=on
         cmake --build build --verbose
 
   bld_fftw3:
@@ -179,11 +199,25 @@ jobs:
         cmake -S . -B build -DCMAKE_BUILD_TYPE=Dev -DFFT_Choice=fftw -DBUILD_TESTING=ON
         cmake --build build --verbose
 
+    # Runs a set of commands using the runners shell
+    - name: Regular FFTW3 inplace
+      run: |
+        export FC=mpif90
+        cmake -S . -B build -DCMAKE_BUILD_TYPE=Dev -DFFT_Choice=fftw -DBUILD_TESTING=ON -DENABLE_INPLACE=on
+        cmake --build build --verbose
+
     - name: New FFTW3
       run: |
         export FC=mpif90
         rm -rf ./build
         cmake -S . -B build -DCMAKE_BUILD_TYPE=Dev -DFFT_Choice=fftw_f03 -DBUILD_TESTING=ON
+        cmake --build build --verbose
+
+    - name: New FFTW3 inplace
+      run: |
+        export FC=mpif90
+        rm -rf ./build
+        cmake -S . -B build -DCMAKE_BUILD_TYPE=Dev -DFFT_Choice=fftw_f03 -DBUILD_TESTING=ON -DENABLE_INPLACE=on
         cmake --build build --verbose
 
   bld_caliper:
@@ -204,18 +238,16 @@ jobs:
     # Runs a set of commands using the runners shell
     - name: Compile caliper
       run: |
-        echo ${PWD}
-        echo ${HOME}
-        wget --no-check-certificate https://github.com/LLNL/Caliper/archive/refs/tags/v2.8.0.tar.gz
-        tar xzf v2.8.0.tar.gz && cd Caliper-2.8.0
+        wget --no-check-certificate https://github.com/LLNL/Caliper/archive/refs/tags/v2.10.0.tar.gz
+        tar xzf v2.10.0.tar.gz && cd Caliper-2.10.0
         mkdir build && cd build
         echo ${PWD}
-        cmake -DCMAKE_C_COMPILER=gcc -DCMAKE_CXX_COMPILER=g++ -DCMAKE_Fortran_COMPILER=gfortran -DCMAKE_INSTALL_PREFIX=${HOME}/Caliper-2.8.0_bld -DWITH_FORTRAN=yes -DWITH_MPI=yes ../
+        cmake -DCMAKE_C_COMPILER=gcc -DCMAKE_CXX_COMPILER=g++ -DCMAKE_Fortran_COMPILER=gfortran -DCMAKE_INSTALL_PREFIX=${HOME}/Caliper-2.10.0_bld -DWITH_FORTRAN=yes -DWITH_MPI=yes ../
         make -j && make install
         cd ../../
 
     - name: Compile
       run: |
-        export caliper_DIR=${HOME}/Caliper-2.8.0_bld/share/cmake/caliper
+        export caliper_DIR=${HOME}/Caliper-2.10.0_bld/share/cmake/caliper
         FC=mpif90 cmake -S . -B build -DCMAKE_BUILD_TYPE=Dev -DENABLE_PROFILER=caliper -DBUILD_TESTING=ON
         cmake --build build --verbose

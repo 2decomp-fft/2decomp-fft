@@ -1,14 +1,4 @@
-!=======================================================================
-! This is part of the 2DECOMP&FFT library
-!
-! 2DECOMP&FFT is a software framework for general-purpose 2D (pencil)
-! decomposition. It also implements a highly scalable distributed
-! three-dimensional Fast Fourier Transform (FFT).
-!
-! Copyright (C) 2009-2013 Ning Li, the Numerical Algorithms Group (NAG)
-! Copyright (C) 2021               the University of Edinburgh (UoE)
-!
-!=======================================================================
+!! SPDX-License-Identifier: BSD-3-Clause
 
 ! This module provides parallel IO facilities for applications based on
 ! 2D decomposition.
@@ -227,7 +217,6 @@ contains
 
 #ifdef ADIOS2
       integer :: ierror
-      logical :: adios2_debug_mode
       character(len=80) :: config_file = "adios2_config.xml"
 #endif
 
@@ -236,10 +225,7 @@ contains
       if (decomp_profiler_io) call decomp_profiler_start("io_init")
 #endif
 
-  !! TODO: make this a runtime-option
-      adios2_debug_mode = .true.
-
-      call adios2_init(adios, trim(config_file), decomp_2d_comm, adios2_debug_mode, ierror)
+      call adios2_init(adios, trim(config_file), decomp_2d_comm, ierror)
       if (ierror /= 0) then
          call decomp_2d_abort(__FILE__, __LINE__, ierror, &
                               "Error initialising ADIOS2 - is "//trim(config_file)//" present and valid?")
@@ -555,21 +541,13 @@ contains
 
       call adios2_variable_steps(nsteps, var_handle, ierror)
       if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "adios2_variable_steps")
-      print *, "AVAILABLE steps for ", nsteps
 
-      print *, "IO_NAME: ", io_name
-      print *, "ENGINE_NAME: ", engine_name
-      print *, "VAR_NAME: ", varname
       idx = get_io_idx(io_name, engine_name)
-      print *, idx
       call adios2_get(engine_registry(idx), var_handle, var, adios2_mode_deferred, ierror)
       if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "adios2_get")
 
-      print *, "MAX: ", maxval(var)
-
       call adios2_current_step(curstep, engine_registry(idx), ierror)
       if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "adios2_current_step")
-      print *, "Current step: ", curstep
 
 #ifdef PROFILER
       if (decomp_profiler_io) call decomp_profiler_end("adios2_read_one_real")
@@ -1224,7 +1202,7 @@ contains
       end if
 
       if (icoarse == 0) then
-       !! Use full fields
+         ! Use full fields
 
          if (present(opt_decomp)) then
             decomp = opt_decomp
@@ -1310,7 +1288,8 @@ contains
 
    end subroutine coarse_extents
 
-  subroutine mpiio_write_real_coarse(ipencil, var, dirname, varname, icoarse, io_name, opt_decomp, reduce_prec, opt_deferred_writes)
+   subroutine mpiio_write_real_coarse(ipencil, var, dirname, varname, icoarse, io_name, &
+                                      opt_decomp, reduce_prec, opt_deferred_writes)
 
       ! USE param
       ! USE variables
@@ -1348,7 +1327,7 @@ contains
       if (decomp_profiler_io) call decomp_profiler_start("mpiio_write_real_coarse")
 #endif
 
-    !! Set defaults
+      ! Set defaults
       write_reduce_prec = .true.
       if (present(opt_deferred_writes)) then
          deferred_writes = opt_deferred_writes
@@ -1371,7 +1350,7 @@ contains
       end if
       if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_TYPE_SIZE")
 
-    !! Use original MPIIO writers
+      ! Use original MPIIO writers
       if (present(opt_decomp)) then
          call coarse_extents(ipencil, icoarse, sizes, subsizes, starts, opt_decomp)
       else
@@ -1533,19 +1512,18 @@ contains
       if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "adios2_at_io "//trim(io_name))
       if (io_handle%valid) then
          call adios2_inquire_variable(var_handle, io_handle, varname, ierror)
-         if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "adios2_inquire_variable "//trim(varname))
          if (.not. var_handle%valid) then
-          !! New variable
+            ! New variable
             if (nrank == 0) then
                print *, "Registering variable for IO: ", varname
             end if
 
             ! Need to set the ADIOS2 data type
             if (type == kind(0._real64)) then
-             !! Double
+               ! Double
                data_type = adios2_type_dp
             else if (type == kind(0._real32)) then
-             !! Single
+               ! Single
                data_type = adios2_type_real
             else
                call decomp_2d_abort(__FILE__, __LINE__, -1, "Trying to write unknown data type!")
@@ -1558,6 +1536,11 @@ contains
                call decomp_2d_abort(__FILE__, __LINE__, ierror, &
                                     "adios2_define_variable, ERROR registering variable "//trim(varname))
             end if
+         else
+            ! This probably can't happen, however if the inquiry to a variable returns a NULL
+            ! pointer an exception is returned in ierr. As the point is to check the existence of
+            ! the variable we are already checking if it is valid or not.
+            if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "adios2_inquire_variable "//trim(varname))
          end if
       else
          call decomp_2d_abort(__FILE__, __LINE__, -1, "trying to register variable with invalid IO!")
@@ -1930,7 +1913,7 @@ contains
 
       idx = get_io_idx(io_name, io_dir)
       if (idx < 1) then
-       !! New io destination
+         ! New io destination
          if (nreg_io < MAX_IOH) then
             nreg_io = nreg_io + 1
             do idx = 1, MAX_IOH
@@ -1944,7 +1927,7 @@ contains
             names_ptr(idx) = full_name
 
             if (mode == decomp_2d_write_mode) then
-             !! Setup writers
+               ! Setup writers
 #ifndef ADIOS2
                filesize = 0_MPI_OFFSET_KIND
                fh_disp(idx) = 0_MPI_OFFSET_KIND
@@ -1953,7 +1936,7 @@ contains
                access_mode = adios2_mode_write
 #endif
             else if (mode == decomp_2d_read_mode) then
-             !! Setup readers
+               ! Setup readers
 #ifndef ADIOS2
                fh_disp(idx) = 0_MPI_OFFSET_KIND
                access_mode = MPI_MODE_RDONLY
@@ -1973,14 +1956,14 @@ contains
                stop
             end if
 
-          !! Open IO
+            ! Open IO
 #ifndef ADIOS2
             call MPI_FILE_OPEN(decomp_2d_comm, io_dir, &
                                access_mode, MPI_INFO_NULL, &
                                fh_registry(idx), ierror)
             if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_FILE_OPEN")
             if (mode == decomp_2d_write_mode) then
-             !! Guarantee overwriting
+               ! Guarantee overwriting
                call MPI_FILE_SET_SIZE(fh_registry(idx), filesize, ierror)
                if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_FILE_SET_SIZE")
             end if

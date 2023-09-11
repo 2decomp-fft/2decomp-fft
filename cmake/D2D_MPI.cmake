@@ -1,6 +1,12 @@
 # MPI CMakeLists
+find_package(MPI REQUIRED COMPONENTS Fortran)
+set(D2D_MPI_FAMILY "Unknown")
 
-find_package(MPI REQUIRED)
+# adios2 IO backend requires C and C++ MPI components
+if (IO_BACKEND MATCHES "adios2")
+    find_package(MPI REQUIRED COMPONENTS C CXX)
+endif (IO_BACKEND MATCHES "adios2")
+
 # Stop if there is no MPI_Fortran_Compiler
 if (MPI_Fortran_COMPILER)
     message(STATUS "MPI_Fortran_COMPILER found: ${MPI_Fortran_COMPILER}")
@@ -8,14 +14,32 @@ if (MPI_Fortran_COMPILER)
     # Try to guess the MPI type to adapt compilation flags if necessary
     string(FIND "${MPI_Fortran_COMPILER}" "mpich" pos)
     if(pos GREATER_EQUAL "0")
-      set(FIND_MPICH TRUE)
+      set(D2D_MPI_FAMILY "MPICH")
       message(STATUS "MPI is MPICH type")
     endif()
     string(FIND "${MPI_Fortran_COMPILER}" "openmpi" pos)
     if(pos GREATER_EQUAL "0")
-      set(FIND_OMPI TRUE)
+      set(D2D_MPI_FAMILY "OMPI")
       message(STATUS "MPI is openMPI type")
     endif()
+
+    if (${D2D_MPI_FAMILY} STREQUAL "Unknown")
+      execute_process(COMMAND ${MPI_Fortran_COMPILER} "-show"
+	OUTPUT_VARIABLE mpi_show
+	ERROR_QUIET)
+      
+      string(FIND "${mpi_show}" "openmpi" pos)
+      if(pos GREATER_EQUAL "0")
+	set(D2D_MPI_FAMILY "OMPI")
+      endif()
+
+      string(FIND "${mpi_show}" "mpich" pos)
+      if(pos GREATER_EQUAL "0")
+	set(D2D_MPI_FAMILY "MPICH")
+      endif()
+    endif()
+
+    message(STATUS "MPI Compiler family: ${D2D_MPI_FAMILY}")
 else (MPI_Fortran_COMPILER)
     message(SEND_ERROR "This application cannot compile without MPI")
 endif(MPI_Fortran_COMPILER)

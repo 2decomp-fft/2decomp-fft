@@ -1,3 +1,5 @@
+!! SPDX-License-Identifier: BSD-3-Clause
+!!!=====================================================
 !!!! init_test.f90
 !!!  Tests initialising the 2decomp&fft library.
 !!!=====================================================

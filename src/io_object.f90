@@ -100,7 +100,6 @@ module decomp_2d_io_object
 #ifdef ADIOS2
    use adios2
 #endif
-   use, intrinsic :: iso_fortran_env, only: real32, real64
 
    implicit none
 
@@ -407,4 +406,4 @@ contains
 
    end subroutine d2d_io_end_close
 
-end submodule decomp_2d_io_object
+end module decomp_2d_io_object

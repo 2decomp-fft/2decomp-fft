@@ -11,7 +11,7 @@ module decomp_2d_io
    use decomp_2d_io_object
    use decomp_2d_mpi
    use MPI
-
+   use, intrinsic :: iso_fortran_env, only: real32, real64
 #ifdef ADIOS2
    use adios2
 #endif
@@ -115,6 +115,9 @@ module decomp_2d_io
 
 contains
 
+   !
+   ! Initialize the IO module
+   !
    subroutine decomp_2d_io_init()
 
 #ifdef ADIOS2
@@ -127,6 +130,8 @@ contains
 #endif
 
 #ifdef ADIOS2
+      ! The ADIOS2 module is always initialized with the file "adios2_config.xml"
+      ! This can be improved
       call adios2_init(adios, trim(config_file), decomp_2d_comm, ierror)
       if (ierror /= 0) then
          call decomp_2d_abort(__FILE__, __LINE__, ierror, &
@@ -136,11 +141,11 @@ contains
       engine_live(:) = .false.
 #endif
 
-      ! Init the default families of readers / writers
+      ! Initialize the default families of readers / writers
       call default_io_family%init("default")
 #ifdef ADIOS2
       ! ADIOS2 does not support all IO operations currently
-      allocate(default_mpi_io_family)
+      allocate (default_mpi_io_family)
       call default_mpi_io_family%mpi_init("default_mpi")
 #else
       default_mpi_io_family => default_io_family
@@ -152,6 +157,9 @@ contains
 
    end subroutine decomp_2d_io_init
 
+   !
+   ! Finalize the IO module
+   !
    subroutine decomp_2d_io_finalise()
 
 #ifdef ADIOS2
@@ -180,9 +188,9 @@ contains
       call default_io_family%fin()
 #ifdef ADIOS2
       call default_mpi_io_family%fin()
-      deallocate(default_mpi_io_family)
+      deallocate (default_mpi_io_family)
 #endif
-      nullify(default_mpi_io_family)
+      nullify (default_mpi_io_family)
 
 #ifdef PROFILER
       if (decomp_profiler_io) call decomp_profiler_end("io_fin")
@@ -1388,23 +1396,24 @@ contains
 
    end subroutine mpiio_write_real_coarse
 
+   !
+   ! This interface is deprecated and will be removed
+   !
    subroutine decomp_2d_register_variable(io_name, varname, ipencil, icoarse, iplane, type, opt_decomp, opt_nplanes)
-
-      use, intrinsic :: iso_fortran_env, only: real32, real64
 
       implicit none
 
+      character(len=*), intent(in) :: io_name
+      character(len=*), intent(in) :: varname
       integer, intent(IN) :: ipencil !(x-pencil=1; y-pencil=2; z-pencil=3)
       integer, intent(IN) :: icoarse !(nstat=1; nvisu=2)
-      character(len=*), intent(in) :: io_name
-      integer, intent(in) :: type
       integer, intent(in) :: iplane
+      integer, intent(in) :: type
       type(decomp_info), intent(in), optional :: opt_decomp
       integer, intent(in), optional :: opt_nplanes
 
-      integer :: nplanes
-      character(len=*), intent(in) :: varname
 #ifdef ADIOS2
+      integer :: nplanes
       integer, dimension(3) :: sizes, subsizes, starts
       type(adios2_io) :: io_handle
       type(adios2_variable) :: var_handle

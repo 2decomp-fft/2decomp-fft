@@ -1,6 +1,6 @@
-file(GLOB files_fft_c2c fft_c2c_x.f90)
-file(GLOB files_fft_r2c fft_r2c_x.f90)
-file(GLOB files_fft_grid fft_grid_x.f90)
+file(GLOB files_fft_c2c fft_c2c_x.f90 ../utilities.f90)
+file(GLOB files_fft_r2c fft_r2c_x.f90 ../utilities.f90)
+file(GLOB files_fft_grid fft_grid_x.f90 ../utilities.f90)
 
 include_directories(${CMAKE_SOURCE_DIR}/src)
 

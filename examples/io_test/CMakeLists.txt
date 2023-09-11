@@ -1,8 +1,8 @@
-file(GLOB files_test io_test.f90)
-file(GLOB files_read io_read.f90)
-file(GLOB files_var_test io_var_test.f90)
-file(GLOB files_plane_test io_plane_test.f90)
-file(GLOB files_bench io_bench.f90)
+file(GLOB files_test io_test.f90 ../utilities.f90)
+file(GLOB files_read io_read.f90 ../utilities.f90)
+file(GLOB files_var_test io_var_test.f90 ../utilities.f90)
+file(GLOB files_plane_test io_plane_test.f90 ../utilities.f90)
+file(GLOB files_bench io_bench.f90 ../utilities.f90)
 
 include_directories(${CMAKE_SOURCE_DIR}/src)
 

@@ -1,4 +1,4 @@
-file(GLOB files_test init_test.f90)
+file(GLOB files_test init_test.f90 ../utilities.f90)
 include_directories(${CMAKE_SOURCE_DIR}/src)
 
 add_executable(init_test ${files_test})

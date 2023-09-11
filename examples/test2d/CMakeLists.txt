@@ -1,6 +1,6 @@
-file(GLOB files_test2d test2d.f90)
-file(GLOB files_timing2d_real timing2d_real.f90)
-file(GLOB files_timing2d_complex timing2d_complex.f90)
+file(GLOB files_test2d test2d.f90 ../utilities.f90)
+file(GLOB files_timing2d_real timing2d_real.f90 ../utilities.f90)
+file(GLOB files_timing2d_complex timing2d_complex.f90 ../utilities.f90)
 
 include_directories(${CMAKE_SOURCE_DIR}/src)
 

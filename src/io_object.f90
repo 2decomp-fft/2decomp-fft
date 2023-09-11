@@ -91,9 +91,12 @@
 !       should allow reduced precision operations easily
 !
 
-submodule(decomp_2d_io) decomp_2d_io_objects
+module decomp_2d_io_object
 
    use decomp_2d_constants
+   use decomp_2d_io_family
+   use decomp_2d_mpi
+   use decomp_2d
 #ifdef ADIOS2
    use adios2
 #endif
@@ -101,272 +104,29 @@ submodule(decomp_2d_io) decomp_2d_io_objects
 
    implicit none
 
+   ! derived type to store info for a reader / writer
+   type, public :: d2d_io
+      type(d2d_io_family), pointer :: family        ! Associated family
+      character(:), allocatable :: label            ! Label of the writer
+      logical :: is_open = .false.                  ! True if the writer is open
+#ifdef ADIOS2
+      logical :: is_active = .false.                ! True if the writer is active (adios2 only)
+      type(adios2_engine) :: engine                 ! adios2 only (only one engine / writer currently)
+#endif
+      integer :: fh                                 ! File handle (mpi only)
+      integer(kind=MPI_OFFSET_KIND) :: disp         ! Displacement offset (mpi only)
+   contains
+      procedure :: open => d2d_io_open              ! Open the IO
+      procedure :: start => d2d_io_start            ! Start the IO
+      procedure :: open_start => d2d_io_open_start  ! Open and start the IO
+      procedure :: end => d2d_io_end                ! End the IO
+      procedure :: close => d2d_io_close            ! Close the IO
+      procedure :: end_close => d2d_io_end_close    ! End and close the IO
+   end type d2d_io
+
+   private
+
 contains
-
-   !
-   ! Initialize a new family of readers / writers (default type)
-   !
-   subroutine d2d_io_family_init(family, label)
-
-      implicit none
-
-      class(d2d_io_family), intent(inout) :: family
-      character(len=*), intent(in) :: label
-
-#ifdef ADIOS2
-      call family%adios2_init(label)
-#else
-      call family%mpi_init(label)
-#endif
-
-   end subroutine d2d_io_family_init
-
-   !
-   ! Initialize a new family of MPI readers / writers
-   !
-   subroutine d2d_io_family_mpi_init(family, label)
-
-      implicit none
-
-      class(d2d_io_family), intent(inout) :: family
-      character(len=*), intent(in) :: label
-
-#ifdef PROFILER
-      if (decomp_profiler_io) call decomp_profiler_start("d2d_io_family_mpi_init")
-#endif
-
-      ! Safety check
-      if (family%type /= decomp_2d_io_none) then
-         call decomp_2d_abort(__FILE__, __LINE__, -1, "Family was not cleared "//label)
-      end if
-
-      family%type = decomp_2d_io_mpi
-      family%label = label
-
-#ifdef PROFILER
-      if (decomp_profiler_io) call decomp_profiler_end("d2d_io_family_mpi_init")
-#endif
-
-   end subroutine d2d_io_family_mpi_init
-
-   !
-   ! Initialize a new family of ADIOS2 readers / writers
-   !
-   subroutine d2d_io_family_adios2_init(family, label)
-
-      implicit none
-
-      class(d2d_io_family), intent(inout) :: family
-      character(len=*), intent(in) :: label
-
-#ifdef ADIOS2
-      integer :: ierror
-#endif
-
-#ifdef PROFILER
-      if (decomp_profiler_io) call decomp_profiler_start("d2d_io_family_adios2_init")
-#endif
-
-      ! Safety check
-      if (family%type /= decomp_2d_io_none) then
-         call decomp_2d_abort(__FILE__, __LINE__, -1, "Family was not cleared "//label)
-      end if
-
-#ifndef ADIOS2
-      call decomp_2d_abort(__FILE__, __LINE__, -1, "ADIOS2 is not available")
-#else
-      family%type = decomp_2d_io_adios2
-      family%label = label
-
-      ! Advanced API
-      ! The external code can set its own object of type adios2_adios before calling init
-      if (.not. associated(family%adios)) then
-         family%adios => adios
-      end if
-
-      if (family%adios%valid) then
-         call adios2_declare_io(family%io, family%adios, label, ierror)
-         if (ierror /= 0) then
-            call decomp_2d_abort(__FILE__, __LINE__, ierror, "adios2_declare_io "//label)
-         end if
-      else
-         call decomp_2d_abort(__FILE__, __LINE__, -1, "adios object not valid")
-      end if
-#endif
-
-#ifdef PROFILER
-      if (decomp_profiler_io) call decomp_profiler_end("d2d_io_family_adios2_init")
-#endif
-
-   end subroutine d2d_io_family_adios2_init
-
-   !
-   ! Clear the given family of readers / writers
-   !
-   subroutine d2d_io_family_fin(family)
-
-      implicit none
-
-      class(d2d_io_family), intent(inout) :: family
-
-#ifdef ADIOS2
-      integer :: ierror
-#endif
-
-#ifdef PROFILER
-      if (decomp_profiler_io) call decomp_profiler_start("d2d_io_family_fin")
-#endif
-
-      ! Safety check
-      if (family%type == decomp_2d_io_none) then
-         call decomp_2d_warning(__FILE__, __LINE__, -1, "Family was already cleared.")
-         return
-      end if
-
-#ifdef ADIOS2
-      if (family%type == decomp_2d_io_adios2) then
-         call adios2_flush_all_engines(family%io, ierror)
-         if (ierror /= 0) then
-            call decomp_2d_abort(__FILE__, __LINE__, ierror, &
-                                 "adios2_flush_all_engines "//family%label)
-         end if
-         call adios2_remove_all_variables(family%io, ierror)
-         if (ierror /= 0) then
-            call decomp_2d_abort(__FILE__, __LINE__, ierror, &
-                                 "adios2_remove_all_variables "//family%label)
-         end if
-         call adios2_remove_all_attributes(family%io, ierror)
-         if (ierror /= 0) then
-            call decomp_2d_abort(__FILE__, __LINE__, ierror, &
-                                 "adios2_remove_all_attributes "//family%label)
-         end if
-         nullify (family%adios)
-      end if
-#endif
-
-      family%type = decomp_2d_io_none
-      deallocate (family%label)
-
-#ifdef PROFILER
-      if (decomp_profiler_io) call decomp_profiler_end("d2d_io_family_fin")
-#endif
-
-   end subroutine d2d_io_family_fin
-
-   !
-   ! Register one variable for the given family of readers / writers
-   !    1 <= ipencil <= 3
-   !    0 <= iplane <= 3
-   !
-   module subroutine d2d_io_family_register_var(family, varname, ipencil, iplane, &
-                                                type, opt_decomp, opt_nplanes)
-
-      implicit none
-
-      class(d2d_io_family), intent(inout) :: family
-      character(len=*), intent(in) :: varname
-      integer, intent(in) :: ipencil ! (x-pencil=1; y-pencil=2; z-pencil=3)
-      integer, intent(in) :: iplane
-      integer, intent(in) :: type
-      type(decomp_info), intent(in), optional :: opt_decomp
-      integer, intent(in), optional :: opt_nplanes
-
-#ifdef ADIOS2
-      integer :: nplanes
-      type(adios2_variable) :: var_handle
-      integer, dimension(3) :: sizes, subsizes, starts
-      type(adios2_variable) :: var_handle
-      integer, parameter :: ndims = 3
-      logical, parameter :: adios2_constant_dims = .true.
-      integer :: data_type
-      integer :: ierror
-#endif
-
-#ifdef PROFILER
-      if (decomp_profiler_io) call decomp_profiler_start("d2d_io_family_register_var")
-#endif
-
-#ifdef ADIOS2
-      if (family%type == decomp_2d_io_adios2) then
-
-         ! Prepare to register
-         if (iplane == 0) then
-            if (present(opt_decomp)) then
-               call coarse_extents(ipencil, 0, sizes, subsizes, starts, opt_decomp)
-            else
-               call coarse_extents(ipencil, 0, sizes, subsizes, starts)
-            end if
-         else
-            if (present(opt_nplanes)) then
-               nplanes = opt_nplanes
-            else
-               nplanes = 1
-            end if
-            if (present(opt_decomp)) then
-               call plane_extents(sizes, subsizes, starts, iplane, opt_decomp, opt_nplanes=nplanes)
-            else
-               call plane_extents(sizes, subsizes, starts, iplane, opt_nplanes=nplanes)
-            end if
-         end if
-
-         ! Register
-         if (family%io%valid) then
-            call adios2_inquire_variable(var_handle, family%io, varname, ierror)
-            if (ierror /= 0) then
-               call decomp_2d_abort(__FILE__, __LINE__, ierror, &
-                                    "adios2_inquire_variable "//varname)
-            end if
-            if (.not. var_handle%valid) then
-
-               ! New variable
-               if (nrank == 0) then
-                  print *, "Registering variable for IO: ", varname
-               end if
-
-               ! Need to set the ADIOS2 data type
-               if (type == kind(0._real64)) then
-                  ! Double
-                  data_type = adios2_type_dp
-               else if (type == kind(0._real32)) then
-                  ! Single
-                  data_type = adios2_type_real
-               else
-                  ! This could be expanded
-                  ! adios2_type_complex
-                  ! adios2_type_complex_dp
-                  ! adios2_type_integer1
-                  ! adios2_type_integer2
-                  ! adios2_type_integer4
-                  ! adios2_type_integer8
-                  !
-                  call decomp_2d_abort(__FILE__, __LINE__, type, &
-                                       "Trying to write unknown data type!")
-               end if
-
-               call adios2_define_variable(var_handle, family%io, varname, data_type, ndims, &
-                                           int(sizes, kind=8), int(starts, kind=8), &
-                                           int(subsizes, kind=8), adios2_constant_dims, ierror)
-               if (ierror /= 0) then
-                  call decomp_2d_abort(__FILE__, __LINE__, ierror, &
-                                       "adios2_define_variable "//varname)
-               end if
-            end if
-         else
-            call decomp_2d_abort(__FILE__, __LINE__, -1, &
-                                 "trying to register variable with invalid IO!")
-         end if
-      end if
-#else
-      associate (fm => family, vr => varname, pc => ipencil, &
-                 pl => iplane, tp => type, od => opt_decomp, on => opt_nplanes)
-      end associate
-#endif
-
-#ifdef PROFILER
-      if (decomp_profiler_io) call decomp_profiler_end("d2d_io_family_register_var")
-#endif
-
-   end subroutine d2d_io_family_register_var
 
    !
    ! Open the given reader / writer
@@ -647,4 +407,4 @@ contains
 
    end subroutine d2d_io_end_close
 
-end submodule decomp_2d_io_objects
+end submodule decomp_2d_io_object

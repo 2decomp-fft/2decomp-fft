@@ -8,6 +8,7 @@ module decomp_2d_io
    use decomp_2d
    use decomp_2d_constants
    use decomp_2d_io_family
+   use decomp_2d_io_object
    use decomp_2d_mpi
    use MPI
 
@@ -38,26 +39,6 @@ module decomp_2d_io
    type(adios2_engine), dimension(MAX_IOH), save :: engine_registry
 #endif
 
-   ! derived type to store info for a reader / writer
-   type, public :: d2d_io
-      type(d2d_io_family), pointer :: family        ! Associated family
-      character(:), allocatable :: label            ! Label of the writer
-      logical :: is_open = .false.                  ! True if the writer is open
-#ifdef ADIOS2
-      logical :: is_active = .false.                ! True if the writer is active (adios2 only)
-      type(adios2_engine) :: engine                 ! adios2 only (only one engine / writer currently)
-#endif
-      integer :: fh                                 ! File handle (mpi only)
-      integer(kind=MPI_OFFSET_KIND) :: disp         ! Displacement offset (mpi only)
-   contains
-      procedure :: open => d2d_io_open              ! Open the IO
-      procedure :: start => d2d_io_start            ! Start the IO
-      procedure :: open_start => d2d_io_open_start  ! Open and start the IO
-      procedure :: end => d2d_io_end                ! End the IO
-      procedure :: close => d2d_io_close            ! Close the IO
-      procedure :: end_close => d2d_io_end_close    ! End and close the IO
-   end type d2d_io
-
    private        ! Make everything private unless declared public
 
    public :: decomp_2d_write_one, decomp_2d_read_one, &
@@ -69,45 +50,7 @@ module decomp_2d_io
              decomp_2d_io_init, decomp_2d_io_finalise, & ! XXX: initialise/finalise 2decomp&fft IO module
              decomp_2d_init_io, & ! XXX: initialise an io process - awful naming
              decomp_2d_register_variable, &
-             decomp_2d_open_io, decomp_2d_close_io, &
-             decomp_2d_start_io, decomp_2d_end_io, &
              gen_iodir_name
-
-   ! Interface for the writers
-
-   interface
-
-      module subroutine d2d_io_open(writer, family, io_dir, mode)
-         class(d2d_io), intent(inout) :: writer
-         type(d2d_io_family), target, intent(in) :: family
-         character(len=*), intent(in) :: io_dir
-         integer, intent(in) :: mode
-      end subroutine d2d_io_open
-
-      module subroutine d2d_io_start(writer)
-         class(d2d_io), intent(inout) :: writer
-      end subroutine d2d_io_start
-
-      module subroutine d2d_io_open_start(writer, family, io_dir, mode)
-         class(d2d_io), intent(inout) :: writer
-         type(d2d_io_family), target, intent(in) :: family
-         character(len=*), intent(in) :: io_dir
-         integer, intent(in) :: mode
-      end subroutine d2d_io_open_start
-
-      module subroutine d2d_io_end(writer)
-         class(d2d_io), intent(inout) :: writer
-      end subroutine d2d_io_end
-
-      module subroutine d2d_io_close(writer)
-         class(d2d_io), intent(inout) :: writer
-      end subroutine d2d_io_close
-
-      module subroutine d2d_io_end_close(writer)
-         class(d2d_io), intent(inout) :: writer
-      end subroutine d2d_io_end_close
-
-   end interface
 
    ! Generic interface to handle multiple data types
 

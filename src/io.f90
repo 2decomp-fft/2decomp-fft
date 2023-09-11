@@ -5,9 +5,9 @@
 
 module decomp_2d_io
 
-   use decomp_2d_constants
    use decomp_2d
    use decomp_2d_constants
+   use decomp_2d_io_family
    use decomp_2d_mpi
    use MPI
 
@@ -16,6 +16,10 @@ module decomp_2d_io
 #endif
 
    implicit none
+
+   ! Default IO family of readers / writers
+   type(d2d_io_family), target, save :: default_io_family
+   type(d2d_io_family), pointer, save :: default_mpi_io_family => null()
 
    integer, parameter, public :: decomp_2d_write_mode = 1, decomp_2d_read_mode = 2, &
                                  decomp_2d_append_mode = 3
@@ -33,22 +37,6 @@ module decomp_2d_io
    logical, dimension(MAX_IOH), target, save :: engine_live
    type(adios2_engine), dimension(MAX_IOH), save :: engine_registry
 #endif
-
-   ! derived type to store info for a family of readers / writers
-   type, public :: d2d_io_family
-      integer :: type = decomp_2d_io_none                     ! Type of the writer
-      character(:), allocatable :: label                      ! Label of the writer
-#ifdef ADIOS2
-      type(adios2_adios), pointer :: adios                    ! adios2 only
-      type(adios2_io) :: io                                   ! adios2 only
-#endif
-   contains
-      procedure :: init => d2d_io_family_init                 ! ADIOS2 writer if possible, MPI otherwise
-      procedure :: mpi_init => d2d_io_family_mpi_init         ! Force MPI writer
-      procedure :: adios2_init => d2d_io_family_adios2_init   ! Force ADIOS2 writer
-      procedure :: fin => d2d_io_family_fin                   ! Clear the writer
-      procedure :: register_var => d2d_io_family_register_var ! Register a variable
-   end type d2d_io_family
 
    ! derived type to store info for a reader / writer
    type, public :: d2d_io
@@ -88,35 +76,6 @@ module decomp_2d_io
    ! Interface for the writers
 
    interface
-
-      module subroutine d2d_io_family_init(family, label)
-         class(d2d_io_family), intent(inout) :: family
-         character(len=*), intent(in) :: label
-      end subroutine d2d_io_family_init
-
-      module subroutine d2d_io_family_mpi_init(family, label)
-         class(d2d_io_family), intent(inout) :: family
-         character(len=*), intent(in) :: label
-      end subroutine d2d_io_family_mpi_init
-
-      module subroutine d2d_io_family_adios2_init(family, label)
-         class(d2d_io_family), intent(inout) :: family
-         character(len=*), intent(in) :: label
-      end subroutine d2d_io_family_adios2_init
-
-      module subroutine d2d_io_family_fin(family)
-         class(d2d_io_family), intent(inout) :: family
-      end subroutine d2d_io_family_fin
-
-      module subroutine d2d_io_family_register_var(family, varname, ipencil, iplane, type, opt_decomp, opt_nplanes)
-         class(d2d_io_family), intent(inout) :: family
-         character(len=*), intent(in) :: varname
-         integer, intent(in) :: ipencil
-         integer, intent(in) :: iplane
-         integer, intent(in) :: type
-         type(decomp_info), intent(in), optional :: opt_decomp
-         integer, intent(in), optional :: opt_nplanes
-      end subroutine d2d_io_family_register_var
 
       module subroutine d2d_io_open(writer, family, io_dir, mode)
          class(d2d_io), intent(inout) :: writer
@@ -220,24 +179,36 @@ contains
       character(len=80) :: config_file = "adios2_config.xml"
 #endif
 
-#ifdef ADIOS2
 #ifdef PROFILER
       if (decomp_profiler_io) call decomp_profiler_start("io_init")
 #endif
 
+#ifdef ADIOS2
       call adios2_init(adios, trim(config_file), decomp_2d_comm, ierror)
       if (ierror /= 0) then
          call decomp_2d_abort(__FILE__, __LINE__, ierror, &
                               "Error initialising ADIOS2 - is "//trim(config_file)//" present and valid?")
       end if
+      call decomp_2d_io_family_set_default_adios(adios)
       engine_live(:) = .false.
+#endif
+
+      ! Init the default families of readers / writers
+      call default_io_family%init("default")
+#ifdef ADIOS2
+      ! ADIOS2 does not support all IO operations currently
+      allocate(default_mpi_io_family)
+      call default_mpi_io_family%mpi_init("default_mpi")
+#else
+      default_mpi_io_family => default_io_family
+#endif
 
 #ifdef PROFILER
       if (decomp_profiler_io) call decomp_profiler_end("io_init")
 #endif
-#endif
 
    end subroutine decomp_2d_io_init
+
    subroutine decomp_2d_io_finalise()
 
 #ifdef ADIOS2
@@ -250,17 +221,28 @@ contains
       integer :: ierror
 #endif
 
-#ifdef ADIOS2
 #ifdef PROFILER
       if (decomp_profiler_io) call decomp_profiler_start("io_fin")
 #endif
+
+#ifdef ADIOS2
       call adios2_finalize(adios, ierror)
       if (ierror /= 0) then
          call decomp_2d_abort(__FILE__, __LINE__, ierror, "adios2_finalize")
       end if
+      call decomp_2d_io_family_set_default_adios()
+#endif
+
+      ! Finalize the default IO families
+      call default_io_family%fin()
+#ifdef ADIOS2
+      call default_mpi_io_family%fin()
+      deallocate(default_mpi_io_family)
+#endif
+      nullify(default_mpi_io_family)
+
 #ifdef PROFILER
       if (decomp_profiler_io) call decomp_profiler_end("io_fin")
-#endif
 #endif
 
    end subroutine decomp_2d_io_finalise

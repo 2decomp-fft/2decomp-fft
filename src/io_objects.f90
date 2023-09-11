@@ -11,9 +11,7 @@
 !=======================================================================
 
 !
-! This is the IO submodule for reader / writer and families of readers / writers
-!    => Initialize / finalize a family of readers / writers
-!    => Register a variable in a family of readers / writers
+! This is the IO module for readers / writers
 !    => Open / close a reader / writer
 !    => Start / end a reader / writer
 !

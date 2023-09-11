@@ -5,6 +5,7 @@ file(GLOB files_decomp factor.f90
 		       log.f90
 		       io.f90
 		       io_objects.f90
+		       io_family.f90
 		       interp.f90)
 include_directories(${CMAKE_SOURCE_DIR}/src)
 

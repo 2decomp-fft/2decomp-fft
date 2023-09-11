@@ -14,11 +14,40 @@
 ! This submodule allow interpolation between grids
 !
 
-submodule(decomp_2d) d2d_interp
+module decomp_2d_interp
 
    use decomp_2d_constants
+   use decomp_2d_mpi
+   use decomp_2d
 
    implicit none
+
+   public :: decomp_2d_interp_var3d
+
+   ! Interpolation subroutines
+   interface decomp_2d_interp_var3d
+      module subroutine d2d_interp_var3d_0(ipencil, varin, decompin, varout, decompout, interp)      
+         integer, intent(in) :: ipencil
+         type(decomp_info), intent(in) :: decompin, decompout
+         real(mytype), dimension(:, :, :), intent(in) :: varin
+         real(mytype), dimension(:, :, :), intent(out) :: varout                                     
+         integer, intent(in), optional :: interp                                                     
+      end subroutine d2d_interp_var3d_0
+      module subroutine d2d_interp_var3d_1(ipencil, varin, varout, decompout, interp)                
+         integer, intent(in) :: ipencil
+         type(decomp_info), intent(in) :: decompout
+         real(mytype), dimension(:, :, :), intent(in) :: varin
+         real(mytype), dimension(:, :, :), intent(out) :: varout                                     
+         integer, intent(in), optional :: interp                                                     
+      end subroutine d2d_interp_var3d_1
+      module subroutine d2d_interp_var3d_2(ipencil, varin, decompin, varout, interp)                 
+         integer, intent(in) :: ipencil
+         type(decomp_info), intent(in) :: decompin
+         real(mytype), dimension(:, :, :), intent(in) :: varin
+         real(mytype), dimension(:, :, :), intent(out) :: varout                                     
+         integer, intent(in), optional :: interp                                                     
+      end subroutine d2d_interp_var3d_2                                                              
+   end interface decomp_2d_interp_var3d
 
 contains
 
@@ -36,7 +65,7 @@ contains
       real(mytype), dimension(:, :, :), intent(out) :: varout
       integer, intent(in), optional :: interp
 
-      call d2d_interp_var3d(ipencil, varin, decomp_main, varout, decompout, interp)
+      call decomp_2d_interp_var3d(ipencil, varin, decomp_main, varout, decompout, interp)
 
    end subroutine d2d_interp_var3d_1
 
@@ -54,7 +83,7 @@ contains
       real(mytype), dimension(:, :, :), intent(out) :: varout
       integer, intent(in), optional :: interp
 
-      call d2d_interp_var3d(ipencil, varin, decompin, varout, decomp_main, interp)
+      call decomp_2d_interp_var3d(ipencil, varin, decompin, varout, decomp_main, interp)
 
    end subroutine d2d_interp_var3d_2
 
@@ -169,4 +198,4 @@ contains
 
    end subroutine interp_var3d_basic
 
-end submodule d2d_interp
+end module decomp_2d_interp

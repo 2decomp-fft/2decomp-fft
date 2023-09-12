@@ -19,6 +19,9 @@ module decomp_2d_io
 
    implicit none
 
+   ! Default reduced precision for write_one
+   logical, parameter :: default_opt_reduce_prec = .false.
+
    ! Default IO family of readers / writers
    type(d2d_io_family), target, save :: default_io_family
    type(d2d_io_family), pointer, save :: default_mpi_io_family => null()
@@ -293,7 +296,7 @@ contains
       if (present(opt_reduce_prec)) then
          reduce = opt_reduce_prec
       else
-         reduce = .false.
+         reduce = default_opt_reduce_prec
       end if
 
       if (present(opt_decomp)) then
@@ -352,7 +355,7 @@ contains
       if (present(opt_reduce_prec)) then
          reduce = opt_reduce_prec
       else
-         reduce = .false.
+         reduce = default_opt_reduce_prec
       end if
 
       if (present(opt_decomp)) then
@@ -558,6 +561,7 @@ contains
          call decomp_2d_abort(__FILE__, __LINE__, 0, "Invalid arguments")
       end if
 
+      ! Default write mode is deferred
       if (present(opt_mode)) then
          mode = opt_mode
       else

@@ -446,15 +446,19 @@ contains
 
       ! Open and start if needed
       if (.not.use_opt_io) then
-         ! Generate a name with varname and opt_dirname
-         if (io%family%type == DECOMP_2D_IO_MPI) then
-            fullname = trim(opt_dirname)//"/"//trim(varname)
-         else ! if (io%family%type == DECOMP_2D_IO_ADIOS2) then ! -Werror=maybe-uninitialized
-            fullname = trim(opt_dirname)
-         end if
          if (present(opt_family)) then
+            if (opt_family%type == DECOMP_2D_IO_MPI) then
+               fullname = trim(opt_dirname)//"/"//trim(varname)
+            else ! if (io%family%type == DECOMP_2D_IO_ADIOS2) then ! -Werror=maybe-uninitialized
+               fullname = trim(opt_dirname)
+            end if
             call io%open_start(opt_family, fullname, decomp_2d_write_mode)
          else
+            if (default_io_family%type == DECOMP_2D_IO_MPI) then
+               fullname = trim(opt_dirname)//"/"//trim(varname)
+            else ! if (io%family%type == DECOMP_2D_IO_ADIOS2) then ! -Werror=maybe-uninitialized
+               fullname = trim(opt_dirname)
+            end if
             call io%open_start(default_io_family, fullname, decomp_2d_write_mode)
          end if
       end if

@@ -108,6 +108,15 @@ module decomp_2d_constants
    integer, parameter, public :: DECOMP_2D_IO_ADIOS2 = 2
 
    !
+   ! Choice for IO operations
+   !
+   integer, parameter, public :: DECOMP_2D_WRITE_MODE = 1, &
+                                 DECOMP_2D_READ_MODE = 2, &
+                                 DECOMP_2D_APPEND_MODE = 3
+
+   integer, parameter, public :: DECOMP_2D_WRITE_DEFERRED = 1, &
+                                 DECOMP_2D_WRITE_SYNC = 2
+   !
    ! Interpolation methods
    !
    integer, parameter, public :: DECOMP_2D_INTERP_BASIC = 0

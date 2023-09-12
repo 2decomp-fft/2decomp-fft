@@ -1,14 +1,4 @@
-!=======================================================================
-! This is part of the 2DECOMP&FFT library
-!
-! 2DECOMP&FFT is a software framework for general-purpose 2D (pencil)
-! decomposition. It also implements a highly scalable distributed
-! three-dimensional Fast Fourier Transform (FFT).
-!
-! Copyright (C) 2009-2012 Ning Li, the Numerical Algorithms Group (NAG)
-! Copyright (C) 2021               the University of Edinburgh (UoE)
-!
-!=======================================================================
+!! SPDX-License-Identifier: BSD-3-Clause
 
 !
 ! This is the IO module for families of readers / writers
@@ -20,6 +10,7 @@ module decomp_2d_io_family
 
    use decomp_2d_constants
    use decomp_2d_mpi
+   use decomp_2d_io_utilities
    use decomp_2d
    use MPI
 #ifdef ADIOS2
@@ -274,19 +265,8 @@ contains
 #ifdef ADIOS2
       if (family%type == decomp_2d_io_adios2) then
 
-         sizes(1) = decomp%xsz(1)
-         sizes(2) = decomp%ysz(2)
-         sizes(3) = decomp%zsz(3)
-         if (ipencil == 1) then
-            starts(:) = decomp%xst(:) - 1
-            subsizes(:) = decomp%xsz(:)
-         else if (ipencil == 2) then
-            starts(:) = decomp%yst(:) - 1
-            subsizes(:) = decomp%ysz(:)
-         else
-            starts(:) = decomp%zst(:) - 1
-            subsizes(:) = decomp%zsz(:)
-         end if
+         ! Process the size
+         call io_get_size(ipencil, decomp, sizes, starts, subsizes)
          call adios2_register_var(family, varname, sizes, starts, subsizes, type)
 
       end if
@@ -375,22 +355,7 @@ contains
 #ifdef ADIOS2
       if (family%type == decomp_2d_io_adios2) then
 
-         sizes(1) = decomp%xsz(1)
-         sizes(2) = decomp%ysz(2)
-         sizes(3) = decomp%zsz(3)
-         if (ipencil == 1) then
-            sizes(1) = nplanes
-            starts(:) = decomp%xst(:) - 1
-            subsizes(:) = decomp%xsz(:)
-         else if (ipencil == 2) then
-            sizes(2) = nplanes
-            starts(:) = decomp%yst(:) - 1
-            subsizes(:) = decomp%ysz(:)
-         else
-            sizes(3) = nplanes
-            starts(:) = decomp%zst(:) - 1
-            subsizes(:) = decomp%zsz(:)
-         end if
+         call io_get_size(ipencil, decomp, sizes, starts, subsizes, nplanes)
          call adios2_register_var(family, varname, sizes, starts, subsizes, type)
 
       end if

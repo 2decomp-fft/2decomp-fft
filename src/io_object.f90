@@ -1,14 +1,4 @@
-!=======================================================================
-! This is part of the 2DECOMP&FFT library
-!
-! 2DECOMP&FFT is a software framework for general-purpose 2D (pencil)
-! decomposition. It also implements a highly scalable distributed
-! three-dimensional Fast Fourier Transform (FFT).
-!
-! Copyright (C) 2009-2012 Ning Li, the Numerical Algorithms Group (NAG)
-! Copyright (C) 2021               the University of Edinburgh (UoE)
-!
-!=======================================================================
+!! SPDX-License-Identifier: BSD-3-Clause
 
 !
 ! This is the IO module for readers / writers
@@ -25,7 +15,6 @@
 !    Add a log subroutine for the derived type reader / writer ?
 !    Have a default reader / writer ? (just like decomp_main for the derived type decomp_info)
 !    Keep type-bound procedures or avoid them ?
-!    Move the subroutines gen_iodir_name, coarse_extents and plane_extents inside io_objects.f90 to hide them
 !
 ! Simplification
 !    Remove icoarse and the special cases icoarse > 0
@@ -61,34 +50,7 @@
 !       Rename decomp_2d_read_inflow => decomp_2d_io_read_inflow
 !       Keep decomp_2d_io_init
 !       Rename decomp_2d_io_finalise => decomp_2d_io_fin
-!       Make gen_iodir_name private
 !    Adapt the examples accordingly
-!
-! Experiment new IO template ? Example for writing one 3D array :
-!    4 public write_one subroutines
-!       single precision real
-!       double precision real
-!       single precision complex
-!       double precision complex
-!       example :
-!          write_one_sreal(ipencil, var, varname, writer, opt_decomp)
-!             real(0._real32), dimension(:,:,:), intent(in) :: var
-!             call write_one_generic(ipencil, varname, writer, opt_decomp, svar = var)
-!          write_one_dreal(ipencil, var, varname, writer, opt_decomp)
-!             real(0._real64), dimension(:,:,:), intent(in) :: var
-!             call write_one_generic(ipencil, varname, writer, opt_decomp, dvar = var)
-!    1 private write_one subroutine to do the IO
-!       4 optional arguments (SP real, DP real, SP cplx, DP cplx)
-!       example :
-!          write_one_generic(ipencil, varname, writer, opt_decomp, svar, dvar, cvar, cdvar)
-!             real(0._real32), dimension(:,:,:), optional, intent(in) :: svar
-!             real(0._real64), dimension(:,:,:), optional, intent(in) :: dvar
-!             complex(0._real32), dimension(:,:,:), optional, intent(in) :: cvar
-!             complex(0._real64), dimension(:,:,:), optional, intent(in) :: cdvar
-!
-!    Remarks :
-!       no need to include a file, everything happens in one subroutine
-!       should allow reduced precision operations easily
 !
 
 module decomp_2d_io_object
@@ -206,9 +168,21 @@ contains
       else if (family%type == decomp_2d_io_adios2) then
 #ifdef ADIOS2
          if (family%io%valid) then
-            call adios2_open(writer%engine, family%io, &
-                             trim(gen_iodir_name(io_dir, family%label)), &
-                             access_mode, ierror)
+            if (writer%family%io%engine_type == "BP4") then
+               call adios2_open(writer%engine, family%io, &
+                                trim(io_dir)//".bp4", &
+                                access_mode, ierror)
+            else if (writer%family%io%engine_type == "HDF5") then
+               call adios2_open(writer%engine, family%io, &
+                                trim(io_dir)//".hdf5", &
+                                access_mode, ierror)
+            else if (writer%family%io%engine_type == "SST") then
+               call adios2_open(writer%engine, family%io, &
+                                trim(io_dir), &
+                                access_mode, ierror)
+            else
+               call decomp_2d_abort(__FILE__, __LINE__, 0, "Engine "//writer%family%io%engine_type//" Dir "//trim(io_dir)//".")
+            end if
             if (ierror /= 0) then
                call decomp_2d_abort(__FILE__, __LINE__, ierror, &
                                     "ERROR opening engine "//io_dir//" "//family%label)

@@ -540,14 +540,6 @@ contains
       if (decomp_profiler_io) call decomp_profiler_start("io_write_one")
 #endif
 
-      ! Safety check
-      if ((ipencil < 1) .or. (ipencil > 3)) then
-         call decomp_2d_abort(__FILE__, __LINE__, ipencil, "Error invalid value of ipencil ")
-      end if
-      if (.not. (present(opt_io)) .and. .not. (present(opt_dirname))) then
-         call decomp_2d_abort(__FILE__, __LINE__, 0, "Invalid arguments")
-      end if
-
       ! Use opt_io only if present and open
       if (present(opt_io)) then
          if (opt_io%is_open) then
@@ -557,6 +549,14 @@ contains
          end if
       else
          use_opt_io = .false.
+      end if
+
+      ! Safety check
+      if ((ipencil < 1) .or. (ipencil > 3)) then
+         call decomp_2d_abort(__FILE__, __LINE__, ipencil, "Error invalid value of ipencil ")
+      end if
+      if ((.not. use_opt_io) .and. (.not. present(opt_dirname))) then
+         call decomp_2d_abort(__FILE__, __LINE__, 0, "Invalid arguments")
       end if
 
       if (present(opt_mode)) then
@@ -654,14 +654,6 @@ contains
       if (decomp_profiler_io) call decomp_profiler_start("io_read_one")
 #endif
 
-      ! Safety check
-      if ((ipencil < 1) .or. (ipencil > 3)) then
-         call decomp_2d_abort(__FILE__, __LINE__, ipencil, "Error invalid value of ipencil ")
-      end if
-      if (.not. (present(opt_io)) .and. .not. (present(opt_dirname))) then
-         call decomp_2d_abort(__FILE__, __LINE__, 0, "Invalid arguments")
-      end if
-
       ! Use opt_io only if present and open
       if (present(opt_io)) then
          if (opt_io%is_open) then
@@ -671,6 +663,14 @@ contains
          end if
       else
          use_opt_io = .false.
+      end if
+
+      ! Safety check
+      if ((ipencil < 1) .or. (ipencil > 3)) then
+         call decomp_2d_abort(__FILE__, __LINE__, ipencil, "Error invalid value of ipencil ")
+      end if
+      if ((.not. use_opt_io) .and. (.not. present(opt_dirname))) then
+         call decomp_2d_abort(__FILE__, __LINE__, 0, "Invalid arguments")
       end if
 
       ! Open and start if needed

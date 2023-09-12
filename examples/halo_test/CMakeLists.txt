@@ -2,7 +2,7 @@ file(GLOB files_test halo_test.f90)
 include_directories(${CMAKE_SOURCE_DIR}/src)
 
 add_executable(halo_test ${files_test})
-target_link_libraries(halo_test PRIVATE decomp2d)
+target_link_libraries(halo_test PRIVATE decomp2d examples_utils)
 
 # Run the test(s)
 set(run_dir "${test_dir}/halo_test")

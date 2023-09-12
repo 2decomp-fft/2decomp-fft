@@ -46,8 +46,7 @@ module decomp_2d_io
              decomp_2d_write_plane, decomp_2d_write_every, &
              decomp_2d_write_subdomain, &
              decomp_2d_write_outflow, decomp_2d_read_inflow, &
-             decomp_2d_io_init, decomp_2d_io_finalise, & ! XXX: initialise/finalise 2decomp&fft IO module
-             decomp_2d_init_io, & ! XXX: initialise an io process - awful naming
+             decomp_2d_io_init, decomp_2d_io_fin, & ! XXX: initialise/finalise 2decomp&fft IO module
              decomp_2d_register_variable, &
              gen_iodir_name
 
@@ -159,7 +158,7 @@ contains
    !
    ! Finalize the IO module
    !
-   subroutine decomp_2d_io_finalise()
+   subroutine decomp_2d_io_fin()
 
 #ifdef ADIOS2
       use adios2
@@ -195,7 +194,7 @@ contains
       if (decomp_profiler_io) call decomp_profiler_end("io_fin")
 #endif
 
-   end subroutine decomp_2d_io_finalise
+   end subroutine decomp_2d_io_fin
 
    !
    ! High-level. Using MPI-IO / ADIOS2 to write a 3D array to a file
@@ -2131,31 +2130,6 @@ contains
 #endif
 
    end subroutine write_subdomain
-
-   subroutine decomp_2d_init_io(io_name)
-
-      implicit none
-
-      character(len=*), intent(in) :: io_name
-#ifdef ADIOS2
-      integer :: ierror
-      type(adios2_io) :: io
-#endif
-
-      if (nrank == 0) then
-         print *, "Initialising IO for ", io_name
-      end if
-
-#ifdef ADIOS2
-      if (adios%valid) then
-         call adios2_declare_io(io, adios, io_name, ierror)
-         if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "adios2_declare_io "//trim(io_name))
-      else
-         call decomp_2d_abort(__FILE__, __LINE__, -1, "couldn't declare IO - adios object not valid")
-      end if
-#endif
-
-   end subroutine decomp_2d_init_io
 
    subroutine decomp_2d_open_io(io_name, io_dir, mode)
 

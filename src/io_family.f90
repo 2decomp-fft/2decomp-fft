@@ -220,6 +220,7 @@ contains
                                            varname, &
                                            ipencil, &
                                            type, &
+                                           opt_reduce_prec, &
                                            opt_decomp)
 
       implicit none
@@ -228,16 +229,25 @@ contains
       character(len=*), intent(in) :: varname
       integer, intent(in) :: ipencil ! (x-pencil=1; y-pencil=2; z-pencil=3)
       integer, intent(in) :: type
+      logical, intent(in), optional :: opt_reduce_prec
       type(decomp_info), intent(in), optional :: opt_decomp
+
+      logical :: reduce_prec
 
 #ifdef PROFILER
       if (decomp_profiler_io) call decomp_profiler_start("d2d_io_family_register_var3d")
 #endif
 
-      if (present(opt_decomp)) then
-         call register_var3d(family, varname, ipencil, type, opt_decomp)
+      if (present(opt_reduce_prec)) then
+         reduce_prec = opt_reduce_prec
       else
-         call register_var3d(family, varname, ipencil, type, decomp_main)
+         reduce_prec = .false.
+      endif
+
+      if (present(opt_decomp)) then
+         call register_var3d(family, varname, ipencil, type, reduce_prec, opt_decomp)
+      else
+         call register_var3d(family, varname, ipencil, type, reduce_prec, decomp_main)
       end if
 
 #ifdef PROFILER
@@ -248,7 +258,7 @@ contains
    !
    ! Low-level. Register one 3D variable for the given family of readers / writers
    !
-   subroutine register_var3d(family, varname, ipencil, type, decomp)
+   subroutine register_var3d(family, varname, ipencil, type, reduce_prec, decomp)
 
       implicit none
 
@@ -256,6 +266,7 @@ contains
       character(len=*), intent(in) :: varname
       integer, intent(in) :: ipencil
       integer, intent(in) :: type
+      logical, intent(in) :: reduce_prec
       type(decomp_info), intent(in) :: decomp
 
 #ifdef ADIOS2
@@ -272,7 +283,13 @@ contains
 
          ! Process the size
          call io_get_size(ipencil, decomp, sizes, starts, subsizes)
-         call adios2_register_var(family, varname, sizes, starts, subsizes, type)
+         if (reduce_prec .and. type == MPI_DOUBLE_PRECISION) then
+            call adios2_register_var(family, varname, sizes, starts, subsizes, MPI_REAL)
+         else if (reduce_prec .and. type == MPI_DOUBLE_COMPLEX) then
+            call adios2_register_var(family, varname, sizes, starts, subsizes, MPI_COMPLEX)
+         else
+            call adios2_register_var(family, varname, sizes, starts, subsizes, type)
+         endif
 
       end if
 #else
@@ -296,6 +313,7 @@ contains
                                            varname, &
                                            ipencil, &
                                            type, &
+                                           opt_reduce_prec, &
                                            opt_decomp, &
                                            opt_nplanes)
 
@@ -305,14 +323,22 @@ contains
       character(len=*), intent(in) :: varname
       integer, intent(in) :: ipencil ! (x-pencil=1; y-pencil=2; z-pencil=3)
       integer, intent(in) :: type
+      logical, intent(in), optional :: opt_reduce_prec
       type(decomp_info), intent(in), optional :: opt_decomp
       integer, intent(in), optional :: opt_nplanes
 
+      logical :: reduce_prec
       integer :: nplanes
 
 #ifdef PROFILER
       if (decomp_profiler_io) call decomp_profiler_start("d2d_io_family_register_var3d")
 #endif
+
+      if (present(opt_reduce_prec)) then
+         reduce_prec = opt_reduce_prec
+      else
+         reduce_prec = .false.
+      endif
 
       if (present(opt_nplanes)) then
          nplanes = opt_nplanes
@@ -321,9 +347,9 @@ contains
       end if
 
       if (present(opt_decomp)) then
-         call register_var2d(family, varname, ipencil, type, opt_decomp, nplanes)
+         call register_var2d(family, varname, ipencil, type, reduce_prec, opt_decomp, nplanes)
       else
-         call register_var2d(family, varname, ipencil, type, decomp_main, nplanes)
+         call register_var2d(family, varname, ipencil, type, reduce_prec, decomp_main, nplanes)
       end if
 
 #ifdef PROFILER
@@ -334,7 +360,7 @@ contains
    !
    ! Low-level. Register one 2D variable for the given family of readers / writers
    !
-   subroutine register_var2d(family, varname, ipencil, type, decomp, nplanes)
+   subroutine register_var2d(family, varname, ipencil, type, reduce_prec, decomp, nplanes)
 
       implicit none
 
@@ -342,6 +368,7 @@ contains
       character(len=*), intent(in) :: varname
       integer, intent(in) :: ipencil
       integer, intent(in) :: type
+      logical, intent(in) :: reduce_prec
       type(decomp_info), intent(in) :: decomp
       integer, intent(in) :: nplanes
 
@@ -361,7 +388,13 @@ contains
       if (family%type == decomp_2d_io_adios2) then
 
          call io_get_size(ipencil, decomp, sizes, starts, subsizes, nplanes)
-         call adios2_register_var(family, varname, sizes, starts, subsizes, type)
+         if (reduce_prec .and. type == MPI_DOUBLE_PRECISION) then
+            call adios2_register_var(family, varname, sizes, starts, subsizes, MPI_REAL)
+         else if (reduce_prec .and. type == MPI_DOUBLE_COMPLEX) then
+            call adios2_register_var(family, varname, sizes, starts, subsizes, MPI_COMPLEX)
+         else
+            call adios2_register_var(family, varname, sizes, starts, subsizes, type)
+         endif
 
       end if
 #else

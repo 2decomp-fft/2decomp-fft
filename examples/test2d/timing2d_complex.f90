@@ -5,6 +5,7 @@ program timing2d_complex
    use decomp_2d
    use decomp_2d_constants
    use decomp_2d_mpi
+   use decomp_2d_testing
 #if defined(_GPU)
    use cudafor
    use openacc
@@ -17,8 +18,6 @@ program timing2d_complex
    integer :: p_row = 0, p_col = 0
    integer :: resize_domain
    integer :: nranks_tot
-   integer :: nargin, arg, FNLength, status, DecInd
-   character(len=80) :: InputFN
 
    complex(mytype), allocatable, dimension(:, :, :) :: u1, u2, u3
 
@@ -48,46 +47,11 @@ program timing2d_complex
    ny = ny_base * resize_domain
    nz = nz_base * resize_domain
    ! Now we can check if user put some inputs
-   ! Handle input file like a boss -- GD
-   nargin = command_argument_count()
-   if ((nargin == 0) .or. (nargin == 2) .or. (nargin == 5) .or. (nargin == 6)) then
-      do arg = 1, nargin
-         call get_command_argument(arg, InputFN, FNLength, status)
-         read (InputFN, *, iostat=status) DecInd
-         if (arg == 1) then
-            p_row = DecInd
-         elseif (arg == 2) then
-            p_col = DecInd
-         elseif (arg == 3) then
-            nx = DecInd
-         elseif (arg == 4) then
-            ny = DecInd
-         elseif (arg == 5) then
-            nz = DecInd
-         elseif (arg == 6) then
-            niter = DecInd
-         end if
-      end do
-   else
-      ! nrank not yet computed we need to avoid write
-      ! for every rank
-      call MPI_COMM_RANK(MPI_COMM_WORLD, nrank, ierror)
-      if (nrank == 0) then
-         print *, "This Test takes no inputs or 2 inputs as"
-         print *, "  1) p_row (default=0)"
-         print *, "  2) p_col (default=0)"
-         print *, "or 5-6 inputs as"
-         print *, "  1) p_row (default=0)"
-         print *, "  2) p_col (default=0)"
-         print *, "  3) nx "
-         print *, "  4) ny "
-         print *, "  5) nz "
-         print *, "  6) n iterations (optional)"
-         print *, "Number of inputs is not correct and the defult settings"
-         print *, "will be used"
-      end if
-   end if
+   call decomp_2d_testing_init(p_row, p_col, nx, ny, nz, niter)
+
    call decomp_2d_init(nx, ny, nz, p_row, p_col)
+
+   call decomp_2d_testing_log()
 
    !! ***** global data *****
    !allocate(data1(nx,ny,nz))

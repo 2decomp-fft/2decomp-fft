@@ -41,6 +41,7 @@ module decomp_2d_io_family
       procedure :: fin => d2d_io_family_fin                       ! Clear the writer
       procedure :: register_var3d => d2d_io_family_register_var3d ! Register a 3D variable
       procedure :: register_var2d => d2d_io_family_register_var2d ! Register a 2D variable
+      procedure :: log => d2d_io_family_log                       ! Print some information about the object
    end type d2d_io_family
 
    private
@@ -92,6 +93,8 @@ contains
       family%type = decomp_2d_io_mpi
       family%label = label
 
+      if (decomp_debug >= D2D_DEBUG_LEVEL_INFO) call family%log()
+
 #ifdef PROFILER
       if (decomp_profiler_io) call decomp_profiler_end("d2d_io_family_mpi_init")
 #endif
@@ -142,6 +145,8 @@ contains
          call decomp_2d_abort(__FILE__, __LINE__, -1, "adios object not valid")
       end if
 #endif
+
+      if (decomp_debug >= D2D_DEBUG_LEVEL_INFO) call family%log()
 
 #ifdef PROFILER
       if (decomp_profiler_io) call decomp_profiler_end("d2d_io_family_adios2_init")
@@ -366,6 +371,44 @@ contains
 #endif
 
    end subroutine register_var2d
+
+   !
+   ! Print some information about the object
+   !
+   subroutine d2d_io_family_log(family)
+
+      implicit none
+
+      class(d2d_io_family), intent(in) :: family
+
+      integer :: iounit
+
+      ! Exit if needed
+      if (decomp_log == D2D_LOG_QUIET) return
+      if (decomp_log == D2D_LOG_STDOUT .and. nrank /= 0) return
+      if (decomp_log == D2D_LOG_TOFILE .and. nrank /= 0) return
+
+      ! Get the IO unit
+      iounit = d2d_listing_get_unit()
+
+      ! Print stuff
+      write (iounit, *) ""
+      write (iounit, *) "  d2d_io_family "//family%label
+      select case (family%type)
+      case (DECOMP_2D_IO_NONE)
+         write (iounit, *) '    type : None'
+      case (DECOMP_2D_IO_MPI)
+         write (iounit, *) '    type : MPI'
+      case (DECOMP_2D_IO_ADIOS2)
+         write (iounit, *) '    type : ADIOS2'
+      case default
+         write (iounit, *) '    type : ? ', family%type
+      end select
+
+      ! Close the IO unit
+      call d2d_listing_close_unit(iounit)
+
+   end subroutine d2d_io_family_log
 
    !
    !

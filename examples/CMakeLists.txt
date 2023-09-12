@@ -9,7 +9,7 @@ file(MAKE_DIRECTORY ${test_dir})
 
 # Define examples utility interface library
 add_library(examples_utils OBJECT utilities.f90)
-target_link_libraries(examples_utils PRIVATE decomp2d)
+add_dependencies(examples_utils decomp2d)
 
 # add subdirectories
 add_subdirectory(init_test)

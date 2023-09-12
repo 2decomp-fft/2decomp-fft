@@ -584,24 +584,32 @@ contains
          end if
       end if
 
-      if (io%family%type == DECOMP_2D_IO_MPI) then
+      if (use_opt_io) then
 
-         ! MPI-IO
-         if (use_opt_io) then
+         if (opt_io%family%type == DECOMP_2D_IO_MPI) then
+
+            ! MPI-IO
             call mpi_write_var(ipencil, opt_io, decomp, freal, dreal, fcplx, dcplx)
-         else
-            call mpi_write_var(ipencil, io, decomp, freal, dreal, fcplx, dcplx)
+
+         else if (opt_io%family%type == DECOMP_2D_IO_ADIOS2) then
+
+            ! ADIOS2
+            call adios2_write_var(opt_io, varname, mode, freal, dreal, fcplx, dcplx)
+
          end if
 
-      else if (io%family%type == DECOMP_2D_IO_ADIOS2) then
+      else
 
-         ! ADIOS2
-         if (use_opt_io) then
-            call adios2_write_var(opt_io, varname, mode, &
-                                  freal, dreal, fcplx, dcplx)
-         else
-            call adios2_write_var(io, varname, mode, &
-                                  freal, dreal, fcplx, dcplx)
+         if (io%family%type == DECOMP_2D_IO_MPI) then
+
+            ! MPI-IO
+            call mpi_write_var(ipencil, io, decomp, freal, dreal, fcplx, dcplx)
+
+         else if (io%family%type == DECOMP_2D_IO_ADIOS2) then
+
+            ! ADIOS2
+            call adios2_write_var(io, varname, mode, freal, dreal, fcplx, dcplx)
+
          end if
 
       end if
@@ -684,24 +692,32 @@ contains
          end if
       end if
 
-      if (io%family%type == DECOMP_2D_IO_MPI) then
+      if (use_opt_io) then
 
-         ! MPI-IO
-         if (use_opt_io) then
+         if (opt_io%family%type == DECOMP_2D_IO_MPI) then
+
+            ! MPI-IO
             call mpi_read_var(ipencil, opt_io, decomp, freal, dreal, fcplx, dcplx)
-         else
-            call mpi_read_var(ipencil, io, decomp, freal, dreal, fcplx, dcplx)
+
+         else if (opt_io%family%type == DECOMP_2D_IO_ADIOS2) then
+
+            ! ADIOS2
+            call adios2_read_var(opt_io, varname, freal, dreal, fcplx, dcplx)
+
          end if
 
-      else if (io%family%type == DECOMP_2D_IO_ADIOS2) then
+      else
 
-         ! ADIOS2
-         if (use_opt_io) then
-            call adios2_read_var(opt_io, varname, &
-                                 freal, dreal, fcplx, dcplx)
-         else
-            call adios2_read_var(io, varname, &
-                                 freal, dreal, fcplx, dcplx)
+         if (io%family%type == DECOMP_2D_IO_MPI) then
+
+            ! MPI-IO
+            call mpi_read_var(ipencil, io, decomp, freal, dreal, fcplx, dcplx)
+
+         else if (io%family%type == DECOMP_2D_IO_ADIOS2) then
+
+            ! ADIOS2
+            call adios2_read_var(io, varname, freal, dreal, fcplx, dcplx)
+
          end if
 
       end if

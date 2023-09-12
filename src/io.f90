@@ -534,7 +534,6 @@ contains
       logical :: use_opt_io
       integer :: mode
       type(d2d_io) :: io
-      character(:), allocatable :: fullname
 
 #ifdef PROFILER
       if (decomp_profiler_io) call decomp_profiler_start("io_write_one")
@@ -568,19 +567,17 @@ contains
       ! Open and start if needed
       if (.not. use_opt_io) then
          if (present(opt_family)) then
-            if (opt_family%type == DECOMP_2D_IO_MPI) then
-               fullname = trim(opt_dirname)//"/"//trim(varname)
-            else ! if (io%family%type == DECOMP_2D_IO_ADIOS2) then ! -Werror=maybe-uninitialized
-               fullname = trim(opt_dirname)
-            end if
-            call io%open_start(opt_family, fullname, decomp_2d_write_mode)
+            call decomp_2d_io_open_and_start(opt_family, &
+                                             io, &
+                                             opt_dirname, &
+                                             varname, &
+                                             decomp_2d_write_mode)
          else
-            if (default_io_family%type == DECOMP_2D_IO_MPI) then
-               fullname = trim(opt_dirname)//"/"//trim(varname)
-            else ! if (io%family%type == DECOMP_2D_IO_ADIOS2) then ! -Werror=maybe-uninitialized
-               fullname = trim(opt_dirname)
-            end if
-            call io%open_start(default_io_family, fullname, decomp_2d_write_mode)
+            call decomp_2d_io_open_and_start(default_io_family, &
+                                             io, &
+                                             opt_dirname, &
+                                             varname, &
+                                             decomp_2d_write_mode)
          end if
       end if
 
@@ -615,10 +612,7 @@ contains
       end if
 
       ! End and close if needed
-      if (.not. use_opt_io) then
-         call io%end_close()
-         deallocate (fullname)
-      end if
+      if (.not. use_opt_io) call io%end_close()
 
 #ifdef PROFILER
       if (decomp_profiler_io) call decomp_profiler_end("io_write_one")
@@ -648,7 +642,6 @@ contains
 
       logical :: use_opt_io
       type(d2d_io) :: io
-      character(:), allocatable :: fullname
 
 #ifdef PROFILER
       if (decomp_profiler_io) call decomp_profiler_start("io_read_one")
@@ -676,19 +669,17 @@ contains
       ! Open and start if needed
       if (.not. use_opt_io) then
          if (present(opt_family)) then
-            if (opt_family%type == DECOMP_2D_IO_MPI) then
-               fullname = trim(opt_dirname)//"/"//trim(varname)
-            else ! if (io%family%type == DECOMP_2D_IO_ADIOS2) then ! -Werror=maybe-uninitialized
-               fullname = trim(opt_dirname)
-            end if
-            call io%open_start(opt_family, fullname, decomp_2d_read_mode)
+            call decomp_2d_io_open_and_start(opt_family, &
+                                             io, &
+                                             opt_dirname, &
+                                             varname, &
+                                             decomp_2d_read_mode)
          else
-            if (default_io_family%type == DECOMP_2D_IO_MPI) then
-               fullname = trim(opt_dirname)//"/"//trim(varname)
-            else ! if (io%family%type == DECOMP_2D_IO_ADIOS2) then ! -Werror=maybe-uninitialized
-               fullname = trim(opt_dirname)
-            end if
-            call io%open_start(default_io_family, fullname, decomp_2d_read_mode)
+            call decomp_2d_io_open_and_start(default_io_family, &
+                                             io, &
+                                             opt_dirname, &
+                                             varname, &
+                                             decomp_2d_read_mode)
          end if
       end if
 
@@ -723,10 +714,7 @@ contains
       end if
 
       ! End and close if needed
-      if (.not. use_opt_io) then
-         call io%end_close()
-         deallocate (fullname)
-      end if
+      if (.not. use_opt_io) call io%end_close()
 
 #ifdef PROFILER
       if (decomp_profiler_io) call decomp_profiler_end("io_read_one")

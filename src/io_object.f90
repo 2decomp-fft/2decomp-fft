@@ -87,6 +87,8 @@ module decomp_2d_io_object
 
    private
 
+   public :: decomp_2d_io_open_and_start
+
 contains
 
    !
@@ -379,5 +381,36 @@ contains
       call writer%close()
 
    end subroutine d2d_io_end_close
+
+   !
+   ! Open and start in write_one or read_one
+   !
+   subroutine decomp_2d_io_open_and_start(family, &
+                                          writer, &
+                                          dirname, &
+                                          varname, &
+                                          mode)
+
+      implicit none
+
+      type(d2d_io_family), intent(in) :: family
+      type(d2d_io), intent(out) :: writer
+      character(len=*), intent(in) :: dirname, varname
+      integer, intent(in) :: mode
+
+      character(:), allocatable :: fullname
+
+      if (family%type == DECOMP_2D_IO_MPI) then
+         fullname = trim(dirname)//"/"//trim(varname)
+      else if (family%type == DECOMP_2D_IO_ADIOS2) then
+         fullname = trim(dirname)
+      else
+         fullname = ""
+         call decomp_2d_abort(__FILE__, __LINE__, family%type, "Invalid value")
+      end if
+      call writer%open_start(family, fullname, mode)
+      deallocate (fullname)
+
+   end subroutine decomp_2d_io_open_and_start
 
 end module decomp_2d_io_object

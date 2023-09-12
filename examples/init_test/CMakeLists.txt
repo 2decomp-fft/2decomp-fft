@@ -1,8 +1,8 @@
-file(GLOB files_test init_test.f90 ../utilities.f90)
+file(GLOB files_test init_test.f90)
 include_directories(${CMAKE_SOURCE_DIR}/src)
 
 add_executable(init_test ${files_test})
-target_link_libraries(init_test PRIVATE decomp2d)
+target_link_libraries(init_test PRIVATE decomp2d examples_utils)
 
 # Run the test(s)
 set(run_dir "${test_dir}/init_test")

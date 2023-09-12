@@ -60,8 +60,10 @@ module decomp_2d_io
    end interface decomp_2d_write_one
 
    interface decomp_2d_read_one
-      module procedure read_one_real
-      module procedure read_one_complex
+      module procedure read_one_freal
+      module procedure read_one_dreal
+      module procedure read_one_fcplx
+      module procedure read_one_dcplx
    end interface decomp_2d_read_one
 
    interface decomp_2d_write_var
@@ -390,6 +392,125 @@ contains
    end subroutine write_one_dcplx
 
    !
+   ! High-level. Using MPI-IO / ADIOS2 to read a 3D array from a file
+   !
+   subroutine read_one_freal(ipencil, var, varname, opt_family, &
+                             opt_io, opt_dirname, opt_decomp)
+
+      implicit none
+
+      integer, intent(IN) :: ipencil
+      real(kind(0._real32)), contiguous, dimension(:, :, :), intent(out) :: var
+      character(len=*), intent(in) :: varname
+      type(d2d_io_family), intent(in), optional :: opt_family
+      type(d2d_io), intent(inout), optional :: opt_io
+      character(len=*), intent(in), optional :: opt_dirname
+      TYPE(DECOMP_INFO), intent(IN), optional :: opt_decomp
+
+      if (present(opt_decomp)) then
+         call read_one(ipencil, varname, opt_decomp, &
+                       opt_family=opt_family, &
+                       opt_io=opt_io, &
+                       opt_dirname=opt_dirname, &
+                       freal=var)
+      else
+         call read_one(ipencil, varname, decomp_main, &
+                       opt_family=opt_family, &
+                       opt_io=opt_io, &
+                       opt_dirname=opt_dirname, &
+                       freal=var)
+      end if
+
+   end subroutine read_one_freal
+   !
+   subroutine read_one_fcplx(ipencil, var, varname, opt_family, &
+                             opt_io, opt_dirname, opt_decomp)
+
+      implicit none
+
+      integer, intent(IN) :: ipencil
+      complex(kind(0._real32)), contiguous, dimension(:, :, :), intent(out) :: var
+      character(len=*), intent(in) :: varname
+      type(d2d_io_family), intent(in), optional :: opt_family
+      type(d2d_io), intent(inout), optional :: opt_io
+      character(len=*), intent(in), optional :: opt_dirname
+      TYPE(DECOMP_INFO), intent(IN), optional :: opt_decomp
+
+      if (present(opt_decomp)) then
+         call read_one(ipencil, varname, opt_decomp, &
+                       opt_family=opt_family, &
+                       opt_io=opt_io, &
+                       opt_dirname=opt_dirname, &
+                       fcplx=var)
+      else
+         call read_one(ipencil, varname, decomp_main, &
+                       opt_family=opt_family, &
+                       opt_io=opt_io, &
+                       opt_dirname=opt_dirname, &
+                       fcplx=var)
+      end if
+
+   end subroutine read_one_fcplx
+   !
+   subroutine read_one_dreal(ipencil, var, varname, opt_family, &
+                             opt_io, opt_dirname, opt_decomp)
+
+      implicit none
+
+      integer, intent(IN) :: ipencil
+      real(kind(0._real64)), contiguous, dimension(:, :, :), intent(out) :: var
+      character(len=*), intent(in) :: varname
+      type(d2d_io_family), intent(in), optional :: opt_family
+      type(d2d_io), intent(inout), optional :: opt_io
+      character(len=*), intent(in), optional :: opt_dirname
+      TYPE(DECOMP_INFO), intent(IN), optional :: opt_decomp
+
+      if (present(opt_decomp)) then
+         call read_one(ipencil, varname, opt_decomp, &
+                       opt_family=opt_family, &
+                       opt_io=opt_io, &
+                       opt_dirname=opt_dirname, &
+                       dreal=var)
+      else
+         call read_one(ipencil, varname, decomp_main, &
+                       opt_family=opt_family, &
+                       opt_io=opt_io, &
+                       opt_dirname=opt_dirname, &
+                       dreal=var)
+      end if
+
+   end subroutine read_one_dreal
+   !
+   subroutine read_one_dcplx(ipencil, var, varname, opt_family, &
+                             opt_io, opt_dirname, opt_decomp)
+
+      implicit none
+
+      integer, intent(IN) :: ipencil
+      complex(kind(0._real64)), contiguous, dimension(:, :, :), intent(out) :: var
+      character(len=*), intent(in) :: varname
+      type(d2d_io_family), intent(in), optional :: opt_family
+      type(d2d_io), intent(inout), optional :: opt_io
+      character(len=*), intent(in), optional :: opt_dirname
+      TYPE(DECOMP_INFO), intent(IN), optional :: opt_decomp
+
+      if (present(opt_decomp)) then
+         call read_one(ipencil, varname, opt_decomp, &
+                       opt_family=opt_family, &
+                       opt_io=opt_io, &
+                       opt_dirname=opt_dirname, &
+                       dcplx=var)
+      else
+         call read_one(ipencil, varname, decomp_main, &
+                       opt_family=opt_family, &
+                       opt_io=opt_io, &
+                       opt_dirname=opt_dirname, &
+                       dcplx=var)
+      end if
+
+   end subroutine read_one_dcplx
+
+   !
    ! Low-level. Using MPI-IO / ADIOS2 to write a 3D array to a file
    !
    subroutine write_one(ipencil, varname, decomp, opt_mode, &
@@ -423,7 +544,7 @@ contains
       if ((ipencil < 1) .or. (ipencil > 3)) then
          call decomp_2d_abort(__FILE__, __LINE__, ipencil, "Error invalid value of ipencil ")
       end if
-      if (.not.(present(opt_io)) .and. .not.(present(opt_dirname))) then
+      if (.not. (present(opt_io)) .and. .not. (present(opt_dirname))) then
          call decomp_2d_abort(__FILE__, __LINE__, 0, "Invalid arguments")
       end if
 
@@ -433,10 +554,10 @@ contains
             use_opt_io = .true.
          else
             use_opt_io = .false.
-         endif
+         end if
       else
          use_opt_io = .false.
-      endif
+      end if
 
       if (present(opt_mode)) then
          mode = opt_mode
@@ -445,7 +566,7 @@ contains
       end if
 
       ! Open and start if needed
-      if (.not.use_opt_io) then
+      if (.not. use_opt_io) then
          if (present(opt_family)) then
             if (opt_family%type == DECOMP_2D_IO_MPI) then
                fullname = trim(opt_dirname)//"/"//trim(varname)
@@ -486,7 +607,7 @@ contains
       end if
 
       ! End and close if needed
-      if (.not.use_opt_io) then
+      if (.not. use_opt_io) then
          call io%end_close()
          deallocate (fullname)
       end if
@@ -496,6 +617,106 @@ contains
 #endif
 
    end subroutine write_one
+
+   !
+   ! Low-level. Using MPI-IO / ADIOS2 to read a 3D array from a file
+   !
+   subroutine read_one(ipencil, varname, decomp, &
+                       opt_family, opt_io, opt_dirname, &
+                       freal, dreal, fcplx, dcplx)
+
+      implicit none
+
+      integer, intent(IN) :: ipencil
+      character(len=*), intent(in) :: varname
+      TYPE(DECOMP_INFO), intent(IN) :: decomp
+      type(d2d_io_family), intent(in), optional :: opt_family
+      type(d2d_io), intent(inout), optional :: opt_io
+      character(len=*), intent(in), optional :: opt_dirname
+      real(kind(0._real32)), contiguous, dimension(:, :, :), intent(out), optional :: freal
+      real(kind(0._real64)), contiguous, dimension(:, :, :), intent(out), optional :: dreal
+      complex(kind(0._real32)), contiguous, dimension(:, :, :), intent(out), optional :: fcplx
+      complex(kind(0._real64)), contiguous, dimension(:, :, :), intent(out), optional :: dcplx
+
+      logical :: use_opt_io
+      type(d2d_io) :: io
+      character(:), allocatable :: fullname
+
+#ifdef PROFILER
+      if (decomp_profiler_io) call decomp_profiler_start("io_read_one")
+#endif
+
+      ! Safety check
+      if ((ipencil < 1) .or. (ipencil > 3)) then
+         call decomp_2d_abort(__FILE__, __LINE__, ipencil, "Error invalid value of ipencil ")
+      end if
+      if (.not. (present(opt_io)) .and. .not. (present(opt_dirname))) then
+         call decomp_2d_abort(__FILE__, __LINE__, 0, "Invalid arguments")
+      end if
+
+      ! Use opt_io only if present and open
+      if (present(opt_io)) then
+         if (opt_io%is_open) then
+            use_opt_io = .true.
+         else
+            use_opt_io = .false.
+         end if
+      else
+         use_opt_io = .false.
+      end if
+
+      ! Open and start if needed
+      if (.not. use_opt_io) then
+         if (present(opt_family)) then
+            if (opt_family%type == DECOMP_2D_IO_MPI) then
+               fullname = trim(opt_dirname)//"/"//trim(varname)
+            else ! if (io%family%type == DECOMP_2D_IO_ADIOS2) then ! -Werror=maybe-uninitialized
+               fullname = trim(opt_dirname)
+            end if
+            call io%open_start(opt_family, fullname, decomp_2d_read_mode)
+         else
+            if (default_io_family%type == DECOMP_2D_IO_MPI) then
+               fullname = trim(opt_dirname)//"/"//trim(varname)
+            else ! if (io%family%type == DECOMP_2D_IO_ADIOS2) then ! -Werror=maybe-uninitialized
+               fullname = trim(opt_dirname)
+            end if
+            call io%open_start(default_io_family, fullname, decomp_2d_read_mode)
+         end if
+      end if
+
+      if (io%family%type == DECOMP_2D_IO_MPI) then
+
+         ! MPI-IO
+         if (use_opt_io) then
+            call mpi_read_var(ipencil, opt_io, decomp, freal, dreal, fcplx, dcplx)
+         else
+            call mpi_read_var(ipencil, io, decomp, freal, dreal, fcplx, dcplx)
+         end if
+
+      else if (io%family%type == DECOMP_2D_IO_ADIOS2) then
+
+         ! ADIOS2
+         if (use_opt_io) then
+            call adios2_read_var(opt_io, varname, &
+                                 freal, dreal, fcplx, dcplx)
+         else
+            call adios2_read_var(io, varname, &
+                                 freal, dreal, fcplx, dcplx)
+         end if
+
+      end if
+
+      ! End and close if needed
+      if (.not. use_opt_io) then
+         call io%end_close()
+         deallocate (fullname)
+      end if
+
+#ifdef PROFILER
+      if (decomp_profiler_io) call decomp_profiler_end("io_read_one")
+#endif
+
+   end subroutine read_one
 
    !
    !
@@ -526,11 +747,29 @@ contains
 
    end subroutine mpi_write_var
    !
-   ! Write a plane to a file
+   ! Read a 3D array from a file
    !
-   !subroutine TODO
-   !   call mpi_write(...)
-   !end subroutine TODO
+   subroutine mpi_read_var(ipencil, io, decomp, freal, dreal, fcplx, dcplx)
+
+      implicit none
+
+      integer, intent(IN) :: ipencil
+      type(d2d_io), intent(inout) :: io
+      TYPE(DECOMP_INFO), intent(IN) :: decomp
+      real(kind(0._real32)), contiguous, dimension(:, :, :), intent(out), optional :: freal
+      real(kind(0._real64)), contiguous, dimension(:, :, :), intent(out), optional :: dreal
+      complex(kind(0._real32)), contiguous, dimension(:, :, :), intent(out), optional :: fcplx
+      complex(kind(0._real64)), contiguous, dimension(:, :, :), intent(out), optional :: dcplx
+
+      integer, dimension(3) :: sizes, subsizes, starts
+
+      ! Process the size
+      call io_get_size(ipencil, decomp, sizes, starts, subsizes)
+
+      ! Do the MPI IO
+      call mpi_read(io, sizes, subsizes, starts, freal, dreal, fcplx, dcplx)
+
+   end subroutine mpi_read_var
    !
    subroutine mpi_write(io, sizes, subsizes, starts, &
                         freal, dreal, fcplx, dcplx, ints, logs)
@@ -607,6 +846,82 @@ contains
                 * int(type_bytes, kind=MPI_OFFSET_KIND)
 
    end subroutine mpi_write
+   !
+   subroutine mpi_read(io, sizes, subsizes, starts, &
+                       freal, dreal, fcplx, dcplx, ints, logs)
+
+      implicit none
+
+      type(d2d_io), intent(inout) :: io
+      integer, dimension(3), intent(in) :: sizes, subsizes, starts
+      real(kind(0._real32)), contiguous, dimension(:, :, :), intent(out), optional :: freal
+      real(kind(0._real64)), contiguous, dimension(:, :, :), intent(out), optional :: dreal
+      complex(kind(0._real32)), contiguous, dimension(:, :, :), intent(out), optional :: fcplx
+      complex(kind(0._real64)), contiguous, dimension(:, :, :), intent(out), optional :: dcplx
+      integer, contiguous, dimension(:, :, :), intent(out), optional :: ints
+      logical, contiguous, dimension(:, :, :), intent(out), optional :: logs
+
+      integer :: ierror, data_type, newtype, type_bytes
+
+      ! Safety check
+      if (.not. io%is_open) then
+         call decomp_2d_abort(__FILE__, __LINE__, 0, &
+                              "IO reader / writer was not opened "//io%label)
+      end if
+
+      ! Select the MPI data type
+      if (present(freal)) then
+         data_type = MPI_REAL
+      else if (present(dreal)) then
+         data_type = MPI_DOUBLE_PRECISION
+      else if (present(fcplx)) then
+         data_type = MPI_COMPLEX
+      else if (present(dcplx)) then
+         data_type = MPI_DOUBLE_COMPLEX
+      else if (present(ints)) then
+         data_type = MPI_INTEGER
+      else if (present(logs)) then
+         data_type = MPI_LOGICAL
+      else
+         call decomp_2d_abort(__FILE__, __LINE__, 0, "Invalid inputs for "//io%label)
+      end if
+
+      ! Get the corresponding record size
+      call MPI_TYPE_SIZE(data_type, type_bytes, ierror)
+      if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_TYPE_SIZE")
+
+      ! Do the MPI IO
+      call MPI_TYPE_CREATE_SUBARRAY(3, sizes, subsizes, starts, &
+                                    MPI_ORDER_FORTRAN, data_type, newtype, ierror)
+      if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_TYPE_CREATE_SUBARRAY")
+      call MPI_TYPE_COMMIT(newtype, ierror)
+      if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_TYPE_COMMIT")
+      call MPI_FILE_SET_VIEW(io%fh, io%disp, data_type, newtype, 'native', MPI_INFO_NULL, ierror)
+      if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_FILE_SET_VIEW")
+      if (present(freal)) then
+         call MPI_FILE_READ_ALL(io%fh, freal, product(subsizes), data_type, MPI_STATUS_IGNORE, ierror)
+      else if (present(dreal)) then
+         call MPI_FILE_READ_ALL(io%fh, dreal, product(subsizes), data_type, MPI_STATUS_IGNORE, ierror)
+      else if (present(fcplx)) then
+         call MPI_FILE_READ_ALL(io%fh, fcplx, product(subsizes), data_type, MPI_STATUS_IGNORE, ierror)
+      else if (present(dcplx)) then
+         call MPI_FILE_READ_ALL(io%fh, dcplx, product(subsizes), data_type, MPI_STATUS_IGNORE, ierror)
+      else if (present(ints)) then
+         call MPI_FILE_READ_ALL(io%fh, ints, product(subsizes), data_type, MPI_STATUS_IGNORE, ierror)
+      else if (present(logs)) then
+         call MPI_FILE_READ_ALL(io%fh, logs, product(subsizes), data_type, MPI_STATUS_IGNORE, ierror)
+      end if
+      if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_FILE_READ_ALL")
+      call MPI_TYPE_FREE(newtype, ierror)
+      if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_TYPE_FREE")
+
+      ! Update displacement for the next write operation
+      io%disp = io%disp + int(sizes(1), kind=MPI_OFFSET_KIND) &
+                * int(sizes(2), kind=MPI_OFFSET_KIND) &
+                * int(sizes(3), kind=MPI_OFFSET_KIND) &
+                * int(type_bytes, kind=MPI_OFFSET_KIND)
+
+   end subroutine mpi_read
 
    !
    !
@@ -684,6 +999,76 @@ contains
 #endif
 
    end subroutine adios2_write_var
+   !
+   ! Read a 3D array
+   !
+   subroutine adios2_read_var(io, varname, &
+                              freal, dreal, fcplx, dcplx)
+
+      implicit none
+
+      type(d2d_io), intent(inout) :: io
+      character(len=*), intent(in) :: varname
+      real(kind(0._real32)), contiguous, dimension(:, :, :), intent(out), optional :: freal
+      real(kind(0._real64)), contiguous, dimension(:, :, :), intent(out), optional :: dreal
+      complex(kind(0._real32)), contiguous, dimension(:, :, :), intent(out), optional :: fcplx
+      complex(kind(0._real64)), contiguous, dimension(:, :, :), intent(out), optional :: dcplx
+
+#ifdef ADIOS2
+      integer :: ierror
+      integer(kind=8) :: nsteps, curstep
+      type(adios2_variable) :: var_handle
+#endif
+
+      ! Safety checks
+      if (.not. io%is_open) then
+         call decomp_2d_abort(__FILE__, __LINE__, 0, &
+                              "IO reader / writer was not opened "//io%label)
+      end if
+#ifdef ADIOS2
+      if (.not. io%is_active) then
+         call decomp_2d_abort(__FILE__, __LINE__, 0, &
+                              "IO reader / writer has not started "//io%label)
+      end if
+#endif
+
+#ifdef ADIOS2
+      call adios2_inquire_variable(var_handle, io%family%io, varname, ierror)
+      if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "adios2_inquire_variable "//trim(varname))
+      if (.not. var_handle%valid) then
+         call decomp_2d_abort(__FILE__, __LINE__, -1, &
+                              "ERROR: trying to read variable without registering first! "//trim(varname))
+      end if
+
+      call adios2_variable_steps(nsteps, var_handle, ierror)
+      if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "adios2_variable_steps")
+
+      if (present(freal)) then
+         call adios2_get(io%engine, var_handle, freal, adios2_mode_deferred, ierror)
+      else if (present(dreal)) then
+         call adios2_get(io%engine, var_handle, dreal, adios2_mode_deferred, ierror)
+      else if (present(fcplx)) then
+         call adios2_get(io%engine, var_handle, fcplx, adios2_mode_deferred, ierror)
+      else if (present(dcplx)) then
+         call adios2_get(io%engine, var_handle, dcplx, adios2_mode_deferred, ierror)
+      end if
+      if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "adios2_get")
+
+      call adios2_current_step(curstep, io%engine, ierror)
+      if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "adios2_current_step")
+
+      call adios2_inquire_variable(var_handle, io%family%io, varname, ierror)
+      if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "adios2_inquire_variable "//trim(varname))
+      if (.not. var_handle%valid) then
+         call decomp_2d_abort(__FILE__, __LINE__, -1, &
+                              "ERROR: trying to write variable before registering! "//trim(varname))
+      end if
+#else
+      associate (o => io, v => varname, fr => freal, dr => dreal, fc => fcplx, dc => dcplx)
+      end associate
+#endif
+
+   end subroutine adios2_read_var
 
    subroutine write_one_complex(ipencil, var, filename, opt_decomp)
 

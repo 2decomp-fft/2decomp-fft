@@ -10,11 +10,8 @@
 ! TODO
 !
 ! Development
-!    Add a log subroutine for the derived type family of readers / writers ?
-!    Have a default family of readers / writers ? (just like decomp_main for the derived type decomp_info)
 !    Add a log subroutine for the derived type reader / writer ?
 !    Have a default reader / writer ? (just like decomp_main for the derived type decomp_info)
-!    Keep type-bound procedures or avoid them ?
 !
 ! Simplification
 !    Remove icoarse and the special cases icoarse > 0

@@ -81,9 +81,8 @@ contains
       integer, intent(in) :: n(3), bytes
 
       disp = disp + product(int(n, kind=MPI_OFFSET_KIND)) &
-              * int(bytes, kind=MPI_OFFSET_KIND)
+             * int(bytes, kind=MPI_OFFSET_KIND)
 
    end subroutine decomp_2d_io_update_disp
-
 
 end module decomp_2d_io_utilities

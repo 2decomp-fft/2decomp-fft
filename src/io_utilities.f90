@@ -6,15 +6,16 @@
 
 module decomp_2d_io_utilities
 
+   use decomp_2d
    use decomp_2d_constants
    use decomp_2d_mpi
-   use decomp_2d
+   use MPI
 
    implicit none
 
    private
 
-   public :: io_get_size
+   public :: io_get_size, decomp_2d_io_update_disp
 
 contains
 
@@ -68,5 +69,21 @@ contains
       end if
 
    end subroutine io_get_size
+
+   !
+   ! Update the MPI displacement offset
+   !
+   subroutine decomp_2d_io_update_disp(disp, n, bytes)
+
+      implicit none
+
+      integer(kind=MPI_OFFSET_KIND), intent(inout) :: disp
+      integer, intent(in) :: n(3), bytes
+
+      disp = disp + product(int(n, kind=MPI_OFFSET_KIND)) &
+              * int(bytes, kind=MPI_OFFSET_KIND)
+
+   end subroutine decomp_2d_io_update_disp
+
 
 end module decomp_2d_io_utilities

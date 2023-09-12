@@ -848,10 +848,7 @@ contains
       if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_TYPE_FREE")
 
       ! Update displacement for the next write operation
-      io%disp = io%disp + int(sizes(1), kind=MPI_OFFSET_KIND) &
-                * int(sizes(2), kind=MPI_OFFSET_KIND) &
-                * int(sizes(3), kind=MPI_OFFSET_KIND) &
-                * int(type_bytes, kind=MPI_OFFSET_KIND)
+      call decomp_2d_io_update_disp(io%disp, sizes, type_bytes)
 
    end subroutine mpi_write
    !
@@ -924,10 +921,7 @@ contains
       if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_TYPE_FREE")
 
       ! Update displacement for the next write operation
-      io%disp = io%disp + int(sizes(1), kind=MPI_OFFSET_KIND) &
-                * int(sizes(2), kind=MPI_OFFSET_KIND) &
-                * int(sizes(3), kind=MPI_OFFSET_KIND) &
-                * int(type_bytes, kind=MPI_OFFSET_KIND)
+      call decomp_2d_io_update_disp(io%disp, sizes, type_bytes)
 
    end subroutine mpi_read
 

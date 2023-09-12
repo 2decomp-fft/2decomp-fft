@@ -242,7 +242,7 @@ contains
          reduce_prec = opt_reduce_prec
       else
          reduce_prec = .false.
-      endif
+      end if
 
       if (present(opt_decomp)) then
          call register_var3d(family, varname, ipencil, type, reduce_prec, opt_decomp)
@@ -289,12 +289,12 @@ contains
             call adios2_register_var(family, varname, sizes, starts, subsizes, MPI_COMPLEX)
          else
             call adios2_register_var(family, varname, sizes, starts, subsizes, type)
-         endif
+         end if
 
       end if
 #else
       associate (fm => family, vr => varname, pc => ipencil, &
-                 tp => type, od => decomp)
+                 tp => type, rd => reduce_prec, od => decomp)
       end associate
 #endif
 
@@ -338,7 +338,7 @@ contains
          reduce_prec = opt_reduce_prec
       else
          reduce_prec = .false.
-      endif
+      end if
 
       if (present(opt_nplanes)) then
          nplanes = opt_nplanes
@@ -394,12 +394,12 @@ contains
             call adios2_register_var(family, varname, sizes, starts, subsizes, MPI_COMPLEX)
          else
             call adios2_register_var(family, varname, sizes, starts, subsizes, type)
-         endif
+         end if
 
       end if
 #else
       associate (fm => family, vr => varname, pc => ipencil, &
-                 tp => type, od => decomp)
+                 tp => type, rd => reduce_prec, od => decomp)
       end associate
 #endif
 

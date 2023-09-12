@@ -199,23 +199,35 @@ contains
    !
    ! High-level. Using MPI-IO / ADIOS2 to write a 3D array to a file
    !
-   subroutine write_one_freal(ipencil, var, io, varname, &
-                              opt_mode, opt_reduce_prec, opt_decomp)
+   subroutine write_one_freal(ipencil, var, varname, opt_mode, opt_family, &
+                              opt_io, opt_dirname, opt_reduce_prec, opt_decomp)
 
       implicit none
 
       integer, intent(IN) :: ipencil
       real(kind(0._real32)), contiguous, dimension(:, :, :), intent(IN) :: var
-      type(d2d_io), intent(inout) :: io
       character(len=*), intent(in) :: varname
       integer, intent(in), optional :: opt_mode
+      type(d2d_io_family), intent(in), optional :: opt_family
+      type(d2d_io), intent(inout), optional :: opt_io
+      character(len=*), intent(in), optional :: opt_dirname
       logical, intent(in), optional :: opt_reduce_prec
       TYPE(DECOMP_INFO), intent(IN), optional :: opt_decomp
 
       if (present(opt_decomp)) then
-         call write_one(ipencil, io, varname, opt_decomp, opt_mode, freal=var)
+         call write_one(ipencil, varname, opt_decomp, &
+                        opt_mode=opt_mode, &
+                        opt_family=opt_family, &
+                        opt_io=opt_io, &
+                        opt_dirname=opt_dirname, &
+                        freal=var)
       else
-         call write_one(ipencil, io, varname, decomp_main, opt_mode, freal=var)
+         call write_one(ipencil, varname, decomp_main, &
+                        opt_mode=opt_mode, &
+                        opt_family=opt_family, &
+                        opt_io=opt_io, &
+                        opt_dirname=opt_dirname, &
+                        freal=var)
       end if
 
       associate (p => opt_reduce_prec)
@@ -223,23 +235,35 @@ contains
 
    end subroutine write_one_freal
    !
-   subroutine write_one_fcplx(ipencil, var, io, varname, &
-                              opt_mode, opt_reduce_prec, opt_decomp)
+   subroutine write_one_fcplx(ipencil, var, varname, opt_mode, opt_family, &
+                              opt_io, opt_dirname, opt_reduce_prec, opt_decomp)
 
       implicit none
 
       integer, intent(IN) :: ipencil
       complex(kind(0._real32)), contiguous, dimension(:, :, :), intent(IN) :: var
-      type(d2d_io), intent(inout) :: io
       character(len=*), intent(in) :: varname
       integer, intent(in), optional :: opt_mode
+      type(d2d_io_family), intent(in), optional :: opt_family
+      type(d2d_io), intent(inout), optional :: opt_io
+      character(len=*), intent(in), optional :: opt_dirname
       logical, intent(in), optional :: opt_reduce_prec
       TYPE(DECOMP_INFO), intent(IN), optional :: opt_decomp
 
       if (present(opt_decomp)) then
-         call write_one(ipencil, io, varname, opt_decomp, opt_mode, fcplx=var)
+         call write_one(ipencil, varname, opt_decomp, &
+                        opt_mode=opt_mode, &
+                        opt_family=opt_family, &
+                        opt_io=opt_io, &
+                        opt_dirname=opt_dirname, &
+                        fcplx=var)
       else
-         call write_one(ipencil, io, varname, decomp_main, opt_mode, fcplx=var)
+         call write_one(ipencil, varname, decomp_main, &
+                        opt_mode=opt_mode, &
+                        opt_family=opt_family, &
+                        opt_io=opt_io, &
+                        opt_dirname=opt_dirname, &
+                        fcplx=var)
       end if
 
       associate (p => opt_reduce_prec)
@@ -247,16 +271,18 @@ contains
 
    end subroutine write_one_fcplx
    !
-   subroutine write_one_dreal(ipencil, var, io, varname, &
-                              opt_mode, opt_reduce_prec, opt_decomp)
+   subroutine write_one_dreal(ipencil, var, varname, opt_mode, opt_family, &
+                              opt_io, opt_dirname, opt_reduce_prec, opt_decomp)
 
       implicit none
 
       integer, intent(IN) :: ipencil
       real(kind(0._real64)), contiguous, dimension(:, :, :), intent(IN) :: var
-      type(d2d_io), intent(inout) :: io
       character(len=*), intent(in) :: varname
       integer, intent(in), optional :: opt_mode
+      type(d2d_io_family), intent(in), optional :: opt_family
+      type(d2d_io), intent(inout), optional :: opt_io
+      character(len=*), intent(in), optional :: opt_dirname
       logical, intent(in), optional :: opt_reduce_prec
       TYPE(DECOMP_INFO), intent(IN), optional :: opt_decomp
 
@@ -270,32 +296,52 @@ contains
 
       if (present(opt_decomp)) then
          if (reduce) then
-            call write_one(ipencil, io, varname, opt_decomp, opt_mode=decomp_2d_write_sync, &
+            call write_one(ipencil, varname, opt_decomp, &
+                           opt_mode=decomp_2d_write_sync, &
+                           opt_family=opt_family, &
+                           opt_io=opt_io, &
+                           opt_dirname=opt_dirname, &
                            freal=real(var, kind=kind(0._real32)))
          else
-            call write_one(ipencil, io, varname, opt_decomp, opt_mode, dreal=var)
+            call write_one(ipencil, varname, opt_decomp, &
+                           opt_mode=opt_mode, &
+                           opt_family=opt_family, &
+                           opt_io=opt_io, &
+                           opt_dirname=opt_dirname, &
+                           dreal=var)
          end if
       else
          if (reduce) then
-            call write_one(ipencil, io, varname, decomp_main, opt_mode=decomp_2d_write_sync, &
+            call write_one(ipencil, varname, decomp_main, &
+                           opt_mode=decomp_2d_write_sync, &
+                           opt_family=opt_family, &
+                           opt_io=opt_io, &
+                           opt_dirname=opt_dirname, &
                            freal=real(var, kind=kind(0._real32)))
          else
-            call write_one(ipencil, io, varname, decomp_main, opt_mode, dreal=var)
+            call write_one(ipencil, varname, decomp_main, &
+                           opt_mode=opt_mode, &
+                           opt_family=opt_family, &
+                           opt_io=opt_io, &
+                           opt_dirname=opt_dirname, &
+                           dreal=var)
          end if
       end if
 
    end subroutine write_one_dreal
    !
-   subroutine write_one_dcplx(ipencil, var, io, varname, &
-                              opt_mode, opt_reduce_prec, opt_decomp)
+   subroutine write_one_dcplx(ipencil, var, varname, opt_mode, opt_family, &
+                              opt_io, opt_dirname, opt_reduce_prec, opt_decomp)
 
       implicit none
 
       integer, intent(IN) :: ipencil
       complex(kind(0._real64)), contiguous, dimension(:, :, :), intent(IN) :: var
-      type(d2d_io), intent(inout) :: io
       character(len=*), intent(in) :: varname
       integer, intent(in), optional :: opt_mode
+      type(d2d_io_family), intent(in), optional :: opt_family
+      type(d2d_io), intent(inout), optional :: opt_io
+      character(len=*), intent(in), optional :: opt_dirname
       logical, intent(in), optional :: opt_reduce_prec
       TYPE(DECOMP_INFO), intent(IN), optional :: opt_decomp
 
@@ -309,17 +355,35 @@ contains
 
       if (present(opt_decomp)) then
          if (reduce) then
-            call write_one(ipencil, io, varname, opt_decomp, opt_mode=decomp_2d_write_sync, &
+            call write_one(ipencil, varname, opt_decomp, &
+                           opt_mode=decomp_2d_write_sync, &
+                           opt_family=opt_family, &
+                           opt_io=opt_io, &
+                           opt_dirname=opt_dirname, &
                            fcplx=cmplx(var, kind=kind(0._real32)))
          else
-            call write_one(ipencil, io, varname, opt_decomp, opt_mode, dcplx=var)
+            call write_one(ipencil, varname, opt_decomp, &
+                           opt_mode=opt_mode, &
+                           opt_family=opt_family, &
+                           opt_io=opt_io, &
+                           opt_dirname=opt_dirname, &
+                           dcplx=var)
          end if
       else
          if (reduce) then
-            call write_one(ipencil, io, varname, decomp_main, opt_mode=decomp_2d_write_sync, &
+            call write_one(ipencil, varname, decomp_main, &
+                           opt_mode=decomp_2d_write_sync, &
+                           opt_family=opt_family, &
+                           opt_io=opt_io, &
+                           opt_dirname=opt_dirname, &
                            fcplx=cmplx(var, kind=kind(0._real32)))
          else
-            call write_one(ipencil, io, varname, decomp_main, opt_mode, dcplx=var)
+            call write_one(ipencil, varname, decomp_main, &
+                           opt_mode=opt_mode, &
+                           opt_family=opt_family, &
+                           opt_io=opt_io, &
+                           opt_dirname=opt_dirname, &
+                           dcplx=var)
          end if
       end if
 
@@ -328,20 +392,28 @@ contains
    !
    ! Low-level. Using MPI-IO / ADIOS2 to write a 3D array to a file
    !
-   subroutine write_one(ipencil, io, varname, decomp, opt_mode, &
+   subroutine write_one(ipencil, varname, decomp, opt_mode, &
+                        opt_family, opt_io, opt_dirname, &
                         freal, dreal, fcplx, dcplx)
 
       implicit none
 
       integer, intent(IN) :: ipencil
-      type(d2d_io), intent(inout) :: io
       character(len=*), intent(in) :: varname
       TYPE(DECOMP_INFO), intent(IN) :: decomp
       integer, intent(in), optional :: opt_mode
+      type(d2d_io_family), intent(in), optional :: opt_family
+      type(d2d_io), intent(inout), optional :: opt_io
+      character(len=*), intent(in), optional :: opt_dirname
       real(kind(0._real32)), contiguous, dimension(:, :, :), intent(IN), optional :: freal
       real(kind(0._real64)), contiguous, dimension(:, :, :), intent(IN), optional :: dreal
       complex(kind(0._real32)), contiguous, dimension(:, :, :), intent(IN), optional :: fcplx
       complex(kind(0._real64)), contiguous, dimension(:, :, :), intent(IN), optional :: dcplx
+
+      logical :: use_opt_io
+      integer :: mode
+      type(d2d_io) :: io
+      character(:), allocatable :: fullname
 
 #ifdef PROFILER
       if (decomp_profiler_io) call decomp_profiler_start("io_write_one")
@@ -351,27 +423,68 @@ contains
       if ((ipencil < 1) .or. (ipencil > 3)) then
          call decomp_2d_abort(__FILE__, __LINE__, ipencil, "Error invalid value of ipencil ")
       end if
+      if (.not.(present(opt_io)) .and. .not.(present(opt_dirname))) then
+         call decomp_2d_abort(__FILE__, __LINE__, 0, "Invalid arguments")
+      end if
+
+      ! Use opt_io only if present and open
+      if (present(opt_io)) then
+         if (opt_io%is_open) then
+            use_opt_io = .true.
+         else
+            use_opt_io = .false.
+         endif
+      else
+         use_opt_io = .false.
+      endif
+
+      if (present(opt_mode)) then
+         mode = opt_mode
+      else
+         mode = decomp_2d_write_deferred
+      end if
+
+      ! Open and start if needed
+      if (.not.use_opt_io) then
+         ! Generate a name with varname and opt_dirname
+         if (io%family%type == DECOMP_2D_IO_MPI) then
+            fullname = trim(opt_dirname)//"/"//trim(varname)
+         else ! if (io%family%type == DECOMP_2D_IO_ADIOS2) then ! -Werror=maybe-uninitialized
+            fullname = trim(opt_dirname)
+         end if
+         if (present(opt_family)) then
+            call io%open_start(opt_family, fullname, decomp_2d_write_mode)
+         else
+            call io%open_start(default_io_family, fullname, decomp_2d_write_mode)
+         end if
+      end if
 
       if (io%family%type == DECOMP_2D_IO_MPI) then
 
          ! MPI-IO
-         call mpi_write_one(ipencil, io, decomp, freal, dreal, fcplx, dcplx)
+         if (use_opt_io) then
+            call mpi_write_var(ipencil, opt_io, decomp, freal, dreal, fcplx, dcplx)
+         else
+            call mpi_write_var(ipencil, io, decomp, freal, dreal, fcplx, dcplx)
+         end if
 
       else if (io%family%type == DECOMP_2D_IO_ADIOS2) then
 
          ! ADIOS2
-         if (present(opt_mode)) then
-            call adios2_write_one(io, varname, opt_mode, &
+         if (use_opt_io) then
+            call adios2_write_var(opt_io, varname, mode, &
                                   freal, dreal, fcplx, dcplx)
          else
-            call adios2_write_one(io, varname, decomp_2d_write_deferred, &
+            call adios2_write_var(io, varname, mode, &
                                   freal, dreal, fcplx, dcplx)
          end if
 
-      else
+      end if
 
-         call decomp_2d_abort(__FILE__, __LINE__, io%family%type, &
-                              "Invalid value for the type of the IO family")
+      ! End and close if needed
+      if (.not.use_opt_io) then
+         call io%end_close()
+         deallocate (fullname)
       end if
 
 #ifdef PROFILER
@@ -387,7 +500,7 @@ contains
    !
    ! Write a 3D array to a file
    !
-   subroutine mpi_write_one(ipencil, io, decomp, freal, dreal, fcplx, dcplx)
+   subroutine mpi_write_var(ipencil, io, decomp, freal, dreal, fcplx, dcplx)
 
       implicit none
 
@@ -407,7 +520,7 @@ contains
       ! Do the MPI IO
       call mpi_write(io, sizes, subsizes, starts, freal, dreal, fcplx, dcplx)
 
-   end subroutine mpi_write_one
+   end subroutine mpi_write_var
    !
    ! Write a plane to a file
    !
@@ -498,7 +611,7 @@ contains
    !
    ! Write a 3D array
    !
-   subroutine adios2_write_one(io, varname, mode, &
+   subroutine adios2_write_var(io, varname, mode, &
                                freal, dreal, fcplx, dcplx)
 
       implicit none
@@ -566,12 +679,7 @@ contains
       end associate
 #endif
 
-   end subroutine adios2_write_one
-   !
-   ! Write a plane
-   !
-   !subroutine TODO
-   !end subroutine TODO
+   end subroutine adios2_write_var
 
    subroutine write_one_complex(ipencil, var, filename, opt_decomp)
 

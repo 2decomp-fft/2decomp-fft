@@ -36,7 +36,6 @@ program halo_test
 
    integer, allocatable, dimension(:) :: seed
 
-   real(mytype) :: err
    integer :: xlast, ylast, zlast
 
    integer :: nx_expected, ny_expected, nz_expected
@@ -501,7 +500,7 @@ contains
       !$acc end kernels
       divmag = mag(tmp)
 
-      if (err < epsilon(divmag) * divmag) then
+      if (error < epsilon(divmag) * divmag) then
          passing = .true.
       else
          passing = .false.
@@ -514,7 +513,7 @@ contains
 #ifdef DEBUG
          write (*, *) (divh(i, i, i), i=2, 13)
 #endif
-         write (*, *) 'Error: ', err, '; Relative: ', err / divmag
+         write (*, *) 'Error: ', error, '; Relative: ', error / divmag
          write (*, *) 'Pass: ', passing
       end if
       deallocate (tmp)

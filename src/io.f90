@@ -221,6 +221,7 @@ contains
 
       TYPE(DECOMP_INFO), pointer :: decomp
 
+      ! Use the provided decomp_info or the default one
       if (present(opt_decomp)) then
          decomp => opt_decomp
       else
@@ -258,6 +259,7 @@ contains
 
       TYPE(DECOMP_INFO), pointer :: decomp
 
+      ! Use the provided decomp_info or the default one
       if (present(opt_decomp)) then
          decomp => opt_decomp
       else
@@ -296,12 +298,14 @@ contains
       logical :: reduce
       TYPE(DECOMP_INFO), pointer :: decomp
 
+      ! Use the provided decomp_info or the default one
       if (present(opt_decomp)) then
          decomp => opt_decomp
       else
          decomp => decomp_main
       end if
 
+      ! One can write to single precision using opt_reduce_prec
       if (present(opt_reduce_prec)) then
          reduce = opt_reduce_prec
       else
@@ -346,12 +350,14 @@ contains
       logical :: reduce
       TYPE(DECOMP_INFO), pointer :: decomp
 
+      ! Use the provided decomp_info or the default one
       if (present(opt_decomp)) then
          decomp => opt_decomp
       else
          decomp => decomp_main
       end if
 
+      ! One can write to single precision using opt_reduce_prec
       if (present(opt_reduce_prec)) then
          reduce = opt_reduce_prec
       else
@@ -397,6 +403,7 @@ contains
 
       TYPE(DECOMP_INFO), pointer :: decomp
 
+      ! Use the provided decomp_info or the default one
       if (present(opt_decomp)) then
          decomp => opt_decomp
       else
@@ -432,6 +439,7 @@ contains
 
       TYPE(DECOMP_INFO), pointer :: decomp
 
+      ! Use the provided decomp_info or the default one
       if (present(opt_decomp)) then
          decomp => opt_decomp
       else
@@ -469,12 +477,14 @@ contains
       TYPE(DECOMP_INFO), pointer :: decomp
       real(kind(0._real32)), allocatable, dimension(:, :, :) :: tmp
 
+      ! Use the provided decomp_info or the default one
       if (present(opt_decomp)) then
          decomp => opt_decomp
       else
          decomp => decomp_main
       end if
 
+      ! One can read a file in single precision using opt_reduce_prec
       if (present(opt_reduce_prec)) then
          reduce = opt_reduce_prec
       else
@@ -530,12 +540,14 @@ contains
       TYPE(DECOMP_INFO), pointer :: decomp
       complex(kind(0._real32)), allocatable, dimension(:, :, :) :: tmp
 
+      ! Use the provided decomp_info or the default one
       if (present(opt_decomp)) then
          decomp => opt_decomp
       else
          decomp => decomp_main
       end if
 
+      ! One can read a file in single precision using opt_reduce_prec
       if (present(opt_reduce_prec)) then
          reduce = opt_reduce_prec
       else
@@ -973,6 +985,7 @@ contains
       end if
 
 #ifdef ADIOS2
+      ! Get the variable handle
       call adios2_inquire_variable(var_handle, io%family%io, varname, ierror)
       if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "adios2_inquire_variable "//trim(varname))
       if (.not. var_handle%valid) then
@@ -1041,6 +1054,7 @@ contains
 #endif
 
 #ifdef ADIOS2
+      ! Get the variable handle
       call adios2_inquire_variable(var_handle, io%family%io, varname, ierror)
       if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "adios2_inquire_variable "//trim(varname))
       if (.not. var_handle%valid) then

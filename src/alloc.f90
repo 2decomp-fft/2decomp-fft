@@ -368,22 +368,33 @@
   end subroutine alloc_y_dcplx
 
   ! Z-pencil real arrays
-  subroutine alloc_z_real_short(var, opt_global)
+  subroutine alloc_z_freal_short(var, opt_global)
 
      implicit none
 
-     real(mytype), allocatable, dimension(:, :, :) :: var
+     real(kind(0._real32)), allocatable, dimension(:, :, :) :: var
      logical, intent(IN), optional :: opt_global
 
      call alloc_z(var, decomp_main, opt_global)
 
-  end subroutine alloc_z_real_short
+  end subroutine alloc_z_freal_short
 
-  subroutine alloc_z_real(var, decomp, opt_global)
+  subroutine alloc_z_dreal_short(var, opt_global)
 
      implicit none
 
-     real(mytype), allocatable, dimension(:, :, :) :: var
+     real(kind(0._real64)), allocatable, dimension(:, :, :) :: var
+     logical, intent(IN), optional :: opt_global
+
+     call alloc_z(var, decomp_main, opt_global)
+
+  end subroutine alloc_z_dreal_short
+
+  subroutine alloc_z_freal(var, decomp, opt_global)
+
+     implicit none
+
+     real(kind(0._real32)), allocatable, dimension(:, :, :) :: var
      TYPE(DECOMP_INFO), intent(IN) :: decomp
      logical, intent(IN), optional :: opt_global
 
@@ -393,7 +404,7 @@
      if (present(opt_global)) then
         global = opt_global
      else
-        global = .false.
+        global = default_opt_global
      end if
 
      if (global) then
@@ -411,26 +422,13 @@
                              'Memory allocation failed when creating new arrays')
      end if
 
-     return
-  end subroutine alloc_z_real
+  end subroutine alloc_z_freal
 
-  ! Z-pencil complex arrays
-  subroutine alloc_z_complex_short(var, opt_global)
+  subroutine alloc_z_dreal(var, decomp, opt_global)
 
      implicit none
 
-     complex(mytype), allocatable, dimension(:, :, :) :: var
-     logical, intent(IN), optional :: opt_global
-
-     call alloc_z(var, decomp_main, opt_global)
-
-  end subroutine alloc_z_complex_short
-
-  subroutine alloc_z_complex(var, decomp, opt_global)
-
-     implicit none
-
-     complex(mytype), allocatable, dimension(:, :, :) :: var
+     real(kind(0._real64)), allocatable, dimension(:, :, :) :: var
      TYPE(DECOMP_INFO), intent(IN) :: decomp
      logical, intent(IN), optional :: opt_global
 
@@ -440,7 +438,7 @@
      if (present(opt_global)) then
         global = opt_global
      else
-        global = .false.
+        global = default_opt_global
      end if
 
      if (global) then
@@ -458,5 +456,95 @@
                              'Memory allocation failed when creating new arrays')
      end if
 
-     return
-  end subroutine alloc_z_complex
+  end subroutine alloc_z_dreal
+
+  ! Y-pencil complex arrays
+  subroutine alloc_z_fcplx_short(var, opt_global)
+
+     implicit none
+
+     complex(kind(0._real32)), allocatable, dimension(:, :, :) :: var
+     logical, intent(IN), optional :: opt_global
+
+     call alloc_z(var, decomp_main, opt_global)
+
+  end subroutine alloc_z_fcplx_short
+
+  subroutine alloc_z_dcplx_short(var, opt_global)
+
+     implicit none
+
+     complex(kind(0._real64)), allocatable, dimension(:, :, :) :: var
+     logical, intent(IN), optional :: opt_global
+
+     call alloc_z(var, decomp_main, opt_global)
+
+  end subroutine alloc_z_dcplx_short
+
+  subroutine alloc_z_fcplx(var, decomp, opt_global)
+
+     implicit none
+
+     complex(kind(0._real32)), allocatable, dimension(:, :, :) :: var
+     TYPE(DECOMP_INFO), intent(IN) :: decomp
+     logical, intent(IN), optional :: opt_global
+
+     logical :: global
+     integer :: alloc_stat, errorcode
+
+     if (present(opt_global)) then
+        global = opt_global
+     else
+        global = default_opt_global
+     end if
+
+     if (global) then
+        allocate (var(decomp%zst(1):decomp%zen(1), &
+                      decomp%zst(2):decomp%zen(2), decomp%zst(3):decomp%zen(3)), &
+                  stat=alloc_stat)
+     else
+        allocate (var(decomp%zsz(1), decomp%zsz(2), decomp%zsz(3)), &
+                  stat=alloc_stat)
+     end if
+
+     if (alloc_stat /= 0) then
+        errorcode = 8
+        call decomp_2d_abort(errorcode, &
+                             'Memory allocation failed when creating new arrays')
+     end if
+
+  end subroutine alloc_z_fcplx
+
+  subroutine alloc_z_dcplx(var, decomp, opt_global)
+
+     implicit none
+
+     complex(kind(0._real64)), allocatable, dimension(:, :, :) :: var
+     TYPE(DECOMP_INFO), intent(IN) :: decomp
+     logical, intent(IN), optional :: opt_global
+
+     logical :: global
+     integer :: alloc_stat, errorcode
+
+     if (present(opt_global)) then
+        global = opt_global
+     else
+        global = default_opt_global
+     end if
+
+     if (global) then
+        allocate (var(decomp%zst(1):decomp%zen(1), &
+                      decomp%zst(2):decomp%zen(2), decomp%zst(3):decomp%zen(3)), &
+                  stat=alloc_stat)
+     else
+        allocate (var(decomp%zsz(1), decomp%zsz(2), decomp%zsz(3)), &
+                  stat=alloc_stat)
+     end if
+
+     if (alloc_stat /= 0) then
+        errorcode = 8
+        call decomp_2d_abort(errorcode, &
+                             'Memory allocation failed when creating new arrays')
+     end if
+
+  end subroutine alloc_z_dcplx

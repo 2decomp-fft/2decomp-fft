@@ -22,6 +22,9 @@ module decomp_2d
 
    private        ! Make everything private unless declared public
 
+   ! Default parameter opt_global in alloc subroutines
+   logical, parameter :: default_opt_global = .false.
+
    ! some key global variables
    integer, save, public :: nx_global, ny_global, nz_global  ! global size
 
@@ -221,10 +224,14 @@ module decomp_2d
    end interface update_halo
 
    interface alloc_x
-      module procedure alloc_x_real
-      module procedure alloc_x_real_short
-      module procedure alloc_x_complex
-      module procedure alloc_x_complex_short
+      module procedure alloc_x_freal
+      module procedure alloc_x_freal_short
+      module procedure alloc_x_dreal
+      module procedure alloc_x_dreal_short
+      module procedure alloc_x_fcplx
+      module procedure alloc_x_fcplx_short
+      module procedure alloc_x_dcplx
+      module procedure alloc_x_dcplx_short
    end interface alloc_x
 
    interface alloc_y

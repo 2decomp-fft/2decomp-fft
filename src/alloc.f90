@@ -4,22 +4,33 @@
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
   ! X-pencil real arrays
-  subroutine alloc_x_real_short(var, opt_global)
+  subroutine alloc_x_freal_short(var, opt_global)
 
      implicit none
 
-     real(mytype), allocatable, dimension(:, :, :) :: var
+     real(kind(0._real32)), allocatable, dimension(:, :, :) :: var
      logical, intent(IN), optional :: opt_global
 
      call alloc_x(var, decomp_main, opt_global)
 
-  end subroutine alloc_x_real_short
+  end subroutine alloc_x_freal_short
 
-  subroutine alloc_x_real(var, decomp, opt_global)
+  subroutine alloc_x_dreal_short(var, opt_global)
 
      implicit none
 
-     real(mytype), allocatable, dimension(:, :, :) :: var
+     real(kind(0._real64)), allocatable, dimension(:, :, :) :: var
+     logical, intent(IN), optional :: opt_global
+
+     call alloc_x(var, decomp_main, opt_global)
+
+  end subroutine alloc_x_dreal_short
+
+  subroutine alloc_x_freal(var, decomp, opt_global)
+
+     implicit none
+
+     real(kind(0._real32)), allocatable, dimension(:, :, :) :: var
      TYPE(DECOMP_INFO), intent(IN) :: decomp
      logical, intent(IN), optional :: opt_global
 
@@ -29,7 +40,7 @@
      if (present(opt_global)) then
         global = opt_global
      else
-        global = .false.
+        global = default_opt_global
      end if
 
      if (global) then
@@ -47,26 +58,70 @@
                              'Memory allocation failed when creating new arrays')
      end if
 
-     return
-  end subroutine alloc_x_real
+  end subroutine alloc_x_freal
+
+  subroutine alloc_x_dreal(var, decomp, opt_global)
+
+     implicit none
+
+     real(kind(0._real64)), allocatable, dimension(:, :, :) :: var
+     TYPE(DECOMP_INFO), intent(IN) :: decomp
+     logical, intent(IN), optional :: opt_global
+
+     logical :: global
+     integer :: alloc_stat, errorcode
+
+     if (present(opt_global)) then
+        global = opt_global
+     else
+        global = default_opt_global
+     end if
+
+     if (global) then
+        allocate (var(decomp%xst(1):decomp%xen(1), &
+                      decomp%xst(2):decomp%xen(2), decomp%xst(3):decomp%xen(3)), &
+                  stat=alloc_stat)
+     else
+        allocate (var(decomp%xsz(1), decomp%xsz(2), decomp%xsz(3)), &
+                  stat=alloc_stat)
+     end if
+
+     if (alloc_stat /= 0) then
+        errorcode = 8
+        call decomp_2d_abort(errorcode, &
+                             'Memory allocation failed when creating new arrays')
+     end if
+
+  end subroutine alloc_x_dreal
 
   ! X-pencil complex arrays
-  subroutine alloc_x_complex_short(var, opt_global)
+  subroutine alloc_x_fcplx_short(var, opt_global)
 
      implicit none
 
-     complex(mytype), allocatable, dimension(:, :, :) :: var
+     complex(kind(0._real32)), allocatable, dimension(:, :, :) :: var
      logical, intent(IN), optional :: opt_global
 
      call alloc_x(var, decomp_main, opt_global)
 
-  end subroutine alloc_x_complex_short
+  end subroutine alloc_x_fcplx_short
 
-  subroutine alloc_x_complex(var, decomp, opt_global)
+  subroutine alloc_x_dcplx_short(var, opt_global)
 
      implicit none
 
-     complex(mytype), allocatable, dimension(:, :, :) :: var
+     complex(kind(0._real64)), allocatable, dimension(:, :, :) :: var
+     logical, intent(IN), optional :: opt_global
+
+     call alloc_x(var, decomp_main, opt_global)
+
+  end subroutine alloc_x_dcplx_short
+
+  subroutine alloc_x_fcplx(var, decomp, opt_global)
+
+     implicit none
+
+     complex(kind(0._real32)), allocatable, dimension(:, :, :) :: var
      TYPE(DECOMP_INFO), intent(IN) :: decomp
      logical, intent(IN), optional :: opt_global
 
@@ -76,7 +131,7 @@
      if (present(opt_global)) then
         global = opt_global
      else
-        global = .false.
+        global = default_opt_global
      end if
 
      if (global) then
@@ -95,7 +150,42 @@
      end if
 
      return
-  end subroutine alloc_x_complex
+  end subroutine alloc_x_fcplx
+
+  subroutine alloc_x_dcplx(var, decomp, opt_global)
+
+     implicit none
+
+     complex(kind(0._real64)), allocatable, dimension(:, :, :) :: var
+     TYPE(DECOMP_INFO), intent(IN) :: decomp
+     logical, intent(IN), optional :: opt_global
+
+     logical :: global
+     integer :: alloc_stat, errorcode
+
+     if (present(opt_global)) then
+        global = opt_global
+     else
+        global = default_opt_global
+     end if
+
+     if (global) then
+        allocate (var(decomp%xst(1):decomp%xen(1), &
+                      decomp%xst(2):decomp%xen(2), decomp%xst(3):decomp%xen(3)), &
+                  stat=alloc_stat)
+     else
+        allocate (var(decomp%xsz(1), decomp%xsz(2), decomp%xsz(3)), &
+                  stat=alloc_stat)
+     end if
+
+     if (alloc_stat /= 0) then
+        errorcode = 8
+        call decomp_2d_abort(errorcode, &
+                             'Memory allocation failed when creating new arrays')
+     end if
+
+     return
+  end subroutine alloc_x_dcplx
 
   ! Y-pencil real arrays
   subroutine alloc_y_real_short(var, opt_global)

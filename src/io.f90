@@ -19,7 +19,7 @@ module decomp_2d_io
 
    implicit none
 
-   ! Default reduced precision for write_one
+   ! Default reduced precision for read_one and write_one
    logical, parameter :: default_opt_reduce_prec = .false.
 
    ! Default IO family of readers / writers
@@ -217,23 +217,24 @@ contains
       type(d2d_io), intent(inout), optional :: opt_io
       character(len=*), intent(in), optional :: opt_dirname
       logical, intent(in), optional :: opt_reduce_prec
-      TYPE(DECOMP_INFO), intent(IN), optional :: opt_decomp
+      TYPE(DECOMP_INFO), target, intent(IN), optional :: opt_decomp
+
+      TYPE(DECOMP_INFO), pointer :: decomp
 
       if (present(opt_decomp)) then
-         call write_one(ipencil, varname, opt_decomp, &
-                        opt_mode=opt_mode, &
-                        opt_family=opt_family, &
-                        opt_io=opt_io, &
-                        opt_dirname=opt_dirname, &
-                        freal=var)
+         decomp => opt_decomp
       else
-         call write_one(ipencil, varname, decomp_main, &
-                        opt_mode=opt_mode, &
-                        opt_family=opt_family, &
-                        opt_io=opt_io, &
-                        opt_dirname=opt_dirname, &
-                        freal=var)
+         decomp => decomp_main
       end if
+
+      call write_one(ipencil, varname, decomp, &
+                     opt_mode=opt_mode, &
+                     opt_family=opt_family, &
+                     opt_io=opt_io, &
+                     opt_dirname=opt_dirname, &
+                     freal=var)
+
+      nullify (decomp)
 
       associate (p => opt_reduce_prec)
       end associate
@@ -253,23 +254,24 @@ contains
       type(d2d_io), intent(inout), optional :: opt_io
       character(len=*), intent(in), optional :: opt_dirname
       logical, intent(in), optional :: opt_reduce_prec
-      TYPE(DECOMP_INFO), intent(IN), optional :: opt_decomp
+      TYPE(DECOMP_INFO), target, intent(IN), optional :: opt_decomp
+
+      TYPE(DECOMP_INFO), pointer :: decomp
 
       if (present(opt_decomp)) then
-         call write_one(ipencil, varname, opt_decomp, &
-                        opt_mode=opt_mode, &
-                        opt_family=opt_family, &
-                        opt_io=opt_io, &
-                        opt_dirname=opt_dirname, &
-                        fcplx=var)
+         decomp => opt_decomp
       else
-         call write_one(ipencil, varname, decomp_main, &
-                        opt_mode=opt_mode, &
-                        opt_family=opt_family, &
-                        opt_io=opt_io, &
-                        opt_dirname=opt_dirname, &
-                        fcplx=var)
+         decomp => decomp_main
       end if
+
+      call write_one(ipencil, varname, decomp, &
+                     opt_mode=opt_mode, &
+                     opt_family=opt_family, &
+                     opt_io=opt_io, &
+                     opt_dirname=opt_dirname, &
+                     fcplx=var)
+
+      nullify (decomp)
 
       associate (p => opt_reduce_prec)
       end associate
@@ -289,9 +291,16 @@ contains
       type(d2d_io), intent(inout), optional :: opt_io
       character(len=*), intent(in), optional :: opt_dirname
       logical, intent(in), optional :: opt_reduce_prec
-      TYPE(DECOMP_INFO), intent(IN), optional :: opt_decomp
+      TYPE(DECOMP_INFO), target, intent(IN), optional :: opt_decomp
 
       logical :: reduce
+      TYPE(DECOMP_INFO), pointer :: decomp
+
+      if (present(opt_decomp)) then
+         decomp => opt_decomp
+      else
+         decomp => decomp_main
+      end if
 
       if (present(opt_reduce_prec)) then
          reduce = opt_reduce_prec
@@ -299,39 +308,23 @@ contains
          reduce = default_opt_reduce_prec
       end if
 
-      if (present(opt_decomp)) then
-         if (reduce) then
-            call write_one(ipencil, varname, opt_decomp, &
-                           opt_mode=decomp_2d_write_sync, &
-                           opt_family=opt_family, &
-                           opt_io=opt_io, &
-                           opt_dirname=opt_dirname, &
-                           freal=real(var, kind=kind(0._real32)))
-         else
-            call write_one(ipencil, varname, opt_decomp, &
-                           opt_mode=opt_mode, &
-                           opt_family=opt_family, &
-                           opt_io=opt_io, &
-                           opt_dirname=opt_dirname, &
-                           dreal=var)
-         end if
+      if (reduce) then
+         call write_one(ipencil, varname, decomp, &
+                        opt_mode=decomp_2d_write_sync, &
+                        opt_family=opt_family, &
+                        opt_io=opt_io, &
+                        opt_dirname=opt_dirname, &
+                        freal=real(var, kind=kind(0._real32)))
       else
-         if (reduce) then
-            call write_one(ipencil, varname, decomp_main, &
-                           opt_mode=decomp_2d_write_sync, &
-                           opt_family=opt_family, &
-                           opt_io=opt_io, &
-                           opt_dirname=opt_dirname, &
-                           freal=real(var, kind=kind(0._real32)))
-         else
-            call write_one(ipencil, varname, decomp_main, &
-                           opt_mode=opt_mode, &
-                           opt_family=opt_family, &
-                           opt_io=opt_io, &
-                           opt_dirname=opt_dirname, &
-                           dreal=var)
-         end if
+         call write_one(ipencil, varname, decomp, &
+                        opt_mode=opt_mode, &
+                        opt_family=opt_family, &
+                        opt_io=opt_io, &
+                        opt_dirname=opt_dirname, &
+                        dreal=var)
       end if
+
+      nullify (decomp)
 
    end subroutine write_one_dreal
    !
@@ -348,9 +341,16 @@ contains
       type(d2d_io), intent(inout), optional :: opt_io
       character(len=*), intent(in), optional :: opt_dirname
       logical, intent(in), optional :: opt_reduce_prec
-      TYPE(DECOMP_INFO), intent(IN), optional :: opt_decomp
+      TYPE(DECOMP_INFO), target, intent(IN), optional :: opt_decomp
 
       logical :: reduce
+      TYPE(DECOMP_INFO), pointer :: decomp
+
+      if (present(opt_decomp)) then
+         decomp => opt_decomp
+      else
+         decomp => decomp_main
+      end if
 
       if (present(opt_reduce_prec)) then
          reduce = opt_reduce_prec
@@ -358,39 +358,23 @@ contains
          reduce = default_opt_reduce_prec
       end if
 
-      if (present(opt_decomp)) then
-         if (reduce) then
-            call write_one(ipencil, varname, opt_decomp, &
-                           opt_mode=decomp_2d_write_sync, &
-                           opt_family=opt_family, &
-                           opt_io=opt_io, &
-                           opt_dirname=opt_dirname, &
-                           fcplx=cmplx(var, kind=kind(0._real32)))
-         else
-            call write_one(ipencil, varname, opt_decomp, &
-                           opt_mode=opt_mode, &
-                           opt_family=opt_family, &
-                           opt_io=opt_io, &
-                           opt_dirname=opt_dirname, &
-                           dcplx=var)
-         end if
+      if (reduce) then
+         call write_one(ipencil, varname, decomp, &
+                        opt_mode=decomp_2d_write_sync, &
+                        opt_family=opt_family, &
+                        opt_io=opt_io, &
+                        opt_dirname=opt_dirname, &
+                        fcplx=cmplx(var, kind=kind(0._real32)))
       else
-         if (reduce) then
-            call write_one(ipencil, varname, decomp_main, &
-                           opt_mode=decomp_2d_write_sync, &
-                           opt_family=opt_family, &
-                           opt_io=opt_io, &
-                           opt_dirname=opt_dirname, &
-                           fcplx=cmplx(var, kind=kind(0._real32)))
-         else
-            call write_one(ipencil, varname, decomp_main, &
-                           opt_mode=opt_mode, &
-                           opt_family=opt_family, &
-                           opt_io=opt_io, &
-                           opt_dirname=opt_dirname, &
-                           dcplx=var)
-         end if
+         call write_one(ipencil, varname, decomp, &
+                        opt_mode=opt_mode, &
+                        opt_family=opt_family, &
+                        opt_io=opt_io, &
+                        opt_dirname=opt_dirname, &
+                        dcplx=var)
       end if
+
+      nullify (decomp)
 
    end subroutine write_one_dcplx
 
@@ -398,7 +382,7 @@ contains
    ! High-level. Using MPI-IO / ADIOS2 to read a 3D array from a file
    !
    subroutine read_one_freal(ipencil, var, varname, opt_family, &
-                             opt_io, opt_dirname, opt_decomp)
+                             opt_io, opt_dirname, opt_reduce_prec, opt_decomp)
 
       implicit none
 
@@ -408,26 +392,32 @@ contains
       type(d2d_io_family), intent(in), optional :: opt_family
       type(d2d_io), intent(inout), optional :: opt_io
       character(len=*), intent(in), optional :: opt_dirname
-      TYPE(DECOMP_INFO), intent(IN), optional :: opt_decomp
+      logical, intent(in), optional :: opt_reduce_prec
+      TYPE(DECOMP_INFO), target, intent(IN), optional :: opt_decomp
+
+      TYPE(DECOMP_INFO), pointer :: decomp
 
       if (present(opt_decomp)) then
-         call read_one(ipencil, varname, opt_decomp, &
-                       opt_family=opt_family, &
-                       opt_io=opt_io, &
-                       opt_dirname=opt_dirname, &
-                       freal=var)
+         decomp => opt_decomp
       else
-         call read_one(ipencil, varname, decomp_main, &
-                       opt_family=opt_family, &
-                       opt_io=opt_io, &
-                       opt_dirname=opt_dirname, &
-                       freal=var)
+         decomp => decomp_main
       end if
+
+      call read_one(ipencil, varname, decomp, &
+                    opt_family=opt_family, &
+                    opt_io=opt_io, &
+                    opt_dirname=opt_dirname, &
+                    freal=var)
+
+      nullify (decomp)
+
+      associate (p => opt_reduce_prec)
+      end associate
 
    end subroutine read_one_freal
    !
    subroutine read_one_fcplx(ipencil, var, varname, opt_family, &
-                             opt_io, opt_dirname, opt_decomp)
+                             opt_io, opt_dirname, opt_reduce_prec, opt_decomp)
 
       implicit none
 
@@ -437,26 +427,32 @@ contains
       type(d2d_io_family), intent(in), optional :: opt_family
       type(d2d_io), intent(inout), optional :: opt_io
       character(len=*), intent(in), optional :: opt_dirname
-      TYPE(DECOMP_INFO), intent(IN), optional :: opt_decomp
+      logical, intent(in), optional :: opt_reduce_prec
+      TYPE(DECOMP_INFO), target, intent(IN), optional :: opt_decomp
+
+      TYPE(DECOMP_INFO), pointer :: decomp
 
       if (present(opt_decomp)) then
-         call read_one(ipencil, varname, opt_decomp, &
-                       opt_family=opt_family, &
-                       opt_io=opt_io, &
-                       opt_dirname=opt_dirname, &
-                       fcplx=var)
+         decomp => opt_decomp
       else
-         call read_one(ipencil, varname, decomp_main, &
-                       opt_family=opt_family, &
-                       opt_io=opt_io, &
-                       opt_dirname=opt_dirname, &
-                       fcplx=var)
+         decomp => decomp_main
       end if
+
+      call read_one(ipencil, varname, decomp, &
+                    opt_family=opt_family, &
+                    opt_io=opt_io, &
+                    opt_dirname=opt_dirname, &
+                    fcplx=var)
+
+      nullify (decomp)
+
+      associate (p => opt_reduce_prec)
+      end associate
 
    end subroutine read_one_fcplx
    !
    subroutine read_one_dreal(ipencil, var, varname, opt_family, &
-                             opt_io, opt_dirname, opt_decomp)
+                             opt_io, opt_dirname, opt_reduce_prec, opt_decomp)
 
       implicit none
 
@@ -466,26 +462,58 @@ contains
       type(d2d_io_family), intent(in), optional :: opt_family
       type(d2d_io), intent(inout), optional :: opt_io
       character(len=*), intent(in), optional :: opt_dirname
-      TYPE(DECOMP_INFO), intent(IN), optional :: opt_decomp
+      logical, intent(in), optional :: opt_reduce_prec
+      TYPE(DECOMP_INFO), target, intent(IN), optional :: opt_decomp
+
+      logical :: reduce
+      TYPE(DECOMP_INFO), pointer :: decomp
+      real(kind(0._real32)), allocatable, dimension(:, :, :) :: tmp
 
       if (present(opt_decomp)) then
-         call read_one(ipencil, varname, opt_decomp, &
-                       opt_family=opt_family, &
-                       opt_io=opt_io, &
-                       opt_dirname=opt_dirname, &
-                       dreal=var)
+         decomp => opt_decomp
       else
-         call read_one(ipencil, varname, decomp_main, &
+         decomp => decomp_main
+      end if
+
+      if (present(opt_reduce_prec)) then
+         reduce = opt_reduce_prec
+      else
+         reduce = default_opt_reduce_prec
+      end if
+
+      if (reduce) then
+
+         if (ipencil == 1) then
+            call alloc_x(tmp, decomp)
+         else if (ipencil == 2) then
+            call alloc_y(tmp, decomp)
+         else
+            call alloc_z(tmp, decomp)
+         end if
+         call read_one(ipencil, varname, decomp, &
+                       opt_family=opt_family, &
+                       opt_io=opt_io, &
+                       opt_dirname=opt_dirname, &
+                       freal=tmp)
+         var = tmp
+         deallocate (tmp)
+
+      else
+
+         call read_one(ipencil, varname, decomp, &
                        opt_family=opt_family, &
                        opt_io=opt_io, &
                        opt_dirname=opt_dirname, &
                        dreal=var)
+
       end if
+
+      nullify (decomp)
 
    end subroutine read_one_dreal
    !
    subroutine read_one_dcplx(ipencil, var, varname, opt_family, &
-                             opt_io, opt_dirname, opt_decomp)
+                             opt_io, opt_dirname, opt_reduce_prec, opt_decomp)
 
       implicit none
 
@@ -495,21 +523,53 @@ contains
       type(d2d_io_family), intent(in), optional :: opt_family
       type(d2d_io), intent(inout), optional :: opt_io
       character(len=*), intent(in), optional :: opt_dirname
-      TYPE(DECOMP_INFO), intent(IN), optional :: opt_decomp
+      logical, intent(in), optional :: opt_reduce_prec
+      TYPE(DECOMP_INFO), target, intent(IN), optional :: opt_decomp
+
+      logical :: reduce
+      TYPE(DECOMP_INFO), pointer :: decomp
+      complex(kind(0._real32)), allocatable, dimension(:, :, :) :: tmp
 
       if (present(opt_decomp)) then
-         call read_one(ipencil, varname, opt_decomp, &
-                       opt_family=opt_family, &
-                       opt_io=opt_io, &
-                       opt_dirname=opt_dirname, &
-                       dcplx=var)
+         decomp => opt_decomp
       else
-         call read_one(ipencil, varname, decomp_main, &
+         decomp => decomp_main
+      end if
+
+      if (present(opt_reduce_prec)) then
+         reduce = opt_reduce_prec
+      else
+         reduce = default_opt_reduce_prec
+      end if
+
+      if (reduce) then
+
+         if (ipencil == 1) then
+            call alloc_x(tmp, decomp)
+         else if (ipencil == 2) then
+            call alloc_y(tmp, decomp)
+         else
+            call alloc_z(tmp, decomp)
+         end if
+         call read_one(ipencil, varname, decomp, &
+                       opt_family=opt_family, &
+                       opt_io=opt_io, &
+                       opt_dirname=opt_dirname, &
+                       fcplx=tmp)
+         var = tmp
+         deallocate (tmp)
+
+      else
+
+         call read_one(ipencil, varname, decomp, &
                        opt_family=opt_family, &
                        opt_io=opt_io, &
                        opt_dirname=opt_dirname, &
                        dcplx=var)
+
       end if
+
+      nullify (decomp)
 
    end subroutine read_one_dcplx
 

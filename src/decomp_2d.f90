@@ -235,10 +235,14 @@ module decomp_2d
    end interface alloc_x
 
    interface alloc_y
-      module procedure alloc_y_real
-      module procedure alloc_y_real_short
-      module procedure alloc_y_complex
-      module procedure alloc_y_complex_short
+      module procedure alloc_y_freal
+      module procedure alloc_y_freal_short
+      module procedure alloc_y_dreal
+      module procedure alloc_y_dreal_short
+      module procedure alloc_y_fcplx
+      module procedure alloc_y_fcplx_short
+      module procedure alloc_y_dcplx
+      module procedure alloc_y_dcplx_short
    end interface alloc_y
 
    interface alloc_z

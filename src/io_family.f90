@@ -426,7 +426,11 @@ contains
 
       ! Print stuff
       write (iounit, *) ""
-      write (iounit, *) "  d2d_io_family "//family%label
+      if (allocated(family%label)) then
+         write (iounit, *) "  d2d_io_family "//family%label
+      else
+         write (iounit, *) "  d2d_io_family, label undefined"
+      end if
       select case (family%type)
       case (DECOMP_2D_IO_NONE)
          write (iounit, *) '    type : None'

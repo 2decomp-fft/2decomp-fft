@@ -62,6 +62,9 @@ module decomp_2d_io_object
 
    implicit none
 
+   ! Default family
+   type(d2d_io_family), save, pointer :: default_family
+
    ! derived type to store info for a reader / writer
    type, public :: d2d_io
       type(d2d_io_family), pointer :: family        ! Associated family
@@ -84,7 +87,11 @@ module decomp_2d_io_object
 
    private
 
-   public :: decomp_2d_io_open_and_start
+   public :: decomp_2d_io_object_open_and_start, &
+             decomp_2d_io_object_get_default_family, &
+             decomp_2d_io_object_set_default_family, &
+             decomp_2d_io_object_init, &
+             decomp_2d_io_object_fin
 
 contains
 
@@ -382,11 +389,11 @@ contains
    !
    ! Open and start in write_one or read_one
    !
-   subroutine decomp_2d_io_open_and_start(family, &
-                                          writer, &
-                                          dirname, &
-                                          varname, &
-                                          mode)
+   subroutine decomp_2d_io_object_open_and_start(family, &
+                                                 writer, &
+                                                 dirname, &
+                                                 varname, &
+                                                 mode)
 
       implicit none
 
@@ -408,6 +415,58 @@ contains
       call writer%open_start(family, fullname, mode)
       deallocate (fullname)
 
-   end subroutine decomp_2d_io_open_and_start
+   end subroutine decomp_2d_io_object_open_and_start
+
+   !
+   ! Provide a pointer to the default family used
+   !
+   function decomp_2d_io_object_get_default_family()
+
+      implicit none
+
+      type(d2d_io_family), pointer :: decomp_2d_io_object_get_default_family
+
+      decomp_2d_io_object_get_default_family => default_family
+
+   end function decomp_2d_io_object_get_default_family
+
+   !
+   ! Set the default family to the provided target
+   !
+   subroutine decomp_2d_io_object_set_default_family(family)
+
+      implicit none
+
+      type(d2d_io_family), target, intent(in), optional :: family
+
+      if (present(family)) then
+         default_family => family
+      else
+         if (associated(default_family)) nullify(default_family)
+      endif
+
+   end subroutine decomp_2d_io_object_set_default_family
+
+   !
+   ! This should be called at the beginning. Not mandatory.
+   !
+   subroutine decomp_2d_io_object_init
+
+      implicit none
+
+      if (associated(default_family)) nullify(default_family)
+
+   end subroutine decomp_2d_io_object_init
+
+   !
+   ! This should be called at the end. Not mandatory.
+   !
+   subroutine decomp_2d_io_object_fin
+
+      implicit none
+
+      if (associated(default_family)) nullify(default_family)
+
+   end subroutine decomp_2d_io_object_fin
 
 end module decomp_2d_io_object

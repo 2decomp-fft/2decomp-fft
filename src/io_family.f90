@@ -21,7 +21,7 @@ module decomp_2d_io_family
    implicit none
 
 #ifdef ADIOS2
-   type(adios2_adios), pointer :: default_adios => null()
+   type(adios2_adios), save, pointer :: default_adios
 #endif
 
    !
@@ -46,6 +46,8 @@ module decomp_2d_io_family
 
    private
 
+   public :: decomp_2d_io_family_init, &                                                             
+             decomp_2d_io_family_fin
 #ifdef ADIOS2
    public :: decomp_2d_io_family_get_default_adios, &
              decomp_2d_io_family_set_default_adios
@@ -448,6 +450,32 @@ contains
    end subroutine d2d_io_family_log
 
    !
+   ! This should be called at the beginning. Not mandatory.
+   !
+   subroutine decomp_2d_io_family_init()
+
+      implicit none
+
+#ifdef ADIOS2
+      if (associated(default_adios)) nullify(default_adios)
+#endif
+
+   end subroutine decomp_2d_io_family_init
+
+   !
+   ! This should be called at the end. Not mandatory.
+   !
+   subroutine decomp_2d_io_family_fin()
+
+      implicit none
+
+#ifdef ADIOS2
+      if (associated(default_adios) nullify(default_adios)
+#endif
+
+   end subroutine decomp_2d_io_family_fin
+
+   !
    !
    ! Stuff below is ADIOS2 only
    !
@@ -543,7 +571,7 @@ contains
       if (present(adios)) then
          default_adios => adios
       else
-         nullify (default_adios)
+         if (associated(default_adios)) nullify (default_adios)
       end if
 
    end subroutine decomp_2d_io_family_set_default_adios

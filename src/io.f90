@@ -156,6 +156,12 @@ contains
       if (decomp_profiler_io) call decomp_profiler_start("io_init")
 #endif
 
+      ! Initialize the IO family module
+      call decomp_2d_io_family_init()
+
+      ! Initialize the IO object module
+      call decomp_2d_io_object_init()
+
 #ifdef ADIOS2
       ! The ADIOS2 module is always initialized with the file "adios2_config.xml"
       ! This can be improved
@@ -177,6 +183,9 @@ contains
 #else
       default_mpi_io_family => default_io_family
 #endif
+
+      ! Send the default family to the IO object module
+      call decomp_2d_io_object_set_default_family(default_io_family)
 
 #ifdef PROFILER
       if (decomp_profiler_io) call decomp_profiler_end("io_init")
@@ -212,12 +221,19 @@ contains
 #endif
 
       ! Finalize the default IO families
+      call decomp_2d_io_object_set_default_family()
       call default_io_family%fin()
 #ifdef ADIOS2
       call default_mpi_io_family%fin()
       deallocate (default_mpi_io_family)
 #endif
       nullify (default_mpi_io_family)
+
+      ! Finalize the IO object module
+      call decomp_2d_io_object_fin()
+
+      ! Finalize the IO family module
+      call decomp_2d_io_family_fin()
 
 #ifdef PROFILER
       if (decomp_profiler_io) call decomp_profiler_end("io_fin")
@@ -667,17 +683,17 @@ contains
       ! Open and start if needed
       if (.not. use_opt_io) then
          if (present(opt_family)) then
-            call decomp_2d_io_open_and_start(opt_family, &
-                                             io, &
-                                             opt_dirname, &
-                                             varname, &
-                                             decomp_2d_write_mode)
+            call decomp_2d_io_object_open_and_start(opt_family, &
+                                                    io, &
+                                                    opt_dirname, &
+                                                    varname, &
+                                                    decomp_2d_write_mode)
          else
-            call decomp_2d_io_open_and_start(default_io_family, &
-                                             io, &
-                                             opt_dirname, &
-                                             varname, &
-                                             decomp_2d_write_mode)
+            call decomp_2d_io_object_open_and_start(default_io_family, &
+                                                    io, &
+                                                    opt_dirname, &
+                                                    varname, &
+                                                    decomp_2d_write_mode)
          end if
       end if
 
@@ -769,17 +785,17 @@ contains
       ! Open and start if needed
       if (.not. use_opt_io) then
          if (present(opt_family)) then
-            call decomp_2d_io_open_and_start(opt_family, &
-                                             io, &
-                                             opt_dirname, &
-                                             varname, &
-                                             decomp_2d_read_mode)
+            call decomp_2d_io_object_open_and_start(opt_family, &
+                                                    io, &
+                                                    opt_dirname, &
+                                                    varname, &
+                                                    decomp_2d_read_mode)
          else
-            call decomp_2d_io_open_and_start(default_io_family, &
-                                             io, &
-                                             opt_dirname, &
-                                             varname, &
-                                             decomp_2d_read_mode)
+            call decomp_2d_io_object_open_and_start(default_io_family, &
+                                                    io, &
+                                                    opt_dirname, &
+                                                    varname, &
+                                                    decomp_2d_read_mode)
          end if
       end if
 

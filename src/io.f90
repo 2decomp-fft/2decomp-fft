@@ -51,6 +51,7 @@ module decomp_2d_io
              decomp_2d_write_outflow, decomp_2d_read_inflow, &
              decomp_2d_io_init, decomp_2d_io_fin, & ! XXX: initialise/finalise 2decomp&fft IO module
              decomp_2d_register_variable, &
+             decomp_2d_io_register_var3d, &
              gen_iodir_name
 
    ! Generic interface to handle multiple data types
@@ -117,6 +118,29 @@ module decomp_2d_io
    end interface decomp_2d_read_inflow
 
 contains
+
+   !
+   ! High-level. Register one 3D variable for the default family of readers / writers.
+   !
+   !    See io_family.f90
+   !
+   subroutine decomp_2d_io_register_var3d(varname, &
+                                          ipencil, &
+                                          type, &
+                                          opt_reduce_prec, &
+                                          opt_decomp)
+
+      implicit none
+
+      character(len=*), intent(in) :: varname
+      integer, intent(in) :: ipencil ! (x-pencil=1; y-pencil=2; z-pencil=3)
+      integer, intent(in) :: type
+      logical, intent(in), optional :: opt_reduce_prec
+      type(decomp_info), intent(in), optional :: opt_decomp
+
+      call default_io_family%register_var3d(varname, ipencil, type, opt_reduce_prec, opt_decomp)
+
+   end subroutine decomp_2d_io_register_var3d
 
    !
    ! Initialize the IO module

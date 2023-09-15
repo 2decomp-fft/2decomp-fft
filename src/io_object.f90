@@ -98,14 +98,14 @@ contains
    !
    ! Open the given reader / writer
    !
-   module subroutine d2d_io_open(writer, family, io_dir, mode)
+   module subroutine d2d_io_open(writer, io_dir, mode, family)
 
       implicit none
 
       class(d2d_io), intent(inout) :: writer
-      type(d2d_io_family), target, intent(in) :: family
       character(len=*), intent(in) :: io_dir
       integer, intent(in) :: mode
+      type(d2d_io_family), target, intent(in) :: family
 
       integer :: access_mode, ierror
 
@@ -261,16 +261,20 @@ contains
    !
    ! Open the given reader / writer and start IO
    !
-   module subroutine d2d_io_open_start(writer, family, io_dir, mode)
+   module subroutine d2d_io_open_start(writer, io_dir, mode, opt_family)
 
       implicit none
 
       class(d2d_io), intent(inout) :: writer
-      type(d2d_io_family), target, intent(in) :: family
       character(len=*), intent(in) :: io_dir
       integer, intent(in) :: mode
+      type(d2d_io_family), target, intent(in), optional :: opt_family
 
-      call writer%open(family, io_dir, mode)
+      if (present(opt_family)) then
+         call writer%open(io_dir, mode, opt_family)
+      else
+         call writer%open(io_dir, mode, default_family)
+      end if
       call writer%start()
 
    end subroutine d2d_io_open_start
@@ -413,10 +417,14 @@ contains
             fullname = ""
             call decomp_2d_abort(__FILE__, __LINE__, opt_family%type, "Invalid value")
          end if
-         call writer%open_start(opt_family, fullname, mode)
+         call writer%open_start(fullname, mode, opt_family)
          deallocate (fullname)
       else
-         call decomp_2d_io_object_open_and_start(writer, dirname, varname, mode, default_family)
+         call decomp_2d_io_object_open_and_start(writer, &
+                                                 dirname, &
+                                                 varname, &
+                                                 mode, &
+                                                 opt_family=default_family)
       end if
 
    end subroutine decomp_2d_io_object_open_and_start

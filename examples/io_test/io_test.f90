@@ -69,8 +69,9 @@ program io_test
    call decomp_2d_testing_log()
 
    call decomp_2d_io_init()
+
+   call decomp_2d_io_register_var3d("u1.dat", 1, real_type)
    call io_family%init(io_name)
-   call io_family%register_var3d("u1.dat", 1, real_type)
    call io_family%register_var3d("u2.dat", 2, real_type)
    call io_family%register_var3d("u3.dat", 3, real_type)
    call io_family_restart%init(io_restart)
@@ -136,10 +137,20 @@ program io_test
 #endif
 
    ! Standard I/O pattern - 1 file per field
+   !
+   ! Using the default IO family
 #ifdef ADIOS2
-   call io%open_start(io_family, "out", decomp_2d_write_mode)
+   call io%open_start("out", decomp_2d_write_mode)
 #endif
    call decomp_2d_write_one(1, u1, 'u1.dat', opt_dirname='out', opt_io=io)
+#ifdef ADIOS2
+   call io%end_close
+#endif
+   !
+   ! Using a dedicated IO family
+#ifdef ADIOS2
+   call io%open_start("out", decomp_2d_write_mode, opt_family=io_family)
+#endif
    call decomp_2d_write_one(2, u2, 'u2.dat', opt_dirname='out', opt_io=io)
    call decomp_2d_write_one(3, u3, 'u3.dat', opt_dirname='out', opt_io=io)
 #ifdef ADIOS2
@@ -147,10 +158,20 @@ program io_test
 #endif
 
    ! read back to different arrays
+   !
+   ! Using the default IO family
 #ifdef ADIOS2
-   call io%open_start(io_family, "out", decomp_2d_read_mode)
+   call io%open_start("out", decomp_2d_read_mode)
 #endif
    call decomp_2d_read_one(1, u1b, 'u1.dat', opt_dirname='out', opt_io=io)
+#ifdef ADIOS2
+   call io%end_close
+#endif
+   !
+   ! Using a dedicated IO family
+#ifdef ADIOS2
+   call io%open_start("out", decomp_2d_read_mode, opt_family=io_family)
+#endif
    call decomp_2d_read_one(2, u2b, 'u2.dat', opt_dirname='out', opt_io=io)
    call decomp_2d_read_one(3, u3b, 'u3.dat', opt_dirname='out', opt_io=io)
 #ifdef ADIOS2
@@ -161,7 +182,7 @@ program io_test
    call check("file per field")
 
    ! Checkpoint I/O pattern - multiple fields per file
-   call io%open_start(io_family_restart, "checkpoint", decomp_2d_write_mode)
+   call io%open_start("checkpoint", decomp_2d_write_mode, opt_family=io_family_restart)
    call decomp_2d_write_one(1, u1, 'u1.dat', opt_io=io)
    call decomp_2d_write_one(2, u2, 'u2.dat', opt_io=io)
    call decomp_2d_write_one(3, u3, 'u3.dat', opt_io=io)
@@ -171,7 +192,7 @@ program io_test
 
    ! read back to different arrays
    u1b = 0; u2b = 0; u3b = 0
-   call io%open_start(io_family_restart, "checkpoint", decomp_2d_read_mode)
+   call io%open_start("checkpoint", decomp_2d_read_mode, opt_family=io_family_restart)
    call decomp_2d_read_one(1, u1b, 'u1.dat', opt_io=io)
    call decomp_2d_read_one(2, u2b, 'u2.dat', opt_io=io)
    call decomp_2d_read_one(3, u3b, 'u3.dat', opt_io=io)

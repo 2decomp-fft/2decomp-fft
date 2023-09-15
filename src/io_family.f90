@@ -46,7 +46,7 @@ module decomp_2d_io_family
 
    private
 
-   public :: decomp_2d_io_family_init, &                                                             
+   public :: decomp_2d_io_family_init, &
              decomp_2d_io_family_fin
 #ifdef ADIOS2
    public :: decomp_2d_io_family_get_default_adios, &
@@ -457,7 +457,7 @@ contains
       implicit none
 
 #ifdef ADIOS2
-      if (associated(default_adios)) nullify(default_adios)
+      if (associated(default_adios)) nullify (default_adios)
 #endif
 
    end subroutine decomp_2d_io_family_init
@@ -470,7 +470,7 @@ contains
       implicit none
 
 #ifdef ADIOS2
-      if (associated(default_adios) nullify(default_adios)
+      if (associated(default_adios) nullify (default_adios)
 #endif
 
    end subroutine decomp_2d_io_family_fin

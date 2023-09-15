@@ -682,19 +682,11 @@ contains
 
       ! Open and start if needed
       if (.not. use_opt_io) then
-         if (present(opt_family)) then
-            call decomp_2d_io_object_open_and_start(opt_family, &
-                                                    io, &
-                                                    opt_dirname, &
-                                                    varname, &
-                                                    decomp_2d_write_mode)
-         else
-            call decomp_2d_io_object_open_and_start(default_io_family, &
-                                                    io, &
-                                                    opt_dirname, &
-                                                    varname, &
-                                                    decomp_2d_write_mode)
-         end if
+         call decomp_2d_io_object_open_and_start(io, &
+                                                 opt_dirname, &
+                                                 varname, &
+                                                 decomp_2d_write_mode, &
+                                                 opt_family=opt_family)
       end if
 
       if (use_opt_io) then
@@ -784,19 +776,11 @@ contains
 
       ! Open and start if needed
       if (.not. use_opt_io) then
-         if (present(opt_family)) then
-            call decomp_2d_io_object_open_and_start(opt_family, &
-                                                    io, &
-                                                    opt_dirname, &
-                                                    varname, &
-                                                    decomp_2d_read_mode)
-         else
-            call decomp_2d_io_object_open_and_start(default_io_family, &
-                                                    io, &
-                                                    opt_dirname, &
-                                                    varname, &
-                                                    decomp_2d_read_mode)
-         end if
+         call decomp_2d_io_object_open_and_start(io, &
+                                                 opt_dirname, &
+                                                 varname, &
+                                                 decomp_2d_read_mode, &
+                                                 opt_family=opt_family)
       end if
 
       if (use_opt_io) then

@@ -389,31 +389,35 @@ contains
    !
    ! Open and start in write_one or read_one
    !
-   subroutine decomp_2d_io_object_open_and_start(family, &
-                                                 writer, &
-                                                 dirname, &
-                                                 varname, &
-                                                 mode)
+   recursive subroutine decomp_2d_io_object_open_and_start(writer, &
+                                                           dirname, &
+                                                           varname, &
+                                                           mode, &
+                                                           opt_family)
 
       implicit none
 
-      type(d2d_io_family), intent(in) :: family
       type(d2d_io), intent(out) :: writer
       character(len=*), intent(in) :: dirname, varname
       integer, intent(in) :: mode
+      type(d2d_io_family), intent(in), optional :: opt_family
 
       character(:), allocatable :: fullname
 
-      if (family%type == DECOMP_2D_IO_MPI) then
-         fullname = trim(dirname)//"/"//trim(varname)
-      else if (family%type == DECOMP_2D_IO_ADIOS2) then
-         fullname = trim(dirname)
+      if (present(opt_family)) then
+         if (opt_family%type == DECOMP_2D_IO_MPI) then
+            fullname = trim(dirname)//"/"//trim(varname)
+         else if (opt_family%type == DECOMP_2D_IO_ADIOS2) then
+            fullname = trim(dirname)
+         else
+            fullname = ""
+            call decomp_2d_abort(__FILE__, __LINE__, opt_family%type, "Invalid value")
+         end if
+         call writer%open_start(opt_family, fullname, mode)
+         deallocate (fullname)
       else
-         fullname = ""
-         call decomp_2d_abort(__FILE__, __LINE__, family%type, "Invalid value")
+         call decomp_2d_io_object_open_and_start(writer, dirname, varname, mode, default_family)
       end if
-      call writer%open_start(family, fullname, mode)
-      deallocate (fullname)
 
    end subroutine decomp_2d_io_object_open_and_start
 
@@ -442,8 +446,8 @@ contains
       if (present(family)) then
          default_family => family
       else
-         if (associated(default_family)) nullify(default_family)
-      endif
+         if (associated(default_family)) nullify (default_family)
+      end if
 
    end subroutine decomp_2d_io_object_set_default_family
 
@@ -454,7 +458,7 @@ contains
 
       implicit none
 
-      if (associated(default_family)) nullify(default_family)
+      if (associated(default_family)) nullify (default_family)
 
    end subroutine decomp_2d_io_object_init
 
@@ -465,7 +469,7 @@ contains
 
       implicit none
 
-      if (associated(default_family)) nullify(default_family)
+      if (associated(default_family)) nullify (default_family)
 
    end subroutine decomp_2d_io_object_fin
 

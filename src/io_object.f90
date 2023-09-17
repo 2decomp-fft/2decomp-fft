@@ -105,7 +105,7 @@ contains
       class(d2d_io), intent(inout) :: writer
       character(len=*), intent(in) :: io_dir
       integer, intent(in) :: mode
-      type(d2d_io_family), target, intent(in) :: family
+      type(d2d_io_family), target, intent(inout) :: family
 
       integer :: access_mode, ierror
 
@@ -268,7 +268,7 @@ contains
       class(d2d_io), intent(inout) :: writer
       character(len=*), intent(in) :: io_dir
       integer, intent(in) :: mode
-      type(d2d_io_family), target, intent(in), optional :: opt_family
+      type(d2d_io_family), target, intent(inout), optional :: opt_family
 
       if (present(opt_family)) then
          call writer%open(io_dir, mode, opt_family)
@@ -404,7 +404,7 @@ contains
       type(d2d_io), intent(out) :: writer
       character(len=*), intent(in) :: dirname, varname
       integer, intent(in) :: mode
-      type(d2d_io_family), intent(in), optional :: opt_family
+      type(d2d_io_family), intent(inout), optional :: opt_family
 
       character(:), allocatable :: fullname
 

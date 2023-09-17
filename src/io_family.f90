@@ -138,7 +138,7 @@ contains
          if (.not. associated(default_adios)) then
             call decomp_2d_warning(__FILE__, __LINE__, 0, &
                                    "Warning, default adios2_adios is null()")
-         endif
+         end if
          family%adios => default_adios
       end if
 

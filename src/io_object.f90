@@ -404,7 +404,7 @@ contains
       type(d2d_io), intent(out) :: writer
       character(len=*), intent(in) :: dirname, varname
       integer, intent(in) :: mode
-      type(d2d_io_family), intent(inout), optional :: opt_family
+      type(d2d_io_family), target, intent(inout), optional :: opt_family
 
       character(:), allocatable :: fullname
 

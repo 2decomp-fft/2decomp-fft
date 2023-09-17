@@ -253,7 +253,7 @@ contains
       real(kind(0._real32)), contiguous, dimension(:, :, :), intent(IN) :: var
       character(len=*), intent(in) :: varname
       integer, intent(in), optional :: opt_mode
-      type(d2d_io_family), intent(inout), optional :: opt_family
+      type(d2d_io_family), target, intent(inout), optional :: opt_family
       type(d2d_io), intent(inout), optional :: opt_io
       character(len=*), intent(in), optional :: opt_dirname
       logical, intent(in), optional :: opt_reduce_prec
@@ -291,7 +291,7 @@ contains
       complex(kind(0._real32)), contiguous, dimension(:, :, :), intent(IN) :: var
       character(len=*), intent(in) :: varname
       integer, intent(in), optional :: opt_mode
-      type(d2d_io_family), intent(inout), optional :: opt_family
+      type(d2d_io_family), target, intent(inout), optional :: opt_family
       type(d2d_io), intent(inout), optional :: opt_io
       character(len=*), intent(in), optional :: opt_dirname
       logical, intent(in), optional :: opt_reduce_prec
@@ -329,7 +329,7 @@ contains
       real(kind(0._real64)), contiguous, dimension(:, :, :), intent(IN) :: var
       character(len=*), intent(in) :: varname
       integer, intent(in), optional :: opt_mode
-      type(d2d_io_family), intent(inout), optional :: opt_family
+      type(d2d_io_family), target, intent(inout), optional :: opt_family
       type(d2d_io), intent(inout), optional :: opt_io
       character(len=*), intent(in), optional :: opt_dirname
       logical, intent(in), optional :: opt_reduce_prec
@@ -381,7 +381,7 @@ contains
       complex(kind(0._real64)), contiguous, dimension(:, :, :), intent(IN) :: var
       character(len=*), intent(in) :: varname
       integer, intent(in), optional :: opt_mode
-      type(d2d_io_family), intent(inout), optional :: opt_family
+      type(d2d_io_family), target, intent(inout), optional :: opt_family
       type(d2d_io), intent(inout), optional :: opt_io
       character(len=*), intent(in), optional :: opt_dirname
       logical, intent(in), optional :: opt_reduce_prec
@@ -435,7 +435,7 @@ contains
       integer, intent(IN) :: ipencil
       real(kind(0._real32)), contiguous, dimension(:, :, :), intent(out) :: var
       character(len=*), intent(in) :: varname
-      type(d2d_io_family), intent(inout), optional :: opt_family
+      type(d2d_io_family), target, intent(inout), optional :: opt_family
       type(d2d_io), intent(inout), optional :: opt_io
       character(len=*), intent(in), optional :: opt_dirname
       logical, intent(in), optional :: opt_reduce_prec
@@ -471,7 +471,7 @@ contains
       integer, intent(IN) :: ipencil
       complex(kind(0._real32)), contiguous, dimension(:, :, :), intent(out) :: var
       character(len=*), intent(in) :: varname
-      type(d2d_io_family), intent(inout), optional :: opt_family
+      type(d2d_io_family), target, intent(inout), optional :: opt_family
       type(d2d_io), intent(inout), optional :: opt_io
       character(len=*), intent(in), optional :: opt_dirname
       logical, intent(in), optional :: opt_reduce_prec
@@ -507,7 +507,7 @@ contains
       integer, intent(IN) :: ipencil
       real(kind(0._real64)), contiguous, dimension(:, :, :), intent(out) :: var
       character(len=*), intent(in) :: varname
-      type(d2d_io_family), intent(inout), optional :: opt_family
+      type(d2d_io_family), target, intent(inout), optional :: opt_family
       type(d2d_io), intent(inout), optional :: opt_io
       character(len=*), intent(in), optional :: opt_dirname
       logical, intent(in), optional :: opt_reduce_prec
@@ -570,7 +570,7 @@ contains
       integer, intent(IN) :: ipencil
       complex(kind(0._real64)), contiguous, dimension(:, :, :), intent(out) :: var
       character(len=*), intent(in) :: varname
-      type(d2d_io_family), intent(inout), optional :: opt_family
+      type(d2d_io_family), target, intent(inout), optional :: opt_family
       type(d2d_io), intent(inout), optional :: opt_io
       character(len=*), intent(in), optional :: opt_dirname
       logical, intent(in), optional :: opt_reduce_prec
@@ -638,7 +638,7 @@ contains
       character(len=*), intent(in) :: varname
       TYPE(DECOMP_INFO), intent(IN) :: decomp
       integer, intent(in), optional :: opt_mode
-      type(d2d_io_family), intent(inout), optional :: opt_family
+      type(d2d_io_family), target, intent(inout), optional :: opt_family
       type(d2d_io), intent(inout), optional :: opt_io
       character(len=*), intent(in), optional :: opt_dirname
       real(kind(0._real32)), contiguous, dimension(:, :, :), intent(IN), optional :: freal
@@ -740,7 +740,7 @@ contains
       integer, intent(IN) :: ipencil
       character(len=*), intent(in) :: varname
       TYPE(DECOMP_INFO), intent(IN) :: decomp
-      type(d2d_io_family), intent(inout), optional :: opt_family
+      type(d2d_io_family), target, intent(inout), optional :: opt_family
       type(d2d_io), intent(inout), optional :: opt_io
       character(len=*), intent(in), optional :: opt_dirname
       real(kind(0._real32)), contiguous, dimension(:, :, :), intent(out), optional :: freal

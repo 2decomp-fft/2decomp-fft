@@ -135,6 +135,10 @@ contains
       ! Advanced API
       ! The external code can set its own object of type adios2_adios before calling init
       if (.not. associated(family%adios)) then
+         if (.not. associated(default_adios)) then
+            call decomp_2d_warning(__FILE__, __LINE__, 0, &
+                                   "Warning, default adios2_adios is null()")
+         endif
          family%adios => default_adios
       end if
 
@@ -264,7 +268,7 @@ contains
 
       implicit none
 
-      type(d2d_io_family), intent(in) :: family
+      type(d2d_io_family), intent(inout) :: family
       character(len=*), intent(in) :: varname
       integer, intent(in) :: ipencil
       integer, intent(in) :: type
@@ -333,7 +337,7 @@ contains
       integer :: nplanes
 
 #ifdef PROFILER
-      if (decomp_profiler_io) call decomp_profiler_start("d2d_io_family_register_var3d")
+      if (decomp_profiler_io) call decomp_profiler_start("d2d_io_family_register_var2d")
 #endif
 
       if (present(opt_reduce_prec)) then
@@ -355,7 +359,7 @@ contains
       end if
 
 #ifdef PROFILER
-      if (decomp_profiler_io) call decomp_profiler_end("d2d_io_family_register_var3d")
+      if (decomp_profiler_io) call decomp_profiler_end("d2d_io_family_register_var2d")
 #endif
 
    end subroutine d2d_io_family_register_var2d
@@ -366,7 +370,7 @@ contains
 
       implicit none
 
-      type(d2d_io_family), intent(in) :: family
+      type(d2d_io_family), intent(inout) :: family
       character(len=*), intent(in) :: varname
       integer, intent(in) :: ipencil
       integer, intent(in) :: type
@@ -470,7 +474,7 @@ contains
       implicit none
 
 #ifdef ADIOS2
-      if (associated(default_adios) nullify (default_adios)
+      if (associated(default_adios)) nullify (default_adios)
 #endif
 
    end subroutine decomp_2d_io_family_fin
@@ -488,7 +492,7 @@ contains
 
       implicit none
 
-      type(d2d_io_family), intent(in) :: family
+      type(d2d_io_family), intent(inout) :: family
       character(len=*), intent(in) :: varname
       integer, dimension(3), intent(in) :: sizes, starts, subsizes
       integer, intent(in) :: type
@@ -552,7 +556,8 @@ contains
       type(adios2_adios), pointer :: decomp_2d_io_family_get_default_adios
 
       if (.not. associated(default_adios)) then
-         call decomp_2d_warning(0, "Warning, default adios2_adios is null()")
+         call decomp_2d_warning(__FILE__, __LINE__, 0, &
+                                "Warning, default adios2_adios is null()")
       end if
 
       decomp_2d_io_family_get_default_adios => default_adios

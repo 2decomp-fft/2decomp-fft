@@ -506,7 +506,8 @@ contains
       ! Register
       if (family%io%valid) then
          call adios2_inquire_variable(var_handle, family%io, varname, ierror)
-         if (ierror /= 0) then
+         ! Variable found : ierror=0. Variable not found : ierror=adios2_error_exception
+         if (.not. (ierror == 0 .or. ierror == adios2_error_exception)) then
             call decomp_2d_abort(__FILE__, __LINE__, ierror, &
                                  "adios2_inquire_variable "//varname)
          end if
@@ -540,7 +541,7 @@ contains
             end if
          end if
       else
-         call decomp_2d_abort(__FILE__, __LINE__, -1, &
+         call decomp_2d_abort(__FILE__, __LINE__, ierror, &
                               "trying to register variable with invalid IO!")
       end if
 

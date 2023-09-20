@@ -628,6 +628,25 @@ contains
    !
    ! Low-level. Using MPI-IO / ADIOS2 to write a 3D array to a file
    !
+   ! Inputs
+   !   - ipencil : pencil orientation of the variable
+   !   - varname : name of the variable
+   !   - decomp : decomp_info for the variable
+   !   - opt_mode : writing mode, no impact on MPI IO
+   !   - opt_family : IO family can be provided to avoid the default one
+   !   - opt_io : IO reader / writer can be provided
+   !   - opt_dirname : This is mandatory if no IO reader / writer was provided
+   !   - freal / dreal / fcplx / dcplx : array
+   !
+   ! If opt_io is provided and open
+   !    - MPI IO will write to the file handle opt_io%fh
+   !    - ADIOS2 IO will write to the engine opt_io%engine
+   !
+   ! Otherwise
+   !    - opt_dirname is mandatory
+   !    - MPI IO will write to the file opt_dirname/varname
+   !    - ADIOS2 IO will write to the folder opt_dirname
+   !
    subroutine write_one(ipencil, varname, decomp, opt_mode, &
                         opt_family, opt_io, opt_dirname, &
                         freal, dreal, fcplx, dcplx)
@@ -730,6 +749,24 @@ contains
 
    !
    ! Low-level. Using MPI-IO / ADIOS2 to read a 3D array from a file
+   !
+   ! Inputs
+   !   - ipencil : pencil orientation of the variable
+   !   - varname : name of the variable
+   !   - decomp : decomp_info for the variable
+   !   - opt_family : IO family can be provided to avoid the default one
+   !   - opt_io : IO reader / writer can be provided
+   !   - opt_dirname : This is mandatory if no IO reader / writer was provided
+   !   - freal / dreal / fcplx / dcplx : array
+   !
+   ! If opt_io is provided and open
+   !    - MPI IO will read from the file handle opt_io%fh
+   !    - ADIOS2 IO will read from the engine opt_io%engine
+   !
+   ! Otherwise
+   !    - opt_dirname is mandatory
+   !    - MPI IO will read from the file opt_dirname/varname
+   !    - ADIOS2 IO will read from the folder opt_dirname
    !
    subroutine read_one(ipencil, varname, decomp, &
                        opt_family, opt_io, opt_dirname, &

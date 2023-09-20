@@ -231,7 +231,7 @@ contains
 
       implicit none
 
-      class(d2d_io_family), intent(inout) :: family
+      class(d2d_io_family), intent(in) :: family
       character(len=*), intent(in) :: varname
       integer, intent(in) :: ipencil ! (x-pencil=1; y-pencil=2; z-pencil=3)
       integer, intent(in) :: type
@@ -268,7 +268,7 @@ contains
 
       implicit none
 
-      type(d2d_io_family), intent(inout) :: family
+      type(d2d_io_family), intent(in) :: family
       character(len=*), intent(in) :: varname
       integer, intent(in) :: ipencil
       integer, intent(in) :: type
@@ -325,7 +325,7 @@ contains
 
       implicit none
 
-      class(d2d_io_family), intent(inout) :: family
+      class(d2d_io_family), intent(in) :: family
       character(len=*), intent(in) :: varname
       integer, intent(in) :: ipencil ! (x-pencil=1; y-pencil=2; z-pencil=3)
       integer, intent(in) :: type
@@ -370,7 +370,7 @@ contains
 
       implicit none
 
-      type(d2d_io_family), intent(inout) :: family
+      type(d2d_io_family), intent(in) :: family
       character(len=*), intent(in) :: varname
       integer, intent(in) :: ipencil
       integer, intent(in) :: type
@@ -492,7 +492,7 @@ contains
 
       implicit none
 
-      type(d2d_io_family), intent(inout) :: family
+      type(d2d_io_family), intent(in) :: family
       character(len=*), intent(in) :: varname
       integer, dimension(3), intent(in) :: sizes, starts, subsizes
       integer, intent(in) :: type

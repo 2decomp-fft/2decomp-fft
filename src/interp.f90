@@ -11,7 +11,7 @@
 !=======================================================================
 
 !
-! This submodule allow interpolation between grids
+! This module allow interpolation between grids
 !
 
 module decomp_2d_interp
@@ -21,6 +21,8 @@ module decomp_2d_interp
    use decomp_2d
 
    implicit none
+
+   private
 
    public :: decomp_2d_interp_var3d
 

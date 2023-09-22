@@ -119,7 +119,7 @@ module decomp_2d_constants
    !
    ! Interpolation methods
    !
-   integer, parameter, public :: DECOMP_2D_INTERP_BASIC = 0
+   integer, parameter, public :: DECOMP_2D_INTERP_BASIC = 0 ! Order 0, find closest point without transpose
 
    !
    ! Major and minor version number

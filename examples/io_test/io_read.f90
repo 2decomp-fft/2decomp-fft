@@ -1,11 +1,13 @@
 program io_read
 
    use mpi
+   use decomp_2d
    use decomp_2d_constants
    use decomp_2d_io
+   use decomp_2d_io_family
+   use decomp_2d_io_object
    use decomp_2d_mpi
    use decomp_2d_testing
-   use decomp_2d
 #if defined(_GPU)
    use cudafor
    use openacc
@@ -32,6 +34,7 @@ program io_read
    real(mytype), parameter :: eps = 1.0E-7_mytype
 
    character(len=*), parameter :: io_name = "test-io"
+   type(d2d_io), save :: io
 #ifndef ADIOS2
    logical ::file_exists1, file_exists2, file_exists3
 #endif
@@ -67,10 +70,9 @@ program io_read
 #endif
 
    call decomp_2d_io_init()
-   call decomp_2d_init_io(io_name)
-   call decomp_2d_register_variable(io_name, "u1.dat", 1, 0, output2D, mytype)
-   call decomp_2d_register_variable(io_name, "u2.dat", 2, 0, output2D, mytype)
-   call decomp_2d_register_variable(io_name, "u3.dat", 3, 0, output2D, mytype)
+   call decomp_2d_io_register_var3d("u1.dat", 1, real_type)
+   call decomp_2d_io_register_var3d("u2.dat", 2, real_type)
+   call decomp_2d_io_register_var3d("u3.dat", 3, real_type)
 
    ! ***** global data *****
    allocate (data1(nx, ny, nz))
@@ -94,15 +96,13 @@ program io_read
 
    ! read back to different arrays
 #ifdef ADIOS2
-   call decomp_2d_open_io(io_name, "out", decomp_2d_read_mode)
-   call decomp_2d_start_io(io_name, "out")
+   call io%open_start("out", decomp_2d_read_mode)
 #endif
-   call decomp_2d_read_one(1, u1b, 'out', 'u1.dat', io_name, reduce_prec=.false.)
-   call decomp_2d_read_one(2, u2b, 'out', 'u2.dat', io_name, reduce_prec=.false.)
-   call decomp_2d_read_one(3, u3b, 'out', 'u3.dat', io_name, reduce_prec=.false.)
+   call decomp_2d_read_one(1, u1b, 'u1.dat', opt_dirname='out', opt_io=io)
+   call decomp_2d_read_one(2, u2b, 'u2.dat', opt_dirname='out', opt_io=io)
+   call decomp_2d_read_one(3, u3b, 'u3.dat', opt_dirname='out', opt_io=io)
 #ifdef ADIOS2
-   call decomp_2d_end_io(io_name, "out")
-   call decomp_2d_close_io(io_name, "out")
+   call io%end_close
 #endif
 
    ! Check against the global data array
@@ -132,6 +132,7 @@ program io_read
 
    deallocate (u1b, u2b, u3b)
    deallocate (data1)
+   call decomp_2d_io_fin
    call decomp_2d_finalize
    call MPI_FINALIZE(ierror)
 

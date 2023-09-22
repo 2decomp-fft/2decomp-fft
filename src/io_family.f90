@@ -58,18 +58,29 @@ contains
    !
    ! Initialize a new family of readers / writers (default type)
    !
-   subroutine d2d_io_family_init(family, label)
+   subroutine d2d_io_family_init(family, label, opt_backend)
 
       implicit none
 
       class(d2d_io_family), intent(inout) :: family
       character(len=*), intent(in) :: label
+      integer, intent(in), optional :: opt_backend
 
+      if (present(opt_backend)) then
+         if (opt_backend == DECOMP_2D_IO_MPI) then
+            call family%mpi_init(label)
+         else if (opt_backend == DECOMP_2D_IO_ADIOS2) then
+            call family%adios2_init(label)
+         else
+            call decomp_2d_abort(__FILE__, __LINE__, opt_backend, "Invalid value for opt_backend")
+         endif
+      else
 #ifdef ADIOS2
-      call family%adios2_init(label)
+         call family%adios2_init(label)
 #else
-      call family%mpi_init(label)
+         call family%mpi_init(label)
 #endif
+      endif
 
    end subroutine d2d_io_family_init
 

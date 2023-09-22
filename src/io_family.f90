@@ -126,6 +126,8 @@ contains
 
 #ifdef ADIOS2
       integer :: ierror
+#else
+      call decomp_2d_abort(__FILE__, __LINE__, -1, "ADIOS2 is not available")
 #endif
 
 #ifdef PROFILER
@@ -137,9 +139,7 @@ contains
          call decomp_2d_abort(__FILE__, __LINE__, -1, "Family was not cleared "//label)
       end if
 
-#ifndef ADIOS2
-      call decomp_2d_abort(__FILE__, __LINE__, -1, "ADIOS2 is not available")
-#else
+#ifdef ADIOS2
       family%type = decomp_2d_io_adios2
       family%label = label
 

@@ -250,7 +250,7 @@ contains
       implicit none
 
       integer, intent(IN) :: ipencil
-      real(kind(0._real32)), contiguous, dimension(:, :, :), intent(IN) :: var
+      real(real32), contiguous, dimension(:, :, :), intent(IN) :: var
       character(len=*), intent(in) :: varname
       integer, intent(in), optional :: opt_mode
       type(d2d_io_family), target, intent(in), optional :: opt_family
@@ -288,7 +288,7 @@ contains
       implicit none
 
       integer, intent(IN) :: ipencil
-      complex(kind(0._real32)), contiguous, dimension(:, :, :), intent(IN) :: var
+      complex(real32), contiguous, dimension(:, :, :), intent(IN) :: var
       character(len=*), intent(in) :: varname
       integer, intent(in), optional :: opt_mode
       type(d2d_io_family), target, intent(in), optional :: opt_family
@@ -326,7 +326,7 @@ contains
       implicit none
 
       integer, intent(IN) :: ipencil
-      real(kind(0._real64)), contiguous, dimension(:, :, :), intent(IN) :: var
+      real(real64), contiguous, dimension(:, :, :), intent(IN) :: var
       character(len=*), intent(in) :: varname
       integer, intent(in), optional :: opt_mode
       type(d2d_io_family), target, intent(in), optional :: opt_family
@@ -358,7 +358,7 @@ contains
                         opt_family=opt_family, &
                         opt_io=opt_io, &
                         opt_dirname=opt_dirname, &
-                        freal=real(var, kind=kind(0._real32)))
+                        freal=real(var, kind=real32))
       else
          call write_one(ipencil, varname, decomp, &
                         opt_mode=opt_mode, &
@@ -378,7 +378,7 @@ contains
       implicit none
 
       integer, intent(IN) :: ipencil
-      complex(kind(0._real64)), contiguous, dimension(:, :, :), intent(IN) :: var
+      complex(real64), contiguous, dimension(:, :, :), intent(IN) :: var
       character(len=*), intent(in) :: varname
       integer, intent(in), optional :: opt_mode
       type(d2d_io_family), target, intent(in), optional :: opt_family
@@ -410,7 +410,7 @@ contains
                         opt_family=opt_family, &
                         opt_io=opt_io, &
                         opt_dirname=opt_dirname, &
-                        fcplx=cmplx(var, kind=kind(0._real32)))
+                        fcplx=cmplx(var, kind=real32))
       else
          call write_one(ipencil, varname, decomp, &
                         opt_mode=opt_mode, &
@@ -433,7 +433,7 @@ contains
       implicit none
 
       integer, intent(IN) :: ipencil
-      real(kind(0._real32)), contiguous, dimension(:, :, :), intent(out) :: var
+      real(real32), contiguous, dimension(:, :, :), intent(out) :: var
       character(len=*), intent(in) :: varname
       type(d2d_io_family), target, intent(in), optional :: opt_family
       type(d2d_io), intent(inout), optional :: opt_io
@@ -469,7 +469,7 @@ contains
       implicit none
 
       integer, intent(IN) :: ipencil
-      complex(kind(0._real32)), contiguous, dimension(:, :, :), intent(out) :: var
+      complex(real32), contiguous, dimension(:, :, :), intent(out) :: var
       character(len=*), intent(in) :: varname
       type(d2d_io_family), target, intent(in), optional :: opt_family
       type(d2d_io), intent(inout), optional :: opt_io
@@ -505,7 +505,7 @@ contains
       implicit none
 
       integer, intent(IN) :: ipencil
-      real(kind(0._real64)), contiguous, dimension(:, :, :), intent(out) :: var
+      real(real64), contiguous, dimension(:, :, :), intent(out) :: var
       character(len=*), intent(in) :: varname
       type(d2d_io_family), target, intent(in), optional :: opt_family
       type(d2d_io), intent(inout), optional :: opt_io
@@ -515,7 +515,7 @@ contains
 
       logical :: reduce
       TYPE(DECOMP_INFO), pointer :: decomp
-      real(kind(0._real32)), allocatable, dimension(:, :, :) :: tmp
+      real(real32), allocatable, dimension(:, :, :) :: tmp
 
       ! Use the provided decomp_info or the default one
       if (present(opt_decomp)) then
@@ -568,7 +568,7 @@ contains
       implicit none
 
       integer, intent(IN) :: ipencil
-      complex(kind(0._real64)), contiguous, dimension(:, :, :), intent(out) :: var
+      complex(real64), contiguous, dimension(:, :, :), intent(out) :: var
       character(len=*), intent(in) :: varname
       type(d2d_io_family), target, intent(in), optional :: opt_family
       type(d2d_io), intent(inout), optional :: opt_io
@@ -578,7 +578,7 @@ contains
 
       logical :: reduce
       TYPE(DECOMP_INFO), pointer :: decomp
-      complex(kind(0._real32)), allocatable, dimension(:, :, :) :: tmp
+      complex(real32), allocatable, dimension(:, :, :) :: tmp
 
       ! Use the provided decomp_info or the default one
       if (present(opt_decomp)) then
@@ -660,10 +660,10 @@ contains
       type(d2d_io_family), target, intent(in), optional :: opt_family
       type(d2d_io), intent(inout), optional :: opt_io
       character(len=*), intent(in), optional :: opt_dirname
-      real(kind(0._real32)), contiguous, dimension(:, :, :), intent(IN), optional :: freal
-      real(kind(0._real64)), contiguous, dimension(:, :, :), intent(IN), optional :: dreal
-      complex(kind(0._real32)), contiguous, dimension(:, :, :), intent(IN), optional :: fcplx
-      complex(kind(0._real64)), contiguous, dimension(:, :, :), intent(IN), optional :: dcplx
+      real(real32), contiguous, dimension(:, :, :), intent(IN), optional :: freal
+      real(real64), contiguous, dimension(:, :, :), intent(IN), optional :: dreal
+      complex(real32), contiguous, dimension(:, :, :), intent(IN), optional :: fcplx
+      complex(real64), contiguous, dimension(:, :, :), intent(IN), optional :: dcplx
 
       logical :: use_opt_io
       integer :: mode
@@ -780,10 +780,10 @@ contains
       type(d2d_io_family), target, intent(in), optional :: opt_family
       type(d2d_io), intent(inout), optional :: opt_io
       character(len=*), intent(in), optional :: opt_dirname
-      real(kind(0._real32)), contiguous, dimension(:, :, :), intent(out), optional :: freal
-      real(kind(0._real64)), contiguous, dimension(:, :, :), intent(out), optional :: dreal
-      complex(kind(0._real32)), contiguous, dimension(:, :, :), intent(out), optional :: fcplx
-      complex(kind(0._real64)), contiguous, dimension(:, :, :), intent(out), optional :: dcplx
+      real(real32), contiguous, dimension(:, :, :), intent(out), optional :: freal
+      real(real64), contiguous, dimension(:, :, :), intent(out), optional :: dreal
+      complex(real32), contiguous, dimension(:, :, :), intent(out), optional :: fcplx
+      complex(real64), contiguous, dimension(:, :, :), intent(out), optional :: dcplx
 
       logical :: use_opt_io
       type(d2d_io) :: io
@@ -873,10 +873,10 @@ contains
       integer, intent(IN) :: ipencil
       type(d2d_io), intent(inout) :: io
       TYPE(DECOMP_INFO), intent(IN) :: decomp
-      real(kind(0._real32)), contiguous, dimension(:, :, :), intent(IN), optional :: freal
-      real(kind(0._real64)), contiguous, dimension(:, :, :), intent(IN), optional :: dreal
-      complex(kind(0._real32)), contiguous, dimension(:, :, :), intent(IN), optional :: fcplx
-      complex(kind(0._real64)), contiguous, dimension(:, :, :), intent(IN), optional :: dcplx
+      real(real32), contiguous, dimension(:, :, :), intent(IN), optional :: freal
+      real(real64), contiguous, dimension(:, :, :), intent(IN), optional :: dreal
+      complex(real32), contiguous, dimension(:, :, :), intent(IN), optional :: fcplx
+      complex(real64), contiguous, dimension(:, :, :), intent(IN), optional :: dcplx
 
       integer, dimension(3) :: sizes, subsizes, starts
 
@@ -898,10 +898,10 @@ contains
       integer, intent(IN) :: ipencil
       type(d2d_io), intent(inout) :: io
       TYPE(DECOMP_INFO), intent(IN) :: decomp
-      real(kind(0._real32)), contiguous, dimension(:, :, :), intent(out), optional :: freal
-      real(kind(0._real64)), contiguous, dimension(:, :, :), intent(out), optional :: dreal
-      complex(kind(0._real32)), contiguous, dimension(:, :, :), intent(out), optional :: fcplx
-      complex(kind(0._real64)), contiguous, dimension(:, :, :), intent(out), optional :: dcplx
+      real(real32), contiguous, dimension(:, :, :), intent(out), optional :: freal
+      real(real64), contiguous, dimension(:, :, :), intent(out), optional :: dreal
+      complex(real32), contiguous, dimension(:, :, :), intent(out), optional :: fcplx
+      complex(real64), contiguous, dimension(:, :, :), intent(out), optional :: dcplx
 
       integer, dimension(3) :: sizes, subsizes, starts
 
@@ -922,10 +922,10 @@ contains
       logical, intent(in) :: flag_read
       type(d2d_io), intent(inout) :: io
       integer, dimension(3), intent(in) :: sizes, subsizes, starts
-      real(kind(0._real32)), contiguous, dimension(:, :, :), optional :: freal
-      real(kind(0._real64)), contiguous, dimension(:, :, :), optional :: dreal
-      complex(kind(0._real32)), contiguous, dimension(:, :, :), optional :: fcplx
-      complex(kind(0._real64)), contiguous, dimension(:, :, :), optional :: dcplx
+      real(real32), contiguous, dimension(:, :, :), optional :: freal
+      real(real64), contiguous, dimension(:, :, :), optional :: dreal
+      complex(real32), contiguous, dimension(:, :, :), optional :: fcplx
+      complex(real64), contiguous, dimension(:, :, :), optional :: dcplx
       integer, contiguous, dimension(:, :, :), optional :: ints
       logical, contiguous, dimension(:, :, :), optional :: logs
 
@@ -1019,10 +1019,10 @@ contains
       type(d2d_io), intent(inout) :: io
       character(len=*), intent(in) :: varname
       integer, intent(in) :: mode
-      real(kind(0._real32)), contiguous, dimension(:, :, :), intent(IN), optional :: freal
-      real(kind(0._real64)), contiguous, dimension(:, :, :), intent(IN), optional :: dreal
-      complex(kind(0._real32)), contiguous, dimension(:, :, :), intent(IN), optional :: fcplx
-      complex(kind(0._real64)), contiguous, dimension(:, :, :), intent(IN), optional :: dcplx
+      real(real32), contiguous, dimension(:, :, :), intent(IN), optional :: freal
+      real(real64), contiguous, dimension(:, :, :), intent(IN), optional :: dreal
+      complex(real32), contiguous, dimension(:, :, :), intent(IN), optional :: fcplx
+      complex(real64), contiguous, dimension(:, :, :), intent(IN), optional :: dcplx
 
 #ifdef ADIOS2
       integer :: write_mode, ierror
@@ -1091,10 +1091,10 @@ contains
 
       type(d2d_io), intent(inout) :: io
       character(len=*), intent(in) :: varname
-      real(kind(0._real32)), contiguous, dimension(:, :, :), intent(out), optional :: freal
-      real(kind(0._real64)), contiguous, dimension(:, :, :), intent(out), optional :: dreal
-      complex(kind(0._real32)), contiguous, dimension(:, :, :), intent(out), optional :: fcplx
-      complex(kind(0._real64)), contiguous, dimension(:, :, :), intent(out), optional :: dcplx
+      real(real32), contiguous, dimension(:, :, :), intent(out), optional :: freal
+      real(real64), contiguous, dimension(:, :, :), intent(out), optional :: dreal
+      complex(real32), contiguous, dimension(:, :, :), intent(out), optional :: fcplx
+      complex(real64), contiguous, dimension(:, :, :), intent(out), optional :: dcplx
 
 #ifdef ADIOS2
       integer :: ierror

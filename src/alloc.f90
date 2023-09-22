@@ -8,7 +8,7 @@
 
      implicit none
 
-     real(kind(0._real32)), allocatable, dimension(:, :, :) :: var
+     real(real32), allocatable, dimension(:, :, :) :: var
      logical, intent(IN), optional :: opt_global
 
      call alloc_x(var, decomp_main, opt_global)
@@ -19,7 +19,7 @@
 
      implicit none
 
-     real(kind(0._real64)), allocatable, dimension(:, :, :) :: var
+     real(real64), allocatable, dimension(:, :, :) :: var
      logical, intent(IN), optional :: opt_global
 
      call alloc_x(var, decomp_main, opt_global)
@@ -30,7 +30,7 @@
 
      implicit none
 
-     real(kind(0._real32)), allocatable, dimension(:, :, :) :: var
+     real(real32), allocatable, dimension(:, :, :) :: var
      TYPE(DECOMP_INFO), intent(IN) :: decomp
      logical, intent(IN), optional :: opt_global
 
@@ -64,7 +64,7 @@
 
      implicit none
 
-     real(kind(0._real64)), allocatable, dimension(:, :, :) :: var
+     real(real64), allocatable, dimension(:, :, :) :: var
      TYPE(DECOMP_INFO), intent(IN) :: decomp
      logical, intent(IN), optional :: opt_global
 
@@ -99,7 +99,7 @@
 
      implicit none
 
-     complex(kind(0._real32)), allocatable, dimension(:, :, :) :: var
+     complex(real32), allocatable, dimension(:, :, :) :: var
      logical, intent(IN), optional :: opt_global
 
      call alloc_x(var, decomp_main, opt_global)
@@ -110,7 +110,7 @@
 
      implicit none
 
-     complex(kind(0._real64)), allocatable, dimension(:, :, :) :: var
+     complex(real64), allocatable, dimension(:, :, :) :: var
      logical, intent(IN), optional :: opt_global
 
      call alloc_x(var, decomp_main, opt_global)
@@ -121,7 +121,7 @@
 
      implicit none
 
-     complex(kind(0._real32)), allocatable, dimension(:, :, :) :: var
+     complex(real32), allocatable, dimension(:, :, :) :: var
      TYPE(DECOMP_INFO), intent(IN) :: decomp
      logical, intent(IN), optional :: opt_global
 
@@ -155,7 +155,7 @@
 
      implicit none
 
-     complex(kind(0._real64)), allocatable, dimension(:, :, :) :: var
+     complex(real64), allocatable, dimension(:, :, :) :: var
      TYPE(DECOMP_INFO), intent(IN) :: decomp
      logical, intent(IN), optional :: opt_global
 
@@ -190,7 +190,7 @@
 
      implicit none
 
-     real(kind(0._real32)), allocatable, dimension(:, :, :) :: var
+     real(real32), allocatable, dimension(:, :, :) :: var
      logical, intent(IN), optional :: opt_global
 
      call alloc_y(var, decomp_main, opt_global)
@@ -201,7 +201,7 @@
 
      implicit none
 
-     real(kind(0._real64)), allocatable, dimension(:, :, :) :: var
+     real(real64), allocatable, dimension(:, :, :) :: var
      logical, intent(IN), optional :: opt_global
 
      call alloc_y(var, decomp_main, opt_global)
@@ -212,7 +212,7 @@
 
      implicit none
 
-     real(kind(0._real32)), allocatable, dimension(:, :, :) :: var
+     real(real32), allocatable, dimension(:, :, :) :: var
      TYPE(DECOMP_INFO), intent(IN) :: decomp
      logical, intent(IN), optional :: opt_global
 
@@ -246,7 +246,7 @@
 
      implicit none
 
-     real(kind(0._real64)), allocatable, dimension(:, :, :) :: var
+     real(real64), allocatable, dimension(:, :, :) :: var
      TYPE(DECOMP_INFO), intent(IN) :: decomp
      logical, intent(IN), optional :: opt_global
 
@@ -281,7 +281,7 @@
 
      implicit none
 
-     complex(kind(0._real32)), allocatable, dimension(:, :, :) :: var
+     complex(real32), allocatable, dimension(:, :, :) :: var
      logical, intent(IN), optional :: opt_global
 
      call alloc_y(var, decomp_main, opt_global)
@@ -292,7 +292,7 @@
 
      implicit none
 
-     complex(kind(0._real64)), allocatable, dimension(:, :, :) :: var
+     complex(real64), allocatable, dimension(:, :, :) :: var
      logical, intent(IN), optional :: opt_global
 
      call alloc_y(var, decomp_main, opt_global)
@@ -303,7 +303,7 @@
 
      implicit none
 
-     complex(kind(0._real32)), allocatable, dimension(:, :, :) :: var
+     complex(real32), allocatable, dimension(:, :, :) :: var
      TYPE(DECOMP_INFO), intent(IN) :: decomp
      logical, intent(IN), optional :: opt_global
 
@@ -337,7 +337,7 @@
 
      implicit none
 
-     complex(kind(0._real64)), allocatable, dimension(:, :, :) :: var
+     complex(real64), allocatable, dimension(:, :, :) :: var
      TYPE(DECOMP_INFO), intent(IN) :: decomp
      logical, intent(IN), optional :: opt_global
 
@@ -372,7 +372,7 @@
 
      implicit none
 
-     real(kind(0._real32)), allocatable, dimension(:, :, :) :: var
+     real(real32), allocatable, dimension(:, :, :) :: var
      logical, intent(IN), optional :: opt_global
 
      call alloc_z(var, decomp_main, opt_global)
@@ -383,7 +383,7 @@
 
      implicit none
 
-     real(kind(0._real64)), allocatable, dimension(:, :, :) :: var
+     real(real64), allocatable, dimension(:, :, :) :: var
      logical, intent(IN), optional :: opt_global
 
      call alloc_z(var, decomp_main, opt_global)
@@ -394,7 +394,7 @@
 
      implicit none
 
-     real(kind(0._real32)), allocatable, dimension(:, :, :) :: var
+     real(real32), allocatable, dimension(:, :, :) :: var
      TYPE(DECOMP_INFO), intent(IN) :: decomp
      logical, intent(IN), optional :: opt_global
 
@@ -428,7 +428,7 @@
 
      implicit none
 
-     real(kind(0._real64)), allocatable, dimension(:, :, :) :: var
+     real(real64), allocatable, dimension(:, :, :) :: var
      TYPE(DECOMP_INFO), intent(IN) :: decomp
      logical, intent(IN), optional :: opt_global
 
@@ -463,7 +463,7 @@
 
      implicit none
 
-     complex(kind(0._real32)), allocatable, dimension(:, :, :) :: var
+     complex(real32), allocatable, dimension(:, :, :) :: var
      logical, intent(IN), optional :: opt_global
 
      call alloc_z(var, decomp_main, opt_global)
@@ -474,7 +474,7 @@
 
      implicit none
 
-     complex(kind(0._real64)), allocatable, dimension(:, :, :) :: var
+     complex(real64), allocatable, dimension(:, :, :) :: var
      logical, intent(IN), optional :: opt_global
 
      call alloc_z(var, decomp_main, opt_global)
@@ -485,7 +485,7 @@
 
      implicit none
 
-     complex(kind(0._real32)), allocatable, dimension(:, :, :) :: var
+     complex(real32), allocatable, dimension(:, :, :) :: var
      TYPE(DECOMP_INFO), intent(IN) :: decomp
      logical, intent(IN), optional :: opt_global
 
@@ -519,7 +519,7 @@
 
      implicit none
 
-     complex(kind(0._real64)), allocatable, dimension(:, :, :) :: var
+     complex(real64), allocatable, dimension(:, :, :) :: var
      TYPE(DECOMP_INFO), intent(IN) :: decomp
      logical, intent(IN), optional :: opt_global
 

@@ -525,6 +525,7 @@ contains
          if (.not. var_handle%valid) then
 
             ! New variable
+            ! TODO print this in the 2decomp log and not stdout
             if (nrank == 0) then
                print *, "Registering variable for IO: ", varname
             end if
@@ -550,10 +551,13 @@ contains
                call decomp_2d_abort(__FILE__, __LINE__, ierror, &
                                     "adios2_define_variable "//varname)
             end if
+         else
+            call decomp_2d_abort(__FILE__, __LINE__, ierror, &
+                                 "Variable already registered "//varname)
          end if
       else
-         call decomp_2d_abort(__FILE__, __LINE__, ierror, &
-                              "trying to register variable with invalid IO!")
+         call decomp_2d_abort(__FILE__, __LINE__, 0, &
+                              "Invalid adios2_io object for registering a variable")
       end if
 
    end subroutine adios2_register_var

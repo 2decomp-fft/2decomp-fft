@@ -110,6 +110,7 @@ module decomp_2d_constants
    !
    ! Choice for IO operations
    !
+   logical, parameter :: DEFAULT_OPT_REDUCE_PREC = .false.
    integer, parameter, public :: DECOMP_2D_WRITE_MODE = 1, &
                                  DECOMP_2D_READ_MODE = 2, &
                                  DECOMP_2D_APPEND_MODE = 3

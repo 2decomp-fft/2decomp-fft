@@ -19,9 +19,6 @@ module decomp_2d_io
 
    implicit none
 
-   ! Default reduced precision for read_one and write_one
-   logical, parameter :: default_opt_reduce_prec = .false.
-
    ! Default IO family of readers / writers
    type(d2d_io_family), target, save :: default_io_family
    type(d2d_io_family), pointer, save :: default_mpi_io_family => null()

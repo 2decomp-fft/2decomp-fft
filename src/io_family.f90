@@ -73,14 +73,14 @@ contains
             call family%adios2_init(label)
          else
             call decomp_2d_abort(__FILE__, __LINE__, opt_backend, "Invalid value for opt_backend")
-         endif
+         end if
       else
 #ifdef ADIOS2
          call family%adios2_init(label)
 #else
          call family%mpi_init(label)
 #endif
-      endif
+      end if
 
    end subroutine d2d_io_family_init
 
@@ -258,7 +258,7 @@ contains
       if (present(opt_reduce_prec)) then
          reduce_prec = opt_reduce_prec
       else
-         reduce_prec = .false.
+         reduce_prec = default_opt_reduce_prec
       end if
 
       if (present(opt_decomp)) then
@@ -354,7 +354,7 @@ contains
       if (present(opt_reduce_prec)) then
          reduce_prec = opt_reduce_prec
       else
-         reduce_prec = .false.
+         reduce_prec = default_opt_reduce_prec
       end if
 
       if (present(opt_nplanes)) then

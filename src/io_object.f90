@@ -98,7 +98,7 @@ contains
    !
    ! Open the given reader / writer
    !
-   module subroutine d2d_io_open(writer, io_dir, mode, family)
+   subroutine d2d_io_open(writer, io_dir, mode, family)
 
       implicit none
 
@@ -209,7 +209,7 @@ contains
    !
    ! Start IO for the given reader / writer
    !
-   module subroutine d2d_io_start(writer)
+   subroutine d2d_io_start(writer)
 
       implicit none
 
@@ -263,7 +263,7 @@ contains
    !
    ! Open the given reader / writer and start IO
    !
-   module subroutine d2d_io_open_start(writer, io_dir, mode, opt_family)
+   subroutine d2d_io_open_start(writer, io_dir, mode, opt_family)
 
       implicit none
 
@@ -284,7 +284,7 @@ contains
    !
    ! End IO for the given reader / writer
    !
-   module subroutine d2d_io_end(writer)
+   subroutine d2d_io_end(writer)
 
       implicit none
 
@@ -335,7 +335,7 @@ contains
    !
    ! Close the given reader / writer
    !
-   module subroutine d2d_io_close(writer)
+   subroutine d2d_io_close(writer)
 
       implicit none
 
@@ -383,7 +383,7 @@ contains
    !
    ! End IO and close the given reader / writer
    !
-   module subroutine d2d_io_end_close(writer)
+   subroutine d2d_io_end_close(writer)
 
       implicit none
 

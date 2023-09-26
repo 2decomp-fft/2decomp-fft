@@ -47,8 +47,8 @@ module decomp_2d_io
              decomp_2d_write_subdomain, &
              decomp_2d_write_outflow, decomp_2d_read_inflow, &
              decomp_2d_io_init, decomp_2d_io_fin, & ! XXX: initialise/finalise 2decomp&fft IO module
-             decomp_2d_register_variable, &
              decomp_2d_io_register_var3d, &
+             decomp_2d_io_register_var2d, &
              gen_iodir_name
 
    ! Generic interface to handle multiple data types
@@ -92,9 +92,10 @@ module decomp_2d_io
    end interface decomp_2d_read_scalar
 
    interface decomp_2d_write_plane
-      module procedure write_plane_3d_real
-      module procedure write_plane_3d_complex
-      !     module procedure write_plane_2d
+      module procedure write_plane_freal
+      module procedure write_plane_dreal
+      module procedure write_plane_fcplx
+      module procedure write_plane_dcplx
    end interface decomp_2d_write_plane
 
    interface decomp_2d_write_every
@@ -135,9 +136,39 @@ contains
       logical, intent(in), optional :: opt_reduce_prec
       type(decomp_info), intent(in), optional :: opt_decomp
 
-      call default_io_family%register_var3d(varname, ipencil, type, opt_reduce_prec, opt_decomp)
+      call default_io_family%register_var3d(varname, ipencil, type, &
+                                            opt_reduce_prec=opt_reduce_prec, &
+                                            opt_decomp=opt_decomp)
 
    end subroutine decomp_2d_io_register_var3d
+
+   !
+   ! High-level. Register planes for the default family of readers / writers.
+   !
+   !    See io_family.f90
+   !
+   subroutine decomp_2d_io_register_var2d(varname, &
+                                          ipencil, &
+                                          type, &
+                                          opt_reduce_prec, &
+                                          opt_decomp, &
+                                          opt_nplanes)
+
+      implicit none
+
+      character(len=*), intent(in) :: varname
+      integer, intent(in) :: ipencil ! (x-pencil=1; y-pencil=2; z-pencil=3)
+      integer, intent(in) :: type
+      logical, intent(in), optional :: opt_reduce_prec
+      type(decomp_info), intent(in), optional :: opt_decomp
+      integer, intent(in), optional :: opt_nplanes
+
+      call default_io_family%register_var2d(varname, ipencil, type, &
+                                            opt_reduce_prec=opt_reduce_prec, &
+                                            opt_decomp=opt_decomp, &
+                                            opt_nplanes=opt_nplanes)
+
+   end subroutine decomp_2d_io_register_var2d
 
    !
    ! Initialize the IO module
@@ -623,6 +654,221 @@ contains
    end subroutine read_one_dcplx
 
    !
+   ! High-level. Using MPI-IO / ADIOS2 to write planes to a file
+   !
+   subroutine write_plane_freal(ipencil, var, varname, opt_nplanes, opt_mode, opt_family, &
+                                opt_io, opt_dirname, opt_reduce_prec, opt_decomp)
+
+      implicit none
+
+      integer, intent(IN) :: ipencil
+      real(real32), contiguous, dimension(:, :, :), intent(IN) :: var
+      character(len=*), intent(in) :: varname
+      integer, intent(in), optional :: opt_nplanes
+      integer, intent(in), optional :: opt_mode
+      type(d2d_io_family), target, intent(in), optional :: opt_family
+      type(d2d_io), intent(inout), optional :: opt_io
+      character(len=*), intent(in), optional :: opt_dirname
+      logical, intent(in), optional :: opt_reduce_prec
+      TYPE(DECOMP_INFO), target, intent(IN), optional :: opt_decomp
+
+      TYPE(DECOMP_INFO), pointer :: decomp
+      integer :: nplanes
+
+      if (present(opt_nplanes)) then
+         nplanes = opt_nplanes
+      else
+         nplanes = 1
+      end if
+
+      ! Use the provided decomp_info or the default one
+      if (present(opt_decomp)) then
+         decomp => opt_decomp
+      else
+         decomp => decomp_main
+      end if
+
+      call write_plane(ipencil, varname, decomp, nplanes, &
+                       opt_mode=opt_mode, &
+                       opt_family=opt_family, &
+                       opt_io=opt_io, &
+                       opt_dirname=opt_dirname, &
+                       freal=var)
+
+      nullify (decomp)
+
+      associate (p => opt_reduce_prec)
+      end associate
+
+   end subroutine write_plane_freal
+   !
+   subroutine write_plane_fcplx(ipencil, var, varname, opt_nplanes, opt_mode, opt_family, &
+                                opt_io, opt_dirname, opt_reduce_prec, opt_decomp)
+
+      implicit none
+
+      integer, intent(IN) :: ipencil
+      complex(real32), contiguous, dimension(:, :, :), intent(IN) :: var
+      character(len=*), intent(in) :: varname
+      integer, intent(in), optional :: opt_nplanes
+      integer, intent(in), optional :: opt_mode
+      type(d2d_io_family), target, intent(in), optional :: opt_family
+      type(d2d_io), intent(inout), optional :: opt_io
+      character(len=*), intent(in), optional :: opt_dirname
+      logical, intent(in), optional :: opt_reduce_prec
+      TYPE(DECOMP_INFO), target, intent(IN), optional :: opt_decomp
+
+      TYPE(DECOMP_INFO), pointer :: decomp
+      integer :: nplanes
+
+      if (present(opt_nplanes)) then
+         nplanes = opt_nplanes
+      else
+         nplanes = 1
+      end if
+
+      ! Use the provided decomp_info or the default one
+      if (present(opt_decomp)) then
+         decomp => opt_decomp
+      else
+         decomp => decomp_main
+      end if
+
+      call write_plane(ipencil, varname, decomp, nplanes, &
+                       opt_mode=opt_mode, &
+                       opt_family=opt_family, &
+                       opt_io=opt_io, &
+                       opt_dirname=opt_dirname, &
+                       fcplx=var)
+
+      nullify (decomp)
+
+      associate (p => opt_reduce_prec)
+      end associate
+
+   end subroutine write_plane_fcplx
+   !
+   subroutine write_plane_dreal(ipencil, var, varname, opt_nplanes, opt_mode, opt_family, &
+                                opt_io, opt_dirname, opt_reduce_prec, opt_decomp)
+
+      implicit none
+
+      integer, intent(IN) :: ipencil
+      real(real64), contiguous, dimension(:, :, :), intent(IN) :: var
+      character(len=*), intent(in) :: varname
+      integer, intent(in), optional :: opt_nplanes
+      integer, intent(in), optional :: opt_mode
+      type(d2d_io_family), target, intent(in), optional :: opt_family
+      type(d2d_io), intent(inout), optional :: opt_io
+      character(len=*), intent(in), optional :: opt_dirname
+      logical, intent(in), optional :: opt_reduce_prec
+      TYPE(DECOMP_INFO), target, intent(IN), optional :: opt_decomp
+
+      logical :: reduce
+      TYPE(DECOMP_INFO), pointer :: decomp
+      integer :: nplanes
+
+      if (present(opt_nplanes)) then
+         nplanes = opt_nplanes
+      else
+         nplanes = 1
+      end if
+
+      ! Use the provided decomp_info or the default one
+      if (present(opt_decomp)) then
+         decomp => opt_decomp
+      else
+         decomp => decomp_main
+      end if
+
+      ! One can write to single precision using opt_reduce_prec
+      if (present(opt_reduce_prec)) then
+         reduce = opt_reduce_prec
+      else
+         reduce = default_opt_reduce_prec
+      end if
+
+      if (reduce) then
+         call write_plane(ipencil, varname, decomp, nplanes, &
+                          opt_mode=decomp_2d_write_sync, &
+                          opt_family=opt_family, &
+                          opt_io=opt_io, &
+                          opt_dirname=opt_dirname, &
+                          freal=real(var, kind=real32))
+      else
+         call write_plane(ipencil, varname, decomp, nplanes, &
+                          opt_mode=opt_mode, &
+                          opt_family=opt_family, &
+                          opt_io=opt_io, &
+                          opt_dirname=opt_dirname, &
+                          dreal=var)
+      end if
+
+      nullify (decomp)
+
+   end subroutine write_plane_dreal
+   !
+   subroutine write_plane_dcplx(ipencil, var, varname, opt_nplanes, opt_mode, opt_family, &
+                                opt_io, opt_dirname, opt_reduce_prec, opt_decomp)
+
+      implicit none
+
+      integer, intent(IN) :: ipencil
+      complex(real64), contiguous, dimension(:, :, :), intent(IN) :: var
+      character(len=*), intent(in) :: varname
+      integer, intent(in), optional :: opt_nplanes
+      integer, intent(in), optional :: opt_mode
+      type(d2d_io_family), target, intent(in), optional :: opt_family
+      type(d2d_io), intent(inout), optional :: opt_io
+      character(len=*), intent(in), optional :: opt_dirname
+      logical, intent(in), optional :: opt_reduce_prec
+      TYPE(DECOMP_INFO), target, intent(IN), optional :: opt_decomp
+
+      logical :: reduce
+      TYPE(DECOMP_INFO), pointer :: decomp
+      integer :: nplanes
+
+      if (present(opt_nplanes)) then
+         nplanes = opt_nplanes
+      else
+         nplanes = 1
+      end if
+
+      ! Use the provided decomp_info or the default one
+      if (present(opt_decomp)) then
+         decomp => opt_decomp
+      else
+         decomp => decomp_main
+      end if
+
+      ! One can write to single precision using opt_reduce_prec
+      if (present(opt_reduce_prec)) then
+         reduce = opt_reduce_prec
+      else
+         reduce = default_opt_reduce_prec
+      end if
+
+      if (reduce) then
+         call write_plane(ipencil, varname, decomp, nplanes, &
+                          opt_mode=decomp_2d_write_sync, &
+                          opt_family=opt_family, &
+                          opt_io=opt_io, &
+                          opt_dirname=opt_dirname, &
+                          fcplx=cmplx(var, kind=real32))
+      else
+         call write_plane(ipencil, varname, decomp, nplanes, &
+                          opt_mode=opt_mode, &
+                          opt_family=opt_family, &
+                          opt_io=opt_io, &
+                          opt_dirname=opt_dirname, &
+                          dcplx=var)
+      end if
+
+      nullify (decomp)
+
+   end subroutine write_plane_dcplx
+
+   !
    ! Low-level. Using MPI-IO / ADIOS2 to write a 3D array to a file
    !
    ! Inputs
@@ -857,6 +1103,129 @@ contains
    end subroutine read_one
 
    !
+   ! Low-level. Using MPI-IO / ADIOS2 to write planes to a file
+   !
+   ! Inputs
+   !   - ipencil : pencil orientation of the variable
+   !   - varname : name of the variable
+   !   - decomp : decomp_info for the variable
+   !   - nplanes : number of planes in the variable
+   !   - opt_mode : writing mode, no impact on MPI IO
+   !   - opt_family : IO family can be provided to avoid the default one
+   !   - opt_io : IO reader / writer can be provided
+   !   - opt_dirname : This is mandatory if no IO reader / writer was provided
+   !   - freal / dreal / fcplx / dcplx : array
+   !
+   ! If opt_io is provided and open
+   !    - MPI IO will write to the file handle opt_io%fh
+   !    - ADIOS2 IO will write to the engine opt_io%engine
+   !
+   ! Otherwise
+   !    - opt_dirname is mandatory
+   !    - MPI IO will write to the file opt_dirname/varname
+   !    - ADIOS2 IO will write to the folder opt_dirname
+   !
+   subroutine write_plane(ipencil, varname, decomp, nplanes, opt_mode, &
+                          opt_family, opt_io, opt_dirname, &
+                          freal, dreal, fcplx, dcplx)
+
+      implicit none
+
+      integer, intent(IN) :: ipencil
+      character(len=*), intent(in) :: varname
+      TYPE(DECOMP_INFO), intent(IN) :: decomp
+      integer, intent(in) :: nplanes
+      integer, intent(in), optional :: opt_mode
+      type(d2d_io_family), target, intent(in), optional :: opt_family
+      type(d2d_io), intent(inout), optional :: opt_io
+      character(len=*), intent(in), optional :: opt_dirname
+      real(real32), contiguous, dimension(:, :, :), intent(IN), optional :: freal
+      real(real64), contiguous, dimension(:, :, :), intent(IN), optional :: dreal
+      complex(real32), contiguous, dimension(:, :, :), intent(IN), optional :: fcplx
+      complex(real64), contiguous, dimension(:, :, :), intent(IN), optional :: dcplx
+
+      logical :: use_opt_io
+      integer :: mode
+      type(d2d_io) :: io
+
+#ifdef PROFILER
+      if (decomp_profiler_io) call decomp_profiler_start("io_write_plane")
+#endif
+
+      ! Use opt_io only if present and open
+      if (present(opt_io)) then
+         if (opt_io%is_open) then
+            use_opt_io = .true.
+         else
+            use_opt_io = .false.
+         end if
+      else
+         use_opt_io = .false.
+      end if
+
+      ! Safety check
+      if (nplanes < 1) then
+         call decomp_2d_abort(__FILE__, __LINE__, nplanes, "Error invalid value of nplanes ")
+      end if
+      if ((ipencil < 1) .or. (ipencil > 3)) then
+         call decomp_2d_abort(__FILE__, __LINE__, ipencil, "Error invalid value of ipencil ")
+      end if
+      if ((.not. use_opt_io) .and. (.not. present(opt_dirname))) then
+         call decomp_2d_abort(__FILE__, __LINE__, 0, "Invalid arguments")
+      end if
+
+      ! Default write mode is deferred
+      if (present(opt_mode)) then
+         mode = opt_mode
+      else
+         mode = decomp_2d_write_deferred
+      end if
+
+      if (use_opt_io) then
+
+         if (opt_io%family%type == DECOMP_2D_IO_MPI) then
+
+            ! MPI-IO
+            call mpi_write_plane(ipencil, opt_io, decomp, nplanes, freal, dreal, fcplx, dcplx)
+
+         else if (opt_io%family%type == DECOMP_2D_IO_ADIOS2) then
+
+            ! ADIOS2
+            call adios2_write_var(opt_io, varname, mode, freal, dreal, fcplx, dcplx)
+
+         end if
+
+      else
+
+         call decomp_2d_io_object_open_and_start(io, &
+                                                 opt_dirname, &
+                                                 varname, &
+                                                 decomp_2d_write_mode, &
+                                                 opt_family=opt_family)
+
+         if (io%family%type == DECOMP_2D_IO_MPI) then
+
+            ! MPI-IO
+            call mpi_write_plane(ipencil, io, decomp, nplanes, freal, dreal, fcplx, dcplx)
+
+         else if (io%family%type == DECOMP_2D_IO_ADIOS2) then
+
+            ! ADIOS2
+            call adios2_write_var(io, varname, mode, freal, dreal, fcplx, dcplx)
+
+         end if
+
+         call io%end_close()
+
+      end if
+
+#ifdef PROFILER
+      if (decomp_profiler_io) call decomp_profiler_end("io_write_plane")
+#endif
+
+   end subroutine write_plane
+
+   !
    !
    ! Low-level MPI. This could be moved ot a dedicated module.
    !
@@ -910,6 +1279,32 @@ contains
                              freal, dreal, fcplx, dcplx)
 
    end subroutine mpi_read_var
+   !
+   ! Write planes to a file
+   !
+   subroutine mpi_write_plane(ipencil, io, decomp, nplanes, freal, dreal, fcplx, dcplx)
+
+      implicit none
+
+      integer, intent(IN) :: ipencil
+      type(d2d_io), intent(inout) :: io
+      TYPE(DECOMP_INFO), intent(IN) :: decomp
+      integer, intent(in) :: nplanes
+      real(real32), contiguous, dimension(:, :, :), intent(IN), optional :: freal
+      real(real64), contiguous, dimension(:, :, :), intent(IN), optional :: dreal
+      complex(real32), contiguous, dimension(:, :, :), intent(IN), optional :: fcplx
+      complex(real64), contiguous, dimension(:, :, :), intent(IN), optional :: dcplx
+
+      integer, dimension(3) :: sizes, subsizes, starts
+
+      ! Process the size
+      call io_get_size(ipencil, decomp, sizes, starts, subsizes, nplanes)
+
+      ! Do the MPI IO
+      call mpi_read_or_write(.false., io, sizes, subsizes, starts, &
+                             freal, dreal, fcplx, dcplx)
+
+   end subroutine mpi_write_plane
    !
    subroutine mpi_read_or_write(flag_read, io, sizes, subsizes, starts, &
                                 freal, dreal, fcplx, dcplx, ints, logs)
@@ -1800,154 +2195,6 @@ contains
    end subroutine read_scalar_logical
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-   ! Write a 2D slice of the 3D data to a file
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-   subroutine plane_extents(sizes, subsizes, starts, iplane, opt_decomp, opt_nplanes)
-
-      integer, intent(in) :: iplane
-      type(decomp_info), intent(in), optional :: opt_decomp
-      integer, intent(in), optional :: opt_nplanes
-
-      integer, dimension(3), intent(out) :: sizes, subsizes, starts
-
-      integer :: nplanes
-      type(decomp_info) :: decomp
-
-      if (present(opt_decomp)) then
-         decomp = opt_decomp
-      else
-         call get_decomp_info(decomp)
-      end if
-
-      if (present(opt_nplanes)) then
-         nplanes = opt_nplanes
-      else
-         nplanes = 1
-      end if
-
-      if (iplane == 1) then
-         sizes(1) = nplanes
-         sizes(2) = decomp%ysz(2)
-         sizes(3) = decomp%zsz(3)
-         subsizes(1) = nplanes
-         subsizes(2) = decomp%xsz(2)
-         subsizes(3) = decomp%xsz(3)
-         starts(1) = 0
-         starts(2) = decomp%xst(2) - 1
-         starts(3) = decomp%xst(3) - 1
-      else if (iplane == 2) then
-         sizes(1) = decomp%xsz(1)
-         sizes(2) = nplanes
-         sizes(3) = decomp%zsz(3)
-         subsizes(1) = decomp%ysz(1)
-         subsizes(2) = nplanes
-         subsizes(3) = decomp%ysz(3)
-         starts(1) = decomp%yst(1) - 1
-         starts(2) = 0
-         starts(3) = decomp%yst(3) - 1
-      else if (iplane == 3) then
-         sizes(1) = decomp%xsz(1)
-         sizes(2) = decomp%ysz(2)
-         sizes(3) = nplanes
-         subsizes(1) = decomp%zsz(1)
-         subsizes(2) = decomp%zsz(2)
-         subsizes(3) = nplanes
-         starts(1) = decomp%zst(1) - 1
-         starts(2) = decomp%zst(2) - 1
-         starts(3) = 0
-      else
-         print *, "Can't work with plane ", iplane
-         stop
-      end if
-
-   end subroutine plane_extents
-
-   subroutine write_plane_3d_real(ipencil, var, iplane, n, dirname, varname, io_name, &
-                                  opt_decomp)
-
-      implicit none
-
-      integer, intent(IN) :: ipencil !(x-pencil=1; y-pencil=2; z-pencil=3)
-      real(mytype), contiguous, dimension(:, :, :), intent(IN) :: var
-      integer, intent(IN) :: iplane !(x-plane=1; y-plane=2; z-plane=3)
-      integer, intent(IN) :: n ! which plane to write (global coordinate)
-      character(len=*), intent(IN) :: dirname, varname, io_name
-      TYPE(DECOMP_INFO), intent(IN), optional :: opt_decomp
-
-      real(mytype), allocatable, dimension(:, :, :) :: wk, wk2
-      real(mytype), allocatable, dimension(:, :, :) :: wk2d
-      TYPE(DECOMP_INFO) :: decomp
-      integer :: i, j, k, ierror, data_type
-
-      logical :: opened_new
-      integer :: idx
-#ifdef ADIOS2
-      type(adios2_io) :: io_handle
-      type(adios2_variable) :: var_handle
-#else
-      integer, dimension(3) :: sizes, subsizes, starts
-      logical :: dir_exists
-      character(len=:), allocatable :: full_io_name
-      integer :: newtype
-#endif
-
-#ifdef PROFILER
-      if (decomp_profiler_io) call decomp_profiler_start("io_write_plane_3d_real")
-#endif
-
-      data_type = real_type
-
-#include "io_write_plane.inc"
-
-#ifdef PROFILER
-      if (decomp_profiler_io) call decomp_profiler_end("io_write_plane_3d_real")
-#endif
-
-   end subroutine write_plane_3d_real
-
-   subroutine write_plane_3d_complex(ipencil, var, iplane, n, &
-                                     dirname, varname, io_name, opt_decomp)
-
-      implicit none
-
-      integer, intent(IN) :: ipencil !(x-pencil=1; y-pencil=2; z-pencil=3)
-      complex(mytype), contiguous, dimension(:, :, :), intent(IN) :: var
-      integer, intent(IN) :: iplane !(x-plane=1; y-plane=2; z-plane=3)
-      integer, intent(IN) :: n ! which plane to write (global coordinate)
-      character(len=*), intent(IN) :: dirname, varname, io_name
-      TYPE(DECOMP_INFO), intent(IN), optional :: opt_decomp
-
-      complex(mytype), allocatable, dimension(:, :, :) :: wk, wk2
-      complex(mytype), allocatable, dimension(:, :, :) :: wk2d
-      TYPE(DECOMP_INFO) :: decomp
-      integer :: i, j, k, ierror, data_type
-      logical :: opened_new
-      integer :: idx
-#ifdef ADIOS2
-      type(adios2_io) :: io_handle
-      type(adios2_variable) :: var_handle
-#else
-      integer, dimension(3) :: sizes, subsizes, starts
-      logical :: dir_exists
-      character(len=:), allocatable :: full_io_name
-      integer :: newtype
-#endif
-
-#ifdef PROFILER
-      if (decomp_profiler_io) call decomp_profiler_start("io_write_plane_3d_cplx")
-#endif
-
-      data_type = complex_type
-
-#include "io_write_plane.inc"
-
-#ifdef PROFILER
-      if (decomp_profiler_io) call decomp_profiler_end("io_write_plane_3d_cplx")
-#endif
-
-   end subroutine write_plane_3d_complex
-
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
    ! Write a 2D array to a file
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
    !************** TO DO ***************
@@ -2315,98 +2562,6 @@ contains
 #endif
 
    end subroutine mpiio_write_real_coarse
-
-   !
-   ! This interface is deprecated and will be removed
-   !
-   subroutine decomp_2d_register_variable(io_name, varname, ipencil, icoarse, iplane, type, opt_decomp, opt_nplanes)
-
-      implicit none
-
-      character(len=*), intent(in) :: io_name
-      character(len=*), intent(in) :: varname
-      integer, intent(IN) :: ipencil !(x-pencil=1; y-pencil=2; z-pencil=3)
-      integer, intent(IN) :: icoarse !(nstat=1; nvisu=2)
-      integer, intent(in) :: iplane
-      integer, intent(in) :: type
-      type(decomp_info), intent(in), optional :: opt_decomp
-      integer, intent(in), optional :: opt_nplanes
-
-#ifdef ADIOS2
-      integer :: nplanes
-      integer, dimension(3) :: sizes, subsizes, starts
-      type(adios2_io) :: io_handle
-      type(adios2_variable) :: var_handle
-      integer, parameter :: ndims = 3
-      logical, parameter :: adios2_constant_dims = .true.
-      integer :: data_type
-      integer :: ierror
-
-      if (iplane == 0) then
-         if (present(opt_decomp)) then
-            call coarse_extents(ipencil, icoarse, sizes, subsizes, starts, opt_decomp)
-         else
-            call coarse_extents(ipencil, icoarse, sizes, subsizes, starts)
-         end if
-      else
-         if (present(opt_nplanes)) then
-            nplanes = opt_nplanes
-         else
-            nplanes = 1
-         end if
-         if (present(opt_decomp)) then
-            call plane_extents(sizes, subsizes, starts, iplane, opt_decomp, opt_nplanes=nplanes)
-         else
-            call plane_extents(sizes, subsizes, starts, iplane, opt_nplanes=nplanes)
-         end if
-      end if
-
-      ! Check if variable already exists, if not create it
-      call adios2_at_io(io_handle, adios, io_name, ierror)
-      if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "adios2_at_io "//trim(io_name))
-      if (io_handle%valid) then
-         call adios2_inquire_variable(var_handle, io_handle, varname, ierror)
-         if (.not. var_handle%valid) then
-            ! New variable
-            if (nrank == 0) then
-               print *, "Registering variable for IO: ", varname
-            end if
-
-            ! Need to set the ADIOS2 data type
-            if (type == kind(0._real64)) then
-               ! Double
-               data_type = adios2_type_dp
-            else if (type == kind(0._real32)) then
-               ! Single
-               data_type = adios2_type_real
-            else
-               call decomp_2d_abort(__FILE__, __LINE__, -1, "Trying to write unknown data type!")
-            end if
-
-            call adios2_define_variable(var_handle, io_handle, varname, data_type, &
-                                        ndims, int(sizes, kind=8), int(starts, kind=8), int(subsizes, kind=8), &
-                                        adios2_constant_dims, ierror)
-            if (ierror /= 0) then
-               call decomp_2d_abort(__FILE__, __LINE__, ierror, &
-                                    "adios2_define_variable, ERROR registering variable "//trim(varname))
-            end if
-         else
-            ! This probably can't happen, however if the inquiry to a variable returns a NULL
-            ! pointer an exception is returned in ierr. As the point is to check the existence of
-            ! the variable we are already checking if it is valid or not.
-            if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "adios2_inquire_variable "//trim(varname))
-         end if
-      else
-         call decomp_2d_abort(__FILE__, __LINE__, -1, "trying to register variable with invalid IO!")
-      end if
-#else
-      associate (crs => icoarse, nm => io_name, pncl => ipencil, pln => iplane, &
-                 opdcmp => opt_decomp, opnpl => opt_nplanes, tp => type, &
-                 vnm => varname) ! Silence unused dummy argument
-      end associate
-#endif
-
-   end subroutine decomp_2d_register_variable
 
    subroutine mpiio_write_real_probe(ipencil, var, filename, nlength)
 

@@ -239,16 +239,18 @@ contains
       ! Tag the writer
       writer%is_active = .true.
 
-      ! Start the writer
-      if (writer%engine%valid) then
-         call adios2_begin_step(writer%engine, ierror)
-         if (ierror /= 0) then
-            call decomp_2d_abort(__FILE__, __LINE__, ierror, &
-                                 "adios2_begin_step "//writer%label)
+      ! Start the writer if needed
+      if (writer%family%type == decomp_2d_io_adios2) then
+         if (writer%engine%valid) then
+            call adios2_begin_step(writer%engine, ierror)
+            if (ierror /= 0) then
+               call decomp_2d_abort(__FILE__, __LINE__, ierror, &
+                                    "adios2_begin_step "//writer%label)
+            end if
+         else
+            call decomp_2d_abort(__FILE__, __LINE__, -1, &
+                                 "begin step, invalid engine "//writer%label)
          end if
-      else
-         call decomp_2d_abort(__FILE__, __LINE__, -1, &
-                              "begin step, invalid engine "//writer%label)
       end if
 #endif
 
@@ -307,15 +309,17 @@ contains
       ! Tag the writer
       writer%is_active = .false.
 
-      if (writer%engine%valid) then
-         call adios2_end_step(writer%engine, ierror)
-         if (ierror /= 0) then
-            call decomp_2d_abort(__FILE__, __LINE__, ierror, &
-                                 "adios2_end_step "//writer%label)
+      if (writer%family%type == decomp_2d_io_adios2) then
+         if (writer%engine%valid) then
+            call adios2_end_step(writer%engine, ierror)
+            if (ierror /= 0) then
+               call decomp_2d_abort(__FILE__, __LINE__, ierror, &
+                                    "adios2_end_step "//writer%label)
+            end if
+         else
+            call decomp_2d_abort(__FILE__, __LINE__, -1, &
+                                 "trying to end step with invalid engine "//writer%label)
          end if
-      else
-         call decomp_2d_abort(__FILE__, __LINE__, -1, &
-                              "trying to end step with invalid engine "//writer%label)
       end if
 #else
       associate (wrt => writer)

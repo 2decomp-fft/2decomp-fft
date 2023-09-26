@@ -1088,15 +1088,6 @@ contains
          mode = decomp_2d_write_deferred
       end if
 
-      ! Open and start if needed
-      if (.not. use_opt_io) then
-         call decomp_2d_io_object_open_and_start(io, &
-                                                 opt_dirname, &
-                                                 varname, &
-                                                 decomp_2d_write_mode, &
-                                                 opt_family=opt_family)
-      end if
-
       if (use_opt_io) then
 
          if (opt_io%family%type == DECOMP_2D_IO_MPI) then
@@ -1113,6 +1104,12 @@ contains
 
       else
 
+         call decomp_2d_io_object_open_and_start(io, &
+                                                 opt_dirname, &
+                                                 varname, &
+                                                 decomp_2d_write_mode, &
+                                                 opt_family=opt_family)
+
          if (io%family%type == DECOMP_2D_IO_MPI) then
 
             ! MPI-IO
@@ -1125,10 +1122,9 @@ contains
 
          end if
 
-      end if
+         call io%end_close()
 
-      ! End and close if needed
-      if (.not. use_opt_io) call io%end_close()
+      end if
 
 #ifdef PROFILER
       if (decomp_profiler_io) call decomp_profiler_end("io_write_one")
@@ -1200,15 +1196,6 @@ contains
          call decomp_2d_abort(__FILE__, __LINE__, 0, "Invalid arguments")
       end if
 
-      ! Open and start if needed
-      if (.not. use_opt_io) then
-         call decomp_2d_io_object_open_and_start(io, &
-                                                 opt_dirname, &
-                                                 varname, &
-                                                 decomp_2d_read_mode, &
-                                                 opt_family=opt_family)
-      end if
-
       if (use_opt_io) then
 
          if (opt_io%family%type == DECOMP_2D_IO_MPI) then
@@ -1225,6 +1212,12 @@ contains
 
       else
 
+         call decomp_2d_io_object_open_and_start(io, &
+                                                 opt_dirname, &
+                                                 varname, &
+                                                 decomp_2d_read_mode, &
+                                                 opt_family=opt_family)
+
          if (io%family%type == DECOMP_2D_IO_MPI) then
 
             ! MPI-IO
@@ -1237,10 +1230,9 @@ contains
 
          end if
 
-      end if
+         call io%end_close()
 
-      ! End and close if needed
-      if (.not. use_opt_io) call io%end_close()
+      end if
 
 #ifdef PROFILER
       if (decomp_profiler_io) call decomp_profiler_end("io_read_one")

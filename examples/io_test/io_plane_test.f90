@@ -114,11 +114,14 @@ program io_plane_test
 #ifdef ADIOS2
    call io%open_start("out", decomp_2d_write_mode)
 #endif
-   call decomp_2d_write_plane(1, u1(nx / 2:nx / 2, :, :), 'x_pencil-x_plane.dat', opt_dirname='out', opt_io=io)
+   call decomp_2d_write_plane(1, u1, 'x_pencil-x_plane.dat', &
+                              opt_iplane=nx / 2, opt_dirname='out', opt_io=io)
    ! Y-pencil data
-   call decomp_2d_write_plane(2, u2(:, ny / 2:ny / 2, :), 'y_pencil-y_plane.dat', opt_dirname='out', opt_io=io)
+   call decomp_2d_write_plane(2, u2, 'y_pencil-y_plane.dat', &
+                              opt_iplane=ny / 2, opt_dirname='out', opt_io=io)
    ! Z-pencil data
-   call decomp_2d_write_plane(3, u3(:, :, nz / 2:nz / 2), 'z_pencil-z_plane.dat', opt_dirname='out', opt_io=io)
+   call decomp_2d_write_plane(3, u3, 'z_pencil-z_plane.dat', &
+                              opt_iplane=nz / 2, opt_dirname='out', opt_io=io)
 #ifdef ADIOS2
    call io%end_close
 #endif

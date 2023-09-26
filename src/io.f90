@@ -656,7 +656,8 @@ contains
    !
    ! High-level. Using MPI-IO / ADIOS2 to write planes to a file
    !
-   subroutine write_plane_freal(ipencil, var, varname, opt_nplanes, opt_mode, opt_family, &
+   subroutine write_plane_freal(ipencil, var, varname, &
+                                opt_nplanes, opt_iplane, opt_mode, opt_family, &
                                 opt_io, opt_dirname, opt_reduce_prec, opt_decomp)
 
       implicit none
@@ -664,7 +665,7 @@ contains
       integer, intent(IN) :: ipencil
       real(real32), contiguous, dimension(:, :, :), intent(IN) :: var
       character(len=*), intent(in) :: varname
-      integer, intent(in), optional :: opt_nplanes
+      integer, intent(in), optional :: opt_nplanes, opt_iplane
       integer, intent(in), optional :: opt_mode
       type(d2d_io_family), target, intent(in), optional :: opt_family
       type(d2d_io), intent(inout), optional :: opt_io
@@ -672,13 +673,24 @@ contains
       logical, intent(in), optional :: opt_reduce_prec
       TYPE(DECOMP_INFO), target, intent(IN), optional :: opt_decomp
 
+      real(real32), allocatable, dimension(:, :, :) :: var2d
       TYPE(DECOMP_INFO), pointer :: decomp
-      integer :: nplanes
+      integer :: nplanes, iplane
 
       if (present(opt_nplanes)) then
          nplanes = opt_nplanes
       else
          nplanes = 1
+      end if
+
+      if (present(opt_iplane)) then
+         iplane = opt_iplane
+      else
+         iplane = 1
+      end if
+      ! Safety check
+      if (iplane < 1) then
+         call decomp_2d_abort(__FILE__, __LINE__, iplane, "Error invalid value of iplane")
       end if
 
       ! Use the provided decomp_info or the default one
@@ -688,12 +700,32 @@ contains
          decomp => decomp_main
       end if
 
-      call write_plane(ipencil, varname, decomp, nplanes, &
-                       opt_mode=opt_mode, &
-                       opt_family=opt_family, &
-                       opt_io=opt_io, &
-                       opt_dirname=opt_dirname, &
-                       freal=var)
+      if (nplanes > 1) then
+         call write_plane(ipencil, varname, decomp, nplanes, &
+                          opt_mode=opt_mode, &
+                          opt_family=opt_family, &
+                          opt_io=opt_io, &
+                          opt_dirname=opt_dirname, &
+                          freal=var)
+      else
+         if (ipencil == 1) then
+            allocate (var2d(1, decomp%xsz(2), decomp%xsz(3)))
+            var2d(1, :, :) = var(iplane, :, :)
+         else if (ipencil == 2) then
+            allocate (var2d(decomp%ysz(1), 1, decomp%ysz(3)))
+            var2d(:, 1, :) = var(:, iplane, :)
+         else if (ipencil == 3) then
+            allocate (var2d(decomp%zsz(1), decomp%zsz(2), 1))
+            var2d(:, :, 1) = var(:, :, iplane)
+         end if
+         call write_plane(ipencil, varname, decomp, nplanes, &
+                          opt_mode=opt_mode, &
+                          opt_family=opt_family, &
+                          opt_io=opt_io, &
+                          opt_dirname=opt_dirname, &
+                          freal=var2d)
+         deallocate (var2d)
+      end if
 
       nullify (decomp)
 
@@ -702,7 +734,8 @@ contains
 
    end subroutine write_plane_freal
    !
-   subroutine write_plane_fcplx(ipencil, var, varname, opt_nplanes, opt_mode, opt_family, &
+   subroutine write_plane_fcplx(ipencil, var, varname, &
+                                opt_nplanes, opt_iplane, opt_mode, opt_family, &
                                 opt_io, opt_dirname, opt_reduce_prec, opt_decomp)
 
       implicit none
@@ -710,7 +743,7 @@ contains
       integer, intent(IN) :: ipencil
       complex(real32), contiguous, dimension(:, :, :), intent(IN) :: var
       character(len=*), intent(in) :: varname
-      integer, intent(in), optional :: opt_nplanes
+      integer, intent(in), optional :: opt_nplanes, opt_iplane
       integer, intent(in), optional :: opt_mode
       type(d2d_io_family), target, intent(in), optional :: opt_family
       type(d2d_io), intent(inout), optional :: opt_io
@@ -718,13 +751,24 @@ contains
       logical, intent(in), optional :: opt_reduce_prec
       TYPE(DECOMP_INFO), target, intent(IN), optional :: opt_decomp
 
+      complex(real32), allocatable, dimension(:, :, :) :: var2d
       TYPE(DECOMP_INFO), pointer :: decomp
-      integer :: nplanes
+      integer :: nplanes, iplane
 
       if (present(opt_nplanes)) then
          nplanes = opt_nplanes
       else
          nplanes = 1
+      end if
+
+      if (present(opt_iplane)) then
+         iplane = opt_iplane
+      else
+         iplane = 1
+      end if
+      ! Safety check
+      if (iplane < 1) then
+         call decomp_2d_abort(__FILE__, __LINE__, iplane, "Error invalid value of iplane")
       end if
 
       ! Use the provided decomp_info or the default one
@@ -734,12 +778,32 @@ contains
          decomp => decomp_main
       end if
 
-      call write_plane(ipencil, varname, decomp, nplanes, &
-                       opt_mode=opt_mode, &
-                       opt_family=opt_family, &
-                       opt_io=opt_io, &
-                       opt_dirname=opt_dirname, &
-                       fcplx=var)
+      if (nplanes > 1) then
+         call write_plane(ipencil, varname, decomp, nplanes, &
+                          opt_mode=opt_mode, &
+                          opt_family=opt_family, &
+                          opt_io=opt_io, &
+                          opt_dirname=opt_dirname, &
+                          fcplx=var)
+      else
+         if (ipencil == 1) then
+            allocate (var2d(1, decomp%xsz(2), decomp%xsz(3)))
+            var2d(1, :, :) = var(iplane, :, :)
+         else if (ipencil == 2) then
+            allocate (var2d(decomp%ysz(1), 1, decomp%ysz(3)))
+            var2d(:, 1, :) = var(:, iplane, :)
+         else if (ipencil == 3) then
+            allocate (var2d(decomp%zsz(1), decomp%zsz(2), 1))
+            var2d(:, :, 1) = var(:, :, iplane)
+         end if
+         call write_plane(ipencil, varname, decomp, nplanes, &
+                          opt_mode=opt_mode, &
+                          opt_family=opt_family, &
+                          opt_io=opt_io, &
+                          opt_dirname=opt_dirname, &
+                          fcplx=var2d)
+         deallocate (var2d)
+      end if
 
       nullify (decomp)
 
@@ -748,7 +812,8 @@ contains
 
    end subroutine write_plane_fcplx
    !
-   subroutine write_plane_dreal(ipencil, var, varname, opt_nplanes, opt_mode, opt_family, &
+   subroutine write_plane_dreal(ipencil, var, varname, &
+                                opt_nplanes, opt_iplane, opt_mode, opt_family, &
                                 opt_io, opt_dirname, opt_reduce_prec, opt_decomp)
 
       implicit none
@@ -756,7 +821,7 @@ contains
       integer, intent(IN) :: ipencil
       real(real64), contiguous, dimension(:, :, :), intent(IN) :: var
       character(len=*), intent(in) :: varname
-      integer, intent(in), optional :: opt_nplanes
+      integer, intent(in), optional :: opt_nplanes, opt_iplane
       integer, intent(in), optional :: opt_mode
       type(d2d_io_family), target, intent(in), optional :: opt_family
       type(d2d_io), intent(inout), optional :: opt_io
@@ -765,13 +830,24 @@ contains
       TYPE(DECOMP_INFO), target, intent(IN), optional :: opt_decomp
 
       logical :: reduce
+      real(real64), allocatable, dimension(:, :, :) :: var2d
       TYPE(DECOMP_INFO), pointer :: decomp
-      integer :: nplanes
+      integer :: nplanes, iplane
 
       if (present(opt_nplanes)) then
          nplanes = opt_nplanes
       else
          nplanes = 1
+      end if
+
+      if (present(opt_iplane)) then
+         iplane = opt_iplane
+      else
+         iplane = 1
+      end if
+      ! Safety check
+      if (iplane < 1) then
+         call decomp_2d_abort(__FILE__, __LINE__, iplane, "Error invalid value of iplane")
       end if
 
       ! Use the provided decomp_info or the default one
@@ -788,27 +864,57 @@ contains
          reduce = default_opt_reduce_prec
       end if
 
-      if (reduce) then
-         call write_plane(ipencil, varname, decomp, nplanes, &
-                          opt_mode=decomp_2d_write_sync, &
-                          opt_family=opt_family, &
-                          opt_io=opt_io, &
-                          opt_dirname=opt_dirname, &
-                          freal=real(var, kind=real32))
+      if (nplanes > 1) then
+         if (reduce) then
+            call write_plane(ipencil, varname, decomp, nplanes, &
+                             opt_mode=decomp_2d_write_sync, &
+                             opt_family=opt_family, &
+                             opt_io=opt_io, &
+                             opt_dirname=opt_dirname, &
+                             freal=real(var, kind=real32))
+         else
+            call write_plane(ipencil, varname, decomp, nplanes, &
+                             opt_mode=opt_mode, &
+                             opt_family=opt_family, &
+                             opt_io=opt_io, &
+                             opt_dirname=opt_dirname, &
+                             dreal=var)
+         end if
       else
-         call write_plane(ipencil, varname, decomp, nplanes, &
-                          opt_mode=opt_mode, &
-                          opt_family=opt_family, &
-                          opt_io=opt_io, &
-                          opt_dirname=opt_dirname, &
-                          dreal=var)
+         if (ipencil == 1) then
+            allocate (var2d(1, decomp%xsz(2), decomp%xsz(3)))
+            var2d(1, :, :) = var(iplane, :, :)
+         else if (ipencil == 2) then
+            allocate (var2d(decomp%ysz(1), 1, decomp%ysz(3)))
+            var2d(:, 1, :) = var(:, iplane, :)
+         else if (ipencil == 3) then
+            allocate (var2d(decomp%zsz(1), decomp%zsz(2), 1))
+            var2d(:, :, 1) = var(:, :, iplane)
+         end if
+         if (reduce) then
+            call write_plane(ipencil, varname, decomp, nplanes, &
+                             opt_mode=decomp_2d_write_sync, &
+                             opt_family=opt_family, &
+                             opt_io=opt_io, &
+                             opt_dirname=opt_dirname, &
+                             freal=real(var2d, kind=real32))
+         else
+            call write_plane(ipencil, varname, decomp, nplanes, &
+                             opt_mode=opt_mode, &
+                             opt_family=opt_family, &
+                             opt_io=opt_io, &
+                             opt_dirname=opt_dirname, &
+                             dreal=var2d)
+         end if
+         deallocate (var2d)
       end if
 
       nullify (decomp)
 
    end subroutine write_plane_dreal
    !
-   subroutine write_plane_dcplx(ipencil, var, varname, opt_nplanes, opt_mode, opt_family, &
+   subroutine write_plane_dcplx(ipencil, var, varname, &
+                                opt_nplanes, opt_iplane, opt_mode, opt_family, &
                                 opt_io, opt_dirname, opt_reduce_prec, opt_decomp)
 
       implicit none
@@ -816,7 +922,7 @@ contains
       integer, intent(IN) :: ipencil
       complex(real64), contiguous, dimension(:, :, :), intent(IN) :: var
       character(len=*), intent(in) :: varname
-      integer, intent(in), optional :: opt_nplanes
+      integer, intent(in), optional :: opt_nplanes, opt_iplane
       integer, intent(in), optional :: opt_mode
       type(d2d_io_family), target, intent(in), optional :: opt_family
       type(d2d_io), intent(inout), optional :: opt_io
@@ -825,13 +931,24 @@ contains
       TYPE(DECOMP_INFO), target, intent(IN), optional :: opt_decomp
 
       logical :: reduce
+      complex(real64), allocatable, dimension(:, :, :) :: var2d
       TYPE(DECOMP_INFO), pointer :: decomp
-      integer :: nplanes
+      integer :: nplanes, iplane
 
       if (present(opt_nplanes)) then
          nplanes = opt_nplanes
       else
          nplanes = 1
+      end if
+
+      if (present(opt_iplane)) then
+         iplane = opt_iplane
+      else
+         iplane = 1
+      end if
+      ! Safety check
+      if (iplane < 1) then
+         call decomp_2d_abort(__FILE__, __LINE__, iplane, "Error invalid value of iplane")
       end if
 
       ! Use the provided decomp_info or the default one
@@ -848,20 +965,49 @@ contains
          reduce = default_opt_reduce_prec
       end if
 
-      if (reduce) then
-         call write_plane(ipencil, varname, decomp, nplanes, &
-                          opt_mode=decomp_2d_write_sync, &
-                          opt_family=opt_family, &
-                          opt_io=opt_io, &
-                          opt_dirname=opt_dirname, &
-                          fcplx=cmplx(var, kind=real32))
+      if (nplanes > 1) then
+         if (reduce) then
+            call write_plane(ipencil, varname, decomp, nplanes, &
+                             opt_mode=decomp_2d_write_sync, &
+                             opt_family=opt_family, &
+                             opt_io=opt_io, &
+                             opt_dirname=opt_dirname, &
+                             fcplx=cmplx(var, kind=real32))
+         else
+            call write_plane(ipencil, varname, decomp, nplanes, &
+                             opt_mode=opt_mode, &
+                             opt_family=opt_family, &
+                             opt_io=opt_io, &
+                             opt_dirname=opt_dirname, &
+                             dcplx=var)
+         end if
       else
-         call write_plane(ipencil, varname, decomp, nplanes, &
-                          opt_mode=opt_mode, &
-                          opt_family=opt_family, &
-                          opt_io=opt_io, &
-                          opt_dirname=opt_dirname, &
-                          dcplx=var)
+         if (ipencil == 1) then
+            allocate (var2d(1, decomp%xsz(2), decomp%xsz(3)))
+            var2d(1, :, :) = var(iplane, :, :)
+         else if (ipencil == 2) then
+            allocate (var2d(decomp%ysz(1), 1, decomp%ysz(3)))
+            var2d(:, 1, :) = var(:, iplane, :)
+         else if (ipencil == 3) then
+            allocate (var2d(decomp%zsz(1), decomp%zsz(2), 1))
+            var2d(:, :, 1) = var(:, :, iplane)
+         end if
+         if (reduce) then
+            call write_plane(ipencil, varname, decomp, nplanes, &
+                             opt_mode=decomp_2d_write_sync, &
+                             opt_family=opt_family, &
+                             opt_io=opt_io, &
+                             opt_dirname=opt_dirname, &
+                             fcplx=cmplx(var2d, kind=real32))
+         else
+            call write_plane(ipencil, varname, decomp, nplanes, &
+                             opt_mode=opt_mode, &
+                             opt_family=opt_family, &
+                             opt_io=opt_io, &
+                             opt_dirname=opt_dirname, &
+                             dcplx=var2d)
+         end if
+         deallocate (var2d)
       end if
 
       nullify (decomp)

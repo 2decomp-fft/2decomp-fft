@@ -8,11 +8,12 @@
 program io_plane_test
 
    use mpi
+   use decomp_2d
    use decomp_2d_constants
    use decomp_2d_io
+   use decomp_2d_io_object
    use decomp_2d_mpi
    use decomp_2d_testing
-   use decomp_2d
 #if defined(_GPU)
    use cudafor
    use openacc
@@ -36,7 +37,7 @@ program io_plane_test
    integer :: xen1, xen2, xen3
    logical :: found
 
-   character(len=*), parameter :: io_name = "test-io"
+   type(d2d_io) :: io
 
    call MPI_INIT(ierror)
    ! To resize the domain we need to know global number of ranks
@@ -54,16 +55,10 @@ program io_plane_test
    call decomp_2d_testing_log()
 
    call decomp_2d_io_init()
-   call decomp_2d_init_io(io_name)
-   call decomp_2d_register_variable(io_name, "x_pencil-x_plane.dat", 1, 0, 1, mytype)
-   call decomp_2d_register_variable(io_name, "x_pencil-y_plane.dat", 1, 0, 2, mytype)
-   call decomp_2d_register_variable(io_name, "x_pencil-z_plane.dat", 1, 0, 3, mytype)
-   call decomp_2d_register_variable(io_name, "y_pencil-x_plane.dat", 2, 0, 1, mytype)
-   call decomp_2d_register_variable(io_name, "y_pencil-y_plane.dat", 2, 0, 2, mytype)
-   call decomp_2d_register_variable(io_name, "y_pencil-z_plane.dat", 2, 0, 3, mytype)
-   call decomp_2d_register_variable(io_name, "z_pencil-x_plane.dat", 3, 0, 1, mytype)
-   call decomp_2d_register_variable(io_name, "z_pencil-y_plane.dat", 3, 0, 2, mytype)
-   call decomp_2d_register_variable(io_name, "z_pencil-z_plane.dat", 3, 0, 3, mytype)
+
+   call decomp_2d_io_register_var2d("x_pencil-x_plane.dat", 1, real_type)
+   call decomp_2d_io_register_var2d("y_pencil-y_plane.dat", 2, real_type)
+   call decomp_2d_io_register_var2d("z_pencil-z_plane.dat", 3, real_type)
 
    ! ***** global data *****
    allocate (data1(nx, ny, nz))
@@ -104,25 +99,28 @@ program io_plane_test
    !$acc update self(u2)
    !$acc update self(u3)
    !$acc end data
+
+   ! write to disk
+#ifndef ADIOS2
+   if (nrank == 0) then
+      inquire (file="out", exist=found)
+      if (.not. found) then
+         call execute_command_line("mkdir out 2> /dev/null")
+      end if
+   end if
+#endif
+
    ! X-pencil data
 #ifdef ADIOS2
-   call decomp_2d_open_io(io_name, "out", decomp_2d_write_mode)
-   call decomp_2d_start_io(io_name, "out")
+   call io%open_start("out", decomp_2d_write_mode)
 #endif
-   call decomp_2d_write_plane(1, u1, 1, nx / 2, 'out', 'x_pencil-x_plane.dat', io_name)
-   call decomp_2d_write_plane(1, u1, 2, ny / 2, 'out', 'x_pencil-y_plane.dat', io_name)
-   call decomp_2d_write_plane(1, u1, 3, nz / 2, 'out', 'x_pencil-z_plane.dat', io_name)
+   call decomp_2d_write_plane(1, u1(nx / 2:nx / 2, :, :), 'x_pencil-x_plane.dat', opt_dirname='out', opt_io=io)
    ! Y-pencil data
-   call decomp_2d_write_plane(2, u2, 2, ny / 2, 'out', 'y_pencil-y_plane.dat', io_name)
-   call decomp_2d_write_plane(2, u2, 1, nx / 2, 'out', 'y_pencil-x_plane.dat', io_name)
-   call decomp_2d_write_plane(2, u2, 3, nz / 2, 'out', 'y_pencil-z_plane.dat', io_name)
+   call decomp_2d_write_plane(2, u2(:, ny / 2:ny / 2, :), 'y_pencil-y_plane.dat', opt_dirname='out', opt_io=io)
    ! Z-pencil data
-   call decomp_2d_write_plane(3, u3, 1, nx / 2, 'out', 'z_pencil-x_plane.dat', io_name)
-   call decomp_2d_write_plane(3, u3, 2, ny / 2, 'out', 'z_pencil-y_plane.dat', io_name)
-   call decomp_2d_write_plane(3, u3, 3, nz / 2, 'out', 'z_pencil-z_plane.dat', io_name)
+   call decomp_2d_write_plane(3, u3(:, :, nz / 2:nz / 2), 'z_pencil-z_plane.dat', opt_dirname='out', opt_io=io)
 #ifdef ADIOS2
-   call decomp_2d_end_io(io_name, "out")
-   call decomp_2d_close_io(io_name, "out")
+   call io%end_close
 #endif
 
 #ifndef ADIOS2
@@ -153,10 +151,10 @@ program io_plane_test
       end if
 
       ! Y-plane
-      inquire (file='./out/x_pencil-y_plane.dat', exist=found)
+      inquire (file='./out/y_pencil-y_plane.dat', exist=found)
       if (found) then
          allocate (work(nx, 1, nz))
-         open (10, FILE='./out/x_pencil-y_plane.dat', FORM='unformatted', &
+         open (10, FILE='./out/y_pencil-y_plane.dat', FORM='unformatted', &
                ACCESS='DIRECT', RECL=iol)
          m = 1
          do k = 1, nz
@@ -171,14 +169,14 @@ program io_plane_test
          deallocate (work)
          write (*, *) 'passed self test y-plane'
       else
-         write (*, *) 'Warning : x_pencil-y_plane.dat is missing'
+         write (*, *) 'Warning : y_pencil-y_plane.dat is missing'
       end if
 
       ! Z-plane
-      inquire (file='./out/x_pencil-z_plane.dat', exist=found)
+      inquire (file='./out/z_pencil-z_plane.dat', exist=found)
       if (found) then
          allocate (work(nx, ny, 1))
-         open (10, FILE='./out/x_pencil-z_plane.dat', FORM='unformatted', &
+         open (10, FILE='./out/z_pencil-z_plane.dat', FORM='unformatted', &
                ACCESS='DIRECT', RECL=iol)
          m = 1
          do j = 1, ny
@@ -193,7 +191,7 @@ program io_plane_test
          deallocate (work)
          write (*, *) 'passed self test z-plane'
       else
-         write (*, *) 'Warning : x_pencil-z_plane.dat is missing'
+         write (*, *) 'Warning : z_pencil-z_plane.dat is missing'
       end if
 
    end if

@@ -472,7 +472,11 @@ contains
       implicit none
 
 #ifdef ADIOS2
-      if (associated(default_adios)) nullify (default_adios)
+      if (associated(default_adios)) then
+         call decomp_2d_warning(__FILE__, __LINE__, 0, &
+                                "Default adios2_adios should be null()")
+         nullify (default_adios)
+      end if
 #endif
 
    end subroutine decomp_2d_io_family_init
@@ -526,7 +530,7 @@ contains
 
             ! New variable
             ! TODO print this in the 2decomp log and not stdout
-            if (nrank == 0) then
+            if (decomp_debug >= D2D_DEBUG_LEVEL_INFO .and. nrank == 0) then
                print *, "Registering variable for IO: ", varname
             end if
 
@@ -573,7 +577,7 @@ contains
 
       if (.not. associated(default_adios)) then
          call decomp_2d_warning(__FILE__, __LINE__, 0, &
-                                "Warning, default adios2_adios is null()")
+                                "Default adios2_adios is null()")
       end if
 
       decomp_2d_io_family_get_default_adios => default_adios

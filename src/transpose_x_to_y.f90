@@ -20,7 +20,6 @@
      real(mytype), dimension(:, :, :), intent(IN) :: src
      real(mytype), dimension(:, :, :), intent(OUT) :: dst
      TYPE(DECOMP_INFO), intent(IN) :: decomp
-
 #if defined(_GPU)
      integer :: istat, nsize
 #endif
@@ -40,11 +39,7 @@
         dst = src
 #endif
      else
-#if defined(_GPU)
-        call transpose_x_to_y_real(src, dst, decomp, work1_r_d, work2_r_d)
-#else
-        call transpose_x_to_y_real(src, dst, decomp, work1_r, work2_r)
-#endif
+        call transpose_x_to_y_real(src, dst, decomp)
      end if
 
 #ifdef PROFILER
@@ -53,17 +48,13 @@
 
   end subroutine transpose_x_to_y_real_long
 
-  subroutine transpose_x_to_y_real(src, dst, decomp, wk1, wk2)
+  subroutine transpose_x_to_y_real(src, dst, decomp)
 
      implicit none
 
-     real(mytype), dimension(:, :, :), intent(IN) :: src
+     Real(mytype), dimension(:, :, :), intent(IN) :: src
      real(mytype), dimension(:, :, :), intent(OUT) :: dst
      TYPE(DECOMP_INFO), intent(IN) :: decomp
-     real(mytype), dimension(:), intent(out) :: wk1, wk2
-#if defined(_GPU)
-     attributes(device) :: wk1, wk2
-#endif
 
      integer :: s1, s2, s3, d1, d2, d3
      integer :: ierror
@@ -76,38 +67,55 @@
      d3 = SIZE(dst, 3)
 
      ! rearrange source array as send buffer
-     call mem_split_xy_real(src, s1, s2, s3, wk1, dims(1), &
+#if defined(_GPU)
+     call mem_split_xy_real(src, s1, s2, s3, work1_r_d, dims(1), &
                             decomp%x1dist, decomp)
+#else
+     call mem_split_xy_real(src, s1, s2, s3, work1_r, dims(1), &
+                            decomp%x1dist, decomp)
+#endif
 
      ! define receive buffer
      ! transpose using MPI_ALLTOALL(V)
 #ifdef EVEN
-     call MPI_ALLTOALL(wk1, decomp%x1count, real_type, &
-                       wk2, decomp%y1count, real_type, &
-                       DECOMP_2D_COMM_COL, ierror)
+     call MPI_ALLTOALL(work1_r, decomp%x1count, &
+                       real_type, work2_r, decomp%y1count, &
+                       real_type, DECOMP_2D_COMM_COL, ierror)
      if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_ALLTOALL")
 #else
 
-#if defined(_GPU) && defined(_NCCL)
-     call decomp_2d_nccl_send_recv_col(wk2, &
-                                       wk1, &
+#if defined(_GPU)
+#if defined(_NCCL)
+     call decomp_2d_nccl_send_recv_col(work2_r_d, &
+                                       work1_r_d, &
                                        decomp%x1disp, &
                                        decomp%x1cnts, &
                                        decomp%y1disp, &
                                        decomp%y1cnts, &
                                        dims(1))
 #else
-     call MPI_ALLTOALLV(wk1, decomp%x1cnts, decomp%x1disp, real_type, &
-                        wk2, decomp%y1cnts, decomp%y1disp, real_type, &
-                        DECOMP_2D_COMM_COL, ierror)
+     call MPI_ALLTOALLV(work1_r_d, decomp%x1cnts, decomp%x1disp, &
+                        real_type, work2_r_d, decomp%y1cnts, decomp%y1disp, &
+                        real_type, DECOMP_2D_COMM_COL, ierror)
+     if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_ALLTOALLV")
+#endif
+#else
+     call MPI_ALLTOALLV(work1_r, decomp%x1cnts, decomp%x1disp, &
+                        real_type, work2_r, decomp%y1cnts, decomp%y1disp, &
+                        real_type, DECOMP_2D_COMM_COL, ierror)
      if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_ALLTOALLV")
 #endif
 
 #endif
 
      ! rearrange receive buffer
-     call mem_merge_xy_real(wk2, d1, d2, d3, dst, dims(1), &
+#if defined(_GPU)
+     call mem_merge_xy_real(work2_r_d, d1, d2, d3, dst, dims(1), &
                             decomp%y1dist, decomp)
+#else
+     call mem_merge_xy_real(work2_r, d1, d2, d3, dst, dims(1), &
+                            decomp%y1dist, decomp)
+#endif
 
   end subroutine transpose_x_to_y_real
 
@@ -129,7 +137,6 @@
      complex(mytype), dimension(:, :, :), intent(IN) :: src
      complex(mytype), dimension(:, :, :), intent(OUT) :: dst
      TYPE(DECOMP_INFO), intent(IN) :: decomp
-
 #if defined(_GPU)
      integer :: istat, nsize
 #endif
@@ -149,11 +156,7 @@
         dst = src
 #endif
      else
-#if defined(_GPU)
-        call transpose_x_to_y_complex(src, dst, decomp, work1_c_d, work2_c_d)
-#else
-        call transpose_x_to_y_complex(src, dst, decomp, work1_c, work2_c)
-#endif
+        call transpose_x_to_y_complex(src, dst, decomp)
      end if
 
 #ifdef PROFILER
@@ -162,17 +165,13 @@
 
   end subroutine transpose_x_to_y_complex_long
 
-  subroutine transpose_x_to_y_complex(src, dst, decomp, wk1, wk2)
+  subroutine transpose_x_to_y_complex(src, dst, decomp)
 
      implicit none
 
      complex(mytype), dimension(:, :, :), intent(IN) :: src
      complex(mytype), dimension(:, :, :), intent(OUT) :: dst
      TYPE(DECOMP_INFO), intent(IN) :: decomp
-     complex(mytype), dimension(:), intent(OUT) :: wk1, wk2
-#if defined(_GPU)
-     attributes(device) :: wk1, wk2
-#endif
 
      integer :: s1, s2, s3, d1, d2, d3
      integer :: ierror
@@ -185,21 +184,27 @@
      d3 = SIZE(dst, 3)
 
      ! rearrange source array as send buffer
-     call mem_split_xy_complex(src, s1, s2, s3, wk1, dims(1), &
+#if defined(_GPU)
+     call mem_split_xy_complex(src, s1, s2, s3, work1_c_d, dims(1), &
                                decomp%x1dist, decomp)
+#else
+     call mem_split_xy_complex(src, s1, s2, s3, work1_c, dims(1), &
+                               decomp%x1dist, decomp)
+#endif
 
      ! define receive buffer
      ! transpose using MPI_ALLTOALL(V)
 #ifdef EVEN
-     call MPI_ALLTOALL(wk1, decomp%x1count, complex_type, &
-                       wk2, decomp%y1count, complex_type, &
-                       DECOMP_2D_COMM_COL, ierror)
+     call MPI_ALLTOALL(work1_c, decomp%x1count, &
+                       complex_type, work2_c, decomp%y1count, &
+                       complex_type, DECOMP_2D_COMM_COL, ierror)
      if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_ALLTOALL")
 #else
 
-#if defined(_GPU) && defined(_NCCL)
-     call decomp_2d_nccl_send_recv_col(wk2, &
-                                       wk1, &
+#if defined(_GPU)
+#if defined(_NCCL)
+     call decomp_2d_nccl_send_recv_col(work2_c_d, &
+                                       work1_c_d, &
                                        decomp%x1disp, &
                                        decomp%x1cnts, &
                                        decomp%y1disp, &
@@ -207,17 +212,28 @@
                                        dims(1), &
                                        decomp_buf_size)
 #else
-     call MPI_ALLTOALLV(wk1, decomp%x1cnts, decomp%x1disp, complex_type, &
-                        wk2, decomp%y1cnts, decomp%y1disp, complex_type, &
-                        DECOMP_2D_COMM_COL, ierror)
+     call MPI_ALLTOALLV(work1_c_d, decomp%x1cnts, decomp%x1disp, &
+                        complex_type, work2_c_d, decomp%y1cnts, decomp%y1disp, &
+                        complex_type, DECOMP_2D_COMM_COL, ierror)
+     if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_ALLTOALLV")
+#endif
+#else
+     call MPI_ALLTOALLV(work1_c, decomp%x1cnts, decomp%x1disp, &
+                        complex_type, work2_c, decomp%y1cnts, decomp%y1disp, &
+                        complex_type, DECOMP_2D_COMM_COL, ierror)
      if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_ALLTOALLV")
 #endif
 
 #endif
 
      ! rearrange receive buffer
-     call mem_merge_xy_complex(wk2, d1, d2, d3, dst, dims(1), &
+#if defined(_GPU)
+     call mem_merge_xy_complex(work2_c_d, d1, d2, d3, dst, dims(1), &
                                decomp%y1dist, decomp)
+#else
+     call mem_merge_xy_complex(work2_c, d1, d2, d3, dst, dims(1), &
+                               decomp%y1dist, decomp)
+#endif
 
   end subroutine transpose_x_to_y_complex
 
@@ -270,6 +286,7 @@
 #endif
      end do
 
+     return
   end subroutine mem_split_xy_real
 
   subroutine mem_split_xy_complex(in, n1, n2, n3, out, iproc, dist, decomp)
@@ -321,6 +338,7 @@
 #endif
      end do
 
+     return
   end subroutine mem_split_xy_complex
 
   subroutine mem_merge_xy_real(in, n1, n2, n3, out, iproc, dist, decomp)
@@ -372,6 +390,7 @@
 #endif
      end do
 
+     return
   end subroutine mem_merge_xy_real
 
   subroutine mem_merge_xy_complex(in, n1, n2, n3, out, iproc, dist, decomp)
@@ -423,4 +442,5 @@
 #endif
      end do
 
+     return
   end subroutine mem_merge_xy_complex

@@ -12,8 +12,8 @@ module decomp_2d_cumpi
    private        ! Make everything private unless declared public
 
    ! Real/complex pointers to GPU buffers
-   real(mytype), dimension(:), device, public, pointer :: work1_r_d, work2_r_d
-   complex(mytype), dimension(:), device, public, pointer :: work1_c_d, work2_c_d
+   real(mytype), dimension(:), device, public, pointer, contiguous :: work1_r_d, work2_r_d
+   complex(mytype), dimension(:), device, public, pointer, contiguous :: work1_c_d, work2_c_d
 
    public :: decomp_2d_cumpi_init, &
              decomp_2d_cumpi_fin

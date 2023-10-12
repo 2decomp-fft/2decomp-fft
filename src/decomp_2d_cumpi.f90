@@ -24,6 +24,8 @@ contains
    !
    subroutine decomp_2d_cumpi_init(buf_size, wk1, wk2)
 
+      use, intrinsic:: iso_c_binding, only: c_f_pointer, c_loc
+
       implicit none
 
       integer, intent(in) :: buf_size

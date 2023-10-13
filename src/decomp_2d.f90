@@ -114,8 +114,12 @@ module decomp_2d
    ! These are the buffers used by MPI_ALLTOALL(V) calls
    integer, save :: decomp_buf_size = 0
    ! Shared real/complex buffers
+#if defined(_GPU)
+   real(mytype), target, device, allocatable, dimension(:) :: work1, work2
+#else
    real(mytype), target, allocatable, dimension(:) :: work1, work2
-   ! Real/complex pointers to buffers
+#endif
+   ! Real/complex pointers to CPU buffers
    real(mytype), pointer, contiguous, dimension(:) :: work1_r, work2_r
    complex(mytype), pointer, contiguous, dimension(:) :: work1_c, work2_c
 
@@ -411,9 +415,6 @@ contains
       ! check if additional memory is required
       if (buf_size > decomp_buf_size) then
          decomp_buf_size = buf_size
-#if defined(_GPU)
-         call decomp_2d_cumpi_init(buf_size)
-#endif
          if (associated(work1_r)) nullify (work1_r)
          if (associated(work2_r)) nullify (work2_r)
          if (associated(work1_c)) nullify (work1_c)
@@ -436,6 +437,9 @@ contains
          call c_f_pointer(c_loc(work2), work2_r, [buf_size])
          call c_f_pointer(c_loc(work1), work1_c, [buf_size])
          call c_f_pointer(c_loc(work2), work2_c, [buf_size])
+#if defined(_GPU)
+         call decomp_2d_cumpi_init(buf_size, work1, work2)
+#endif
       end if
 
    end subroutine decomp_info_init

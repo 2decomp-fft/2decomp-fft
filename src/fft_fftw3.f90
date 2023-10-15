@@ -52,7 +52,7 @@ module decomp_2d_fft
 
       complex(mytype), allocatable, dimension(:, :, :) :: a1
 
-      allocate (a1(decomp%xsz(1), decomp%xsz(2), decomp%xsz(3)))
+      call alloc_x(a1, decomp)
 
 #ifdef DOUBLE_PREC
       call dfftw_plan_many_dft(plan1, 1, decomp%xsz(1), &
@@ -113,7 +113,7 @@ module decomp_2d_fft
 
       complex(mytype), allocatable, dimension(:, :, :) :: a1
 
-      allocate (a1(decomp%zsz(1), decomp%zsz(2), decomp%zsz(3)))
+      call alloc_z(a1, decomp)
 
 #ifdef DOUBLE_PREC
       call dfftw_plan_many_dft(plan1, 1, decomp%zsz(3), &
@@ -144,8 +144,8 @@ module decomp_2d_fft
       real(mytype), allocatable, dimension(:, :, :) :: a1
       complex(mytype), allocatable, dimension(:, :, :) :: a2
 
-      allocate (a1(decomp_ph%xsz(1), decomp_ph%xsz(2), decomp_ph%xsz(3)))
-      allocate (a2(decomp_sp%xsz(1), decomp_sp%xsz(2), decomp_sp%xsz(3)))
+      call alloc_x(a1, decomp_ph)
+      call alloc_x(a2, decomp_sp)
 #ifdef DOUBLE_PREC
       call dfftw_plan_many_dft_r2c(plan1, 1, decomp_ph%xsz(1), &
                                    decomp_ph%xsz(2) * decomp_ph%xsz(3), a1, decomp_ph%xsz(1), 1, &
@@ -174,8 +174,8 @@ module decomp_2d_fft
       complex(mytype), allocatable, dimension(:, :, :) :: a1
       real(mytype), allocatable, dimension(:, :, :) :: a2
 
-      allocate (a1(decomp_sp%xsz(1), decomp_sp%xsz(2), decomp_sp%xsz(3)))
-      allocate (a2(decomp_ph%xsz(1), decomp_ph%xsz(2), decomp_ph%xsz(3)))
+      call alloc_x(a1, decomp_sp)
+      call alloc_x(a2, decomp_ph)
 #ifdef DOUBLE_PREC
       call dfftw_plan_many_dft_c2r(plan1, 1, decomp_ph%xsz(1), &
                                    decomp_ph%xsz(2) * decomp_ph%xsz(3), a1, decomp_sp%xsz(1), 1, &
@@ -204,8 +204,8 @@ module decomp_2d_fft
       real(mytype), allocatable, dimension(:, :, :) :: a1
       complex(mytype), allocatable, dimension(:, :, :) :: a2
 
-      allocate (a1(decomp_ph%zsz(1), decomp_ph%zsz(2), decomp_ph%zsz(3)))
-      allocate (a2(decomp_sp%zsz(1), decomp_sp%zsz(2), decomp_sp%zsz(3)))
+      call alloc_z(a1, decomp_ph)
+      call alloc_z(a2, decomp_sp)
 #ifdef DOUBLE_PREC
       call dfftw_plan_many_dft_r2c(plan1, 1, decomp_ph%zsz(3), &
                                    decomp_ph%zsz(1) * decomp_ph%zsz(2), a1, decomp_ph%zsz(3), &
@@ -234,8 +234,8 @@ module decomp_2d_fft
       complex(mytype), allocatable, dimension(:, :, :) :: a1
       real(mytype), allocatable, dimension(:, :, :) :: a2
 
-      allocate (a1(decomp_sp%zsz(1), decomp_sp%zsz(2), decomp_sp%zsz(3)))
-      allocate (a2(decomp_ph%zsz(1), decomp_ph%zsz(2), decomp_ph%zsz(3)))
+      call alloc_z(a1, decomp_sp)
+      call alloc_z(a2, decomp_ph)
 
 #ifdef DOUBLE_PREC
       call dfftw_plan_many_dft_c2r(plan1, 1, decomp_ph%zsz(3), &
@@ -481,7 +481,7 @@ module decomp_2d_fft
 #ifdef OVERWRITE
          call c2c_1m_x(in, plan(isign, 1))
 #else
-         allocate (wk1(ph%xsz(1), ph%xsz(2), ph%xsz(3)))
+         call alloc_x(wk1, ph)
          wk1 = in
          call c2c_1m_x(wk1, plan(isign, 1))
 #endif
@@ -523,7 +523,7 @@ module decomp_2d_fft
 #ifdef OVERWRITE
          call c2c_1m_z(in, plan(isign, 3))
 #else
-         allocate (wk1(ph%zsz(1), ph%zsz(2), ph%zsz(3)))
+         call alloc_z(wk1, ph)
          wk1 = in
          call c2c_1m_z(wk1, plan(isign, 3))
 #endif
@@ -636,7 +636,7 @@ module decomp_2d_fft
 #ifdef OVERWRITE
          call c2c_1m_z(in_c, plan(2, 3))
 #else
-         allocate (wk1(sp%zsz(1), sp%zsz(2), sp%zsz(3)))
+         call alloc_z(wk1, sp)
          wk1 = in_c
          call c2c_1m_z(wk1, plan(2, 3))
 #endif
@@ -663,7 +663,7 @@ module decomp_2d_fft
 #ifdef OVERWRITE
          call c2c_1m_x(in_c, plan(2, 1))
 #else
-         allocate (wk1(sp%xsz(1), sp%xsz(2), sp%xsz(3)))
+         call alloc_x(wk1, sp)
          wk1 = in_c
          call c2c_1m_x(wk1, plan(2, 1))
 #endif

@@ -395,7 +395,7 @@ contains
    end subroutine d2d_io_end_close
 
    !
-   ! Open and start in write_one or read_one
+   ! Open and start in write_one, read_one or write_plane
    !
    recursive subroutine decomp_2d_io_object_open_and_start(writer, &
                                                            dirname, &

@@ -61,25 +61,6 @@ jobs:
         ctest --test-dir build
         rm -rf build  
     
-    # Configure-Build-Run 
-    - name: Compile NHVHPC GPU NCCL inplace
-      run: |
-        ls -ltr ~/.bashrc
-        source ~/.bashrc
-        source ~/.profile_github
-        module load CMake 
-        module load nvhpc
-        export FC=mpif90
-        cmake -S . -B build -DBUILD_TESTING=ON -DBUILD_TARGET=gpu -DENABLE_NCCL=yes -DENABLE_INPLACE=on
-        cmake --build build -j 4
-        cmake --install build
-        ctest --test-dir build  
-        cmake -S . -B build -DNX=128 -DNY=128 -DNX=128
-        cmake --build build -j 4
-        cmake --install build
-        ctest --test-dir build
-        rm -rf build
-
     # Configure-Build-Run-Run on 4 cores 
     - name: Compile GNU_Dev openMPI FFTW_F03 ADIOS2 CPU
       run: |

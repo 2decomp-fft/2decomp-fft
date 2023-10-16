@@ -105,35 +105,48 @@ contains
 
    subroutine init_data()
 
+      integer :: xen1, xen2, xen3
+      integer :: yen1, yen2, yen3
+      integer :: zen1, zen2, zen3
+
       call alloc_x(u1)
       call alloc_y(u2)
       call alloc_z(u3)
+      xen1 = xsize(1)
+      xen2 = xsize(2)
+      xen3 = xsize(3)
+      yen1 = ysize(1)
+      yen2 = ysize(2)
+      yen3 = ysize(3)
+      zen1 = zsize(1)
+      zen2 = zsize(2)
+      zen3 = zsize(3)
 
       ! distribute the data
       !$acc data copy(u1,u2,u3)
 
       !$acc parallel loop default(present)
-      do k = 1, xsize(3)
-         do j = 1, xsize(2)
-            do i = 1, xsize(1)
+      do k = 1, xen3
+         do j = 1, xen2
+            do i = 1, xen1
                u1(i, j, k) = real(100 + nrank, mytype)
             end do
          end do
       end do
       !$acc end loop
       !$acc parallel loop default(present)
-      do k = 1, ysize(3)
-         do j = 1, ysize(2)
-            do i = 1, ysize(1)
+      do k = 1, yen3
+         do j = 1, yen2
+            do i = 1, yen1
                u2(i, j, k) = real(100 + nrank, mytype)
             end do
          end do
       end do
       !$acc end loop
       !$acc parallel loop default(present)
-      do k = 1, zsize(3)
-         do j = 1, zsize(2)
-            do i = 1, zsize(1)
+      do k = 1, zen3
+         do j = 1, zen2
+            do i = 1, zen1
                u3(i, j, k) = real(100 + nrank, mytype)
             end do
          end do

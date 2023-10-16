@@ -16,4 +16,12 @@
       <parameter key="ProfileUnits" value="Milliseconds"/>
     </transport>
   </io>
+  <io name="visu-io">
+    <engine type="HDF5">
+    </engine>
+    <transport type="File">
+      <parameter key="Library" value="fstream"/>
+      <parameter key="ProfileUnits" value="Milliseconds"/>
+    </transport>
+  </io>
 </adios-config>

@@ -1194,7 +1194,8 @@ contains
 
    end subroutine coarse_extents
 
-  subroutine mpiio_write_real_coarse(ipencil, var, dirname, varname, icoarse, io_name, opt_decomp, reduce_prec, opt_deferred_writes)
+   subroutine mpiio_write_real_coarse(ipencil, var, dirname, varname, icoarse, io_name, &
+                                      opt_decomp, reduce_prec, opt_deferred_writes)
 
       ! USE param
       ! USE variables

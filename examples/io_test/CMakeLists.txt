@@ -14,12 +14,12 @@ add_executable(io_plane_test ${files_plane_test})
 add_executable(io_bench ${files_bench})
 add_executable(io_visu ${files_visu})
 
-target_link_libraries(io_test PRIVATE decomp2d)
-target_link_libraries(io_read PRIVATE decomp2d)
-target_link_libraries(io_var_test PRIVATE decomp2d)
-target_link_libraries(io_plane_test PRIVATE decomp2d)
-target_link_libraries(io_bench PRIVATE decomp2d)
-target_link_libraries(io_visu PRIVATE decomp2d)
+target_link_libraries(io_test PRIVATE decomp2d examples_utils)
+target_link_libraries(io_read PRIVATE decomp2d examples_utils)
+target_link_libraries(io_var_test PRIVATE decomp2d examples_utils)
+target_link_libraries(io_plane_test PRIVATE decomp2d examples_utils)
+target_link_libraries(io_bench PRIVATE decomp2d examples_utils)
+target_link_libraries(io_visu PRIVATE decomp2d examples_utils)
 
 # Run the test(s)
 # Note visu is not a test - it is an example to show/create visu files

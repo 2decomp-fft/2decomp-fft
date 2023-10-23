@@ -302,11 +302,23 @@ Note the legacy `fftw` interface lacks interface definitions
 and will fail when stricter compilation flags are used (e.g. when `-DCMAKE_BUILD_TYPE=Dev`) 
 for this it is recommended to use `fftw_f03` which provides proper interfaces.
 
+#### Vendor FFTW
+
+Some vendors supply an FFTW library optimised for their systems.
+These can be used via the same FFTW interfaces described above, linking etc. may be performed automatically by some compilers, however the `-DFFTW_ROOT` variable can also used if the system fails to find the vendor FFTW.
+An example of configuring `2decomp&fft` against a vendor FFTW using AMD AOCL is
+```
+cmake -S . -B build -DFFT_Choice=fftw_f03 -DFFTW_ROOT=${AOCL_ROOT}
+```
+where `${AOCL_ROOT}` is the AOCL installation directory.
+Linking against other vendor's libraries should work similarly.
+On Cray systems using the Cray compiler wrappers the FFTW library (when selected) should be picked up automatically when the `cray-fftw` module is loaded.
+
 ### Caliper
 
 The library [caliper](https://github.com/LLNL/Caliper) can be used to profile the execution of the code. 
-The version 2.9.1 was tested and is supported, version 2.8.0 has also been tested 
-and is still expected to work. 
+The version 2.10.0 was tested and is supported, other versions above 2.8.0 were also tested 
+and are still expected to work. 
 Please note that one must build caliper and decomp2d against the same C/C++/Fortran 
 compilers and MPI libray. 
 For build instructions, please check 
@@ -317,9 +329,9 @@ Below is a suggestion for the compilation of the library using the GNU compilers
 ```
 git clone https://github.com/LLNL/Caliper.git caliper_github
 cd caliper_github
-git checkout v2.9.1
+git checkout v2.10.0
 mkdir build && cd build
-cmake -DCMAKE_C_COMPILER=gcc -DCMAKE_CXX_COMPILER=g++ -DCMAKE_Fortran_COMPILER=gfortran -DCMAKE_INSTALL_PREFIX=../../caliper_build_2.9.1 -DWITH_FORTRAN=yes -DWITH_MPI=yes -DBUILD_TESTING=yes ../
+cmake -DCMAKE_C_COMPILER=gcc -DCMAKE_CXX_COMPILER=g++ -DCMAKE_Fortran_COMPILER=gfortran -DCMAKE_INSTALL_PREFIX=../../caliper_build_2.10.0 -DWITH_FORTRAN=yes -DWITH_MPI=yes -DBUILD_TESTING=yes ../
 make -j
 make test
 make install

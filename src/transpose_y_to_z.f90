@@ -24,6 +24,10 @@
      integer :: istat, nsize
 #endif
 
+#ifdef PROFILER
+     if (decomp_profiler_transpose) call decomp_profiler_start("transp_y_z_r")
+#endif
+
      if (dims(2) == 1) then
 #if defined(_GPU)
         nsize = product(decomp%ysz)
@@ -35,18 +39,30 @@
         dst = src
 #endif
      else
-        call transpose_y_to_z_real(src, dst, decomp)
+#if defined(_GPU)
+        call transpose_y_to_z_real(src, dst, decomp, work1_r_d, work2_r_d)
+#else
+        call transpose_y_to_z_real(src, dst, decomp, work1_r, work2_r)
+#endif
      end if
+
+#ifdef PROFILER
+     if (decomp_profiler_transpose) call decomp_profiler_end("transp_y_z_r")
+#endif
 
   end subroutine transpose_y_to_z_real_long
 
-  subroutine transpose_y_to_z_real(src, dst, decomp)
+  subroutine transpose_y_to_z_real(src, dst, decomp, wk1, wk2)
 
      implicit none
 
      real(mytype), dimension(:, :, :), intent(IN) :: src
      real(mytype), dimension(:, :, :), intent(OUT) :: dst
      TYPE(DECOMP_INFO), intent(IN) :: decomp
+     real(mytype), dimension(:), intent(out) :: wk1, wk2
+#if defined(_GPU)
+     attributes(device) :: wk1, wk2
+#endif
 
 #if defined(_GPU)
      integer :: istat
@@ -54,10 +70,6 @@
 
      integer :: s1, s2, s3, d1, d2, d3
      integer :: ierror
-
-#ifdef PROFILER
-     if (decomp_profiler_transpose) call decomp_profiler_start("transp_y_z_r")
-#endif
 
      s1 = SIZE(src, 1)
      s2 = SIZE(src, 2)
@@ -67,48 +79,44 @@
      d3 = SIZE(dst, 3)
 
      ! rearrange source array as send buffer
-#if defined(_GPU)
-     call mem_split_yz_real(src, s1, s2, s3, work1_r_d, dims(2), &
+     call mem_split_yz_real(src, s1, s2, s3, wk1, dims(2), &
                             decomp%y2dist, decomp)
-#else
-     call mem_split_yz_real(src, s1, s2, s3, work1_r, dims(2), &
-                            decomp%y2dist, decomp)
-#endif
 
      ! define receive buffer
 #ifdef EVEN
      if (decomp%even) then
-        call MPI_ALLTOALL(work1_r, decomp%y2count, &
-                          real_type, dst, decomp%z2count, &
-                          real_type, DECOMP_2D_COMM_ROW, ierror)
-        if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_ALLTOALLV")
+        call MPI_ALLTOALL(wk1, decomp%y2count, real_type, &
+                          dst, decomp%z2count, real_type, &
+                          DECOMP_2D_COMM_ROW, ierror)
      else
-        call MPI_ALLTOALL(work1_r, decomp%y2count, &
-                          real_type, work2_r, decomp%z2count, &
-                          real_type, DECOMP_2D_COMM_ROW, ierror)
-        if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_ALLTOALL")
+        call MPI_ALLTOALL(wk1, decomp%y2count, real_type, &
+                          wk2, decomp%z2count, real_type, &
+                          DECOMP_2D_COMM_ROW, ierror)
      end if
+     if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_ALLTOALL")
 #else
 
 #if defined(_GPU)
 #if defined(_NCCL)
-     call decomp_2d_nccl_send_recv_row(work2_r_d, &
-                                       work1_r_d, &
+     call decomp_2d_nccl_send_recv_row(wk2, &
+                                       wk1, &
                                        decomp%y2disp, &
                                        decomp%y2cnts, &
                                        decomp%z2disp, &
                                        decomp%z2cnts, &
                                        dims(2))
 #else
-     call MPI_ALLTOALLV(work1_r_d, decomp%y2cnts, decomp%y2disp, &
-                        real_type, work2_r_d, decomp%z2cnts, decomp%z2disp, &
-                        real_type, DECOMP_2D_COMM_ROW, ierror)
+     call MPI_ALLTOALLV(wk1, decomp%y2cnts, decomp%y2disp, real_type, &
+                        wk2, decomp%z2cnts, decomp%z2disp, real_type, &
+                        DECOMP_2D_COMM_ROW, ierror)
      if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_ALLTOALLV")
 #endif
 #else
-     call MPI_ALLTOALLV(work1_r, decomp%y2cnts, decomp%y2disp, &
-                        real_type, dst, decomp%z2cnts, decomp%z2disp, &
-                        real_type, DECOMP_2D_COMM_ROW, ierror)
+     associate (wk => wk2)
+     end associate
+     call MPI_ALLTOALLV(wk1, decomp%y2cnts, decomp%y2disp, real_type, &
+                        dst, decomp%z2cnts, decomp%z2disp, real_type, &
+                        DECOMP_2D_COMM_ROW, ierror)
      if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_ALLTOALLV")
 #endif
 
@@ -117,7 +125,7 @@
      ! rearrange receive buffer
 #ifdef EVEN
      if (.not. decomp%even) then
-        call mem_merge_yz_real(work2_r, d1, d2, d3, dst, dims(2), &
+        call mem_merge_yz_real(wk2, d1, d2, d3, dst, dims(2), &
                                decomp%z2dist, decomp)
      end if
 #else
@@ -127,18 +135,13 @@
 #if defined(_GPU)
      !If one of the array in cuda call is not device we need to add acc host_data
      !$acc host_data use_device(dst)
-     istat = cudaMemcpy(dst, work2_r_d, d1 * d2 * d3, cudaMemcpyDeviceToDevice)
+     istat = cudaMemcpy(dst, wk2, d1 * d2 * d3, cudaMemcpyDeviceToDevice)
      !$acc end host_data
      if (istat /= 0) call decomp_2d_abort(__FILE__, __LINE__, istat, "cudaMemcpy2D")
 #endif
 
 #endif
 
-#ifdef PROFILER
-     if (decomp_profiler_transpose) call decomp_profiler_end("transp_y_z_r")
-#endif
-
-     return
   end subroutine transpose_y_to_z_real
 
   subroutine transpose_y_to_z_complex_short(src, dst)
@@ -163,6 +166,10 @@
      integer :: istat, nsize
 #endif
 
+#ifdef PROFILER
+     if (decomp_profiler_transpose) call decomp_profiler_start("transp_y_z_c")
+#endif
+
      if (dims(2) == 1) then
 #if defined(_GPU)
         nsize = product(decomp%ysz)
@@ -174,18 +181,30 @@
         dst = src
 #endif
      else
-        call transpose_y_to_z_complex(src, dst, decomp)
+#if defined(_GPU)
+        call transpose_y_to_z_complex(src, dst, decomp, work1_c_d, work2_c_d)
+#else
+        call transpose_y_to_z_complex(src, dst, decomp, work1_c, work2_c)
+#endif
      end if
+
+#ifdef PROFILER
+     if (decomp_profiler_transpose) call decomp_profiler_end("transp_y_z_c")
+#endif
 
   end subroutine transpose_y_to_z_complex_long
 
-  subroutine transpose_y_to_z_complex(src, dst, decomp)
+  subroutine transpose_y_to_z_complex(src, dst, decomp, wk1, wk2)
 
      implicit none
 
      complex(mytype), dimension(:, :, :), intent(IN) :: src
      complex(mytype), dimension(:, :, :), intent(OUT) :: dst
      TYPE(DECOMP_INFO), intent(IN) :: decomp
+     complex(mytype), dimension(:), intent(out) :: wk1, wk2
+#if defined(_GPU)
+     attributes(device) :: wk1, wk2
+#endif
 
 #if defined(_GPU)
      integer :: istat
@@ -193,10 +212,6 @@
 
      integer :: s1, s2, s3, d1, d2, d3
      integer :: ierror
-
-#ifdef PROFILER
-     if (decomp_profiler_transpose) call decomp_profiler_start("transp_y_z_c")
-#endif
 
      s1 = SIZE(src, 1)
      s2 = SIZE(src, 2)
@@ -206,32 +221,27 @@
      d3 = SIZE(dst, 3)
 
      ! rearrange source array as send buffer
-#if defined(_GPU)
-     call mem_split_yz_complex(src, s1, s2, s3, work1_c_d, dims(2), &
+     call mem_split_yz_complex(src, s1, s2, s3, wk1, dims(2), &
                                decomp%y2dist, decomp)
-#else
-     call mem_split_yz_complex(src, s1, s2, s3, work1_c, dims(2), &
-                               decomp%y2dist, decomp)
-#endif
 
      ! define receive buffer
 #ifdef EVEN
      if (decomp%even) then
-        call MPI_ALLTOALL(work1_c, decomp%y2count, &
-                          complex_type, dst, decomp%z2count, &
-                          complex_type, DECOMP_2D_COMM_ROW, ierror)
+        call MPI_ALLTOALL(wk1, decomp%y2count, complex_type, &
+                          dst, decomp%z2count, complex_type, &
+                          DECOMP_2D_COMM_ROW, ierror)
      else
-        call MPI_ALLTOALL(work1_c, decomp%y2count, &
-                          complex_type, work2_c, decomp%z2count, &
-                          complex_type, DECOMP_2D_COMM_ROW, ierror)
+        call MPI_ALLTOALL(wk1, decomp%y2count, complex_type, &
+                          wk2, decomp%z2count, complex_type, &
+                          DECOMP_2D_COMM_ROW, ierror)
      end if
      if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_ALLTOALL")
 #else
 
 #if defined(_GPU)
 #if defined(_NCCL)
-     call decomp_2d_nccl_send_recv_row(work2_c_d, &
-                                       work1_c_d, &
+     call decomp_2d_nccl_send_recv_row(wk2, &
+                                       wk1, &
                                        decomp%y2disp, &
                                        decomp%y2cnts, &
                                        decomp%z2disp, &
@@ -239,15 +249,17 @@
                                        dims(2), &
                                        decomp_buf_size)
 #else
-     call MPI_ALLTOALLV(work1_c_d, decomp%y2cnts, decomp%y2disp, &
-                        complex_type, work2_c_d, decomp%z2cnts, decomp%z2disp, &
-                        complex_type, DECOMP_2D_COMM_ROW, ierror)
+     call MPI_ALLTOALLV(wk1, decomp%y2cnts, decomp%y2disp, complex_type, &
+                        wk2, decomp%z2cnts, decomp%z2disp, complex_type, &
+                        DECOMP_2D_COMM_ROW, ierror)
      if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_ALLTOALLV")
 #endif
 #else
-     call MPI_ALLTOALLV(work1_c, decomp%y2cnts, decomp%y2disp, &
-                        complex_type, dst, decomp%z2cnts, decomp%z2disp, &
-                        complex_type, DECOMP_2D_COMM_ROW, ierror)
+     associate (wk => wk2)
+     end associate
+     call MPI_ALLTOALLV(wk1, decomp%y2cnts, decomp%y2disp, complex_type, &
+                        dst, decomp%z2cnts, decomp%z2disp, complex_type, &
+                        DECOMP_2D_COMM_ROW, ierror)
      if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_ALLTOALLV")
 #endif
 
@@ -256,7 +268,7 @@
      ! rearrange receive buffer
 #ifdef EVEN
      if (.not. decomp%even) then
-        call mem_merge_yz_complex(work2_c, d1, d2, d3, dst, dims(2), &
+        call mem_merge_yz_complex(wk2, d1, d2, d3, dst, dims(2), &
                                   decomp%z2dist, decomp)
      end if
 #else
@@ -265,18 +277,13 @@
 
 #if defined(_GPU)
      !$acc host_data use_device(dst)
-     istat = cudaMemcpy(dst, work2_c_d, d1 * d2 * d3, cudaMemcpyDeviceToDevice)
+     istat = cudaMemcpy(dst, wk2, d1 * d2 * d3, cudaMemcpyDeviceToDevice)
      !$acc end host_data
      if (istat /= 0) call decomp_2d_abort(__FILE__, __LINE__, istat, "cudaMemcpy2D")
 #endif
 
 #endif
 
-#ifdef PROFILER
-     if (decomp_profiler_transpose) call decomp_profiler_end("transp_y_z_c")
-#endif
-
-     return
   end subroutine transpose_y_to_z_complex
 
   subroutine mem_split_yz_real(in, n1, n2, n3, out, iproc, dist, decomp)

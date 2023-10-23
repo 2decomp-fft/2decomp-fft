@@ -17,7 +17,7 @@
     </transport>
   </io>
   <io name="visu-io">
-    <engine type="HDF5">
+    <engine type="BP4">
     </engine>
     <transport type="File">
       <parameter key="Library" value="fstream"/>

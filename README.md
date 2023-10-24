@@ -1,7 +1,10 @@
 # 2DECOMP&FFT
 
 This README contains basic instructions for building and installing the 2DECOMP&FFT library, more
-detailed instructions can be found in [INSTALL.md](INSTALL.md).
+detailed instructions about installation and linking to the library within an external project 
+can be found in the [install section](INSTALL.md).
+For how to use the library within your projec please refers to [HOWTO.md](HOWTO.md) and at the [examples](examples/README.md) 
+provided. 
 
 ## Building
 

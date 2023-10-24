@@ -1,5 +1,4 @@
-Examples
-========
+# Examples
 
 * init_test      - to test the initialisation of the DECOMP2D&FFT library
 

@@ -15,12 +15,14 @@ after a forward and a backward transform and proper normalisation.
 The test automatically resize the problem depending on the number of MPI processes in use
 
 What to input: The program takes max 6 inputs as : 
+
 1. p_row [optional]
 1. p_col [optional] 
 1. nx    [optional]
 1. ny    [optional]
 1. nz    [optional]
 1. nt    [optional]
+
 In case the decomposition is imposed both (1) and (2) are necessary. 
 If also the resolution is imposed (1-5) are necessary
 

@@ -151,3 +151,8 @@ is ready.
 For example, starting from `v2.0.0` the `main` branch will only be updated to receive fixes giving
 `v2.0.1`, etc. until the next release (either `v2.1.0` or `v3.0.0` depending on the magnitude of the
 change is ready).
+
+### Contributing
+
+If you would like to contribute to the development of the 2DECOMP&FFT library or just to report a bug please refer to 
+the [Contributing section](Contribute.md)

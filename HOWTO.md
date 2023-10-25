@@ -8,7 +8,7 @@ The 2D Pencil Decomposition API is defined with three Fortran module which shoul
   use decomp_2d
 ```
 where ``use decomp_2d_constants`` defines all the parameters, ``use decomp_2d_mpi`` introduces all the MPI 
-related interfaces and ``use decomp_2d`` cointains the main decomposition and transposition APIs. 
+related interfaces and ``use decomp_2d`` cointains the main decomposition and transposition APIs. The library is initialized using
 ```
   call decomp_2d_init(nx, ny, nz, p_row, p_col)
 ```
@@ -26,11 +26,11 @@ Correspondingly, the library provides 4 communication subroutines:
   call transpose_z_to_y(var_in,var_out)
   call transpose_y_to_x(var_in,var_out)
 ```
-The input array ``var_in`` and ``var_output`` array out should have been defined
+The input array ``var_in`` and output array ``var_out`` are defined by the code using the library
 and contain distributed data for the correct pencil orientations.
 
 Note that the library is written using Fortran's generic interface so different data types are supported
-without user input. That means in and out above can be either real arrays or complex arrays,
+without user input. That means in and out above can be either real or complex arrays,
 the latter being useful for applications involving 3D Fast Fourier Transforms.
 Finally, before exit, applications should clean up the memory by:
 ```
@@ -38,11 +38,11 @@ Finally, before exit, applications should clean up the memory by:
 ```
 Detailed information about the decomposition API are available [here](https://2decomp-fft.github.io/pages/api_domain.html) 
 ### Use of the FFT module
-To use the FFT programming interface, first of all, one additional Fortran module has to be used:
+To use the FFT programming interface, first of all, one additional Fortran module is needed:
 ```
   use decomp_2d_fft
 ```
-Then one needs to initialise the FFT interface by:
+Then one needs to initialise the FFT interface using
 ```
   call decomp_2d_fft_init(pencil, n1, n2, n3)
 ```
@@ -54,7 +54,7 @@ For complex-to-complex (c2c) FFTs, the user interface is:
 ```
 where ``direction`` can be either ``DECOMP_2D_FFT_FORWARD == -1`` for forward transforms, 
 or ``DECOMP_2D_FFT_BACKWARD == 1`` for backward transforms.
-The input array ``input`` and ``output`` array out are both complex
+The input array (``input``) and the output one (``output``) are both complex
 and have to be either a X-pencil/Z-pencil combination or vice-versa.
 The interface foe real-to-complex and complex-to-real transform is
 ```

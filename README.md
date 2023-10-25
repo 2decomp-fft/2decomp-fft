@@ -156,5 +156,5 @@ change is ready).
 
 ### Contributing
 
-If you would like to contribute to the development of the 2DECOMP&FFT library or just to report a bug please refer to 
+If you would like to contribute to the development of the 2DECOMP&FFT library or report a bug please refer to 
 the [Contributing section](Contribute.md)

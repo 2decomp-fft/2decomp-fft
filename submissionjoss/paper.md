@@ -92,7 +92,47 @@ The new version of the library can now leverage NVIDIA GPUs, modern CPUs and var
 (GNU, Intel, NVHPC, CRAY). 
 It has CMAKE capabilities as well as a proper continuous integration framework with automated tests. 
 The new library was designed to be more appealing to the scientific community,  
-and can now be easily implemented as an independent library for use by other software. 
+and can now be easily implemented as an independent library for use by other software.
+
+# How to use 2DECOMP&FFT
+Full informations on how to use the 2DECOMP&FFT library together with some related information [here](https://2decomp-fft.github.io/).
+
+The 2D Pencil Decomposition API is defined with three Fortran module which should be used by applications as:
+```
+  use decomp_2d_constants
+  use decomp_2d_mpi
+  use decomp_2d
+```
+where ``use decomp_2d_constants`` defines all the parameters, ``use decomp_2d_mpi`` introduces all the MPI 
+related interfaces and ``use decomp_2d`` cointains the main decomposition and transposition APIs. The library is initialized using
+```
+  call decomp_2d_init(nx, ny, nz, p_row, p_col)
+```
+where ``nx``, ``ny`` and ``nz`` are the spatial dimensions of the problem, to be distributed over
+a 2D processor grid :math:`p_row \times p_col`.
+Note that none of the dimensions need to be divisible by ``p_row`` or ``p_col``.
+In case of ``p_row=p_col=0`` an automatic decomposition is selected among all possible combination available.
+A key element of this library is a set of communication routines that actually perform the data transpositions.
+As mentioned, one needs to perform 4 global transpositions to go through all 3 pencil orientations
+(i.e. one has to go from x-pencils to y-pencils to z-pencils to y-pencils to x-pencils)
+Correspondingly, the library provides 4 communication subroutines:
+```
+  call transpose_x_to_y(var_in,var_out)
+  call transpose_y_to_z(var_in,var_out)
+  call transpose_z_to_y(var_in,var_out)
+  call transpose_y_to_x(var_in,var_out)
+```
+The input array ``var_in`` and output array ``var_out`` are defined by the code using the library
+and contain distributed data for the correct pencil orientations.
+
+Note that the library is written using Fortran's generic interface so different data types are supported
+without user input. That means in and out above can be either real or complex arrays,
+the latter being useful for applications involving 3D Fast Fourier Transforms.
+Finally, before exit, applications should clean up the memory by:
+```
+  call decomp_2d_finalize
+```
+Detailed information about the decomposition API are available [here](https://2decomp-fft.github.io/pages/api_domain.html) 
 
 # Acknowledgements
 

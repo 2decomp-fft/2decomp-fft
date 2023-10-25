@@ -1,7 +1,7 @@
 # How To use 2DECOMP&FFT
-Full informations on how to use the 2DECOMP&FFT library together with some related theory are available [here](https://2decomp-fft.github.io/).
+Full informations on how to use the 2DECOMP&FFT library together with some related information [here](https://2decomp-fft.github.io/).
 
-The 2D Pencil Decomposition API is defined in three Fortran module which should be used by applications as:
+The 2D Pencil Decomposition API is defined with three Fortran module which should be used by applications as:
 ```
   use decomp_2d_constants
   use decomp_2d_mpi
@@ -12,12 +12,13 @@ related interfaces and ``use decomp_2d`` cointains the main decomposition and tr
 ```
   call decomp_2d_init(nx, ny, nz, p_row, p_col)
 ```
-where ``nx``, ``ny`` and ``nz`` are the size of 3D global data to be distributed over
+where ``nx``, ``ny`` and ``nz`` are the spatial dimensions of the problem, to be distributed over
 a 2D processor grid :math:`p_row \times p_col`.
-Note that none of the dimensions need to be divisible by ``p_row`` or ``p_col``, i.e. the library can handle non-evenly distributed data.
+Note that none of the dimensions need to be divisible by ``p_row`` or ``p_col``.
 In case of ``p_row=p_col=0`` an automatic decomposition is selected among all possible combination available.
 A key element of this library is a set of communication routines that actually perform the data transpositions.
-As mentioned, one needs to perform 4 global transpositions to go through all 3 pencil orientations.
+As mentioned, one needs to perform 4 global transpositions to go through all 3 pencil orientations
+(i.e. one has to go from x-pencils to y-pencils to z-pencils to y-pencils to x-pencils)
 Correspondingly, the library provides 4 communication subroutines:
 ```
   call transpose_x_to_y(var_in,var_out)
@@ -29,8 +30,8 @@ The input array ``var_in`` and ``var_output`` array out should have been defined
 and contain distributed data for the correct pencil orientations.
 
 Note that the library is written using Fortran's generic interface so different data types are supported
-without user intervention. That means in and out above can be either real arrays or complex arrays,
-the latter being useful for FFT-type of applications.
+without user input. That means in and out above can be either real arrays or complex arrays,
+the latter being useful for applications involving 3D Fast Fourier Transforms.
 Finally, before exit, applications should clean up the memory by:
 ```
   call decomp_2d_finalize
@@ -55,7 +56,7 @@ where ``direction`` can be either ``DECOMP_2D_FFT_FORWARD == -1`` for forward tr
 or ``DECOMP_2D_FFT_BACKWARD == 1`` for backward transforms.
 The input array ``input`` and ``output`` array out are both complex
 and have to be either a X-pencil/Z-pencil combination or vice-versa.
-The interface for the the real-to-complex and complex-to-real transform is
+The interface foe real-to-complex and complex-to-real transform is
 ```
   call decomp_2d_fft_3d(input, output)
 ```
@@ -84,7 +85,7 @@ group to be used.
 
 There are two ways of writing multiple variables to a single file which may
 be used for check-pointing purposes, for example. The newer interface is described first and allows
-codes to use the ADIOS2 and MPI-IO backends, the older interface is supported for backwards
+codes to use the ADIOS2 and MPI-IO backends, the original interface is supported for backwards
 compatibility.
 
 When ``decomp_2d_write_one`` is called, the ``directory`` and ``io_name`` are combined to check
@@ -93,8 +94,8 @@ written to - this is the "standard" use.  If, however, a file is opened first th
 ``decomp_2d_write_one`` will append to the current file, resulting in a single file with multiple
 fields.  Once the check-pointing is complete the file can then be closed.
 
-The original interface for writing multiple variables to a file and is only
-supported by the MPI-IO backend and takes the following form:
+The original interface for writing multiple variables to a file, only
+supported by the MPI-IO backend, takes the following form:
 ```
    call decomp_2d_write_var(fh,disp,ipencil,var)
 ```

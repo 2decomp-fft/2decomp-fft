@@ -5,10 +5,10 @@ List of the tests:
 - [fft_r2c_x](fft_r2c_z.f90): Test Real to Complex FFT transform;
 
 
-These programs can be used to test the fft trasform using Z as starting physical dimension. 
+These programs can be used to test the FFT transform using Z-pencils as starting domain decomposition. 
 Both c2c (fft_c2c_z) and r2c/c2r (fft_r2c_z) transforms are tested.
 The results should recover the input data up to machine accuracy
-after a forward and a backward transform and proper normalisation.
+after a forward and a backward transform and appropriate normalisation.
 The test automatically resize the problem depending on the number of MPI processes in use
 
 What to input: The program takes max 6 inputs as : 
@@ -20,8 +20,8 @@ What to input: The program takes max 6 inputs as :
 1. nz    [optional]
 1. nt    [optional]
 
-In case the decomposition is imposed both (1) and (2) are necessary. 
-If also the resolution is imposed (1-5) are necessary
+If the decomposition is imposed both (1) and (2) are necessary. 
+If the resolution is imposed (1-5) are necessary
 
 What to expect:
 - The timing results 

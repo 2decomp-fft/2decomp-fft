@@ -95,8 +95,6 @@ The new library was designed to be more appealing to the scientific community,
 and can now be easily implemented as an independent library for use by other software.
 
 # How to use 2DECOMP&FFT
-Full informations on how to use the 2DECOMP&FFT library together with some related information [here](https://2decomp-fft.github.io/).
-
 The 2D Pencil Decomposition API is defined with three Fortran module which should be used by applications as:
 ```
   use decomp_2d_constants

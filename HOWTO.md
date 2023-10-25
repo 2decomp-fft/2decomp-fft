@@ -60,7 +60,7 @@ We recommend using the ``DECOMP_2D_FFT_XXX`` variables, rather than literal ``1`
 to avoid potential issues if these values change in future versions.
 The input array (``input``) and the output one (``output``) are both complex
 and have to be either a X-pencil/Z-pencil combination or vice-versa.
-The interface foe real-to-complex and complex-to-real transform is
+The interface for real-to-complex and complex-to-real transform is
 ```
   call decomp_2d_fft_3d(input, output)
 ```

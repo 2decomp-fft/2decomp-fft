@@ -1,6 +1,6 @@
 # How To use 2DECOMP&FFT
 This document presents the basic usage of 2DECOMP&FFT. 
-Full informations on how to use the 2DECOMP&FFT library can be found
+Detailed instructions on how to use the 2DECOMP&FFT library can be found
 [here](https://2decomp-fft.github.io/).
 
 The 2D Pencil Decomposition API is defined with three Fortran module which should be used by applications as:
@@ -10,13 +10,13 @@ The 2D Pencil Decomposition API is defined with three Fortran module which shoul
   use decomp_2d
 ```
 where ``use decomp_2d_constants`` defines all the parameters, ``use decomp_2d_mpi`` introduces all the MPI 
-related interfaces and ``use decomp_2d`` cointains the main decomposition and transposition APIs. The library is initialized using
+related interfaces and ``use decomp_2d`` contains the main decomposition and transposition APIs. The library is initialized using
 ```
   call decomp_2d_init(nx, ny, nz, p_row, p_col)
 ```
 where ``nx``, ``ny`` and ``nz`` are the spatial dimensions of the problem, to be distributed over
 a 2D processor grid :math:`p_row \times p_col`.
-Note that none of the dimensions need to be divisible by ``p_row`` or ``p_col``.
+Note that none of the dimensions need to be divisible by ``p_row`` or ``p_col`` however a load imbalance will occur if not.
 In case of ``p_row=p_col=0`` an automatic decomposition is selected among all possible combination available.
 A key element of this library is a set of communication routines that actually perform the data transpositions.
 As mentioned, one needs to perform 4 global transpositions to go through all 3 pencil orientations

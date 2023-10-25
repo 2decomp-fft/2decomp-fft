@@ -56,6 +56,8 @@ For complex-to-complex (c2c) FFTs, the user interface is:
 ```
 where ``direction`` can be either ``DECOMP_2D_FFT_FORWARD == -1`` for forward transforms, 
 or ``DECOMP_2D_FFT_BACKWARD == 1`` for backward transforms.
+We recommend using the ``DECOMP_2D_FFT_XXX`` variables, rather than literal ``1`` or ``-1``,
+to avoid potential issues if these values change in future versions.
 The input array (``input``) and the output one (``output``) are both complex
 and have to be either a X-pencil/Z-pencil combination or vice-versa.
 The interface foe real-to-complex and complex-to-real transform is

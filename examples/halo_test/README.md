@@ -4,7 +4,7 @@ List of the tests:
 - [HALO test](halo_test.f90): Test for the halo exchange capability of the library. 
 
 This example demonstrates the use of the halo-cell support API. It calculates
-the divergency of an arbitrary field, which contains evaluation of spatial
+the divergence of an arbitrary field, which contains evaluation of spatial
 derivatives in all three dimensions. The calculation was first implemented via
 the global transposition routines, then via halo-cell exchanges. Identical
 results are to be expected regardless of the communication algorithm. The 

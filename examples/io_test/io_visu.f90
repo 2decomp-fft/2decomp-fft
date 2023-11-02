@@ -7,9 +7,11 @@ program visu
    use mpi
 
    use decomp_2d
-   use decomp_2d_mpi
    use decomp_2d_constants
    use decomp_2d_io
+   use decomp_2d_io_object
+   use decomp_2d_mpi
+   use decomp_2d_testing
 
    implicit none
 
@@ -25,10 +27,7 @@ program visu
    logical :: dir_exists
 #endif
 
-   integer :: nargin, arg, FNLength, status, DecInd
-
    integer :: i, j, k
-
    integer :: ierr
 
    call init_example()
@@ -45,7 +44,6 @@ contains
 
       integer :: resize_domain
       integer :: nranks_tot
-      character(len=80) :: InputFN
 
       call MPI_INIT(ierr)
       ! To resize the domain we need to know global number of ranks
@@ -56,50 +54,16 @@ contains
       ny = ny_base * resize_domain
       nz = nz_base * resize_domain
       ! Now we can check if user put some inputs
-      ! Handle input file like a boss -- GD
-      nargin = command_argument_count()
-      if ((nargin == 0) .or. (nargin == 2) .or. (nargin == 5)) then
-         do arg = 1, nargin
-            call get_command_argument(arg, InputFN, FNLength, status)
-            read (InputFN, *, iostat=status) DecInd
-            if (arg == 1) then
-               p_row = DecInd
-            elseif (arg == 2) then
-               p_col = DecInd
-            elseif (arg == 3) then
-               nx = DecInd
-            elseif (arg == 4) then
-               ny = DecInd
-            elseif (arg == 5) then
-               nz = DecInd
-            end if
-         end do
-      else
-         ! nrank not yet computed we need to avoid write
-         ! for every rank
-         call MPI_COMM_RANK(MPI_COMM_WORLD, nrank, ierr)
-         if (nrank == 0) then
-            print *, "This Test takes no inputs or 2 inputs as"
-            print *, "  1) p_row (default=0)"
-            print *, "  2) p_col (default=0)"
-            print *, "or 5 inputs as"
-            print *, "  1) p_row (default=0)"
-            print *, "  2) p_col (default=0)"
-            print *, "  3) nx "
-            print *, "  4) ny "
-            print *, "  5) nz "
-            print *, "Number of inputs is not correct and the defult settings"
-            print *, "will be used"
-         end if
-      end if
+      call decomp_2d_testing_init(p_row, p_col, nx, ny, nz)
 
       call decomp_2d_init(nx, ny, nz, p_row, p_col)
 
+      call decomp_2d_testing_log()
+
       call decomp_2d_io_init()
-      call decomp_2d_init_io(io_name)
-      call decomp_2d_register_variable(io_name, "u1.dat", 1, 0, output2D, mytype)
-      call decomp_2d_register_variable(io_name, "u2.dat", 2, 0, output2D, mytype)
-      call decomp_2d_register_variable(io_name, "u3.dat", 3, 0, output2D, mytype)
+      call decomp_2d_io_register_var3d("u1.dat", 1, real_type)
+      call decomp_2d_io_register_var3d("u2.dat", 2, real_type)
+      call decomp_2d_io_register_var3d("u3.dat", 3, real_type)
 
    end subroutine init_example
 
@@ -161,6 +125,8 @@ contains
 
    subroutine write_data()
 
+      type(d2d_io) :: io
+
     !! Write arrays + visu data from orientations 1, 2 and 3
 #ifndef ADIOS2
       if (nrank == 0) then
@@ -173,17 +139,13 @@ contains
 
       ! Standard I/O pattern - file per field
 #ifdef ADIOS2
-      call decomp_2d_open_io(io_name, "out", decomp_2d_write_mode)
-      call decomp_2d_start_io(io_name, "out")
+      call io%open_start("out", decomp_2d_write_mode)
 #endif
-
-      call decomp_2d_write_one(1, u1, 'out', 'u1.dat', 0, io_name)
-      call decomp_2d_write_one(2, u2, 'out', 'u2.dat', 0, io_name)
-      call decomp_2d_write_one(3, u3, 'out', 'u3.dat', 0, io_name)
-
+      call decomp_2d_write_one(1, u1, 'u1.dat', opt_dirname='out', opt_io=io)
+      call decomp_2d_write_one(2, u2, 'u2.dat', opt_dirname='out', opt_io=io)
+      call decomp_2d_write_one(3, u3, 'u3.dat', opt_dirname='out', opt_io=io)
 #ifdef ADIOS2
-      call decomp_2d_end_io(io_name, "out")
-      call decomp_2d_close_io(io_name, "out")
+      call io%end_close
 #endif
 
    end subroutine write_data
@@ -284,6 +246,7 @@ contains
 
       integer :: ierr
 
+      call decomp_2d_io_fin
       call decomp_2d_finalize
       call MPI_FINALIZE(ierr)
 

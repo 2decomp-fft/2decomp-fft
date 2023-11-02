@@ -22,7 +22,6 @@ program io_bench
    integer :: nranks_tot
 
    real(mytype), allocatable, dimension(:, :, :) :: u1
-   type(d2d_io) :: io
 
    double precision :: t1, t2
    integer :: ierror
@@ -49,13 +48,7 @@ program io_bench
    call random_number(u1)
 
    t1 = MPI_WTIME()
-#ifdef ADIOS2
-   call io%open_start("./", decomp_2d_write_mode)
-#endif
-   call decomp_2d_write_one(1, u1, 'io.dat', opt_dirname="./", opt_io=io)
-#ifdef ADIOS2
-   call io%end_close
-#endif
+   call decomp_2d_write_one(1, u1, 'io.dat', opt_dirname="./")
    t2 = MPI_WTIME()
 
    if (nrank == 0) then

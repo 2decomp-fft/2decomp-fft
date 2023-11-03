@@ -110,7 +110,11 @@ module decomp_2d_constants
    !
    ! Choice for IO operations
    !
+#ifdef SAVE_SINGLE
+   logical, parameter :: DEFAULT_OPT_REDUCE_PREC = .true.
+#else
    logical, parameter :: DEFAULT_OPT_REDUCE_PREC = .false.
+#endif
    integer, parameter, public :: DECOMP_2D_WRITE_MODE = 1, &
                                  DECOMP_2D_READ_MODE = 2, &
                                  DECOMP_2D_APPEND_MODE = 3

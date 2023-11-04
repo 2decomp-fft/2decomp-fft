@@ -93,8 +93,8 @@ module decomp_2d_io
 
    interface decomp_2d_write_plane
       module procedure write_plane_freal
-      module procedure write_plane_dreal
       module procedure write_plane_fcplx
+      module procedure write_plane_dreal
       module procedure write_plane_dcplx
    end interface decomp_2d_write_plane
 

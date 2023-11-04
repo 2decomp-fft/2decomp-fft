@@ -62,8 +62,8 @@ module decomp_2d_io
 
    interface decomp_2d_read_one
       module procedure read_one_freal
-      module procedure read_one_dreal
       module procedure read_one_fcplx
+      module procedure read_one_dreal
       module procedure read_one_dcplx
    end interface decomp_2d_read_one
 

@@ -55,8 +55,8 @@ module decomp_2d_io
 
    interface decomp_2d_write_one
       module procedure write_one_freal
-      module procedure write_one_dreal
       module procedure write_one_fcplx
+      module procedure write_one_dreal
       module procedure write_one_dcplx
    end interface decomp_2d_write_one
 
@@ -386,7 +386,7 @@ contains
                         opt_family=opt_family, &
                         opt_io=opt_io, &
                         opt_dirname=opt_dirname, &
-                        freal=real(var, kind=real32))
+                        freal=real(var, kind=real32)) ! Warning, implicit memory allocation
       else
          call write_one(ipencil, varname, decomp, &
                         opt_mode=opt_mode, &
@@ -438,7 +438,7 @@ contains
                         opt_family=opt_family, &
                         opt_io=opt_io, &
                         opt_dirname=opt_dirname, &
-                        fcplx=cmplx(var, kind=real32))
+                        fcplx=cmplx(var, kind=real32)) ! Warning, implicit memory allocation
       else
          call write_one(ipencil, varname, decomp, &
                         opt_mode=opt_mode, &

@@ -85,7 +85,11 @@ Y-pencil and 3 for Z-pencil); ``var`` is the reference to the data array, which 
 complex; ``directory`` is the path to where I/O should be written; ``filename`` is the name of the
 file to be written; ``icoarse`` indicates whether the I/O should be coarsend (valid values are: 0
 for no; 1 for the ``nstat`` and 2 for the ``nvisu`` coarsenings); ``io_name`` is the name of the I/O
-group to be used. 
+group to be used. When using ADIOS2 write operations are deferred by default, this means that before the
+end of the step the data stored in ``var`` may not have been written. Overwriting ``var``, for example
+when used as a temporary variable, would cause the output data to become corrupted. In such situations
+``decomp_2d_write_one`` accepts an optional argument ``opt_deferred_writes`` (default ``.true.``) which
+when set to ``.false.`` causes the data to be flushed immediately.
 
 There are two ways of writing multiple variables to a single file which may
 be used for check-pointing purposes, for example. The newer interface is described first and allows

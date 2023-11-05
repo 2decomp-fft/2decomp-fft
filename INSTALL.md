@@ -1,4 +1,4 @@
-# Bulding and installing 2DECOMP&FFT
+# Building, installing and linking 2DECOMP&FFT
 
 The library 2decomp is a Fortran library compatible with the Fortran 2008 standard.
 It requires a MPI library compatible with MPI-2.0 with extended Fortran support.

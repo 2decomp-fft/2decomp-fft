@@ -297,6 +297,8 @@ program io_test
 
    deallocate (u1, u2, u3)
    deallocate (u1b, u2b, u3b)
+   deallocate (v1, v2, v3)
+   deallocate (v1b, v2b, v3b)
    deallocate (data1)
    call decomp_2d_finalize
    call MPI_FINALIZE(ierror)

@@ -152,9 +152,9 @@ for i in range(nformat):
         f.write("                             opt_io=opt_io, &\n")
         f.write("                             opt_dirname=opt_dirname, &\n")
         if (i==2):
-            f.write("                             freal=real(var, kind=real32))\n")
+            f.write("                             freal=real(var, kind=real32)) ! Warning, implicit memory allocation\n")
         elif (i==3):
-            f.write("                             fcplx=cmplx(var, kind=real32))\n")
+            f.write("                             fcplx=cmplx(var, kind=real32)) ! Warning, implicit memory allocation\n")
         f.write("         else\n")
         f.write("            call write_plane(ipencil, varname, decomp, nplanes, &\n")
         f.write("                             opt_mode=opt_mode, &\n")
@@ -184,9 +184,9 @@ for i in range(nformat):
         f.write("                             opt_io=opt_io, &\n")
         f.write("                             opt_dirname=opt_dirname, &\n")
         if (i==2):
-            f.write("                             freal=real(var2d, kind=real32))\n")
+            f.write("                             freal=real(var2d, kind=real32)) ! Warning, implicit memory allocation\n")
         elif (i==3):
-            f.write("                             fcplx=cmplx(var2d, kind=real32))\n")
+            f.write("                             fcplx=cmplx(var2d, kind=real32)) ! Warning, implicit memory allocation\n")
         f.write("         else\n")
         f.write("            call write_plane(ipencil, varname, decomp, nplanes, &\n")
         f.write("                             opt_mode=opt_mode, &\n")

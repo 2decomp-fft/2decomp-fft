@@ -272,6 +272,7 @@ contains
    !
    ! High-level. Using MPI-IO / ADIOS2 to write a 3D array to a file
    !
+   ! The code below below was generated with the script gen_io_write_one.py
    subroutine write_one_freal(ipencil, var, varname, opt_mode, opt_family, &
                               opt_io, opt_dirname, opt_reduce_prec, opt_decomp)
 
@@ -455,6 +456,7 @@ contains
    !
    ! High-level. Using MPI-IO / ADIOS2 to read a 3D array from a file
    !
+   ! The code below below was generated with the script gen_io_read_one.py
    subroutine read_one_freal(ipencil, var, varname, opt_family, &
                              opt_io, opt_dirname, opt_reduce_prec, opt_decomp)
 
@@ -656,6 +658,7 @@ contains
    !
    ! High-level. Using MPI-IO / ADIOS2 to write planes to a file
    !
+   ! The code below below was generated with the script gen_io_write_plane.py
    subroutine write_plane_freal(ipencil, var, varname, &
                                 opt_nplanes, opt_iplane, opt_mode, opt_family, &
                                 opt_io, opt_dirname, opt_reduce_prec, opt_decomp)
@@ -871,7 +874,7 @@ contains
                              opt_family=opt_family, &
                              opt_io=opt_io, &
                              opt_dirname=opt_dirname, &
-                             freal=real(var, kind=real32))
+                             freal=real(var, kind=real32)) ! Warning, implicit memory allocation
          else
             call write_plane(ipencil, varname, decomp, nplanes, &
                              opt_mode=opt_mode, &
@@ -897,7 +900,7 @@ contains
                              opt_family=opt_family, &
                              opt_io=opt_io, &
                              opt_dirname=opt_dirname, &
-                             freal=real(var2d, kind=real32))
+                             freal=real(var2d, kind=real32)) ! Warning, implicit memory allocation
          else
             call write_plane(ipencil, varname, decomp, nplanes, &
                              opt_mode=opt_mode, &
@@ -972,7 +975,7 @@ contains
                              opt_family=opt_family, &
                              opt_io=opt_io, &
                              opt_dirname=opt_dirname, &
-                             fcplx=cmplx(var, kind=real32))
+                             fcplx=cmplx(var, kind=real32)) ! Warning, implicit memory allocation
          else
             call write_plane(ipencil, varname, decomp, nplanes, &
                              opt_mode=opt_mode, &
@@ -998,7 +1001,7 @@ contains
                              opt_family=opt_family, &
                              opt_io=opt_io, &
                              opt_dirname=opt_dirname, &
-                             fcplx=cmplx(var2d, kind=real32))
+                             fcplx=cmplx(var2d, kind=real32)) ! Warning, implicit memory allocation
          else
             call write_plane(ipencil, varname, decomp, nplanes, &
                              opt_mode=opt_mode, &

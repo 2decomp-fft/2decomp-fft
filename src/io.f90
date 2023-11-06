@@ -25,10 +25,8 @@ module decomp_2d_io
 
    integer, parameter :: MAX_IOH = 10 ! How many live IO things should we handle?
    character(len=*), parameter :: io_sep = "::"
-   integer, save :: nreg_io = 0
 #ifndef ADIOS2
    integer, dimension(MAX_IOH), save :: fh_registry
-   logical, dimension(MAX_IOH), target, save :: fh_live
    character(len=1024), dimension(MAX_IOH), target, save :: fh_names
    integer(kind=MPI_OFFSET_KIND), dimension(MAX_IOH), save :: fh_disp
 #else

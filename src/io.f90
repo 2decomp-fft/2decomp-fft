@@ -745,6 +745,7 @@ contains
 
       implicit none
 
+      ! Arguments
       integer, intent(IN) :: ipencil
       real(real32), contiguous, dimension(:, :, :), intent(IN) :: var
       character(len=*), intent(in) :: varname
@@ -756,9 +757,14 @@ contains
       logical, intent(in), optional :: opt_reduce_prec
       TYPE(DECOMP_INFO), target, intent(IN), optional :: opt_decomp
 
+      ! Local variables
       real(real32), allocatable, dimension(:, :, :) :: var2d
       TYPE(DECOMP_INFO), pointer :: decomp
       integer :: nplanes, iplane
+
+#ifdef PROFILER
+      if (decomp_profiler_io) call decomp_profiler_start("io_write_plane")
+#endif
 
       if (present(opt_nplanes)) then
          nplanes = opt_nplanes
@@ -815,6 +821,10 @@ contains
       associate (p => opt_reduce_prec)
       end associate
 
+#ifdef PROFILER
+      if (decomp_profiler_io) call decomp_profiler_end("io_write_plane")
+#endif
+
    end subroutine write_plane_freal
    !
    subroutine write_plane_fcplx(ipencil, var, varname, &
@@ -823,6 +833,7 @@ contains
 
       implicit none
 
+      ! Arguments
       integer, intent(IN) :: ipencil
       complex(real32), contiguous, dimension(:, :, :), intent(IN) :: var
       character(len=*), intent(in) :: varname
@@ -834,9 +845,14 @@ contains
       logical, intent(in), optional :: opt_reduce_prec
       TYPE(DECOMP_INFO), target, intent(IN), optional :: opt_decomp
 
+      ! Local variables
       complex(real32), allocatable, dimension(:, :, :) :: var2d
       TYPE(DECOMP_INFO), pointer :: decomp
       integer :: nplanes, iplane
+
+#ifdef PROFILER
+      if (decomp_profiler_io) call decomp_profiler_start("io_write_plane")
+#endif
 
       if (present(opt_nplanes)) then
          nplanes = opt_nplanes
@@ -893,6 +909,10 @@ contains
       associate (p => opt_reduce_prec)
       end associate
 
+#ifdef PROFILER
+      if (decomp_profiler_io) call decomp_profiler_end("io_write_plane")
+#endif
+
    end subroutine write_plane_fcplx
    !
    subroutine write_plane_dreal(ipencil, var, varname, &
@@ -901,6 +921,7 @@ contains
 
       implicit none
 
+      ! Arguments
       integer, intent(IN) :: ipencil
       real(real64), contiguous, dimension(:, :, :), intent(IN) :: var
       character(len=*), intent(in) :: varname
@@ -912,10 +933,15 @@ contains
       logical, intent(in), optional :: opt_reduce_prec
       TYPE(DECOMP_INFO), target, intent(IN), optional :: opt_decomp
 
+      ! Local variables
       logical :: reduce
       real(real64), allocatable, dimension(:, :, :) :: var2d
       TYPE(DECOMP_INFO), pointer :: decomp
       integer :: nplanes, iplane
+
+#ifdef PROFILER
+      if (decomp_profiler_io) call decomp_profiler_start("io_write_plane")
+#endif
 
       if (present(opt_nplanes)) then
          nplanes = opt_nplanes
@@ -994,6 +1020,10 @@ contains
 
       nullify (decomp)
 
+#ifdef PROFILER
+      if (decomp_profiler_io) call decomp_profiler_end("io_write_plane")
+#endif
+
    end subroutine write_plane_dreal
    !
    subroutine write_plane_dcplx(ipencil, var, varname, &
@@ -1002,6 +1032,7 @@ contains
 
       implicit none
 
+      ! Arguments
       integer, intent(IN) :: ipencil
       complex(real64), contiguous, dimension(:, :, :), intent(IN) :: var
       character(len=*), intent(in) :: varname
@@ -1013,10 +1044,15 @@ contains
       logical, intent(in), optional :: opt_reduce_prec
       TYPE(DECOMP_INFO), target, intent(IN), optional :: opt_decomp
 
+      ! Local variables
       logical :: reduce
       complex(real64), allocatable, dimension(:, :, :) :: var2d
       TYPE(DECOMP_INFO), pointer :: decomp
       integer :: nplanes, iplane
+
+#ifdef PROFILER
+      if (decomp_profiler_io) call decomp_profiler_start("io_write_plane")
+#endif
 
       if (present(opt_nplanes)) then
          nplanes = opt_nplanes
@@ -1094,6 +1130,10 @@ contains
       end if
 
       nullify (decomp)
+
+#ifdef PROFILER
+      if (decomp_profiler_io) call decomp_profiler_end("io_write_plane")
+#endif
 
    end subroutine write_plane_dcplx
 
@@ -1353,10 +1393,6 @@ contains
       integer :: mode
       type(d2d_io) :: io
 
-#ifdef PROFILER
-      if (decomp_profiler_io) call decomp_profiler_start("io_write_plane")
-#endif
-
       ! Use opt_io only if present and open
       if (present(opt_io)) then
          if (opt_io%is_open) then
@@ -1423,10 +1459,6 @@ contains
          call io%end_close()
 
       end if
-
-#ifdef PROFILER
-      if (decomp_profiler_io) call decomp_profiler_end("io_write_plane")
-#endif
 
    end subroutine write_plane
 

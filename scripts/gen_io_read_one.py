@@ -37,6 +37,7 @@ for i in range(nformat):
     #
     # Arguments
     #
+    f.write("      ! Arguments\n")
     f.write("      integer, intent(IN) :: ipencil\n")
     if (i==0):
         f.write("      real(real32), contiguous, dimension(:, :, :), intent(out) :: var\n")
@@ -57,6 +58,7 @@ for i in range(nformat):
     #
     # Local variables
     #
+    f.write("      ! Local variable(s)\n")
     if (i==2 or i==3):
         f.write("      logical :: reduce\n")
     f.write("      TYPE(DECOMP_INFO), pointer :: decomp\n")
@@ -64,6 +66,13 @@ for i in range(nformat):
         f.write("      real(real32), allocatable, dimension(:, :, :) :: tmp\n")
     elif (i==3):
         f.write("      complex(real32), allocatable, dimension(:, :, :) :: tmp\n")
+    f.write("\n")
+    #
+    # Start profiling
+    #
+    f.write("#ifdef PROFILER\n")
+    f.write("      if (decomp_profiler_io) call decomp_profiler_start(\"io_read_one\")\n")
+    f.write("#endif\n")
     f.write("\n")
     #
     # Deal with optional arguments
@@ -139,6 +148,13 @@ for i in range(nformat):
         f.write("      associate (p => opt_reduce_prec)\n")
         f.write("      end associate\n")
         f.write("\n")
+    #
+    # End profiling
+    #
+    f.write("#ifdef PROFILER\n")
+    f.write("      if (decomp_profiler_io) call decomp_profiler_end(\"io_read_one\")\n")
+    f.write("#endif\n")
+    f.write("\n")
     #
     # Footer
     #

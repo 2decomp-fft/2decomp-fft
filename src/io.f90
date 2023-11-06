@@ -502,6 +502,7 @@ contains
 
       implicit none
 
+      ! Arguments
       integer, intent(IN) :: ipencil
       real(real32), contiguous, dimension(:, :, :), intent(out) :: var
       character(len=*), intent(in) :: varname
@@ -511,7 +512,12 @@ contains
       logical, intent(in), optional :: opt_reduce_prec
       TYPE(DECOMP_INFO), target, intent(IN), optional :: opt_decomp
 
+      ! Local variable(s)
       TYPE(DECOMP_INFO), pointer :: decomp
+
+#ifdef PROFILER
+      if (decomp_profiler_io) call decomp_profiler_start("io_read_one")
+#endif
 
       ! Use the provided decomp_info or the default one
       if (present(opt_decomp)) then
@@ -531,6 +537,10 @@ contains
       associate (p => opt_reduce_prec)
       end associate
 
+#ifdef PROFILER
+      if (decomp_profiler_io) call decomp_profiler_end("io_read_one")
+#endif
+
    end subroutine read_one_freal
    !
    subroutine read_one_fcplx(ipencil, var, varname, opt_family, &
@@ -538,6 +548,7 @@ contains
 
       implicit none
 
+      ! Arguments
       integer, intent(IN) :: ipencil
       complex(real32), contiguous, dimension(:, :, :), intent(out) :: var
       character(len=*), intent(in) :: varname
@@ -547,7 +558,12 @@ contains
       logical, intent(in), optional :: opt_reduce_prec
       TYPE(DECOMP_INFO), target, intent(IN), optional :: opt_decomp
 
+      ! Local variable(s)
       TYPE(DECOMP_INFO), pointer :: decomp
+
+#ifdef PROFILER
+      if (decomp_profiler_io) call decomp_profiler_start("io_read_one")
+#endif
 
       ! Use the provided decomp_info or the default one
       if (present(opt_decomp)) then
@@ -567,6 +583,10 @@ contains
       associate (p => opt_reduce_prec)
       end associate
 
+#ifdef PROFILER
+      if (decomp_profiler_io) call decomp_profiler_end("io_read_one")
+#endif
+
    end subroutine read_one_fcplx
    !
    subroutine read_one_dreal(ipencil, var, varname, opt_family, &
@@ -574,6 +594,7 @@ contains
 
       implicit none
 
+      ! Arguments
       integer, intent(IN) :: ipencil
       real(real64), contiguous, dimension(:, :, :), intent(out) :: var
       character(len=*), intent(in) :: varname
@@ -583,9 +604,14 @@ contains
       logical, intent(in), optional :: opt_reduce_prec
       TYPE(DECOMP_INFO), target, intent(IN), optional :: opt_decomp
 
+      ! Local variable(s)
       logical :: reduce
       TYPE(DECOMP_INFO), pointer :: decomp
       real(real32), allocatable, dimension(:, :, :) :: tmp
+
+#ifdef PROFILER
+      if (decomp_profiler_io) call decomp_profiler_start("io_read_one")
+#endif
 
       ! Use the provided decomp_info or the default one
       if (present(opt_decomp)) then
@@ -630,6 +656,10 @@ contains
 
       nullify (decomp)
 
+#ifdef PROFILER
+      if (decomp_profiler_io) call decomp_profiler_end("io_read_one")
+#endif
+
    end subroutine read_one_dreal
    !
    subroutine read_one_dcplx(ipencil, var, varname, opt_family, &
@@ -637,6 +667,7 @@ contains
 
       implicit none
 
+      ! Arguments
       integer, intent(IN) :: ipencil
       complex(real64), contiguous, dimension(:, :, :), intent(out) :: var
       character(len=*), intent(in) :: varname
@@ -646,9 +677,14 @@ contains
       logical, intent(in), optional :: opt_reduce_prec
       TYPE(DECOMP_INFO), target, intent(IN), optional :: opt_decomp
 
+      ! Local variable(s)
       logical :: reduce
       TYPE(DECOMP_INFO), pointer :: decomp
       complex(real32), allocatable, dimension(:, :, :) :: tmp
+
+#ifdef PROFILER
+      if (decomp_profiler_io) call decomp_profiler_start("io_read_one")
+#endif
 
       ! Use the provided decomp_info or the default one
       if (present(opt_decomp)) then
@@ -692,6 +728,10 @@ contains
       end if
 
       nullify (decomp)
+
+#ifdef PROFILER
+      if (decomp_profiler_io) call decomp_profiler_end("io_read_one")
+#endif
 
    end subroutine read_one_dcplx
 
@@ -1208,10 +1248,6 @@ contains
       logical :: use_opt_io
       type(d2d_io) :: io
 
-#ifdef PROFILER
-      if (decomp_profiler_io) call decomp_profiler_start("io_read_one")
-#endif
-
       ! Use opt_io only if present and open
       if (present(opt_io)) then
          if (opt_io%is_open) then
@@ -1268,10 +1304,6 @@ contains
          call io%end_close()
 
       end if
-
-#ifdef PROFILER
-      if (decomp_profiler_io) call decomp_profiler_end("io_read_one")
-#endif
 
    end subroutine read_one
 

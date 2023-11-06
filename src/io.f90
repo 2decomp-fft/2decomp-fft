@@ -2459,4 +2459,75 @@ contains
 
    end subroutine write_subdomain
 
+   integer function get_io_idx(io_name, engine_name)
+
+      implicit none
+
+      character(len=*), intent(in) :: io_name
+      character(len=*), intent(in) :: engine_name
+
+      character(len=(len(io_name) + len(io_sep) + len(engine_name))) :: full_name
+      integer :: idx
+      logical :: found
+
+      character(len=1024), dimension(:), pointer :: names_ptr
+
+#ifndef ADIOS2
+      names_ptr => fh_names
+#else
+      names_ptr => engine_names
+#endif
+
+      full_name = io_name//io_sep//engine_name
+
+      found = .false.
+      do idx = 1, MAX_IOH
+         if (names_ptr(idx) == full_name) then
+            found = .true.
+            exit
+         end if
+      end do
+
+      if (.not. found) then
+         idx = -1
+      end if
+
+      get_io_idx = idx
+
+   end function get_io_idx
+
+   function gen_iodir_name(io_dir, io_name)
+
+      character(len=*), intent(in) :: io_dir, io_name
+      character(len=(len(io_dir) + 5)) :: gen_iodir_name
+#ifdef ADIOS2
+      integer :: ierror
+      type(adios2_io) :: io
+      character(len=5) :: ext
+#endif
+
+#ifndef ADIOS2
+      associate (nm => io_name) ! Silence unused dummy argument
+      end associate
+      write (gen_iodir_name, "(A)") io_dir
+#else
+      call adios2_at_io(io, adios, io_name, ierror)
+      if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "adios2_at_io "//trim(io_name))
+      if (io%engine_type == "BP4") then
+         ext = ".bp4"
+      else if (io%engine_type == "HDF5") then
+         ext = ".hdf5"
+      else if (io%engine_type == "SST") then
+         ext = ""
+      else
+         print *, "ERROR: Unkown engine type! ", io%engine_type
+         print *, "-  IO: ", io_name
+         print *, "- DIR:", io_dir
+         stop
+      end if
+      write (gen_iodir_name, "(A,A)") io_dir, trim(ext)
+#endif
+
+   end function gen_iodir_name
+
 end module decomp_2d_io

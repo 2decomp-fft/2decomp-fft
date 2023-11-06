@@ -1,5 +1,5 @@
-# How To use 2DECOMP&FFT
-This document presents the basic usage of 2DECOMP&FFT. 
+# How to use 2DECOMP&FFT
+This document presents the main features of 2DECOMP&FFT library. 
 Detailed instructions on how to use the 2DECOMP&FFT library can be found
 [here](https://2decomp-fft.github.io/).
 
@@ -76,14 +76,14 @@ All the I/O functions have been packed in a Fortran module:
 ```
   use decomp_2d_io
 ```
-To write a single three-dimensional array to a file
+To write a single three-dimensional array to a file, the following call to a subroutine can be used:
 ```
   call decomp_2d_write_one(ipencil,var,directory,filename,icoarse,io_name)
 ```
 where ``ipencil`` describes how the data is distributed (valid values are: 1 for X-pencil; 2 for
-Y-pencil and 3 for Z-pencil); ``var`` is the reference to the data array, which can be either real or
+Y-pencil and 3 for Z-pencil); ``var`` is the data array to be written on disk, which can be either real or
 complex; ``directory`` is the path to where I/O should be written; ``filename`` is the name of the
-file to be written; ``icoarse`` indicates whether the I/O should be coarsend (valid values are: 0
+file to be written; ``icoarse`` indicates whether the I/O should be coarsened (valid values are: 0
 for no; 1 for the ``nstat`` and 2 for the ``nvisu`` coarsenings); ``io_name`` is the name of the I/O
 group to be used. 
 

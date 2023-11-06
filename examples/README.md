@@ -5,6 +5,6 @@
 - [Test FFT from X pencil](fft_physical_x) - various tests for the FFT starting from the ``X`` direction 
 - [Test FFT from Z pencil](fft_physical_z) - various tests for the FFT starting from the ``Z`` direction 
 - [Test HALO exchange](halo_test)          - to test the halo-cell exchange capability
-- [Test IO features](io_test)              - various tests for the IO module
+- [Test I/O features](io_test)             - various tests for the I/O module
 
 Refer to the README files for each example for details.

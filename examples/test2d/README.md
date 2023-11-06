@@ -24,6 +24,6 @@ If the decomposition is imposed both (1) and (2) are necessary.
 If the resolution is imposed (1-5) are necessary
 
 What to expect: 
-- For test2d the output is e success message or an error message with the direction of error in swapping;
+- For test2d the output is a success message or an error message with the direction of swapping;
 - For the timing, beside the error/success message timing for all transpostions
   (X->Y, Y->Z, Z->Y, Y->X) together with the sum are reported. 

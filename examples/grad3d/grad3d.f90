@@ -502,6 +502,14 @@ contains
       end if
 #endif
 
+      call decomp_2d_io_init()
+      call decomp_2d_init_io(io_name)
+
+      call decomp_2d_register_variable(io_name, "phi1.dat", 1, 0, 0, mytype)
+      call decomp_2d_register_variable(io_name, "dphiX.dat", 1, 0, 0, mytype)
+      call decomp_2d_register_variable(io_name, "dphiY.dat", 1, 0, 0, mytype)
+      call decomp_2d_register_variable(io_name, "dphiZ.dat", 1, 0, 0, mytype)
+      
       ! Standard I/O pattern - file per field
 #ifdef ADIOS2
       call decomp_2d_open_io(io_name, "out", decomp_2d_write_mode)

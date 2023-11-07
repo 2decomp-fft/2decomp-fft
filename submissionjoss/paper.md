@@ -107,7 +107,7 @@ takes full adavantages of CUDA and also uses NVIDIA most recent libraries for co
 such as NVIDIA Collective Communication Library (NCCL), is presented in [@Romero_2022_cuDecomp].
 Indeed, cuDECOMP only targets NVIDIA GPUs.
 The updated 2DECOMP&FFT mainly uses a mix of CUDA-fortran and openACC for the GPU porting 
-together with CUDA-aware-MPI and NCCL for the communications. In additions to previous work,
+together with CUDA-aware-MPI and NCCL for the communications. In addition to previous work,
 the FFT module is ported to GPUs using CUDA-FFT. 
 The next step is also to use openMP for GPU porting to support both AMD and Intel GPU hardware.
 

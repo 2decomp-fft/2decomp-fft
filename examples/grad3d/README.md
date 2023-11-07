@@ -1,4 +1,4 @@
-# Halo test
+# Gradient example
 
 List of the tests:
 - [grad3d](grad3d.f90): Example to compute the gradient of a field. 

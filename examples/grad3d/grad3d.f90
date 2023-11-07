@@ -134,7 +134,7 @@ contains
 
       logical, parameter :: glob = .false.
 
-      ! initialise u,v,w with random numbers in X-pencil
+      ! Allocate main variables in X-pencil
       call alloc_x(phi1, glob)
       call alloc_x(dphiX, glob)
       call alloc_x(dphiY, glob)
@@ -313,7 +313,7 @@ contains
 
    end subroutine derz 
    !=====================================================================
-   ! Calculate divergence using halo-cell exchange (data in X-pencil)
+   ! Test derivatives against analytical solution (data in X-pencil)
    !=====================================================================
    subroutine test_derX(df)
 
@@ -339,7 +339,7 @@ contains
       xs2 = xstart(2)
       xs3 = xstart(3)
 
-      ! Initial velocity
+      ! Compute the error against analytical solution
       !$acc parallel loop default(present) reduction(+:error)
       do k=1,xe3
         do j=1,xe2
@@ -367,7 +367,7 @@ contains
    end subroutine test_derX
 
    !=====================================================================
-   ! Calculate divergence using halo-cell exchange (data in Y-pencil)
+   ! Test derivatives against analytical solution (data in Y-pencil)
    !=====================================================================
    subroutine test_derY(df)
 
@@ -393,7 +393,7 @@ contains
       xs2 = xstart(2)
       xs3 = xstart(3)
 
-      ! Initial velocity
+      ! Compute the error against analytical solution
       !$acc parallel loop default(present) reduction(+:error)
       do k=1,xe3
         do j=1,xe2
@@ -422,7 +422,7 @@ contains
    end subroutine test_derY
 
    !=====================================================================
-   ! Calculate divergence using halo-cell exchange (data in Z-pencil)
+   ! Test derivatives against analytical solution (data in Z-pencil)
    !=====================================================================
    subroutine test_derZ(df)
 
@@ -448,7 +448,7 @@ contains
       xs2 = xstart(2)
       xs3 = xstart(3)
 
-      ! Initial velocity
+      ! Compute the error against analytical solution
       !$acc parallel loop default(present) reduction(+:error)
       do k=1,xe3
         do j=1,xe2

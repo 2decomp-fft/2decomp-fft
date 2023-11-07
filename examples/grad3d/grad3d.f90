@@ -25,7 +25,7 @@ program grad3d
    integer :: nranks_tot
    integer :: nargin, arg, FNLength, status, DecInd
    integer :: ierror
-   logical :: passing, all_pass
+   logical :: all_pass
    character(len=80) :: InputFN
 
    real(mytype), parameter :: lx = 1.0_mytype

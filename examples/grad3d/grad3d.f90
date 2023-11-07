@@ -171,7 +171,7 @@ contains
       xs2 = xstart(2)
       xs3 = xstart(3)
 
-      ! Initial velocity
+      ! Scalar field
       !$acc kernels default(present)
       do concurrent (k=1:xe3, j=1:xe2, i=1:xe1)
          z = (k + xs3 - 2) * dz

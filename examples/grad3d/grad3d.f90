@@ -543,6 +543,7 @@ contains
       character(len=:), allocatable :: fmt
 
       integer :: precision
+      integer, parameter :: output2D = 0 ! Which plane to write in 2D (0 for 3D)
 
       integer :: varctr
       character(len=16) :: filename

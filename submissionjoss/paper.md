@@ -46,7 +46,8 @@ spatially implicit numerical algorithms. However, the library can be easily used
 based on a structured layout and where pencil decomposition can apply. 
 It is based on a general-purpose 2D pencil decomposition for data distribution and data Input Output (I/O). 
 A 1D slab decomposition is also available as a special case of the 2D pencil decomposition.
-The library includes a highly scalable and efficient interface to perform three-dimensional Fast Fourier Transforms (FFTs). 
+The library includes a highly scalable and efficient interface to perform three-dimensional 
+Fast Fourier Transforms (FFTs). 
 The library has been designed to be user-friendly, with a clean application programming interface 
 hiding most communication details from application developers, and portable with support for modern CPUs 
 and NVIDIA GPUs (support for AMD and Intel GPUs to follow).
@@ -96,6 +97,19 @@ The new version of the library can now leverage NVIDIA GPUs, modern CPUs and var
 It has CMAKE capabilities as well as a proper continuous integration framework with automated tests. 
 The new library was designed to be more appealing to the scientific community,
 and can now be easily implemented as an independent library for use by other software.
+
+# GPU porting
+A first attempt to port 2DECOMP&FFT to GPU
+has been performed within the solver AFiD-GPU [@ZHU2018199], which was mainly based 
+on CUDA-Fortran for some kernels and CUDA-aware-MPI for communication.
+A second library, named cuDECOMP, which is directly inspired by 2DECOMP&FFT, takes 
+full adavantages of CUDA and also uses NVIDIA most recent libraries for communication 
+such as NVIDIA Collective Communication Library (NCCL), is presented in [@Romero_2022_cuDecomp]. 
+This work mainly uses a mix of CUDA-fortran and openACC for the CPU porting together with 
+CUDA-aware-MPI and NCCL for the communications. In additions to previous work also the FFT module 
+is ported to GPs using CUDA-FFT. 
+The long term goal is also to introduce openMP for GPU porting to support both AMD and Intel 
+GPU hardware. 
 
 # How to use 2DECOMP&FFT
 The 2D Pencil Decomposition API is defined with three Fortran module which should be used by applications as:

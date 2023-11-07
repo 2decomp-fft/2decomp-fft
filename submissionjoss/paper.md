@@ -1,5 +1,5 @@
 ---
-title: 'The new version of the 2DECOMP&FFT library'
+title: 'The 2DECOMP&FFT library: an update with new CPU/GPU capabilities'
 tags:
   - Fortran
   - FFT
@@ -41,7 +41,9 @@ bibliography: paper.bib
 # Summary
 
 The 2DECOMP&FFT library is a software framework written in modern Fortran to build large-scale parallel applications. 
-It is designed for applications using three-dimensional structured mesh and spatially implicit numerical algorithms. 
+It is designed for applications using three-dimensional structured meshes with a particular focus on 
+spatially implicit numerical algorithms. However, the library can be easily used also with other discretisation schemes 
+based on a structured layout and where pencil decomposition can apply. 
 It is based on a general-purpose 2D pencil decomposition for data distribution and data Input Output (I/O). 
 A 1D slab decomposition is also available as a special case of the 2D pencil decomposition.
 The library includes a highly scalable and efficient interface to perform three-dimensional Fast Fourier Transforms (FFTs). 
@@ -52,18 +54,19 @@ and NVIDIA GPUs (support for AMD and Intel GPUs to follow).
 
 # Statement of need
 
-The 2DECOMP&FFT library [@li_2010_2decomp] is a software framework written in Fortran targeting 
-large-scale parallel applications on structured meshes. 
-It was originally designed for CPU hardware and is now used by many research groups worldwide. 
+The 2DECOMP&FFT library [@li_2010_2decomp] was originally designed for CPU hardware 
+and is now used by many research groups worldwide. 
 The library is based on a 2D-pencil decomposition for data distribution on distributed memory systems 
 and is used as the core of many CFD solvers such as Xcompact3d [@BARTHOLOMEW2020100550] or CaNS [@COSTA20181853], 
 with excellent strong scaling performance up to hundreds of thousands of CPU cores. 
 2DECOMP&FFT mainly relies on MPI, and it offers a user-friendly interface that hides the complexity 
 of the communication. 
-The version 2.0 of the library offers also a 1D slab decomposition, which is implemented as a special case of the 
-2D decomposition. Two alteratives are possible: 
-- Initial slabs orientation in the `XY` plane 
-- Initial slabs orientation in the `XZ` plane
+The version 2.0.0 of the library offers also a 1D slab decomposition, which is implemented as a special case of the 
+2D decomposition. Two alteratives are possible:
+
+- Initial slabs orientation in the `XY` plane; 
+- Initial slabs orientation in the `XZ` plane.
+
 In many configurations the slabs decompostion gives some gain in performances with respect to the 
 2D  pencil decomposion. This is a consequence of having data already in memory when transposing between 
 the two dimensions of the slab. Therefore, it is possible to perfor a simple memory copy between 
@@ -77,7 +80,7 @@ which is used for FFT on NVIDIA GPUs. A Generic FFT backend, based on the
 Glassman's general N Fast Fourier Transform [@FERGUSON1982401], 
 is also available to make the library more portable.   
 
-While 2DECOMP&FFT library has been design with high order compact schemes in mind, it is possible 
+While 2DECOMP&FFT library has been designed with high order compact schemes in mind, it is possible 
 that some derivatives can be evaluated using explicit formulation using local stencils. For this reason a 
 halo support API is also provided to support explicit message passing between neighbouring pencils. 
 
@@ -91,7 +94,7 @@ and could only make use of CPUs. It has not been modified since its release.
 The new version of the library can now leverage NVIDIA GPUs, modern CPUs and various compilers 
 (GNU, Intel, NVHPC, CRAY). 
 It has CMAKE capabilities as well as a proper continuous integration framework with automated tests. 
-The new library was designed to be more appealing to the scientific community,  
+The new library was designed to be more appealing to the scientific community,
 and can now be easily implemented as an independent library for use by other software.
 
 # How to use 2DECOMP&FFT

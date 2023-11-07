@@ -103,12 +103,12 @@ and can now be easily implemented as an independent library for use by other sof
 An initial port of 2DECOMP&FFT to GPU has been performed within the solver AFiD-GPU [@ZHU2018199],
 which was mainly based on CUDA-Fortran for some kernels and CUDA-aware-MPI for communications.
 A second library, named cuDECOMP, which is directly inspired by 2DECOMP&FFT, 
-takes full adavantages of CUDA and uses NVIDIA most recent libraries for communications 
+takes full advantages of CUDA and uses NVIDIA most recent libraries for communications 
 such as NVIDIA Collective Communication Library (NCCL), is presented in [@Romero_2022_cuDecomp].
 Indeed, cuDECOMP only targets NVIDIA GPUs.
 The updated 2DECOMP&FFT mainly uses a mix of CUDA-Fortran and openACC for the GPU porting 
-together with CUDA-aware-MPI and NCCL for the communications. In additions to previous work,
-the FFT module is ported to GPUs using CUDA-FFT. 
+together with CUDA-aware-MPI and NCCL for the communications. In addition to previous work,
+the FFT module is ported to GPUs using cuFFT. 
 The next step is also to use openMP for GPU porting to support both AMD and Intel GPU hardware.
 
 # How to use 2DECOMP&FFT

@@ -6,7 +6,7 @@ List of the tests:
 This example demonstrates the use 2DECOMP&FFT library to compute the gradient
 of a field using an explicit second order finite difference scheme. 
 The purpose is to show how to use the transpose operations to allow explicit calculation
-of the gradient in all 3 directions. The results are written on a file and the function 
+of the gradient in all 3 directions. The results are written to a file and the function 
 is periodic over the interval [0-1] 
 
 What to input: The program takes max 5 inputs as: 

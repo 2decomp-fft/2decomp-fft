@@ -90,6 +90,9 @@ end of the step the data stored in ``var`` may not have been written. Overwritin
 when used as a temporary variable, would cause the output data to become corrupted. In such situations
 ``decomp_2d_write_one`` accepts an optional argument ``opt_deferred_writes`` (default ``.true.``) which
 when set to ``.false.`` causes the data to be flushed immediately.
+The last argument ``io_name`` is a string used to group I/O operations together, and for the ADIOS2 backend
+allows for the runtime control of I/O through the file ``adios2_config.xml``, there must be a matching IO
+handle to specify the I/O engine - see the examples under ``examples/io_test/`` for how this works.
 
 There are two ways of writing multiple variables to a single file which may
 be used for check-pointing purposes, for example. The newer interface is described first and allows
@@ -112,6 +115,26 @@ where ``fh`` is a MPI-IO file handle provided by the application (file opened us
 Y-pencil and 3 for Z-pencil); ``disp`` (meaning displacement) is a variable of ``kind MPI_OFFSET_KIND``
 and of ``intent INOUT``. 
 Detailed information about the IO API are available [here](https://2decomp-fft.github.io/pages/api_io.html) 
+#### Initialising the IO module
+Before you can perform I/O you must initialise the IO module by calling
+```
+call decomp_2d_io_init()
+```
+somewhere near the start of the program (and before beginning any I/O operations).
+The IO module supports multiple handles (see above discussion of ``io_name``), these are initialised by calling
+```
+call decomp_2d_init_io(io_name)
+...
+```
+#### Registering variables for ADIOS2
+The ADIOS2 backend needs information about the variables it is going to write, during initialisation of I/O operations
+each variable must be registered by calling
+```
+call decomp_2d_register_variable(io_name,filename,ipencil,icoarse,iplanes,kind) 
+```
+where the arguments are described as above.
+The argument ``iplanes`` is used to declare writing planes from a field - pass ``0`` for 3-D field output and the ``kind``
+argument is the argument used when declaring the variable, e.g. ``real(kind)``.
 ### Use of the halo exchange
 The halo-cell support API provides data structures and nearest-neighbour communication routines 
 that support explicit message passing between neighbouring pencils. 

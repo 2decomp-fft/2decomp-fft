@@ -347,7 +347,8 @@ contains
              z = (k + xs3 - 2) * dz
              y = (j + xs2 - 2) * dy
              x = (i + xs1 - 2) * dx
-             dphi = -2._mytype * twopi * sin(twopi * (x / lx)) * cos(twopi * (y / ly)) * sin(twopi * (z / lz))
+             dphi = -2._mytype * (twopi / lx) &
+                     * sin(twopi * (x / lx)) * cos(twopi * (y / ly)) * sin(twopi * (z / lz))
              dphi2 = dphi2 + dphi * dphi
              dphi_num = df(i,j,k)
              error = error + (dphi-dphi_num)*(dphi-dphi_num)
@@ -401,7 +402,8 @@ contains
              z = (k + xs3 - 2) * dz
              y = (j + xs2 - 2) * dy
              x = (i + xs1 - 2) * dx
-             dphi = -2._mytype * twopi * cos(twopi * (x / lx)) * sin(twopi * (y / ly)) * sin(twopi * (z / lz))
+             dphi = -2._mytype * (twopi / ly) &
+                     * cos(twopi * (x / lx)) * sin(twopi * (y / ly)) * sin(twopi * (z / lz))
              dphi2 = dphi2 + dphi * dphi
              dphi_num = df(i,j,k)
              error = error + (dphi-dphi_num)*(dphi-dphi_num)
@@ -456,7 +458,8 @@ contains
              z = (k + xs3 - 2) * dz
              y = (j + xs2 - 2) * dy
              x = (i + xs1 - 2) * dx
-             dphi = 2._mytype * twopi * cos(twopi * (x / lx)) * cos(twopi * (y / ly)) * cos(twopi * (z / lz))
+             dphi = 2._mytype * (twopi / lz) &
+                    * cos(twopi * (x / lx)) * cos(twopi * (y / ly)) * cos(twopi * (z / lz))
              dphi2 = dphi2 + dphi * dphi
              dphi_num = df(i,j,k)
              error = error + (dphi-dphi_num)*(dphi-dphi_num)

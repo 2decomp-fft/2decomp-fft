@@ -139,7 +139,8 @@ Detailed information about the decomposition API are available [here](https://2d
 
 The first version of the library was initially designed thanks to several projects funded under the 
 HECToR Distributed Computational Science and Engineering (CSE) Service operated by NAG Ltd. 
-The new library has been designed thanks to the support of EPSRC via the CCP Turbulence (EP/T026170/1). 
+The new library has been designed thanks to the support of EPSRC via the CCP Turbulence (EP/T026170/1) and work funded under
+the embedded CSE programme of the ARCHER2 UK National Supercomputing Service (http://www.archer2.ac.uk) (ARCHER2 eCSE03-2).
 
 # References
 

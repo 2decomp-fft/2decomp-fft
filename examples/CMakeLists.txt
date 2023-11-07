@@ -12,6 +12,7 @@ add_subdirectory(fft_physical_x)
 add_subdirectory(fft_physical_z)
 add_subdirectory(halo_test)
 add_subdirectory(io_test)
+add_subdirectory(grad3d)
 
 # Set real/complex tests
 #set(COMPLEX_TESTS "OFF" CACHE STRING "Enables complex numbers for tests that support it")

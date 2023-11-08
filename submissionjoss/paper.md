@@ -148,7 +148,9 @@ Finally, before exit, applications should clean up the memory by:
 ```
   call decomp_2d_finalize
 ```
-Detailed information about the decomposition API are available [here](https://2decomp-fft.github.io/pages/api_domain.html) 
+Detailed information about the decomposition API are available [here](https://2decomp-fft.github.io/pages/api_domain.html).
+Several examples detailing the usage of the different library functionalities can be found 
+[here](https://github.com/2decomp-fft/2decomp-fft/blob/main/examples/README.md).
 
 # Acknowledgements
 

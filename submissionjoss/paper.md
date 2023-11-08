@@ -27,7 +27,7 @@ affiliations:
    index: 1
  - name: PPRIME institute, Curiosity Group, Université de Poitiers, CNRS, ISAE-ENSMA, Poitiers, France
    index: 2
- - name: The University of Edinburgh, EPCC, Edinburgh, UK
+ - name: EPCC, The University of Edinburgh, Edinburgh, UK
    index: 3
  - name: NVIDIA Corporation, Cambridge, UK
    index: 4
@@ -62,33 +62,33 @@ and is used as the core of many CFD solvers such as Xcompact3d [@BARTHOLOMEW2020
 with excellent strong scaling performance up to hundreds of thousands of CPU cores. 
 2DECOMP&FFT mainly relies on MPI, and it offers a user-friendly interface that hides the complexity 
 of the communication. 
-The version 2.0.0 of the library offers also a 1D slab decomposition, which is implemented as a special case of the 
+The version 2.0.0 of the library also offers a 1D slab decomposition, which is implemented as a special case of the 
 2D decomposition. Two alternatives are possible:
 
 - Initial slabs orientation in the `XY` plane; 
 - Initial slabs orientation in the `XZ` plane.
 
-In many configurations the slabs decomposition gives some gain in performances with respect to the 
+In many configurations the slabs decomposition gives some gain in performance with respect to the 
 2D-pencil decomposition. This is a consequence of having data already in memory when transposing between 
 the two dimensions of the slab. Therefore, it is possible to perform a simple memory copy between 
 input and output arrays instead of the full MPI communication.
 
-The library also offers also a very efficient and flexible 3D tool to perform 
-Fast Fourier Transform (FFT) for distributed memory systems. However, 2DECOMP&FFT is mainly designed to perform 
+The library also offers a very efficient and flexible interface to perform 3D
+Fast Fourier Transform (FFT) on distributed memory systems. However, 2DECOMP&FFT is mainly designed to perform 
 management and communication and the actual computation of the 1D FFT is delegated to 3rd-parly libraries. 
 The supported FFT backends are: FFTW [@FFTW05], the Intel Math Kernel Library (MKL) and the CUDA FFT (cuFFT) 
-which is used for FFT on NVIDIA GPUs. A Generic FFT backend, based on the 
+which is used for FFT on NVIDIA GPUs. A Generic FFT backend, based on 
 Glassman's general N Fast Fourier Transform [@FERGUSON1982401], 
 is also available to make the library more portable.   
 
-While 2DECOMP&FFT library has been designed with high order compact schemes in mind, it is possible 
-that some derivatives can be evaluated using explicit formulation using local stencils. For this reason a 
+While the 2DECOMP&FFT library has been designed with high order compact schemes in mind, it is possible 
+that some derivatives can be evaluated using an explicit formulation based on local stencils. For this reason a 
 halo support API is also provided to support explicit message passing between neighbouring pencils. 
 
-Finally, the library provides an infrastructure to perform data I/O using MPI I/O or ADIOS2 [@godoy2020adios]. 
-The API provide several features such as: write of a single or multiple 3D arrays into a file, write of 2D slices 
-from a 2D array, write of the results using a lower precision (i.e. double precision into single) 
-and with lower resolution. 
+Finally, the library provides infrastructure to perform parallel data I/O using MPI I/O or ADIOS2 [@godoy2020adios]. 
+The API provide several features such as: writing single or multiple 3D arrays into a file, writing 2D slices 
+of the data, and data compression either via ADIOS2 or by writing reduced precision or resolution with the MPI I/O
+backend. 
 
 The first version of the library was released in 2010 as a tar.gz package, with a Makefile approach, 
 and could only make use of CPUs. It has not been modified since its release. 
@@ -127,7 +127,7 @@ The library is initialized using:
 where ``nx``, ``ny`` and ``nz`` are the spatial dimensions of the problem, to be distributed over
 a 2D processor grid $p_{row} \times p_{col}$.
 Note that none of the dimensions need to be divisible by ``p_row`` or ``p_col``.
-In case of ``p_row=p_col=0`` an automatic decomposition is selected among all possible combination available.
+In the case of ``p_row=p_col=0`` an automatic decomposition is selected among all possible combinations available.
 A key element of this library is a set of communication routines that perform the data transpositions.
 As mentioned, one needs to perform 4 global transpositions to go through all 3 pencil orientations
 (i.e. one has to go from x-pencils to y-pencils to z-pencils to y-pencils to x-pencils).
@@ -141,7 +141,7 @@ Correspondingly, the library provides 4 communication subroutines:
 The input array ``var_in`` and output array ``var_out`` are defined by the code using the library
 and contain distributed data for the correct pencil orientations.
 
-Note that the library is written using Fortran's generic interface so different data types are supported
+Note that the library is written using Fortran's generic interfaces so different data types are supported
 without user input. That means in and out above can be either real or complex arrays,
 the latter being useful for applications involving 3D Fast Fourier Transforms.
 Finally, before exit, applications should clean up the memory by:

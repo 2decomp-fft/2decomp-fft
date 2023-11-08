@@ -33,12 +33,11 @@ program grad3d
    real(mytype), parameter :: lz = 1.0_mytype
 
    real(mytype) :: dx, dy, dz
-   real(mytype) :: error_ref 
+   real(mytype) :: error_ref
 
    real(mytype), allocatable, dimension(:, :, :) :: phi1, phi2, phi3
    real(mytype), allocatable, dimension(:, :, :) :: dphiX, dphiY, dphiz
    real(mytype), allocatable, dimension(:, :, :) :: wk2, wk3
-
 
    call MPI_INIT(ierror)
    ! To resize the domain we need to know global number of ranks
@@ -87,13 +86,13 @@ program grad3d
    end if
    call decomp_2d_init(nx, ny, nz, p_row, p_col)
 
-   dx = lx/real(nx,mytype)
-   dy = ly/real(ny,mytype)
-   dz = lz/real(nz,mytype)
-   
+   dx = lx / real(nx, mytype)
+   dy = ly / real(ny, mytype)
+   dz = lz / real(nz, mytype)
+
    if (nrank == 0) then
       write (*, *) '-----------------------------------------------'
-      write (*, *) "Mesh Resolution ", nx , ny, nz 
+      write (*, *) "Mesh Resolution ", nx, ny, nz
       write (*, *) '-----------------------------------------------'
    end if
 
@@ -159,7 +158,7 @@ contains
       implicit none
 
       integer :: i, j, k
-      real(mytype), parameter :: twopi=2._mytype*acos(-1._mytype)
+      real(mytype), parameter :: twopi = 2._mytype * acos(-1._mytype)
       real(mytype) :: x, y, z
       integer :: xe1, xe2, xe3
       integer :: xs1, xs2, xs3
@@ -173,12 +172,12 @@ contains
 
       ! Scalar field
       !$acc kernels default(present)
-      do concurrent (k=1:xe3, j=1:xe2, i=1:xe1)
+      do concurrent(k=1:xe3, j=1:xe2, i=1:xe1)
          z = (k + xs3 - 2) * dz
          y = (j + xs2 - 2) * dy
          x = (i + xs1 - 2) * dx
          phi1(i, j, k) = -2._mytype * cos(twopi * (x / lx)) * cos(twopi * (y / ly)) * sin(twopi * (z / lz))
-      enddo
+      end do
       !$acc end kernels
 
    end subroutine init_phi
@@ -202,116 +201,116 @@ contains
       implicit none
 
       ! Compute X derivative
-      call derx(dphiX,phi1,dx,xsize(1),xsize(2),xsize(3))
+      call derx(dphiX, phi1, dx, xsize(1), xsize(2), xsize(3))
 
       ! Compute Y derivative
-      call transpose_x_to_y(phi1,phi2)
-      call dery(wk2,phi2,dy,ysize(1),ysize(2),ysize(3))
-      call transpose_y_to_x(wk2,dphiY)
+      call transpose_x_to_y(phi1, phi2)
+      call dery(wk2, phi2, dy, ysize(1), ysize(2), ysize(3))
+      call transpose_y_to_x(wk2, dphiY)
 
       ! Compute Z derivative
-      call transpose_y_to_z(phi2,phi3)
-      call derz(wk3,phi3,dz,zsize(1),zsize(2),zsize(3))
-      call transpose_z_to_y(wk3,wk2)
-      call transpose_y_to_x(wk2,dphiZ)
+      call transpose_y_to_z(phi2, phi3)
+      call derz(wk3, phi3, dz, zsize(1), zsize(2), zsize(3))
+      call transpose_z_to_y(wk3, wk2)
+      call transpose_y_to_x(wk2, dphiZ)
 
    end subroutine compute_grad
    !=====================================================================
    ! Calculate gradient in X (data in X-pencil)
    !=====================================================================
-   subroutine derx(df,ff,delta,nx,ny,nz)
+   subroutine derx(df, ff, delta, nx, ny, nz)
 
       implicit none
 
       ! Arguments
       integer, intent(in) :: nx, ny, nz
       real(mytype), intent(in) :: delta
-      real(mytype), intent(out), dimension(nx,ny,nz) :: df
-      real(mytype), intent(in), dimension(nx,ny,nz) :: ff
+      real(mytype), intent(out), dimension(nx, ny, nz) :: df
+      real(mytype), intent(in), dimension(nx, ny, nz) :: ff
 
       ! Local variables
       integer :: i, j, k
       real(mytype) :: coeff = 0.5_mytype
 
-      coeff = coeff/delta
+      coeff = coeff / delta
 
       !$acc kernels default(present)
-      do concurrent (k=1:nz, j=1:ny)
-         df(1,j,k) = coeff*(ff(2,j,k)-ff(nx,j,k)) 
-         do concurrent (i=2:nx-1)
-            df(i,j,k) = coeff*(ff(i+1,j,k)-ff(i-1,j,k)) 
-         enddo
-         df(nx,j,k) = coeff*(ff(1,j,k)-ff(nx-1,j,k))
-      enddo
+      do concurrent(k=1:nz, j=1:ny)
+         df(1, j, k) = coeff * (ff(2, j, k) - ff(nx, j, k))
+         do concurrent(i=2:nx - 1)
+            df(i, j, k) = coeff * (ff(i + 1, j, k) - ff(i - 1, j, k))
+         end do
+         df(nx, j, k) = coeff * (ff(1, j, k) - ff(nx - 1, j, k))
+      end do
       !$acc end kernels
 
-   end subroutine derx 
+   end subroutine derx
    !=====================================================================
    ! Calculate gradient in Y (data in Y-pencil)
    !=====================================================================
-   subroutine dery(df,ff,delta,nx,ny,nz)
+   subroutine dery(df, ff, delta, nx, ny, nz)
 
       implicit none
 
       ! Arguments
       integer, intent(in) :: nx, ny, nz
       real(mytype), intent(in) :: delta
-      real(mytype), intent(out), dimension(nx,ny,nz) :: df
-      real(mytype), intent(in), dimension(nx,ny,nz) :: ff
+      real(mytype), intent(out), dimension(nx, ny, nz) :: df
+      real(mytype), intent(in), dimension(nx, ny, nz) :: ff
 
       ! Local variables
       integer :: i, j, k
       real(mytype) :: coeff = 0.5_mytype
 
-      coeff = coeff/delta
+      coeff = coeff / delta
 
       !$acc kernels default(present)
-      do concurrent (k=1:nz)
-        do concurrent (i=1:nx)
-           df(i,1,k) = coeff*(ff(i,2,k)-ff(i,ny,k))
-        enddo
-        do concurrent (j=2:ny-1, i=1:nx)
-           df(i,j,k) = coeff*(ff(i,j+1,k)-ff(i,j-1,k))
-        enddo
-        do concurrent (i=1:nx)
-           df(i,ny,k) = coeff*(ff(i,1,k)-ff(i,ny-1,k)) 
-        enddo
-      enddo
+      do concurrent(k=1:nz)
+         do concurrent(i=1:nx)
+            df(i, 1, k) = coeff * (ff(i, 2, k) - ff(i, ny, k))
+         end do
+         do concurrent(j=2:ny - 1, i=1:nx)
+            df(i, j, k) = coeff * (ff(i, j + 1, k) - ff(i, j - 1, k))
+         end do
+         do concurrent(i=1:nx)
+            df(i, ny, k) = coeff * (ff(i, 1, k) - ff(i, ny - 1, k))
+         end do
+      end do
       !$acc end kernels
 
-   end subroutine dery 
+   end subroutine dery
    !=====================================================================
    ! Calculate gradient in Z (data in Z-pencil)
    !=====================================================================
-   subroutine derz(df,ff,delta,nx,ny,nz)
+   subroutine derz(df, ff, delta, nx, ny, nz)
 
       implicit none
 
       ! Arguments
       integer, intent(in) :: nx, ny, nz
       real(mytype), intent(in) :: delta
-      real(mytype), intent(out), dimension(nx,ny,nz) :: df
-      real(mytype), intent(in), dimension(nx,ny,nz) :: ff
+      real(mytype), intent(out), dimension(nx, ny, nz) :: df
+      real(mytype), intent(in), dimension(nx, ny, nz) :: ff
 
       ! Local variables
       integer :: i, j, k
       real(mytype) :: coeff = 0.5_mytype
-      
-      coeff = coeff/delta
+
+      coeff = coeff / delta
 
       !$acc kernels default(present)
-      do concurrent (j=1:ny, i=1:nx)
-         df(i,j,1) = coeff*(ff(i,j,2)-ff(i,j,nz  ))
-      enddo
-      do concurrent (k=2:nz-1, j=1:ny, i=1:nx)
-         df(i,j,k) = coeff*(ff(i,j,k+1)-ff(i,j,k-1))
-      enddo
-      do concurrent (j=1:ny, i=1:nx)
-         df(i,j,nz) = coeff*(ff(i,j,1)-ff(i,j,nz-1))
-      enddo
+      do concurrent(j=1:ny, i=1:nx)
+         df(i, j, 1) = coeff * (ff(i, j, 2) - ff(i, j, nz))
+      end do
+      do concurrent(k=2:nz - 1, j=1:ny, i=1:nx)
+         df(i, j, k) = coeff * (ff(i, j, k + 1) - ff(i, j, k - 1))
+      end do
+      do concurrent(j=1:ny, i=1:nx)
+         df(i, j, nz) = coeff * (ff(i, j, 1) - ff(i, j, nz - 1))
+      end do
       !$acc end kernels
 
-   end subroutine derz 
+   end subroutine derz
    !=====================================================================
    ! Test derivatives against analytical solution (data in X-pencil)
    !=====================================================================
@@ -319,10 +318,10 @@ contains
 
       implicit none
       ! Arguments
-      real(mytype), intent(in), dimension(xsize(1),xsize(2),xsize(3)) :: df
+      real(mytype), intent(in), dimension(xsize(1), xsize(2), xsize(3)) :: df
 
       integer :: i, j, k
-      real(mytype), parameter :: twopi=2._mytype*acos(-1._mytype)
+      real(mytype), parameter :: twopi = 2._mytype * acos(-1._mytype)
       real(mytype) :: x, y, z
       real(mytype) :: dphi, dphi_num
       real(mytype) :: error = 0._mytype
@@ -341,29 +340,29 @@ contains
 
       ! Compute the error against analytical solution
       !$acc parallel loop default(present) reduction(+:error)
-      do k=1,xe3
-        do j=1,xe2
-          do i=1,xe1
-             z = (k + xs3 - 2) * dz
-             y = (j + xs2 - 2) * dy
-             x = (i + xs1 - 2) * dx
-             dphi = -2._mytype * (twopi / lx) &
-                     * sin(twopi * (x / lx)) * cos(twopi * (y / ly)) * sin(twopi * (z / lz))
-             dphi2 = dphi2 + dphi * dphi
-             dphi_num = df(i,j,k)
-             error = error + (dphi-dphi_num)*(dphi-dphi_num)
-          enddo
-        enddo
-      enddo
+      do k = 1, xe3
+         do j = 1, xe2
+            do i = 1, xe1
+               z = (k + xs3 - 2) * dz
+               y = (j + xs2 - 2) * dy
+               x = (i + xs1 - 2) * dx
+               dphi = -2._mytype * (twopi / lx) &
+                      * sin(twopi * (x / lx)) * cos(twopi * (y / ly)) * sin(twopi * (z / lz))
+               dphi2 = dphi2 + dphi * dphi
+               dphi_num = df(i, j, k)
+               error = error + (dphi - dphi_num) * (dphi - dphi_num)
+            end do
+         end do
+      end do
       !$acc end loop
       call MPI_ALLREDUCE(error, err_all, 1, real_type, MPI_SUM, MPI_COMM_WORLD, ierror)
       call MPI_ALLREDUCE(dphi2, sum_dphi2, 1, real_type, MPI_SUM, MPI_COMM_WORLD, ierror)
-      err_all = sqrt(err_all/sum_dphi2) / (real(nx, mytype) * real(ny, mytype) * real(nz, mytype))
+      err_all = sqrt(err_all / sum_dphi2) / (real(nx, mytype) * real(ny, mytype) * real(nz, mytype))
       error_ref = err_all
-      
+
       if (nrank == 0) then
          write (*, *) 'DX error / mesh point: ', err_all
-      endif
+      end if
 
    end subroutine test_derX
 
@@ -374,10 +373,10 @@ contains
 
       implicit none
       ! Arguments
-      real(mytype), intent(in), dimension(xsize(1),xsize(2),xsize(3)) :: df
+      real(mytype), intent(in), dimension(xsize(1), xsize(2), xsize(3)) :: df
 
       integer :: i, j, k
-      real(mytype), parameter :: twopi=2._mytype*acos(-1._mytype)
+      real(mytype), parameter :: twopi = 2._mytype * acos(-1._mytype)
       real(mytype) :: x, y, z
       real(mytype) :: dphi, dphi_num
       real(mytype) :: error = 0._mytype
@@ -396,30 +395,30 @@ contains
 
       ! Compute the error against analytical solution
       !$acc parallel loop default(present) reduction(+:error)
-      do k=1,xe3
-        do j=1,xe2
-          do i=1,xe1
-             z = (k + xs3 - 2) * dz
-             y = (j + xs2 - 2) * dy
-             x = (i + xs1 - 2) * dx
-             dphi = -2._mytype * (twopi / ly) &
-                     * cos(twopi * (x / lx)) * sin(twopi * (y / ly)) * sin(twopi * (z / lz))
-             dphi2 = dphi2 + dphi * dphi
-             dphi_num = df(i,j,k)
-             error = error + (dphi-dphi_num)*(dphi-dphi_num)
-          enddo
-        enddo
-      enddo
+      do k = 1, xe3
+         do j = 1, xe2
+            do i = 1, xe1
+               z = (k + xs3 - 2) * dz
+               y = (j + xs2 - 2) * dy
+               x = (i + xs1 - 2) * dx
+               dphi = -2._mytype * (twopi / ly) &
+                      * cos(twopi * (x / lx)) * sin(twopi * (y / ly)) * sin(twopi * (z / lz))
+               dphi2 = dphi2 + dphi * dphi
+               dphi_num = df(i, j, k)
+               error = error + (dphi - dphi_num) * (dphi - dphi_num)
+            end do
+         end do
+      end do
       !$acc end loop
       call MPI_ALLREDUCE(error, err_all, 1, real_type, MPI_SUM, MPI_COMM_WORLD, ierror)
       call MPI_ALLREDUCE(dphi2, sum_dphi2, 1, real_type, MPI_SUM, MPI_COMM_WORLD, ierror)
-      err_all = sqrt(err_all/sum_dphi2) / (real(nx, mytype) * real(ny, mytype) * real(nz, mytype))
+      err_all = sqrt(err_all / sum_dphi2) / (real(nx, mytype) * real(ny, mytype) * real(nz, mytype))
 
       if (nrank == 0) then
          write (*, *) 'DY error / mesh point: ', err_all
-      endif
+      end if
 
-      if (abs(err_all-error_ref) > 1.0e-5_mytype) all_pass = .false.
+      if (abs(err_all - error_ref) > 1.0e-5_mytype) all_pass = .false.
 
    end subroutine test_derY
 
@@ -430,10 +429,10 @@ contains
 
       implicit none
       ! Arguments
-      real(mytype), intent(in), dimension(xsize(1),xsize(2),xsize(3)) :: df
+      real(mytype), intent(in), dimension(xsize(1), xsize(2), xsize(3)) :: df
 
       integer :: i, j, k
-      real(mytype), parameter :: twopi=2._mytype*acos(-1._mytype)
+      real(mytype), parameter :: twopi = 2._mytype * acos(-1._mytype)
       real(mytype) :: x, y, z
       real(mytype) :: dphi, dphi_num
       real(mytype) :: error = 0._mytype
@@ -452,46 +451,46 @@ contains
 
       ! Compute the error against analytical solution
       !$acc parallel loop default(present) reduction(+:error)
-      do k=1,xe3
-        do j=1,xe2
-          do i=1,xe1
-             z = (k + xs3 - 2) * dz
-             y = (j + xs2 - 2) * dy
-             x = (i + xs1 - 2) * dx
-             dphi = 2._mytype * (twopi / lz) &
-                    * cos(twopi * (x / lx)) * cos(twopi * (y / ly)) * cos(twopi * (z / lz))
-             dphi2 = dphi2 + dphi * dphi
-             dphi_num = df(i,j,k)
-             error = error + (dphi-dphi_num)*(dphi-dphi_num)
-          enddo
-        enddo
-      enddo
+      do k = 1, xe3
+         do j = 1, xe2
+            do i = 1, xe1
+               z = (k + xs3 - 2) * dz
+               y = (j + xs2 - 2) * dy
+               x = (i + xs1 - 2) * dx
+               dphi = 2._mytype * (twopi / lz) &
+                      * cos(twopi * (x / lx)) * cos(twopi * (y / ly)) * cos(twopi * (z / lz))
+               dphi2 = dphi2 + dphi * dphi
+               dphi_num = df(i, j, k)
+               error = error + (dphi - dphi_num) * (dphi - dphi_num)
+            end do
+         end do
+      end do
       !$acc end loop
       call MPI_ALLREDUCE(error, err_all, 1, real_type, MPI_SUM, MPI_COMM_WORLD, ierror)
       call MPI_ALLREDUCE(dphi2, sum_dphi2, 1, real_type, MPI_SUM, MPI_COMM_WORLD, ierror)
-      err_all = sqrt(err_all/sum_dphi2) / (real(nx, mytype) * real(ny, mytype) * real(nz, mytype))
+      err_all = sqrt(err_all / sum_dphi2) / (real(nx, mytype) * real(ny, mytype) * real(nz, mytype))
 
       if (nrank == 0) then
          write (*, *) 'DZ error / mesh point: ', err_all
-      endif
+      end if
 
-      if (abs(err_all-error_ref) > 1.0e-5_mytype) all_pass = .false.
+      if (abs(err_all - error_ref) > 1.0e-5_mytype) all_pass = .false.
 
    end subroutine test_derZ
    !=====================================================================
    ! Write of the results (all data are in X-pencil)
    !=====================================================================
    subroutine write_data()
-    
+
       use decomp_2d_io
 
       implicit none
-    
+
       character(len=*), parameter :: io_name = "grad-io"
 #ifndef ADIOS2
       logical :: dir_exists
 #endif
-      
+
       !$acc update self (phi1)
       !$acc update self (dphiX)
       !$acc update self (dphiY)
@@ -512,7 +511,7 @@ contains
       call decomp_2d_register_variable(io_name, "dphiX.dat", 1, 0, 0, mytype)
       call decomp_2d_register_variable(io_name, "dphiY.dat", 1, 0, 0, mytype)
       call decomp_2d_register_variable(io_name, "dphiZ.dat", 1, 0, 0, mytype)
-      
+
       ! Standard I/O pattern - file per field
 #ifdef ADIOS2
       call decomp_2d_open_io(io_name, "out", decomp_2d_write_mode)
@@ -582,18 +581,18 @@ contains
          write (ioxdmf, *) '       <Geometry Reference="/Xdmf/Domain/Geometry[1]"/>'
          do varctr = 1, 4
             select case (varctr)
-              case (1)
-                write (varname, "(A)") "phi1"
-                write (filename, '(A)') "./out/phi1.dat"
-              case (2)
-                write (varname, "(A)") "dphiX"
-                write (filename, '(A)') "./out/dphiX.dat"
-              case (3)
-                write (varname, "(A)") "dphiY"
-                write (filename, '(A)') "./out/dphiY.dat"
-              case (4)
-                write (varname, "(A)") "dphiZ"
-                write (filename, '(A)') "./out/dphiZ.dat"
+            case (1)
+               write (varname, "(A)") "phi1"
+               write (filename, '(A)') "./out/phi1.dat"
+            case (2)
+               write (varname, "(A)") "dphiX"
+               write (filename, '(A)') "./out/dphiX.dat"
+            case (3)
+               write (varname, "(A)") "dphiY"
+               write (filename, '(A)') "./out/dphiY.dat"
+            case (4)
+               write (varname, "(A)") "dphiZ"
+               write (filename, '(A)') "./out/dphiZ.dat"
             end select
             write (ioxdmf, *) '       <Attribute Name="'//trim(varname)//'" Center="Node">'
 #ifndef ADIOS2

@@ -75,7 +75,7 @@ input and output arrays instead of the full MPI communication.
 
 The library also offers also a very efficient and flexible 3D tool to perform 
 Fast Fourier Transform (FFT) for distributed memory systems. However, 2DECOMP&FFT is mainly designed to perform 
-management and communication and the actual computation of the 1D FFT is delegated to 3rd-parly libraries. 
+data management, communication and the actual computation of the 1D FFT is delegated to 3rd-parly libraries. 
 The supported FFT backends are: FFTW [@FFTW05], the Intel Math Kernel Library (MKL) and the CUDA FFT (cuFFT) 
 which is used for FFT on NVIDIA GPUs. A Generic FFT backend, based on the 
 Glassman's general N Fast Fourier Transform [@FERGUSON1982401], 
@@ -109,7 +109,7 @@ Indeed, cuDECOMP only targets NVIDIA GPUs.
 The updated 2DECOMP&FFT mainly uses a mix of CUDA-Fortran and openACC for the GPU porting 
 together with CUDA-aware-MPI and NCCL for the communications. In addition to previous work,
 the FFT module is ported to GPUs using cuFFT. 
-The next step is also to use openMP for GPU porting to support both AMD and Intel GPU hardware.
+The next step is also to implement OpenMP for GPU porting to support both AMD and Intel GPU hardware.
 
 # How to use 2DECOMP&FFT
 The 2D Pencil Decomposition API is defined with three Fortran module which should be used by applications as:

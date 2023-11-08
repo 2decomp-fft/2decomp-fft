@@ -319,7 +319,7 @@ contains
 
       implicit none
       ! Arguments
-      real(mytype), intent(out), dimension(xsize(1),xsize(2),xsize(3)) :: df
+      real(mytype), intent(in), dimension(xsize(1),xsize(2),xsize(3)) :: df
 
       integer :: i, j, k
       real(mytype), parameter :: twopi=2._mytype*acos(-1._mytype)
@@ -374,7 +374,7 @@ contains
 
       implicit none
       ! Arguments
-      real(mytype), intent(out), dimension(xsize(1),xsize(2),xsize(3)) :: df
+      real(mytype), intent(in), dimension(xsize(1),xsize(2),xsize(3)) :: df
 
       integer :: i, j, k
       real(mytype), parameter :: twopi=2._mytype*acos(-1._mytype)
@@ -430,7 +430,7 @@ contains
 
       implicit none
       ! Arguments
-      real(mytype), intent(out), dimension(xsize(1),xsize(2),xsize(3)) :: df
+      real(mytype), intent(in), dimension(xsize(1),xsize(2),xsize(3)) :: df
 
       integer :: i, j, k
       real(mytype), parameter :: twopi=2._mytype*acos(-1._mytype)

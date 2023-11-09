@@ -30,12 +30,12 @@ contains
       real(mytype), dimension(:, :, :), intent(IN) :: src
       real(mytype), dimension(:, :, :), intent(OUT) :: dst
       TYPE(DECOMP_INFO), intent(IN) :: decomp
-#ifdef PROFILER
-      if (decomp_profiler_transpose) call decomp_profiler_start("transp_y_z_r")
-#endif
-
 #if defined(_GPU)
       integer :: istat, nsize
+#endif
+
+#ifdef PROFILER
+      if (decomp_profiler_transpose) call decomp_profiler_start("transp_y_z_r")
 #endif
 
       if (dims(2) == 1) then
@@ -72,9 +72,7 @@ contains
       real(mytype), dimension(:), intent(out) :: wk1, wk2
 #if defined(_GPU)
       attributes(device) :: wk1, wk2
-#endif
 
-#if defined(_GPU)
       integer :: istat
 #endif
 
@@ -214,9 +212,7 @@ contains
       complex(mytype), dimension(:), intent(out) :: wk1, wk2
 #if defined(_GPU)
       attributes(device) :: wk1, wk2
-#endif
 
-#if defined(_GPU)
       integer :: istat
 #endif
 

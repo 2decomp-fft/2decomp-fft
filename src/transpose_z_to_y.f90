@@ -39,10 +39,6 @@ contains
       if (decomp_profiler_transpose) call decomp_profiler_start("transp_z_y_r")
 #endif
 
-#if defined(_GPU)
-      integer :: istat, nsize
-#endif
-
       if (dims(2) == 1) then
 #if defined(_GPU)
          nsize = product(decomp%zsz)
@@ -77,9 +73,7 @@ contains
       real(mytype), dimension(:), intent(out) :: wk1, wk2
 #if defined(_GPU)
       attributes(device) :: wk1, wk2
-#endif
 
-#if defined(_GPU)
       integer :: istat
 #endif
 
@@ -217,9 +211,7 @@ contains
       complex(mytype), dimension(:), intent(out) :: wk1, wk2
 #if defined(_GPU)
       attributes(device) :: wk1, wk2
-#endif
 
-#if defined(_GPU)
       integer :: istat
 #endif
 

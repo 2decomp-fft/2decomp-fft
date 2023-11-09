@@ -438,6 +438,8 @@ contains
       real(mytype), dimension(:), intent(out) :: wk1
 #if defined(_GPU)
       attributes(device) :: wk1
+
+      integer :: istat
 #endif
 
       integer :: s1, s2, s3
@@ -552,9 +554,15 @@ contains
       real(mytype), dimension(:), intent(out) :: wk1, wk2
       attributes(device) :: wk1, wk2
 
+#ifndef _NCCL
       integer :: istat
-
-#ifdef _NCCL
+      integer :: ierror
+      
+      call MPI_ALLTOALLV(wk1, decomp%z2cnts, decomp%z2disp, real_type, &
+                         wk2, decomp%y2cnts, decomp%y2disp, real_type, &
+                         DECOMP_2D_COMM_ROW, ierror)
+      if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_ALLTOALLV")
+#else
       call decomp_2d_nccl_send_recv_row(wk2, &
                                         wk1, &
                                         decomp%z2disp, &
@@ -562,11 +570,6 @@ contains
                                         decomp%y2disp, &
                                         decomp%y2cnts, &
                                         dims(2))
-#else
-      call MPI_ALLTOALLV(wk1, decomp%z2cnts, decomp%z2disp, real_type, &
-                         wk2, decomp%y2cnts, decomp%y2disp, real_type, &
-                         DECOMP_2D_COMM_ROW, ierror)
-      if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_ALLTOALLV")
 #endif
 
    end subroutine define_recvbuf_real_gpu

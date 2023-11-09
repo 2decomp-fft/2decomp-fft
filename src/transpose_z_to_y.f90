@@ -545,7 +545,8 @@ contains
       
    end subroutine define_recvbuf_real_std
 
-#else ! _GPU is defined
+#else
+   ! _GPU is defined
    subroutine define_recvbuf_real_gpu(decomp, wk1, wk2)
 
       implicit none
@@ -574,9 +575,11 @@ contains
 
    end subroutine define_recvbuf_real_gpu
 
-#endif ! IFDEF _GPU
+   ! END IFDEF _GPU
+#endif
 
-#else ! EVEN is defined
+#else
+   ! EVEN is defined
 
    subroutine define_recvbuf_real_even(src, decomp, wk1, wk2)
 
@@ -600,7 +603,8 @@ contains
       if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_ALLTOALL")
       
    end subroutine define_recvbuf_real_even
-    
-#endif ! IFDEF EVEN
+
+   ! END IFDEF EVEN
+#endif
 
 end submodule d2d_transpose_z_to_y

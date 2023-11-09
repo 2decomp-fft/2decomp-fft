@@ -1,3 +1,4 @@
+!! SPDX-License-Identifier: BSD-3-Clause
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 ! This example calculates the divergence of a random field using
 !   (1) global transposition
@@ -11,6 +12,7 @@ program halo_test
    use decomp_2d
    use decomp_2d_constants
    use decomp_2d_mpi
+   use decomp_2d_testing
    use MPI
 #if defined(_GPU)
    use cudafor
@@ -24,19 +26,16 @@ program halo_test
    integer :: p_row = 0, p_col = 0
    integer :: resize_domain
    integer :: nranks_tot
-   integer :: nargin, arg, FNLength, status, DecInd
-   character(len=80) :: InputFN
 
-   real(mytype), allocatable, dimension(:, :, :) :: u1, v1, w1, div1
-   real(mytype), allocatable, dimension(:, :, :) :: u2, v2, w2, div2
-   real(mytype), allocatable, dimension(:, :, :) :: u3, v3, w3, div3
+   real(mytype), allocatable, dimension(:, :, :) :: u1, v1, w1
+   real(mytype), allocatable, dimension(:, :, :) :: u2, v2, w2
+   real(mytype), allocatable, dimension(:, :, :) :: u3, v3, w3
    real(mytype), allocatable, dimension(:, :, :) :: div, wk2, wk3
 
    integer :: i, j, k, ierror, n
 
    integer, allocatable, dimension(:) :: seed
 
-   real(mytype) :: err
    integer :: xlast, ylast, zlast
 
    integer :: nx_expected, ny_expected, nz_expected
@@ -52,43 +51,11 @@ program halo_test
    ny = ny_base * resize_domain
    nz = nz_base * resize_domain
    ! Now we can check if user put some inputs
-   ! Handle input file like a boss -- GD
-   nargin = command_argument_count()
-   if ((nargin == 0) .or. (nargin == 2) .or. (nargin == 5)) then
-      do arg = 1, nargin
-         call get_command_argument(arg, InputFN, FNLength, status)
-         read (InputFN, *, iostat=status) DecInd
-         if (arg == 1) then
-            p_row = DecInd
-         elseif (arg == 2) then
-            p_col = DecInd
-         elseif (arg == 3) then
-            nx = DecInd
-         elseif (arg == 4) then
-            ny = DecInd
-         elseif (arg == 5) then
-            nz = DecInd
-         end if
-      end do
-   else
-      ! nrank not yet computed we need to avoid write
-      ! for every rank
-      call MPI_COMM_RANK(MPI_COMM_WORLD, nrank, ierror)
-      if (nrank == 0) then
-         print *, "This Test takes no inputs or 2 inputs as"
-         print *, "  1) p_row (default=0)"
-         print *, "  2) p_col (default=0)"
-         print *, "or 5 inputs as"
-         print *, "  1) p_row (default=0)"
-         print *, "  2) p_col (default=0)"
-         print *, "  3) nx "
-         print *, "  4) ny "
-         print *, "  5) nz "
-         print *, "Number of inputs is not correct and the defult settings"
-         print *, "will be used"
-      end if
-   end if
+   call decomp_2d_testing_init(p_row, p_col, nx, ny, nz)
+
    call decomp_2d_init(nx, ny, nz, p_row, p_col)
+
+   call decomp_2d_testing_log()
 
    xlast = xsize(1) - 1
    if (xend(2) == ny) then
@@ -103,7 +70,7 @@ program halo_test
    end if
 
    call initialise()
-   !$acc data copyin(u1,v1,w1) create(u2,v2,w2,u3,v3,w3,div1,div2,div3,wk2,wk3) copy(div)
+   !$acc data copyin(u1,v1,w1) create(u2,v2,w2,u3,v3,w3,wk2,wk3) copy(div)
    call test_div_transpose()
    call test_div_haloX()
    call test_div_haloY()
@@ -146,9 +113,6 @@ contains
       call alloc_x(v1, global)
       call alloc_x(w1, global)
       call alloc_x(div, global)
-      call alloc_x(div1, global)
-      call alloc_x(div2, global)
-      call alloc_x(div3, global)
 
       call random_seed(size=n)
       allocate (seed(n))
@@ -293,6 +257,7 @@ contains
 
       implicit none
 
+      real(mytype), allocatable, dimension(:, :, :) :: div1
       real(mytype), allocatable, dimension(:, :, :) :: vh, wh
 #if defined(_GPU)
       attributes(device) :: vh, wh
@@ -306,6 +271,8 @@ contains
       integer :: ifirst, ilast ! I loop start/end
       integer :: jfirst, jlast ! J loop start/end
       integer :: kfirst, klast ! K loop start/end
+
+      call alloc_x(div1, global)
 
       ! Expected sizes
       nx_expected = nx
@@ -333,6 +300,7 @@ contains
       call test_halo_size(vh, nx_expected, ny_expected, nz_expected, "X:v")
       call test_halo_size(wh, nx_expected, ny_expected, nz_expected, "X:w")
 
+      !$acc data copy(div1)
       !$acc kernels default(present)
       div1(:, :, :) = 0._mytype
       !$acc end kernels
@@ -349,9 +317,10 @@ contains
       !$acc end kernels
 
       ! Compute error
-      call check_err(div1, "X")
+      call check_err(div1, div, "X")
+      !$acc end data
 
-      deallocate (vh, wh)
+      deallocate (vh, wh, div1)
 
    end subroutine test_div_haloX
 
@@ -361,6 +330,8 @@ contains
    subroutine test_div_haloY()
 
       implicit none
+
+      real(mytype), allocatable, dimension(:, :, :) :: div2
       real(mytype), allocatable, dimension(:, :, :) :: uh, wh
 #if defined(_GPU)
       attributes(device) :: uh, wh
@@ -374,6 +345,8 @@ contains
       integer :: ifirst, ilast ! I loop start/end
       integer :: jfirst, jlast ! J loop start/end
       integer :: kfirst, klast ! K loop start/end
+
+      call alloc_x(div2, global)
 
       ! Expected sizes
       nx_expected = ysize(1) + 2
@@ -401,6 +374,7 @@ contains
       call test_halo_size(uh, nx_expected, ny_expected, nz_expected, "Y:u")
       call test_halo_size(wh, nx_expected, ny_expected, nz_expected, "Y:w")
 
+      !$acc data copy(div2)
       !$acc kernels default(present)
       do k = kfirst, klast
          do j = jfirst, jlast
@@ -416,9 +390,10 @@ contains
       call transpose_y_to_x(wk2, div2)
 
       ! Compute error
-      call check_err(div2, "Y")
+      call check_err(div2, div, "Y")
+      !$acc end data
 
-      deallocate (uh, wh)
+      deallocate (uh, wh, div2)
 
    end subroutine test_div_haloY
 
@@ -428,6 +403,9 @@ contains
    subroutine test_div_haloZ()
 
       implicit none
+
+      real(mytype), allocatable, dimension(:, :, :) :: div3
+
       real(mytype), allocatable, dimension(:, :, :) :: uh, vh
 #if defined(_GPU)
       attributes(device) :: vh, uh
@@ -441,6 +419,8 @@ contains
       integer :: ifirst, ilast ! I loop start/end
       integer :: jfirst, jlast ! J loop start/end
       integer :: kfirst, klast ! K loop start/end
+
+      call alloc_x(div3, global)
 
       ! Expected sizes
       nx_expected = zsize(1) + 2
@@ -468,6 +448,7 @@ contains
       call test_halo_size(uh, nx_expected, ny_expected, nz_expected, "Z:u")
       call test_halo_size(vh, nx_expected, ny_expected, nz_expected, "Z:v")
 
+      !$acc data copy(div3)
       !$acc kernels default(present)
       do j = jfirst, jlast
          do i = ifirst, ilast
@@ -484,18 +465,20 @@ contains
       call transpose_y_to_x(wk2, div3)
 
       ! Compute error
-      call check_err(div3, "Z")
+      call check_err(div3, div, "Z")
+      !$acc end data
 
-      deallocate (uh, vh)
+      deallocate (uh, vh, div3)
    end subroutine test_div_haloZ
    !=====================================================================
    ! Check the difference between halo and transpose divergence
    !=====================================================================
-   subroutine check_err(divh, pencil)
+   subroutine check_err(divh, divref, pencil)
 
       implicit none
 
       real(mytype), dimension(:, :, :), intent(in) :: divh
+      real(mytype), dimension(:, :, :), intent(in) :: divref
       character(len=*), intent(in) :: pencil
       real(mytype), dimension(:, :, :), allocatable :: tmp
       real(mytype) :: divmag, error
@@ -509,15 +492,15 @@ contains
       allocate (tmp(size(divh, 1), size(divh, 2), size(divh, 3)))
 
       !$acc kernels default(present)
-      tmp(2:xlast, 2:ylast, 2:zlast) = divh(2:xlast, 2:ylast, 2:zlast) - div1(2:xlast, 2:ylast, 2:zlast)
+      tmp(2:xlast, 2:ylast, 2:zlast) = divh(2:xlast, 2:ylast, 2:zlast) - divref(2:xlast, 2:ylast, 2:zlast)
       !$acc end kernels
       error = mag(tmp)
       !$acc kernels default(present)
-      tmp(2:xlast, 2:ylast, 2:zlast) = div1(2:xlast, 2:ylast, 2:zlast)
+      tmp(2:xlast, 2:ylast, 2:zlast) = divref(2:xlast, 2:ylast, 2:zlast)
       !$acc end kernels
       divmag = mag(tmp)
 
-      if (err < epsilon(divmag) * divmag) then
+      if (error < epsilon(divmag) * divmag) then
          passing = .true.
       else
          passing = .false.
@@ -530,7 +513,7 @@ contains
 #ifdef DEBUG
          write (*, *) (divh(i, i, i), i=2, 13)
 #endif
-         write (*, *) 'Error: ', err, '; Relative: ', err / divmag
+         write (*, *) 'Error: ', error, '; Relative: ', error / divmag
          write (*, *) 'Pass: ', passing
       end if
       deallocate (tmp)
@@ -600,8 +583,6 @@ contains
          write (*, *) trim(rank_lbl), " ", "+ Got:      ", nx, " ", ny, " ", nz, " "
 
          all_pass = .false.
-      else
-         write (*, *) trim(rank_lbl), " ", tag, ":PASS"
       end if
 
    end subroutine test_halo_size

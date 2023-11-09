@@ -1,13 +1,4 @@
-!=======================================================================
-! This is part of the 2DECOMP&FFT library
-!
-! 2DECOMP&FFT is a software framework for general-purpose 2D (pencil)
-! decomposition. It also implements a highly scalable distributed
-! three-dimensional Fast Fourier Transform (FFT).
-!
-! Copyright (C) 2009-2011 Ning Li, the Numerical Algorithms Group (NAG)
-!
-!=======================================================================
+!! SPDX-License-Identifier: BSD-3-Clause
 
 ! This file contains common code shared by all FFT engines
 
@@ -91,7 +82,7 @@ subroutine fft_init_general(pencil, nx, ny, nz)
    integer, intent(IN) :: pencil
    integer, intent(IN) :: nx, ny, nz
 
-   integer :: status, errorcode
+   integer :: errorcode
 
 #ifdef PROFILER
    if (decomp_profiler_fft) call decomp_profiler_start("fft_init")
@@ -139,12 +130,7 @@ subroutine fft_init_general(pencil, nx, ny, nz)
    ! Allocate the workspace for intermediate y-pencil data
    ! The largest memory block needed is the one for c2c transforms
    !
-   allocate (wk2_c2c(ph%ysz(1), ph%ysz(2), ph%ysz(3)), STAT=status)
-   if (status /= 0) then
-      errorcode = 3
-      call decomp_2d_abort(__FILE__, __LINE__, errorcode, &
-                           'Out of memory when initialising FFT')
-   end if
+   call alloc_y(wk2_c2c, ph)
    !
    ! A smaller memory block is needed for r2c and c2r transforms
    ! wk2_c2c and wk2_r2c start at the same memory location
@@ -161,14 +147,9 @@ subroutine fft_init_general(pencil, nx, ny, nz)
    ! transpose_y_to_z(wk2_r2c, wk13, sp)
    !
    if (format == PHYSICAL_IN_X) then
-      allocate (wk13(sp%xsz(1), sp%xsz(2), sp%xsz(3)), STAT=status)
+      call alloc_x(wk13, sp)
    else if (format == PHYSICAL_IN_Z) then
-      allocate (wk13(sp%zsz(1), sp%zsz(2), sp%zsz(3)), STAT=status)
-   end if
-   if (status /= 0) then
-      errorcode = 3
-      call decomp_2d_abort(__FILE__, __LINE__, errorcode, &
-                           'Out of memory when initialising FFT')
+      call alloc_z(wk13, sp)
    end if
 
    call init_fft_engine

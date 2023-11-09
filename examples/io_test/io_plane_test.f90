@@ -1,3 +1,4 @@
+!! SPDX-License-Identifier: BSD-3-Clause
 !!
 !! FIXME The issue below is specific to GPU and should be discussed in a dedicated github issue
 !!
@@ -8,9 +9,10 @@ program io_plane_test
 
    use mpi
    use decomp_2d_constants
-   use decomp_2d_mpi
-   use decomp_2d
    use decomp_2d_io
+   use decomp_2d_mpi
+   use decomp_2d_testing
+   use decomp_2d
 #if defined(_GPU)
    use cudafor
    use openacc
@@ -23,8 +25,6 @@ program io_plane_test
    integer :: p_row = 0, p_col = 0
    integer :: resize_domain
    integer :: nranks_tot
-   integer :: nargin, arg, FNLength, status, DecInd
-   character(len=80) :: InputFN
 
    real(mytype), allocatable, dimension(:, :, :) :: data1
    real(mytype), allocatable, dimension(:, :, :) :: u1, u2, u3
@@ -36,6 +36,8 @@ program io_plane_test
    integer :: xen1, xen2, xen3
    logical :: found
 
+   character(len=*), parameter :: io_name = "test-io"
+
    call MPI_INIT(ierror)
    ! To resize the domain we need to know global number of ranks
    ! This operation is also done as part of decomp_2d_init
@@ -45,44 +47,23 @@ program io_plane_test
    ny = ny_base * resize_domain
    nz = nz_base * resize_domain
    ! Now we can check if user put some inputs
-   ! Handle input file like a boss -- GD
-   nargin = command_argument_count()
-   if ((nargin == 0) .or. (nargin == 2) .or. (nargin == 5)) then
-      do arg = 1, nargin
-         call get_command_argument(arg, InputFN, FNLength, status)
-         read (InputFN, *, iostat=status) DecInd
-         if (arg == 1) then
-            p_row = DecInd
-         elseif (arg == 2) then
-            p_col = DecInd
-         elseif (arg == 3) then
-            nx = DecInd
-         elseif (arg == 4) then
-            ny = DecInd
-         elseif (arg == 5) then
-            nz = DecInd
-         end if
-      end do
-   else
-      ! nrank not yet computed we need to avoid write
-      ! for every rank
-      call MPI_COMM_RANK(MPI_COMM_WORLD, nrank, ierror)
-      if (nrank == 0) then
-         print *, "This Test takes no inputs or 2 inputs as"
-         print *, "  1) p_row (default=0)"
-         print *, "  2) p_col (default=0)"
-         print *, "or 5 inputs as"
-         print *, "  1) p_row (default=0)"
-         print *, "  2) p_col (default=0)"
-         print *, "  3) nx "
-         print *, "  4) ny "
-         print *, "  5) nz "
-         print *, "Number of inputs is not correct and the defult settings"
-         print *, "will be used"
-      end if
-   end if
+   call decomp_2d_testing_init(p_row, p_col, nx, ny, nz)
 
    call decomp_2d_init(nx, ny, nz, p_row, p_col)
+
+   call decomp_2d_testing_log()
+
+   call decomp_2d_io_init()
+   call decomp_2d_init_io(io_name)
+   call decomp_2d_register_variable(io_name, "x_pencil-x_plane.dat", 1, 0, 1, mytype)
+   call decomp_2d_register_variable(io_name, "x_pencil-y_plane.dat", 1, 0, 2, mytype)
+   call decomp_2d_register_variable(io_name, "x_pencil-z_plane.dat", 1, 0, 3, mytype)
+   call decomp_2d_register_variable(io_name, "y_pencil-x_plane.dat", 2, 0, 1, mytype)
+   call decomp_2d_register_variable(io_name, "y_pencil-y_plane.dat", 2, 0, 2, mytype)
+   call decomp_2d_register_variable(io_name, "y_pencil-z_plane.dat", 2, 0, 3, mytype)
+   call decomp_2d_register_variable(io_name, "z_pencil-x_plane.dat", 3, 0, 1, mytype)
+   call decomp_2d_register_variable(io_name, "z_pencil-y_plane.dat", 3, 0, 2, mytype)
+   call decomp_2d_register_variable(io_name, "z_pencil-z_plane.dat", 3, 0, 3, mytype)
 
    ! ***** global data *****
    allocate (data1(nx, ny, nz))
@@ -124,26 +105,36 @@ program io_plane_test
    !$acc update self(u3)
    !$acc end data
    ! X-pencil data
-   call decomp_2d_write_plane(1, u1, 1, nx / 2, '.', 'x_pencil-x_plane.dat', 'test')
-   call decomp_2d_write_plane(1, u1, 2, ny / 2, '.', 'x_pencil-y_plane.dat', 'test')
-   call decomp_2d_write_plane(1, u1, 3, nz / 2, '.', 'x_pencil-z_plane.dat', 'test')
+#ifdef ADIOS2
+   call decomp_2d_open_io(io_name, "out", decomp_2d_write_mode)
+   call decomp_2d_start_io(io_name, "out")
+#endif
+   call decomp_2d_write_plane(1, u1, 1, nx / 2, 'out', 'x_pencil-x_plane.dat', io_name)
+   call decomp_2d_write_plane(1, u1, 2, ny / 2, 'out', 'x_pencil-y_plane.dat', io_name)
+   call decomp_2d_write_plane(1, u1, 3, nz / 2, 'out', 'x_pencil-z_plane.dat', io_name)
    ! Y-pencil data
-   call decomp_2d_write_plane(2, u2, 2, ny / 2, '.', 'y_pencil-y_plane.dat', 'test')
-   call decomp_2d_write_plane(2, u2, 1, nx / 2, '.', 'y_pencil-x_plane.dat', 'test')
-   call decomp_2d_write_plane(2, u2, 3, nz / 2, '.', 'y_pencil-z_plane.dat', 'test')
+   call decomp_2d_write_plane(2, u2, 2, ny / 2, 'out', 'y_pencil-y_plane.dat', io_name)
+   call decomp_2d_write_plane(2, u2, 1, nx / 2, 'out', 'y_pencil-x_plane.dat', io_name)
+   call decomp_2d_write_plane(2, u2, 3, nz / 2, 'out', 'y_pencil-z_plane.dat', io_name)
    ! Z-pencil data
-   call decomp_2d_write_plane(3, u3, 1, nx / 2, '.', 'z_pencil-x_plane.dat', 'test')
-   call decomp_2d_write_plane(3, u3, 2, ny / 2, '.', 'z_pencil-y_plane.dat', 'test')
-   call decomp_2d_write_plane(3, u3, 3, nz / 2, '.', 'z_pencil-z_plane.dat', 'test')
+   call decomp_2d_write_plane(3, u3, 1, nx / 2, 'out', 'z_pencil-x_plane.dat', io_name)
+   call decomp_2d_write_plane(3, u3, 2, ny / 2, 'out', 'z_pencil-y_plane.dat', io_name)
+   call decomp_2d_write_plane(3, u3, 3, nz / 2, 'out', 'z_pencil-z_plane.dat', io_name)
+#ifdef ADIOS2
+   call decomp_2d_end_io(io_name, "out")
+   call decomp_2d_close_io(io_name, "out")
+#endif
+
+#ifndef ADIOS2
    ! Attemp to read the files
    if (nrank == 0) then
       inquire (iolength=iol) data1(1, 1, 1)
 
       ! X-plane
-      inquire (file='x_pencil-x_plane.dat', exist=found)
+      inquire (file='./out/x_pencil-x_plane.dat', exist=found)
       if (found) then
          allocate (work(1, ny, nz))
-         open (10, FILE='x_pencil-x_plane.dat', FORM='unformatted', &
+         open (10, FILE='./out/x_pencil-x_plane.dat', FORM='unformatted', &
                ACCESS='DIRECT', RECL=iol)
          m = 1
          do k = 1, nz
@@ -162,10 +153,10 @@ program io_plane_test
       end if
 
       ! Y-plane
-      inquire (file='x_pencil-y_plane.dat', exist=found)
+      inquire (file='./out/x_pencil-y_plane.dat', exist=found)
       if (found) then
          allocate (work(nx, 1, nz))
-         open (10, FILE='x_pencil-y_plane.dat', FORM='unformatted', &
+         open (10, FILE='./out/x_pencil-y_plane.dat', FORM='unformatted', &
                ACCESS='DIRECT', RECL=iol)
          m = 1
          do k = 1, nz
@@ -184,10 +175,10 @@ program io_plane_test
       end if
 
       ! Z-plane
-      inquire (file='x_pencil-z_plane.dat', exist=found)
+      inquire (file='./out/x_pencil-z_plane.dat', exist=found)
       if (found) then
          allocate (work(nx, ny, 1))
-         open (10, FILE='x_pencil-z_plane.dat', FORM='unformatted', &
+         open (10, FILE='./out/x_pencil-z_plane.dat', FORM='unformatted', &
                ACCESS='DIRECT', RECL=iol)
          m = 1
          do j = 1, ny
@@ -206,6 +197,10 @@ program io_plane_test
       end if
 
    end if
+#else
+   associate (fnd => found, io => iol, wk => work)
+   end associate
+#endif
 
    deallocate (u1, u2, u3)
    deallocate (data1)

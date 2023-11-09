@@ -1,0 +1,27 @@
+<?xml version="1.0"?>
+<adios-config>
+  <io name="test-io">
+    <engine type="BP4">
+    </engine>
+    <transport type="File">
+      <parameter key="Library" value="fstream"/>
+      <parameter key="ProfileUnits" value="Milliseconds"/>
+    </transport>
+  </io>
+  <io name="restart-io">
+    <engine type="BP4">
+    </engine>
+    <transport type="File">
+      <parameter key="Library" value="fstream"/>
+      <parameter key="ProfileUnits" value="Milliseconds"/>
+    </transport>
+  </io>
+  <io name="visu-io">
+    <engine type="BP4">
+    </engine>
+    <transport type="File">
+      <parameter key="Library" value="fstream"/>
+      <parameter key="ProfileUnits" value="Milliseconds"/>
+    </transport>
+  </io>
+</adios-config>

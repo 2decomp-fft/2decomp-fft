@@ -1,14 +1,5 @@
 !                          -*- mode: f90 -*-
-!=======================================================================
-! This is part of the 2DECOMP&FFT library
-!
-! 2DECOMP&FFT is a software framework for general-purpose 2D (pencil)
-! decomposition. It also implements a highly scalable distributed
-! three-dimensional Fast Fourier Transform (FFT).
-!
-! Copyright (C) 2009-2011 Ning Li, the Numerical Algorithms Group (NAG)
-!
-!=======================================================================
+!! SPDX-License-Identifier: BSD-3-Clause
 
 ! This file contain common code to be included by subroutines
 ! 'mpiio_write_plane_3d_...' in io.f90
@@ -36,13 +27,13 @@ endif
 opened_new = .false.
 
 if (iplane == 1) then
-   allocate (wk(decomp%xsz(1), decomp%xsz(2), decomp%xsz(3)))
+   call alloc_x(wk, decomp)
    if (ipencil == 1) then
       wk = var
    else if (ipencil == 2) then
       call transpose_y_to_x(var, wk, decomp)
    else if (ipencil == 3) then
-      allocate (wk2(decomp%ysz(1), decomp%ysz(2), decomp%ysz(3)))
+      call alloc_y(wk2, decomp)
       call transpose_z_to_y(var, wk2, decomp)
       call transpose_y_to_x(wk2, wk, decomp)
       deallocate (wk2)
@@ -62,7 +53,7 @@ if (iplane == 1) then
       end do
    end if
 else if (iplane == 2) then
-   allocate (wk(decomp%ysz(1), decomp%ysz(2), decomp%ysz(3)))
+   call alloc_y(wk, decomp)
    if (ipencil == 1) then
       call transpose_x_to_y(var, wk, decomp)
    else if (ipencil == 2) then
@@ -85,9 +76,9 @@ else if (iplane == 2) then
       end do
    end if
 else if (iplane == 3) then
-   allocate (wk(decomp%zsz(1), decomp%zsz(2), decomp%zsz(3)))
+   call alloc_z(wk, decomp)
    if (ipencil == 1) then
-      allocate (wk2(decomp%ysz(1), decomp%ysz(2), decomp%ysz(3)))
+      call alloc_y(wk2, decomp)
       call transpose_x_to_y(var, wk2, decomp)
       call transpose_y_to_z(wk2, wk, decomp)
       deallocate (wk2)

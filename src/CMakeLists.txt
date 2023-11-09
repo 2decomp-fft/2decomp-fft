@@ -88,6 +88,11 @@ if (Fortran_COMPILER_NAME MATCHES "NVHPC")
   target_compile_definitions(decomp2d PUBLIC -DNVHPC)
 endif (Fortran_COMPILER_NAME MATCHES "NVHPC")
 
+if (IO_BACKEND MATCHES "adios2")
+  target_compile_definitions(decomp2d PUBLIC -DADIOS2)
+  target_link_libraries(decomp2d PUBLIC adios2::fortran_mpi adios2::fortran)
+endif (IO_BACKEND MATCHES "adios2")
+
 install(TARGETS decomp2d
   EXPORT decomp2d-targets
   RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}

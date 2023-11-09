@@ -1,13 +1,4 @@
-!=======================================================================
-! This is part of the 2DECOMP&FFT library
-!
-! 2DECOMP&FFT is a software framework for general-purpose 2D (pencil)
-! decomposition. It also implements a highly scalable distributed
-! three-dimensional Fast Fourier Transform (FFT).
-!
-! Copyright (C) 2009-2011 Ning Li, the Numerical Algorithms Group (NAG)
-!
-!=======================================================================
+!! SPDX-License-Identifier: BSD-3-Clause
 
 ! This file contains 3D c2c/r2c/c2r transform subroutines which are
 ! identical for several FFT engines
@@ -39,7 +30,7 @@ subroutine fft_3d_c2c(in, out, isign)
 #ifdef OVERWRITE
       call c2c_1m_x(in, isign, ph)
 #else
-      allocate (wk1(ph%xsz(1), ph%xsz(2), ph%xsz(3)))
+      call alloc_x(wk1, ph)
       do concurrent(k=1:ph%xsz(3), j=1:ph%xsz(2), i=1:ph%xsz(1))
          wk1(i, j, k) = in(i, j, k)
       end do
@@ -83,7 +74,7 @@ subroutine fft_3d_c2c(in, out, isign)
 #ifdef OVERWRITE
       call c2c_1m_z(in, isign, ph)
 #else
-      allocate (wk1(ph%zsz(1), ph%zsz(2), ph%zsz(3)))
+      call alloc_z(wk1, ph)
       do concurrent(k=1:ph%zsz(3), j=1:ph%zsz(2), i=1:ph%zsz(1))
          wk1(i, j, k) = in(i, j, k)
       end do
@@ -216,7 +207,7 @@ subroutine fft_3d_c2r(in_c, out_r)
 #ifdef OVERWRITE
       call c2c_1m_z(in_c, 1, sp)
 #else
-      allocate (wk1(sp%zsz(1), sp%zsz(2), sp%zsz(3)))
+      call alloc_z(wk1, sp)
       do concurrent(k=1:sp%zsz(3), j=1:sp%zsz(2), i=1:sp%zsz(1))
          wk1(i, j, k) = in_c(i, j, k)
       end do
@@ -245,7 +236,7 @@ subroutine fft_3d_c2r(in_c, out_r)
 #ifdef OVERWRITE
       call c2c_1m_x(in_c, 1, sp)
 #else
-      allocate (wk1(sp%xsz(1), sp%xsz(2), sp%xsz(3)))
+      call alloc_x(wk1, sp)
       do concurrent(k=1:sp%xsz(3), j=1:sp%xsz(2), i=1:sp%xsz(1))
          wk1(i, j, k) = in_c(i, j, k)
       end do

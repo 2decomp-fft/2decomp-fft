@@ -1,14 +1,4 @@
-!=======================================================================
-! This is part of the 2DECOMP&FFT library
-!
-! 2DECOMP&FFT is a software framework for general-purpose 2D (pencil)
-! decomposition. It also implements a highly scalable distributed
-! three-dimensional Fast Fourier Transform (FFT).
-!
-! Copyright (C) 2009-2012 Ning Li, the Numerical Algorithms Group (NAG)
-! Copyright (C) 2021               the University of Edinburgh (UoE)
-!
-!=======================================================================
+!! SPDX-License-Identifier: BSD-3-Clause
 
 ! This is the main 2D pencil decomposition module
 
@@ -123,8 +113,15 @@ module decomp_2d
 
    ! These are the buffers used by MPI_ALLTOALL(V) calls
    integer, save :: decomp_buf_size = 0
-   real(mytype), allocatable, dimension(:) :: work1_r, work2_r
-   complex(mytype), allocatable, dimension(:) :: work1_c, work2_c
+   ! Shared real/complex buffers
+#if defined(_GPU)
+   real(mytype), target, device, allocatable, dimension(:) :: work1, work2
+#else
+   real(mytype), target, allocatable, dimension(:) :: work1, work2
+#endif
+   ! Real/complex pointers to CPU buffers
+   real(mytype), pointer, contiguous, dimension(:) :: work1_r, work2_r
+   complex(mytype), pointer, contiguous, dimension(:) :: work1_c, work2_c
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
    ! To define smaller arrays using every several mesh points
@@ -413,6 +410,8 @@ contains
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
    subroutine decomp_info_init(nx, ny, nz, decomp)
 
+      use, intrinsic:: iso_c_binding, only: c_f_pointer, c_loc
+
       implicit none
 
       integer, intent(IN) :: nx, ny, nz
@@ -470,43 +469,35 @@ contains
 #endif
 
       ! check if additional memory is required
-      ! *** TODO: consider how to share the real/complex buffers
       if (buf_size > decomp_buf_size) then
          decomp_buf_size = buf_size
+         if (associated(work1_r)) nullify (work1_r)
+         if (associated(work2_r)) nullify (work2_r)
+         if (associated(work1_c)) nullify (work1_c)
+         if (associated(work2_c)) nullify (work2_c)
+         if (allocated(work1)) deallocate (work1)
+         if (allocated(work2)) deallocate (work2)
+         allocate (work1(2 * buf_size), STAT=status)
+         if (status /= 0) then
+            errorcode = 2
+            call decomp_2d_abort(__FILE__, __LINE__, errorcode, &
+                                 'Out of memory when allocating 2DECOMP workspace')
+         end if
+         allocate (work2(2 * buf_size), STAT=status)
+         if (status /= 0) then
+            errorcode = 2
+            call decomp_2d_abort(__FILE__, __LINE__, errorcode, &
+                                 'Out of memory when allocating 2DECOMP workspace')
+         end if
+         call c_f_pointer(c_loc(work1), work1_r, [buf_size])
+         call c_f_pointer(c_loc(work2), work2_r, [buf_size])
+         call c_f_pointer(c_loc(work1), work1_c, [buf_size])
+         call c_f_pointer(c_loc(work2), work2_c, [buf_size])
 #if defined(_GPU)
-         call decomp_2d_cumpi_init(buf_size)
+         call decomp_2d_cumpi_init(buf_size, work1, work2)
 #endif
-         if (allocated(work1_r)) deallocate (work1_r)
-         if (allocated(work2_r)) deallocate (work2_r)
-         if (allocated(work1_c)) deallocate (work1_c)
-         if (allocated(work2_c)) deallocate (work2_c)
-         allocate (work1_r(buf_size), STAT=status)
-         if (status /= 0) then
-            errorcode = 2
-            call decomp_2d_abort(__FILE__, __LINE__, errorcode, &
-                                 'Out of memory when allocating 2DECOMP workspace')
-         end if
-         allocate (work2_r(buf_size), STAT=status)
-         if (status /= 0) then
-            errorcode = 2
-            call decomp_2d_abort(__FILE__, __LINE__, errorcode, &
-                                 'Out of memory when allocating 2DECOMP workspace')
-         end if
-         allocate (work1_c(buf_size), STAT=status)
-         if (status /= 0) then
-            errorcode = 2
-            call decomp_2d_abort(__FILE__, __LINE__, errorcode, &
-                                 'Out of memory when allocating 2DECOMP workspace')
-         end if
-         allocate (work2_c(buf_size), STAT=status)
-         if (status /= 0) then
-            errorcode = 2
-            call decomp_2d_abort(__FILE__, __LINE__, errorcode, &
-                                 'Out of memory when allocating 2DECOMP workspace')
-         end if
       end if
 
-      return
    end subroutine decomp_info_init
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -743,7 +734,7 @@ contains
 
       if (ipencil == 1) then
          allocate (wk(xstS(1):xenS(1), xstS(2):xenS(2), xstS(3):xenS(3)))
-         allocate (wk2(xstart(1):xend(1), xstart(2):xend(2), xstart(3):xend(3)))
+         call alloc_x(wk2, opt_global=.true.)
          wk2 = var_fine
          if (coarse_mesh_starts_from_1) then
             do k = xstS(3), xenS(3)
@@ -765,7 +756,7 @@ contains
          var_coarse = wk
       else if (ipencil == 2) then
          allocate (wk(ystS(1):yenS(1), ystS(2):yenS(2), ystS(3):yenS(3)))
-         allocate (wk2(ystart(1):yend(1), ystart(2):yend(2), ystart(3):yend(3)))
+         call alloc_y(wk2, opt_global=.true.)
          wk2 = var_fine
          if (coarse_mesh_starts_from_1) then
             do k = ystS(3), yenS(3)
@@ -787,7 +778,7 @@ contains
          var_coarse = wk
       else if (ipencil == 3) then
          allocate (wk(zstS(1):zenS(1), zstS(2):zenS(2), zstS(3):zenS(3)))
-         allocate (wk2(zstart(1):zend(1), zstart(2):zend(2), zstart(3):zend(3)))
+         call alloc_z(wk2, opt_global=.true.)
          wk2 = var_fine
          if (coarse_mesh_starts_from_1) then
             do k = zstS(3), zenS(3)
@@ -828,7 +819,7 @@ contains
 
       if (ipencil == 1) then
          allocate (wk(xstV(1):xenV(1), xstV(2):xenV(2), xstV(3):xenV(3)))
-         allocate (wk2(xstart(1):xend(1), xstart(2):xend(2), xstart(3):xend(3)))
+         call alloc_x(wk2, opt_global=.true.)
          wk2 = var_fine
          if (coarse_mesh_starts_from_1) then
             do k = xstV(3), xenV(3)
@@ -850,7 +841,7 @@ contains
          var_coarse = wk
       else if (ipencil == 2) then
          allocate (wk(ystV(1):yenV(1), ystV(2):yenV(2), ystV(3):yenV(3)))
-         allocate (wk2(ystart(1):yend(1), ystart(2):yend(2), ystart(3):yend(3)))
+         call alloc_y(wk2, opt_global=.true.)
          wk2 = var_fine
          if (coarse_mesh_starts_from_1) then
             do k = ystV(3), yenV(3)
@@ -872,7 +863,7 @@ contains
          var_coarse = wk
       else if (ipencil == 3) then
          allocate (wk(zstV(1):zenV(1), zstV(2):zenV(2), zstV(3):zenV(3)))
-         allocate (wk2(zstart(1):zend(1), zstart(2):zend(2), zstart(3):zend(3)))
+         call alloc_z(wk2, opt_global=.true.)
          wk2 = var_fine
          if (coarse_mesh_starts_from_1) then
             do k = zstV(3), zenV(3)
@@ -913,7 +904,7 @@ contains
 
       if (ipencil == 1) then
          allocate (wk(xstP(1):xenP(1), xstP(2):xenP(2), xstP(3):xenP(3)))
-         allocate (wk2(xstart(1):xend(1), xstart(2):xend(2), xstart(3):xend(3)))
+         call alloc_x(wk2, opt_global=.true.)
          wk2 = var_fine
          if (coarse_mesh_starts_from_1) then
             do k = xstP(3), xenP(3)
@@ -935,7 +926,7 @@ contains
          var_coarse = wk
       else if (ipencil == 2) then
          allocate (wk(ystP(1):yenP(1), ystP(2):yenP(2), ystP(3):yenP(3)))
-         allocate (wk2(ystart(1):yend(1), ystart(2):yend(2), ystart(3):yend(3)))
+         call alloc_y(wk2, opt_global=.true.)
          wk2 = var_fine
          if (coarse_mesh_starts_from_1) then
             do k = ystP(3), yenP(3)
@@ -957,7 +948,7 @@ contains
          var_coarse = wk
       else if (ipencil == 3) then
          allocate (wk(zstP(1):zenP(1), zstP(2):zenP(2), zstP(3):zenP(3)))
-         allocate (wk2(zstart(1):zend(1), zstart(2):zend(2), zstart(3):zend(3)))
+         call alloc_z(wk2, opt_global=.true.)
          wk2 = var_fine
          if (coarse_mesh_starts_from_1) then
             do k = zstP(3), zenP(3)

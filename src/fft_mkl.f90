@@ -1,13 +1,4 @@
-!=======================================================================
-! This is part of the 2DECOMP&FFT library
-!
-! 2DECOMP&FFT is a software framework for general-purpose 2D (pencil)
-! decomposition. It also implements a highly scalable distributed
-! three-dimensional Fast Fourier Transform (FFT).
-!
-! Copyright (C) 2009-2012 Ning Li, the Numerical Algorithms Group (NAG)
-!
-!=======================================================================
+!! SPDX-License-Identifier: BSD-3-Clause
 
 ! This is the Intel MKL implementation of the FFT library
 
@@ -368,7 +359,7 @@ module decomp_2d_fft
 #ifdef OVERWRITE
          status = wrapper_c2c_inplace(c2c_x, in, isign)
 #else
-         allocate (wk1(ph%xsz(1), ph%xsz(2), ph%xsz(3)))
+         call alloc_x(wk1, ph)
          status = wrapper_c2c(c2c_x, in, wk1, isign)
 #endif
          if (status /= 0) call decomp_2d_abort(__FILE__, __LINE__, status, "wrapper_c2c")
@@ -387,7 +378,7 @@ module decomp_2d_fft
             if (status /= 0) call decomp_2d_abort(__FILE__, __LINE__, status, "wrapper_c2c")
          end do
 #else
-         allocate (wk2b(ph%ysz(1), ph%ysz(2), ph%ysz(3)))
+         call alloc_y(wk2b, ph)
          do k = 1, ph%xsz(3) ! one Z-plane at a time
             !          if (isign==DECOMP_2D_FFT_FORWARD) then
             !             status = DftiComputeForward(c2c_y, wk2(:,1,k), wk2b(:,1,k))
@@ -403,7 +394,7 @@ module decomp_2d_fft
 #ifdef OVERWRITE
          call transpose_y_to_z(wk2_c2c, out, ph)
 #else
-         allocate (wk3(ph%zsz(1), ph%zsz(2), ph%zsz(3)))
+         call alloc_z(wk3, ph)
          call transpose_y_to_z(wk2b, wk3, ph)
 #endif
 
@@ -433,7 +424,7 @@ module decomp_2d_fft
 #ifdef OVERWRITE
          status = wrapper_c2c_inplace(c2c_z, in, isign)
 #else
-         allocate (wk1(ph%zsz(1), ph%zsz(2), ph%zsz(3)))
+         call alloc_z(wk1, ph)
          status = wrapper_c2c(c2c_z, in, wk1, isign)
 #endif
          if (status /= 0) call decomp_2d_abort(__FILE__, __LINE__, status, "wrapper_c2c")
@@ -452,7 +443,7 @@ module decomp_2d_fft
             if (status /= 0) call decomp_2d_abort(__FILE__, __LINE__, status, "wrapper_c2c")
          end do
 #else
-         allocate (wk2b(ph%ysz(1), ph%ysz(2), ph%ysz(3)))
+         call alloc_y(wk2b, ph)
          do k = 1, ph%xsz(3) ! one Z-plane at a time
             !          if (isign==DECOMP_2D_FFT_FORWARD) then
             !             status = DftiComputeForward(c2c_y, wk2(:,1,k), wk2b(:,1,k))
@@ -468,7 +459,7 @@ module decomp_2d_fft
 #ifdef OVERWRITE
          call transpose_y_to_x(wk2_c2c, out, ph)
 #else
-         allocate (wk3(ph%xsz(1), ph%xsz(2), ph%xsz(3)))
+         call alloc_x(wk3, ph)
          call transpose_y_to_x(wk2b, wk3, ph)
 #endif
 
@@ -537,7 +528,7 @@ module decomp_2d_fft
             if (status /= 0) call decomp_2d_abort(__FILE__, __LINE__, status, "wrapper_c2c")
          end do
 #else
-         allocate (wk2b(sp%ysz(1), sp%ysz(2), sp%ysz(3)))
+         call alloc_y(wk2b, sp)
          do k = 1, sp%ysz(3)
             !          status = DftiComputeForward(c2c_y2, wk2(:,1,k), wk2b(:,1,k))
             status = wrapper_c2c(c2c_y2, wk2_r2c(:, :, k), wk2b(1, 1, k), isign)
@@ -549,7 +540,7 @@ module decomp_2d_fft
 #ifdef OVERWRITE
          call transpose_y_to_z(wk2_r2c, out_c, sp)
 #else
-         allocate (wk3(sp%zsz(1), sp%zsz(2), sp%zsz(3)))
+         call alloc_z(wk3, sp)
          call transpose_y_to_z(wk2b, wk3, sp)
 #endif
 
@@ -579,7 +570,7 @@ module decomp_2d_fft
             if (status /= 0) call decomp_2d_abort(__FILE__, __LINE__, status, "wrapper_c2c")
          end do
 #else
-         allocate (wk2b(sp%ysz(1), sp%ysz(2), sp%ysz(3)))
+         call alloc_y(wk2b, sp)
          do k = 1, sp%ysz(3)
             !          status = DftiComputeForward(c2c_y2, wk2(:,1,k), wk2b(:,1,k))
             status = wrapper_c2c(c2c_y2, wk2_r2c(:, :, k), wk2b(1, 1, k), isign)
@@ -591,7 +582,7 @@ module decomp_2d_fft
 #ifdef OVERWRITE
          call transpose_y_to_x(wk2_r2c, out_c, sp)
 #else
-         allocate (wk3(sp%xsz(1), sp%xsz(2), sp%xsz(3)))
+         call alloc_x(wk3, sp)
          call transpose_y_to_x(wk2b, wk3, sp)
 #endif
 
@@ -645,7 +636,7 @@ module decomp_2d_fft
 #ifdef OVERWRITE
          status = wrapper_c2c_inplace(c2c_z2, in_c, isign)
 #else
-         allocate (wk1(sp%zsz(1), sp%zsz(2), sp%zsz(3)))
+         call alloc_z(wk1, sp)
          !       status = DftiComputeBackward(c2c_z2, in_c(:,1,1), wk1(:,1,1))
          status = wrapper_c2c(c2c_z2, in_c, wk1, isign)
 #endif
@@ -665,7 +656,7 @@ module decomp_2d_fft
             if (status /= 0) call decomp_2d_abort(__FILE__, __LINE__, status, "wrapper_c2c")
          end do
 #else
-         allocate (wk2b(sp%ysz(1), sp%ysz(2), sp%ysz(3)))
+         call alloc_y(wk2b, sp)
          do k = 1, sp%ysz(3)
             !          status = DftiComputeBackward(c2c_y2, wk2(:,1,k), wk2b(:,1,k))
             status = wrapper_c2c(c2c_y2, wk2_r2c(:, :, k), wk2b(1, 1, k), isign)
@@ -691,7 +682,7 @@ module decomp_2d_fft
 #ifdef OVERWRITE
          status = wrapper_c2c_inplace(c2c_x2, in_c, isign)
 #else
-         allocate (wk1(sp%xsz(1), sp%xsz(2), sp%xsz(3)))
+         call alloc_x(wk1, sp)
          !       status = DftiComputeBackward(c2c_x2, in_c(:,1,1), wk1(:,1,1))
          status = wrapper_c2c(c2c_x2, in_c, wk1, isign)
 #endif
@@ -711,7 +702,7 @@ module decomp_2d_fft
             if (status /= 0) call decomp_2d_abort(__FILE__, __LINE__, status, "wrapper_c2c")
          end do
 #else
-         allocate (wk2b(sp%ysz(1), sp%ysz(2), sp%ysz(3)))
+         call alloc_y(wk2b, sp)
          do k = 1, sp%ysz(3)
             !          status = DftiComputeBackward(c2c_y2, wk2(:,1,k), wk2b(:,1,k))
             status = wrapper_c2c(c2c_y2, wk2_r2c(:, :, k), wk2b(1, 1, k), isign)

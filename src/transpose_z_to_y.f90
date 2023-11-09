@@ -33,6 +33,9 @@ contains
 
       real(mytype), dimension(:), pointer, contiguous :: wk1
       real(mytype), dimension(:), pointer, contiguous :: wk2
+#ifdef _GPU
+      attributes(device) :: wk1, wk2
+#endif
       
 #ifdef PROFILER
       if (decomp_profiler_transpose) call decomp_profiler_start("transp_z_y_r")

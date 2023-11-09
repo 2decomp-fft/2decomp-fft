@@ -83,7 +83,26 @@ jobs:
         cmake --install build 
         ctest --test-dir build
         rm -rf build  
-    
+
+    # Configure-Build-Run-Run
+    - name: Compile NHVHPC GPU cuMPI inplace
+      run: |
+        ls -ltr ~/.bashrc
+        source ~/.bashrc
+        source ~/.profile_github
+        module load CMake 
+        module load nvhpc
+        export FC=mpif90
+        cmake -S . -B build -DBUILD_TESTING=ON -DBUILD_TARGET=gpu -DENABLE_NCCL=no -DENABLE_INPLACE=ON
+        cmake --build build -j 4
+        cmake --install build 
+        ctest --test-dir build 
+        cmake -S . -B build -DNX=128 -DNY=128 -DNX=128
+        cmake --build build -j 4
+        cmake --install build 
+        ctest --test-dir build
+        rm -rf build
+
     # Configure-Build-Run 
     - name: Compile NHVHPC GPU NCCL
       run: |

@@ -31,30 +31,25 @@ contains
       real(mytype), dimension(:, :, :), intent(OUT) :: dst
       TYPE(DECOMP_INFO), intent(IN) :: decomp
 
-#if defined(_GPU)
-      integer :: istat, nsize
-#endif
-
+      real(mytype), dimension(:), pointer, contiguous :: wk1
+      real(mytype), dimension(:), pointer, contiguous :: wk2
+      
 #ifdef PROFILER
       if (decomp_profiler_transpose) call decomp_profiler_start("transp_z_y_r")
 #endif
 
+#if defined(_GPU)
+      wk1 => work1_r_d
+      wk2 => work2_r_d
+#else
+      wk1 => work1_r
+      wk2 => work2_r
+#endif
+
       if (dims(2) == 1) then
-#if defined(_GPU)
-         nsize = product(decomp%zsz)
-         !$acc host_data use_device(src,dst)
-         istat = cudaMemcpy(dst, src, nsize, cudaMemcpyDeviceToDevice)
-         !$acc end host_data
-         if (istat /= 0) call decomp_2d_abort(__FILE__, __LINE__, istat, "cudaMemcpy")
-#else
-         dst = src
-#endif
+         call transpose_z_to_y_real_fast(src, dst, decomp)
       else
-#if defined(_GPU)
-         call transpose_z_to_y_real(src, dst, decomp, work1_r_d, work2_r_d)
-#else
-         call transpose_z_to_y_real(src, dst, decomp, work1_r, work2_r)
-#endif
+         call transpose_z_to_y_real(src, dst, decomp, wk1, wk2)
       end if
 
 #ifdef PROFILER
@@ -63,6 +58,31 @@ contains
 
    end subroutine transpose_z_to_y_real_long
 
+   subroutine transpose_z_to_y_real_fast(src, dst, decomp)
+
+      implicit none
+
+      real(mytype), dimension(:, :, :), intent(IN) :: src
+      real(mytype), dimension(:, :, :), intent(OUT) :: dst
+      TYPE(DECOMP_INFO), intent(IN) :: decomp
+
+      integer :: nsize
+#if defined(_GPU)
+      integer :: istat
+#endif
+
+      nsize = product(decomp%zsz)
+#if defined(_GPU)
+      !$acc host_data use_device(src,dst)
+      istat = cudaMemcpy(dst, src, nsize, cudaMemcpyDeviceToDevice)
+      !$acc end host_data
+      if (istat /= 0) call decomp_2d_abort(__FILE__, __LINE__, istat, "cudaMemcpy")
+#else
+      dst = src
+#endif
+
+   end subroutine transpose_z_to_y_real_fast
+   
    subroutine transpose_z_to_y_real(src, dst, decomp, wk1, wk2)
 
       implicit none
@@ -73,84 +93,14 @@ contains
       real(mytype), dimension(:), intent(out) :: wk1, wk2
 #if defined(_GPU)
       attributes(device) :: wk1, wk2
-
-      integer :: istat
 #endif
 
-      integer :: s1, s2, s3, d1, d2, d3
-      integer :: ierror
-
-      s1 = SIZE(src, 1)
-      s2 = SIZE(src, 2)
-      s3 = SIZE(src, 3)
-      d1 = SIZE(dst, 1)
-      d2 = SIZE(dst, 2)
-      d3 = SIZE(dst, 3)
-
-      ! rearrange source array as send buffer
-#ifdef EVEN
-      if (.not. decomp%even) then
-         call mem_split_zy_real(src, s1, s2, s3, wk1, dims(2), &
-                                decomp%z2dist, decomp)
-      end if
-#else
-      ! note the src array is suitable to be a send buffer
-      ! so no split operation needed
-
-#if defined(_GPU)
-      !$acc host_data use_device(src)
-      istat = cudaMemcpy(wk1, src, s1 * s2 * s3, cudaMemcpyDeviceToDevice)
-      !$acc end host_data
-      if (istat /= 0) call decomp_2d_abort(__FILE__, __LINE__, istat, "cudaMemcpy2D")
-#endif
-
-#endif
-
-      ! define receive buffer
-#ifdef EVEN
-      if (decomp%even) then
-         call MPI_ALLTOALL(src, decomp%z2count, real_type, &
-                           wk2, decomp%y2count, real_type, &
-                           DECOMP_2D_COMM_ROW, ierror)
-      else
-         call MPI_ALLTOALL(wk1, decomp%z2count, real_type, &
-                           wk2, decomp%y2count, real_type, &
-                           DECOMP_2D_COMM_ROW, ierror)
-      end if
-      if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_ALLTOALL")
-#else
-
-#if defined(_GPU)
-#if defined(_NCCL)
-      call decomp_2d_nccl_send_recv_row(wk2, &
-                                        wk1, &
-                                        decomp%z2disp, &
-                                        decomp%z2cnts, &
-                                        decomp%y2disp, &
-                                        decomp%y2cnts, &
-                                        dims(2))
-#else
-      call MPI_ALLTOALLV(wk1, decomp%z2cnts, decomp%z2disp, real_type, &
-                         wk2, decomp%y2cnts, decomp%y2disp, real_type, &
-                         DECOMP_2D_COMM_ROW, ierror)
-      if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_ALLTOALLV")
-#endif
-#else
-      associate (wk => wk1)
-      end associate
-      call MPI_ALLTOALLV(src, decomp%z2cnts, decomp%z2disp, real_type, &
-                         wk2, decomp%y2cnts, decomp%y2disp, real_type, &
-                         DECOMP_2D_COMM_ROW, ierror)
-      if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_ALLTOALLV")
-#endif
-#endif
-
-      ! rearrange receive buffer
-      call mem_merge_zy_real(wk2, d1, d2, d3, dst, dims(2), &
-                             decomp%y2dist, decomp)
+      call rearrange_sendbuf_real(src, wk1, decomp)
+      call define_recvbuf_real(src, decomp, wk1, wk2)
+      call rearrange_recvbuf_real(src, dst, decomp, wk2)
 
    end subroutine transpose_z_to_y_real
-
+   
    module subroutine transpose_z_to_y_complex_short(src, dst)
 
       implicit none
@@ -475,5 +425,176 @@ contains
       end do
 
    end subroutine mem_merge_zy_complex
+
+!!! Utility subroutines
+    
+   subroutine rearrange_sendbuf_real(src, wk1, decomp)
+
+      real(mytype), dimension(:, :, :), intent(IN) :: src
+      TYPE(DECOMP_INFO), intent(IN) :: decomp
+      real(mytype), dimension(:), intent(out) :: wk1
+#if defined(_GPU)
+      attributes(device) :: wk1
+#endif
+
+      integer :: s1, s2, s3
+
+      s1 = SIZE(src, 1)
+      s2 = SIZE(src, 2)
+      s3 = SIZE(src, 3)
+
+#ifdef EVEN
+      if (.not. decomp%even) then
+         call mem_split_zy_real(src, s1, s2, s3, wk1, dims(2), &
+                                decomp%z2dist, decomp)
+      end if
+#else
+      ! note the src array is suitable to be a send buffer
+      ! so no split operation needed
+
+#if defined(_GPU)
+      !$acc host_data use_device(src)
+      istat = cudaMemcpy(wk1, src, s1 * s2 * s3, cudaMemcpyDeviceToDevice)
+      !$acc end host_data
+      if (istat /= 0) call decomp_2d_abort(__FILE__, __LINE__, istat, "cudaMemcpy2D")
+#else
+      associate(foo => wk1, bar => decomp)
+      end associate
+#endif
+
+#endif
+   end subroutine rearrange_sendbuf_real
+
+   subroutine define_recvbuf_real(src, decomp, wk1, wk2)
+
+      implicit none
+
+      real(mytype), dimension(:, :, :), intent(IN) :: src
+      TYPE(DECOMP_INFO), intent(IN) :: decomp
+      real(mytype), dimension(:), intent(out) :: wk1, wk2
+#if defined(_GPU)
+      attributes(device) :: wk1, wk2
+#endif
+     
+#ifdef EVEN
+      call define_recvbuf_real_even(src, decomp, wk1, wk2)
+#else
+
+#if defined(_GPU)
+      call define_recvbuf_real_gpu(decomp, wk1, wk2)
+#else
+      associate (wk => wk1)
+      end associate
+      call define_recvbuf_real_std(src, decomp, wk2)
+#endif
+#endif
+
+   end subroutine define_recvbuf_real
+
+   subroutine rearrange_recvbuf_real(src, dst, decomp, wk2)
+
+      implicit none
+     
+      real(mytype), dimension(:, :, :), intent(IN) :: src
+      real(mytype), dimension(:, :, :), intent(OUT) :: dst
+      TYPE(DECOMP_INFO), intent(IN) :: decomp
+      real(mytype), dimension(:), intent(out) :: wk2
+#if defined(_GPU)
+      attributes(device) :: wk2
+#endif
+
+      integer :: s1, s2, s3, d1, d2, d3
+
+      s1 = SIZE(src, 1)
+      s2 = SIZE(src, 2)
+      s3 = SIZE(src, 3)
+      d1 = SIZE(dst, 1)
+      d2 = SIZE(dst, 2)
+      d3 = SIZE(dst, 3)
+
+      call mem_merge_zy_real(wk2, d1, d2, d3, dst, dims(2), &
+           decomp%y2dist, decomp)
+      
+   end subroutine rearrange_recvbuf_real
+
+!!!! Option-specific utility subroutines
+   
+#ifndef EVEN
+   
+#ifndef _GPU
+
+   subroutine define_recvbuf_real_std(src, decomp, wk2)
+
+      implicit none
+
+      real(mytype), dimension(:, :, :), intent(IN) :: src
+      TYPE(DECOMP_INFO), intent(IN) :: decomp
+      real(mytype), dimension(:), intent(out) :: wk2
+
+      integer :: ierror
+
+      call MPI_ALLTOALLV(src, decomp%z2cnts, decomp%z2disp, real_type, &
+                         wk2, decomp%y2cnts, decomp%y2disp, real_type, &
+                         DECOMP_2D_COMM_ROW, ierror)
+      if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_ALLTOALLV")
+      
+   end subroutine define_recvbuf_real_std
+
+#else ! _GPU is defined
+   subroutine define_recvbuf_real_gpu(decomp, wk1, wk2)
+
+      implicit none
+
+      TYPE(DECOMP_INFO), intent(IN) :: decomp
+      real(mytype), dimension(:), intent(out) :: wk1, wk2
+      attributes(device) :: wk1, wk2
+
+      integer :: istat
+
+#ifdef _NCCL
+      call decomp_2d_nccl_send_recv_row(wk2, &
+                                        wk1, &
+                                        decomp%z2disp, &
+                                        decomp%z2cnts, &
+                                        decomp%y2disp, &
+                                        decomp%y2cnts, &
+                                        dims(2))
+#else
+      call MPI_ALLTOALLV(wk1, decomp%z2cnts, decomp%z2disp, real_type, &
+                         wk2, decomp%y2cnts, decomp%y2disp, real_type, &
+                         DECOMP_2D_COMM_ROW, ierror)
+      if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_ALLTOALLV")
+#endif
+
+   end subroutine define_recvbuf_real_gpu
+
+#endif ! IFDEF _GPU
+
+#else ! EVEN is defined
+
+   subroutine define_recvbuf_real_even(src, decomp, wk1, wk2)
+
+      implicit none
+
+      real(mytype), dimension(:, :, :), intent(IN) :: src
+      TYPE(DECOMP_INFO), intent(IN) :: decomp
+      real(mytype), dimension(:), intent(out) :: wk1, wk2
+
+      integer :: ierror
+
+      if (decomp%even) then
+         call MPI_ALLTOALL(src, decomp%z2count, real_type, &
+                           wk2, decomp%y2count, real_type, &
+                           DECOMP_2D_COMM_ROW, ierror)
+      else
+         call MPI_ALLTOALL(wk1, decomp%z2count, real_type, &
+                           wk2, decomp%y2count, real_type, &
+                           DECOMP_2D_COMM_ROW, ierror)
+      end if
+      if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_ALLTOALL")
+      
+   end subroutine define_recvbuf_real_even
+    
+#endif ! IFDEF EVEN
 
 end submodule d2d_transpose_z_to_y

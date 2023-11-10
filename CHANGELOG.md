@@ -10,7 +10,13 @@ _e.g._ vX.Y - YYYY-MM-DD and a new "Unreleased" section started above.
 ## Unreleased
 
 ### Added
+
+- Add profiling to transpose subroutines when `p_row` or `p_col` is equal to one. See [PR #251](https://github.com/2decomp-fft/2decomp-fft/pull/251)
+
 ### Fixed
+
+- Fuse transpose CPU and GPU memory buffers to reduce memory usage. See [PR 271](https://github.com/2decomp-fft/2decomp-fft/pull/271)
+
 ### Changed
 ### Deprecated
 ### Removed
@@ -20,13 +26,7 @@ _e.g._ vX.Y - YYYY-MM-DD and a new "Unreleased" section started above.
 - See JOSS paper (under submission)
 
 ### Added
-
-- Add profiling to transpose subroutines when `p_row` or `p_col` is equal to one. See [PR #251](https://github.com/2decomp-fft/2decomp-fft/pull/251)
-
 ### Fixed
-
-- Fuse transpose CPU and GPU memory buffers to reduce memory usage. See [PR 271](https://github.com/2decomp-fft/2decomp-fft/pull/271)
-
 ### Changed
 ### Deprecated
 ### Removed

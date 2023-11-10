@@ -13,6 +13,7 @@ _e.g._ vX.Y - YYYY-MM-DD and a new "Unreleased" section started above.
 ### Added
 ### Fixed
 ### Changed
+### Deprecated
 ### Removed
 
 ## v2.0

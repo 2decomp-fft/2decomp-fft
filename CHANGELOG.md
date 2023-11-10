@@ -16,6 +16,6 @@ _e.g._ vX.Y - YYYY-MM-DD and a new "Unreleased" section started above.
 ### Deprecated
 ### Removed
 
-## v2.0
+## v2.0.1
 
 - See JOSS paper (under submission)

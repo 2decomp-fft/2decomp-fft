@@ -6,11 +6,13 @@
 program io_test
 
    use mpi
+   use decomp_2d
    use decomp_2d_constants
    use decomp_2d_io
+   use decomp_2d_io_family
+   use decomp_2d_io_object
    use decomp_2d_mpi
    use decomp_2d_testing
-   use decomp_2d
 #if defined(_GPU)
    use cudafor
    use openacc
@@ -50,6 +52,8 @@ program io_test
 
    character(len=*), parameter :: io_name = "test-io"
    character(len=*), parameter :: io_restart = "restart-io"
+   type(d2d_io_family), save :: io_family_restart
+   type(d2d_io), save :: io
 
    integer :: i, j, k, m, ierror
    integer :: xst1, xst2, xst3
@@ -77,20 +81,20 @@ program io_test
    call decomp_2d_testing_log()
 
    call decomp_2d_io_init()
-   call decomp_2d_init_io(io_name)
-   call decomp_2d_register_variable(io_name, "u1.dat", 1, 0, output2D, mytype)
-   call decomp_2d_register_variable(io_name, "u2.dat", 2, 0, output2D, mytype)
-   call decomp_2d_register_variable(io_name, "u3.dat", 3, 0, output2D, mytype)
-   call decomp_2d_register_variable(io_name, "v1.dat", 1, 0, output2D, mytype)
-   call decomp_2d_register_variable(io_name, "v2.dat", 2, 0, output2D, mytype)
-   call decomp_2d_register_variable(io_name, "v3.dat", 3, 0, output2D, mytype)
-   call decomp_2d_init_io(io_restart)
-   call decomp_2d_register_variable(io_restart, "u1.dat", 1, 0, output2D, mytype)
-   call decomp_2d_register_variable(io_restart, "u2.dat", 2, 0, output2D, mytype)
-   call decomp_2d_register_variable(io_restart, "u3.dat", 3, 0, output2D, mytype)
-   call decomp_2d_register_variable(io_restart, "v1.dat", 1, 0, output2D, mytype)
-   call decomp_2d_register_variable(io_restart, "v2.dat", 2, 0, output2D, mytype)
-   call decomp_2d_register_variable(io_restart, "v3.dat", 3, 0, output2D, mytype)
+
+   call decomp_2d_io_register_var3d("u1.dat", 1, real_type)
+   call decomp_2d_io_register_var3d("u2.dat", 2, real_type)
+   call decomp_2d_io_register_var3d("u3.dat", 3, real_type)
+   call decomp_2d_io_register_var3d("v1.dat", 1, real_type)
+   call decomp_2d_io_register_var3d("v2.dat", 2, real_type)
+   call decomp_2d_io_register_var3d("v3.dat", 3, real_type)
+   call io_family_restart%init(io_restart)
+   call io_family_restart%register_var3d("u1.dat", 1, real_type)
+   call io_family_restart%register_var3d("u2.dat", 2, real_type)
+   call io_family_restart%register_var3d("u3.dat", 3, real_type)
+   call io_family_restart%register_var3d("v1.dat", 1, real_type)
+   call io_family_restart%register_var3d("v2.dat", 2, real_type)
+   call io_family_restart%register_var3d("v3.dat", 3, real_type)
 
    ! ***** global data *****
    allocate (data1(nx, ny, nz))
@@ -167,73 +171,69 @@ program io_test
    end if
 #endif
 
-   ! Standard I/O pattern - file per field
+   ! Standard I/O pattern - 1 file per field
+   !
+   ! Using the default IO family
 #ifdef ADIOS2
-   call decomp_2d_open_io(io_name, "out", decomp_2d_write_mode)
-   call decomp_2d_start_io(io_name, "out")
+   call io%open_start("out", decomp_2d_write_mode)
 #endif
    ! Copy data to temporary memory and write from the temporary memory
-
    tmp1(:, :, :) = u1(:, :, :)
-   call decomp_2d_write_one(1, tmp1, 'out', 'u1.dat', 0, io_name, opt_deferred_writes=.false.)
+   call decomp_2d_write_one(1, tmp1, 'u1.dat', opt_dirname='out', opt_io=io, opt_mode=decomp_2d_write_sync)
    tmp1(:, :, :) = v1(:, :, :)
-   call decomp_2d_write_one(1, tmp1, 'out', 'v1.dat', 0, io_name, opt_deferred_writes=.false.)
+   call decomp_2d_write_one(1, tmp1, 'v1.dat', opt_dirname='out', opt_io=io, opt_mode=decomp_2d_write_sync)
 
    tmp2(:, :, :) = u2(:, :, :)
-   call decomp_2d_write_one(2, tmp2, 'out', 'u2.dat', 0, io_name, opt_deferred_writes=.false.)
+   call decomp_2d_write_one(2, tmp2, 'u2.dat', opt_dirname='out', opt_io=io, opt_mode=decomp_2d_write_sync)
    tmp2(:, :, :) = v2(:, :, :)
-   call decomp_2d_write_one(2, tmp2, 'out', 'v2.dat', 0, io_name, opt_deferred_writes=.false.)
+   call decomp_2d_write_one(2, tmp2, 'v2.dat', opt_dirname='out', opt_io=io, opt_mode=decomp_2d_write_sync)
 
    tmp3(:, :, :) = u3(:, :, :)
-   call decomp_2d_write_one(3, tmp3, 'out', 'u3.dat', 0, io_name, opt_deferred_writes=.false.)
+   call decomp_2d_write_one(3, tmp3, 'u3.dat', opt_dirname='out', opt_io=io, opt_mode=decomp_2d_write_sync)
    tmp3(:, :, :) = v3(:, :, :)
-   call decomp_2d_write_one(3, tmp3, 'out', 'v3.dat', 0, io_name, opt_deferred_writes=.false.)
+   call decomp_2d_write_one(3, tmp3, 'v3.dat', opt_dirname='out', opt_io=io, opt_mode=decomp_2d_write_sync)
 #ifdef ADIOS2
-   call decomp_2d_end_io(io_name, "out")
-   call decomp_2d_close_io(io_name, "out")
+   call io%end_close
 #endif
 
    ! read back to different arrays
+   !
+   ! Using the default IO family
 #ifdef ADIOS2
-   call decomp_2d_open_io(io_name, "out", decomp_2d_read_mode)
-   call decomp_2d_start_io(io_name, "out")
+   call io%open_start("out", decomp_2d_read_mode)
 #endif
-   call decomp_2d_read_one(1, u1b, 'out', 'u1.dat', io_name, reduce_prec=.false.)
-   call decomp_2d_read_one(2, u2b, 'out', 'u2.dat', io_name, reduce_prec=.false.)
-   call decomp_2d_read_one(3, u3b, 'out', 'u3.dat', io_name, reduce_prec=.false.)
-
-   call decomp_2d_read_one(1, v1b, 'out', 'v1.dat', io_name, reduce_prec=.false.)
-   call decomp_2d_read_one(2, v2b, 'out', 'v2.dat', io_name, reduce_prec=.false.)
-   call decomp_2d_read_one(3, v3b, 'out', 'v3.dat', io_name, reduce_prec=.false.)
+   call decomp_2d_read_one(1, u1b, 'u1.dat', opt_dirname='out', opt_io=io)
+   call decomp_2d_read_one(2, u2b, 'u2.dat', opt_dirname='out', opt_io=io)
+   call decomp_2d_read_one(3, u3b, 'u3.dat', opt_dirname='out', opt_io=io)
+   call decomp_2d_read_one(1, v1b, 'v1.dat', opt_dirname='out', opt_io=io)
+   call decomp_2d_read_one(2, v2b, 'v2.dat', opt_dirname='out', opt_io=io)
+   call decomp_2d_read_one(3, v3b, 'v3.dat', opt_dirname='out', opt_io=io)
 #ifdef ADIOS2
-   call decomp_2d_end_io(io_name, "out")
-   call decomp_2d_close_io(io_name, "out")
+   call io%end_close
 #endif
 
    ! compare
    call check("file per field")
 
    ! Checkpoint I/O pattern - multiple fields per file
-   call decomp_2d_open_io(io_name, "checkpoint", decomp_2d_write_mode)
-   call decomp_2d_start_io(io_name, "checkpoint")
+   call io%open_start("checkpoint", decomp_2d_write_mode, opt_family=io_family_restart)
 
    tmp1(:, :, :) = u1(:, :, :)
-   call decomp_2d_write_one(1, tmp1, 'checkpoint', 'u1.dat', 0, io_name, opt_deferred_writes=.false.)
+   call decomp_2d_write_one(1, tmp1, 'u1.dat', opt_io=io, opt_mode=decomp_2d_write_sync)
    tmp1(:, :, :) = v1(:, :, :)
-   call decomp_2d_write_one(1, tmp1, 'checkpoint', 'v1.dat', 0, io_name, opt_deferred_writes=.false.)
+   call decomp_2d_write_one(1, tmp1, 'v1.dat', opt_io=io, opt_mode=decomp_2d_write_sync)
 
    tmp2(:, :, :) = u2(:, :, :)
-   call decomp_2d_write_one(2, tmp2, 'checkpoint', 'u2.dat', 0, io_name, opt_deferred_writes=.false.)
+   call decomp_2d_write_one(2, tmp2, 'u2.dat', opt_io=io, opt_mode=decomp_2d_write_sync)
    tmp2(:, :, :) = v2(:, :, :)
-   call decomp_2d_write_one(2, tmp2, 'checkpoint', 'v2.dat', 0, io_name, opt_deferred_writes=.false.)
+   call decomp_2d_write_one(2, tmp2, 'v2.dat', opt_io=io, opt_mode=decomp_2d_write_sync)
 
    tmp3(:, :, :) = u3(:, :, :)
-   call decomp_2d_write_one(3, tmp3, 'checkpoint', 'u3.dat', 0, io_name, opt_deferred_writes=.false.)
+   call decomp_2d_write_one(3, tmp3, 'u3.dat', opt_io=io, opt_mode=decomp_2d_write_sync)
    tmp3(:, :, :) = v3(:, :, :)
-   call decomp_2d_write_one(3, tmp3, 'checkpoint', 'v3.dat', 0, io_name, opt_deferred_writes=.false.)
+   call decomp_2d_write_one(3, tmp3, 'v3.dat', opt_io=io, opt_mode=decomp_2d_write_sync)
 
-   call decomp_2d_end_io(io_name, "checkpoint")
-   call decomp_2d_close_io(io_name, "checkpoint")
+   call io%end_close()
 
    call MPI_Barrier(MPI_COMM_WORLD, ierr)
 
@@ -241,20 +241,14 @@ program io_test
    ! XXX: For the MPI-IO backend the order of reading must match the order of writing!
    u1b = 0; u2b = 0; u3b = 0
    v1b = 0; v2b = 0; v3b = 0
-   call decomp_2d_open_io(io_restart, "checkpoint", decomp_2d_read_mode)
-   call decomp_2d_start_io(io_restart, "checkpoint")
-
-   call decomp_2d_read_one(1, u1b, 'checkpoint', 'u1.dat', io_restart, reduce_prec=.false.)
-   call decomp_2d_read_one(1, v1b, 'checkpoint', 'v1.dat', io_restart, reduce_prec=.false.)
-
-   call decomp_2d_read_one(2, u2b, 'checkpoint', 'u2.dat', io_restart, reduce_prec=.false.)
-   call decomp_2d_read_one(2, v2b, 'checkpoint', 'v2.dat', io_restart, reduce_prec=.false.)
-
-   call decomp_2d_read_one(3, u3b, 'checkpoint', 'u3.dat', io_restart, reduce_prec=.false.)
-   call decomp_2d_read_one(3, v3b, 'checkpoint', 'v3.dat', io_restart, reduce_prec=.false.)
-
-   call decomp_2d_end_io(io_restart, "checkpoint")
-   call decomp_2d_close_io(io_restart, "checkpoint")
+   call io%open_start("checkpoint", decomp_2d_read_mode, opt_family=io_family_restart)
+   call decomp_2d_read_one(1, u1b, 'u1.dat', opt_io=io)
+   call decomp_2d_read_one(1, v1b, 'u1.dat', opt_io=io)
+   call decomp_2d_read_one(2, u2b, 'u2.dat', opt_io=io)
+   call decomp_2d_read_one(2, v2b, 'u2.dat', opt_io=io)
+   call decomp_2d_read_one(3, u3b, 'u3.dat', opt_io=io)
+   call decomp_2d_read_one(3, v3b, 'u3.dat', opt_io=io)
+   call io%end_close
 
    call MPI_Barrier(MPI_COMM_WORLD, ierr)
 

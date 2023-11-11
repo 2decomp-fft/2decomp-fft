@@ -434,12 +434,10 @@ contains
       integer :: iounit
 
       ! Exit if needed
-      if (decomp_log == D2D_LOG_QUIET) return
-      if (decomp_log == D2D_LOG_STDOUT .and. nrank /= 0) return
-      if (decomp_log == D2D_LOG_TOFILE .and. nrank /= 0) return
+      if (.not. d2d_log_is_active()) return
 
       ! Get the IO unit
-      iounit = d2d_listing_get_unit()
+      iounit = d2d_log_get_unit()
 
       ! Print stuff
       write (iounit, *) ""
@@ -460,7 +458,7 @@ contains
       end select
 
       ! Close the IO unit
-      call d2d_listing_close_unit(iounit)
+      call d2d_log_close_unit(iounit)
 
    end subroutine d2d_io_family_log
 
@@ -529,13 +527,11 @@ contains
          if (.not. var_handle%valid) then
 
             ! New variable
-            if ((decomp_log == D2D_LOG_STDOUT .and. nrank == 0) .or. &
-                (decomp_log == D2D_LOG_TOFILE .and. nrank == 0) .or. &
-                (decomp_log == D2D_LOG_TOFILE_FULL)) then
-               iounit = d2d_listing_get_unit()
+            if (d2d_log_is_active()) then
+               iounit = d2d_log_get_unit()
                write (iounit, *) "Registering variable for IO: ", varname
-               call d2d_listing_close_unit(iounit)
-            endif
+               call d2d_log_close_unit(iounit)
+            end if
 
             ! Need to set the ADIOS2 data type
             if (type == MPI_REAL) then

@@ -28,8 +28,8 @@ module decomp_2d_io_family
    ! derived type to store info for a family of readers / writers
    !
    type, public :: d2d_io_family
-      integer :: type = decomp_2d_io_none                     ! Type of the writer
-      character(:), allocatable :: label                      ! Label of the writer
+      integer :: type = decomp_2d_io_none                     ! Type of the family of writer
+      character(:), allocatable :: label                      ! Label of the family writer
 #ifdef ADIOS2
       type(adios2_adios), pointer :: adios                    ! adios2 only
       type(adios2_io) :: io                                   ! adios2 only

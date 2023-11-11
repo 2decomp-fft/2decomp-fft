@@ -516,7 +516,7 @@ contains
       integer, parameter :: ndims = 3
       logical, parameter :: adios2_constant_dims = .true.
       integer :: data_type
-      integer :: ierror
+      integer :: ierror, iounit
 
       ! Register
       if (family%io%valid) then
@@ -529,10 +529,13 @@ contains
          if (.not. var_handle%valid) then
 
             ! New variable
-            ! TODO print this in the 2decomp log and not stdout
-            if (decomp_debug >= D2D_DEBUG_LEVEL_INFO .and. nrank == 0) then
-               print *, "Registering variable for IO: ", varname
-            end if
+            if ((decomp_log == D2D_LOG_STDOUT .and. nrank == 0) .or. &
+                (decomp_log == D2D_LOG_TOFILE .and. nrank == 0) .or. &
+                (decomp_log == D2D_LOG_TOFILE_FULL)) then
+               iounit = d2d_listing_get_unit()
+               write (iounit, *) "Registering variable for IO: ", varname
+               call d2d_listing_close_unit(iounit)
+            endif
 
             ! Need to set the ADIOS2 data type
             if (type == MPI_REAL) then

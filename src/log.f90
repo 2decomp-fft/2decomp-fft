@@ -238,7 +238,7 @@ contains
       !
       ! At high debug level, all ranks will print env. variables
       !
-      ! The system call, if writing to a file, is not blocking if supported
+      ! The system call, if writing to a file, is blocking
       !
       if (nrank == 0 .or. decomp_debug >= D2D_DEBUG_LEVEL_INFO) then
          write (io_unit, *) '============== Environment variables ======================'

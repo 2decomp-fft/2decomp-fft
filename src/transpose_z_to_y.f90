@@ -476,7 +476,8 @@ contains
 
       real(mytype), dimension(:, :, :), intent(IN) :: src
       TYPE(DECOMP_INFO), intent(IN) :: decomp
-      real(mytype), dimension(:), intent(out) :: wk1, wk2
+      real(mytype), dimension(:), intent(in) :: wk1
+      real(mytype), dimension(:), intent(out) :: wk2
 #if defined(_GPU)
       attributes(device) :: wk1, wk2
 #endif
@@ -552,7 +553,8 @@ contains
       implicit none
 
       TYPE(DECOMP_INFO), intent(IN) :: decomp
-      real(mytype), dimension(:), intent(out) :: wk1, wk2
+      real(mytype), dimension(:), intent(in) :: wk1
+      real(mytype), dimension(:), intent(out) :: wk2
       attributes(device) :: wk1, wk2
 
 #ifndef _NCCL
@@ -587,7 +589,8 @@ contains
 
       real(mytype), dimension(:, :, :), intent(IN) :: src
       TYPE(DECOMP_INFO), intent(IN) :: decomp
-      real(mytype), dimension(:), intent(out) :: wk1, wk2
+      real(mytype), dimension(:), intent(in) :: wk1
+      real(mytype), dimension(:), intent(out) :: wk2
 
       integer :: ierror
 

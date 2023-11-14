@@ -82,12 +82,6 @@ if (HALO_DEBUG)
   target_compile_definitions(decomp2d PUBLIC -DHALO_DEBUG)
 endif()
 
-# Fix issue of Nvidia compiler with submodules
-#   (require NVHPC version 23.1 and above)
-if (Fortran_COMPILER_NAME MATCHES "NVHPC")
-  target_compile_definitions(decomp2d PUBLIC -DNVHPC)
-endif (Fortran_COMPILER_NAME MATCHES "NVHPC")
-
 if (IO_BACKEND MATCHES "adios2")
   target_compile_definitions(decomp2d PUBLIC -DADIOS2)
   target_link_libraries(decomp2d PUBLIC adios2::fortran_mpi adios2::fortran)

@@ -190,9 +190,6 @@ contains
 #ifdef _NCCL
       write (io_unit, *) 'Compile flag _NCCL detected'
 #endif
-#ifdef NVHPC
-      write (io_unit, *) 'Compile flag NVHPC detected'
-#endif
       write (io_unit, *) '==========================================================='
       write (io_unit, *) 'Profiler id : ', decomp_profiler
 #ifdef PROFILER

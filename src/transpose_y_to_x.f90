@@ -460,7 +460,7 @@ contains
       TYPE(DECOMP_INFO), intent(IN) :: decomp
       real(mytype), dimension(:), intent(in) :: wk1
       real(mytype), dimension(:), intent(out) :: wk2
-#if defined(_GPU)
+#if defined(_GPU) && defined(_NCCL)
       attributes(device) :: wk1, wk2
 #endif
       

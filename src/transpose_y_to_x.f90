@@ -96,7 +96,7 @@ contains
       real(mytype), dimension(:, :, :), intent(OUT) :: dst
       TYPE(DECOMP_INFO), intent(IN) :: decomp
       real(mytype), dimension(:), intent(out) :: wk1, wk2
-#if defined(_GPU)
+#if defined(_GPU) && defined(_NCCL)
       attributes(device) :: wk1, wk2
 #endif
 

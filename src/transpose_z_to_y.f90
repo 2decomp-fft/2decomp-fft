@@ -9,7 +9,7 @@ submodule(decomp_2d) d2d_transpose_z_to_y
 
 contains
 
-  ! Short transpose interface for real numbers with implicit decomposition.
+   ! Short transpose interface for real numbers with implicit decomposition.
    module subroutine transpose_z_to_y_real_short(src, dst)
 
       implicit none
@@ -101,7 +101,7 @@ contains
 
       call rearrange_sendbuf_real(src, wk1, decomp)
       call perform_transpose_real(src, decomp, wk1, wk2)
-      call rearrange_recvbuf_real(src, dst, decomp, wk2)
+      call rearrange_recvbuf_real(dst, decomp, wk2)
 
    end subroutine transpose_z_to_y_real
 
@@ -504,11 +504,10 @@ contains
    end subroutine perform_transpose_real
 
    ! Unpack the transposed data from the receive buffer into the destination array.
-   subroutine rearrange_recvbuf_real(src, dst, decomp, wk2)
+   subroutine rearrange_recvbuf_real(dst, decomp, wk2)
 
       implicit none
      
-      real(mytype), dimension(:, :, :), intent(IN) :: src
       real(mytype), dimension(:, :, :), intent(OUT) :: dst
       TYPE(DECOMP_INFO), intent(IN) :: decomp
       real(mytype), dimension(:), intent(in) :: wk2
@@ -516,11 +515,8 @@ contains
       attributes(device) :: wk2
 #endif
 
-      integer :: s1, s2, s3, d1, d2, d3
+      integer :: d1, d2, d3
 
-      s1 = SIZE(src, 1)
-      s2 = SIZE(src, 2)
-      s3 = SIZE(src, 3)
       d1 = SIZE(dst, 1)
       d2 = SIZE(dst, 2)
       d3 = SIZE(dst, 3)

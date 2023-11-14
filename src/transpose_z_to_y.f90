@@ -99,7 +99,7 @@ contains
 #endif
 
       call rearrange_sendbuf_real(src, wk1, decomp)
-      call define_recvbuf_real(src, decomp, wk1, wk2)
+      call perform_transpose_real(src, decomp, wk1, wk2)
       call rearrange_recvbuf_real(src, dst, decomp, wk2)
 
    end subroutine transpose_z_to_y_real
@@ -470,7 +470,7 @@ contains
 #endif
    end subroutine rearrange_sendbuf_real
 
-   subroutine define_recvbuf_real(src, decomp, wk1, wk2)
+   subroutine perform_transpose_real(src, decomp, wk1, wk2)
 
       implicit none
 
@@ -482,19 +482,19 @@ contains
 #endif
      
 #ifdef EVEN
-      call define_recvbuf_real_even(src, decomp, wk1, wk2)
+      call perform_transpose_real_even(src, decomp, wk1, wk2)
 #else
 
 #if defined(_GPU)
-      call define_recvbuf_real_gpu(decomp, wk1, wk2)
+      call perform_transpose_real_gpu(decomp, wk1, wk2)
 #else
       associate (wk => wk1)
       end associate
-      call define_recvbuf_real_std(src, decomp, wk2)
+      call perform_transpose_real_std(src, decomp, wk2)
 #endif
 #endif
 
-   end subroutine define_recvbuf_real
+   end subroutine perform_transpose_real
 
    subroutine rearrange_recvbuf_real(src, dst, decomp, wk2)
 
@@ -528,7 +528,7 @@ contains
    
 #ifndef _GPU
 
-   subroutine define_recvbuf_real_std(src, decomp, wk2)
+   subroutine perform_transpose_real_std(src, decomp, wk2)
 
       implicit none
 
@@ -543,11 +543,11 @@ contains
                          DECOMP_2D_COMM_ROW, ierror)
       if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_ALLTOALLV")
       
-   end subroutine define_recvbuf_real_std
+   end subroutine perform_transpose_real_std
 
 #else
    ! _GPU is defined
-   subroutine define_recvbuf_real_gpu(decomp, wk1, wk2)
+   subroutine perform_transpose_real_gpu(decomp, wk1, wk2)
 
       implicit none
 
@@ -573,7 +573,7 @@ contains
                                         dims(2))
 #endif
 
-   end subroutine define_recvbuf_real_gpu
+   end subroutine perform_transpose_real_gpu
 
    ! END IFDEF _GPU
 #endif
@@ -581,7 +581,7 @@ contains
 #else
    ! EVEN is defined
 
-   subroutine define_recvbuf_real_even(src, decomp, wk1, wk2)
+   subroutine perform_transpose_real_even(src, decomp, wk1, wk2)
 
       implicit none
 
@@ -602,7 +602,7 @@ contains
       end if
       if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_ALLTOALL")
       
-   end subroutine define_recvbuf_real_even
+   end subroutine perform_transpose_real_even
 
    ! END IFDEF EVEN
 #endif

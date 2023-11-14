@@ -12,6 +12,7 @@ submodule(decomp_2d) d2d_transpose_z_to_y
 
 contains
 
+  ! Short transpose interface for real numbers with implicit decomposition.
    module subroutine transpose_z_to_y_real_short(src, dst)
 
       implicit none
@@ -22,7 +23,8 @@ contains
       call transpose_z_to_y(src, dst, decomp_main)
 
    end subroutine transpose_z_to_y_real_short
-
+    
+   ! Full transpose interface for real numbers with explicit decomposition
    module subroutine transpose_z_to_y_real_long(src, dst, decomp)
 
       implicit none
@@ -61,6 +63,7 @@ contains
 
    end subroutine transpose_z_to_y_real_long
 
+   ! Fast implementation of transpose for real numbers avoiding communication
    subroutine transpose_z_to_y_real_fast(src, dst, decomp)
 
       implicit none
@@ -85,7 +88,8 @@ contains
 #endif
 
    end subroutine transpose_z_to_y_real_fast
-   
+
+   ! Default implementation of transpose for real numbers
    subroutine transpose_z_to_y_real(src, dst, decomp, wk1, wk2)
 
       implicit none
@@ -103,7 +107,8 @@ contains
       call rearrange_recvbuf_real(src, dst, decomp, wk2)
 
    end subroutine transpose_z_to_y_real
-   
+
+   ! Short transpose interface for complex numbers with implicit decomposition
    module subroutine transpose_z_to_y_complex_short(src, dst)
 
       implicit none
@@ -115,6 +120,7 @@ contains
 
    end subroutine transpose_z_to_y_complex_short
 
+   ! Full transpose interface for complex numbers with explicit decomposition
    module subroutine transpose_z_to_y_complex_long(src, dst, decomp)
 
       implicit none
@@ -154,6 +160,7 @@ contains
 
    end subroutine transpose_z_to_y_complex_long
 
+   ! Transpose implementation for complex numbers
    subroutine transpose_z_to_y_complex(src, dst, decomp, wk1, wk2)
 
       implicit none
@@ -430,7 +437,8 @@ contains
    end subroutine mem_merge_zy_complex
 
 !!! Utility subroutines
-    
+
+   ! Pack the array to be transposed into the send buffer as necessary.
    subroutine rearrange_sendbuf_real(src, wk1, decomp)
 
       real(mytype), dimension(:, :, :), intent(IN) :: src
@@ -470,6 +478,7 @@ contains
 #endif
    end subroutine rearrange_sendbuf_real
 
+   ! Subroutine to do the transpose communications.
    subroutine perform_transpose_real(src, decomp, wk1, wk2)
 
       implicit none
@@ -497,6 +506,7 @@ contains
 
    end subroutine perform_transpose_real
 
+   ! Unpack the transposed data from the receive buffer into the destination array.
    subroutine rearrange_recvbuf_real(src, dst, decomp, wk2)
 
       implicit none
@@ -529,6 +539,7 @@ contains
    
 #ifndef _GPU
 
+   ! Subroutine to do the transpose communications in the default case.
    subroutine perform_transpose_real_std(src, decomp, wk2)
 
       implicit none
@@ -548,6 +559,8 @@ contains
 
 #else
    ! _GPU is defined
+
+   ! Subroutine to do the transpose communications on GPUs.
    subroutine perform_transpose_real_gpu(decomp, wk1, wk2)
 
       implicit none
@@ -583,6 +596,7 @@ contains
 #else
    ! EVEN is defined
 
+   ! Subroutine to do the transpose communications for even communications.
    subroutine perform_transpose_real_even(src, decomp, wk1, wk2)
 
       implicit none

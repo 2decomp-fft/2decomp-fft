@@ -9,6 +9,7 @@ submodule(decomp_2d) d2d_transpose_y_to_x
 
 contains
 
+   ! Short transpose interface for real numbers with implicit decomposition.
    module subroutine transpose_y_to_x_real_short(src, dst)
 
       implicit none
@@ -20,6 +21,7 @@ contains
 
    end subroutine transpose_y_to_x_real_short
 
+   ! Full transpose interface for real numbers with explicit decomposition
    module subroutine transpose_y_to_x_real_long(src, dst, decomp)
 
       implicit none
@@ -28,30 +30,29 @@ contains
       real(mytype), dimension(:, :, :), intent(OUT) :: dst
       TYPE(DECOMP_INFO), intent(IN) :: decomp
 
-#if defined(_GPU)
-      integer :: istat, nsize
+      real(mytype), dimension(:), pointer, contiguous :: wk1
+      real(mytype), dimension(:), pointer, contiguous :: wk2
+#ifdef _GPU
+      attributes(device) :: wk1, wk2
 #endif
+      
 
 #ifdef PROFILER
       if (decomp_profiler_transpose) call decomp_profiler_start("transp_y_x_r")
 #endif
 
+#ifdef _GPU
+      wk1 => work1_r_d
+      wk2 => work2_r_d
+#else
+      wk1 => work1_r
+      wk2 => work2_r
+#endif
+
       if (dims(1) == 1) then
-#if defined(_GPU)
-         nsize = product(decomp%ysz)
-         !$acc host_data use_device(src,dst)
-         istat = cudaMemcpy(dst, src, nsize, cudaMemcpyDeviceToDevice)
-         !$acc end host_data
-         if (istat /= 0) call decomp_2d_abort(__FILE__, __LINE__, istat, "cudaMemcpy")
-#else
-         dst = src
-#endif
+         call transpose_y_to_x_real_fast(src, dst, decomp)
       else
-#if defined(_GPU)
-         call transpose_y_to_x_real(src, dst, decomp, work1_r_d, work2_r_d)
-#else
-         call transpose_y_to_x_real(src, dst, decomp, work1_r, work2_r)
-#endif
+         call transpose_y_to_x_real(src, dst, decomp, wk1, wk2)
       end if
 
 #ifdef PROFILER
@@ -60,7 +61,34 @@ contains
 
    end subroutine transpose_y_to_x_real_long
 
-   subroutine transpose_y_to_x_real(src, dst, decomp, wk1, wk2)
+   ! Fast implementation of transpose for real numbers avoiding communication
+   subroutine transpose_y_to_x_real_fast(src, dst, decomp)
+
+      implicit none
+
+      real(mytype), dimension(:, :, :), intent(IN) :: src
+      real(mytype), dimension(:, :, :), intent(OUT) :: dst
+      TYPE(DECOMP_INFO), intent(IN) :: decomp
+
+      integer :: nsize
+#ifdef _GPU
+      integer :: istat
+#endif
+      
+      nsize = product(decomp%ysz)
+#if defined(_GPU)
+      !$acc host_data use_device(src,dst)
+      istat = cudaMemcpy(dst, src, nsize, cudaMemcpyDeviceToDevice)
+      !$acc end host_data
+      if (istat /= 0) call decomp_2d_abort(__FILE__, __LINE__, istat, "cudaMemcpy")
+#else
+      dst = src
+#endif
+
+    end subroutine transpose_y_to_x_real_fast
+
+    ! Default implementation of transpose for real numbers
+    subroutine transpose_y_to_x_real(src, dst, decomp, wk1, wk2)
 
       implicit none
 
@@ -73,7 +101,6 @@ contains
 #endif
 
       integer :: s1, s2, s3, d1, d2, d3
-      integer :: ierror
 
       s1 = SIZE(src, 1)
       s2 = SIZE(src, 2)
@@ -82,39 +109,9 @@ contains
       d2 = SIZE(dst, 2)
       d3 = SIZE(dst, 3)
 
-      ! rearrange source array as send buffer
-      call mem_split_yx_real(src, s1, s2, s3, wk1, dims(1), &
-                             decomp%y1dist, decomp)
-
-      ! define receive buffer
-      ! transpose using MPI_ALLTOALL(V)
-#ifdef EVEN
-      call MPI_ALLTOALL(wk1, decomp%y1count, real_type, &
-                        wk2, decomp%x1count, real_type, &
-                        DECOMP_2D_COMM_COL, ierror)
-      if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_ALLTOALL")
-#else
-
-#if defined(_GPU) && defined(_NCCL)
-      call decomp_2d_nccl_send_recv_col(wk2, &
-                                        wk1, &
-                                        decomp%y1disp, &
-                                        decomp%y1cnts, &
-                                        decomp%x1disp, &
-                                        decomp%x1cnts, &
-                                        dims(1))
-#else
-      call MPI_ALLTOALLV(wk1, decomp%y1cnts, decomp%y1disp, real_type, &
-                         wk2, decomp%x1cnts, decomp%x1disp, real_type, &
-                         DECOMP_2D_COMM_COL, ierror)
-      if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_ALLTOALLV")
-#endif
-
-#endif
-
-      ! rearrange receive buffer
-      call mem_merge_yx_real(wk2, d1, d2, d3, dst, dims(1), &
-                             decomp%x1dist, decomp)
+      call rearrange_sendbuf_real(src, wk1, decomp)
+      call perform_transpose_real(decomp, wk1, wk2)
+      call rearrange_recvbuf_real(dst, decomp, wk2)
 
    end subroutine transpose_y_to_x_real
 
@@ -432,4 +429,149 @@ contains
 
    end subroutine mem_merge_yx_complex
 
+!!! Utility subroutines
+
+   ! Pack the array to be transposed into the send buffer as necessary.
+   subroutine rearrange_sendbuf_real(src, wk1, decomp)
+
+     real(mytype), dimension(:, :, :), intent(IN) :: src
+     TYPE(DECOMP_INFO), intent(IN) :: decomp
+     real(mytype), dimension(:), intent(out) :: wk1
+#if defined(_GPU)
+     attributes(device) :: wk1
+#endif
+
+     integer :: s1, s2, s3
+
+     s1 = SIZE(src, 1)
+     s2 = SIZE(src, 2)
+     s3 = SIZE(src, 3)
+
+     call mem_split_yx_real(src, s1, s2, s3, wk1, dims(1), &
+                            decomp%y1dist, decomp)
+      
+   end subroutine rearrange_sendbuf_real
+
+   ! Subroutine to do the transpose communications.
+   subroutine perform_transpose_real(decomp, wk1, wk2)
+
+      implicit none
+
+      TYPE(DECOMP_INFO), intent(IN) :: decomp
+      real(mytype), dimension(:), intent(in) :: wk1
+      real(mytype), dimension(:), intent(out) :: wk2
+#if defined(_GPU)
+      attributes(device) :: wk1, wk2
+#endif
+      
+#ifdef EVEN
+      call perform_transpose_real_even(decomp, wk1, wk2)
+#else
+
+#if defined(_GPU) && defined(_NCCL)
+      call perform_transpose_real_gpu(decomp, wk1, wk2)
+#else
+      call perform_transpose_real_std(decomp, wk1, wk2)
+#endif
+
+#endif
+      
+   end subroutine perform_transpose_real
+
+   subroutine rearrange_recvbuf_real(dst, decomp, wk2)
+
+      implicit none
+     
+      real(mytype), dimension(:, :, :), intent(OUT) :: dst
+      TYPE(DECOMP_INFO), intent(IN) :: decomp
+      real(mytype), dimension(:), intent(in) :: wk2
+#if defined(_GPU)
+      attributes(device) :: wk2
+#endif
+
+      integer :: d1, d2, d3
+
+      d1 = SIZE(dst, 1)
+      d2 = SIZE(dst, 2)
+      d3 = SIZE(dst, 3)
+
+      call mem_merge_yx_real(wk2, d1, d2, d3, dst, dims(1), &
+                             decomp%x1dist, decomp)
+      
+   end subroutine rearrange_recvbuf_real
+
+!!! Option-specific utility subroutines
+
+#ifndef EVEN
+
+#if defined(_GPU) && defined(_NCCL)
+
+   ! Subroutine to do the transpose communications on GPUs.
+   subroutine perform_transpose_real_gpu(decomp, wk1, wk2)
+
+      implicit none
+
+      TYPE(DECOMP_INFO), intent(IN) :: decomp
+      real(mytype), dimension(:), intent(in) :: wk1
+      real(mytype), dimension(:), intent(out) :: wk2
+      attributes(device) :: wk1, wk2
+
+      call decomp_2d_nccl_send_recv_col(wk2, &
+                                        wk1, &
+                                        decomp%y1disp, &
+                                        decomp%y1cnts, &
+                                        decomp%x1disp, &
+                                        decomp%x1cnts, &
+                                        dims(1))
+      
+   end subroutine perform_transpose_real_gpu
+   
+#else
+   ! At least one of _GPU and _NCCL is not defined
+
+   ! Subroutine to do the transpose communications in the default case.
+   subroutine perform_transpose_real_std(decomp, wk1, wk2)
+
+      implicit none
+
+      TYPE(DECOMP_INFO), intent(IN) :: decomp
+      real(mytype), dimension(:), intent(IN) :: wk1
+      real(mytype), dimension(:), intent(out) :: wk2
+
+      integer :: ierror
+
+      call MPI_ALLTOALLV(wk1, decomp%y1cnts, decomp%y1disp, real_type, &
+                         wk2, decomp%x1cnts, decomp%x1disp, real_type, &
+                         DECOMP_2D_COMM_COL, ierror)
+      if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_ALLTOALLV")
+      
+   end subroutine perform_transpose_real_std
+   
+#endif
+   ! ifdef _GPU
+   
+#else
+   ! EVEN is defined
+
+   ! Subroutine to do the transpose communications for even communications
+   subroutine perform_transpose_real_even(decomp, wk1, wk2)
+
+      implicit none
+
+      TYPE(DECOMP_INFO), intent(IN) :: decomp
+      real(mytype), dimension(:), intent(in) :: wk1
+      real(mytype), dimension(:), intent(out) :: wk2
+
+      integer :: ierror
+
+     call MPI_ALLTOALL(wk1, decomp%y1count, real_type, &
+                       wk2, decomp%x1count, real_type, &
+                       DECOMP_2D_COMM_COL, ierror)
+     if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_ALLTOALL")
+
+    end subroutine perform_transpose_real_even
+   
+#endif
+   ! ifdef EVEN
+   
 end submodule d2d_transpose_y_to_x

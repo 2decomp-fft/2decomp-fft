@@ -5,6 +5,8 @@ submodule(decomp_2d) d2d_transpose_z_to_y
 
    use decomp_2d_constants, only: mytype
 
+   use transpose_common
+   
    implicit none
 
 contains
@@ -49,7 +51,7 @@ contains
 #endif
 
       if (dims(2) == 1) then
-         call transpose_z_to_y_real_fast(src, dst, decomp)
+         call transpose_real_fast(src, dst, product(decomp%zsz))
       else
          call transpose_z_to_y_real(src, dst, decomp, wk1, wk2)
       end if
@@ -61,30 +63,6 @@ contains
    end subroutine transpose_z_to_y_real_long
 
    ! Fast implementation of transpose for real numbers avoiding communication
-   subroutine transpose_z_to_y_real_fast(src, dst, decomp)
-
-      implicit none
-
-      real(mytype), dimension(:, :, :), intent(IN) :: src
-      real(mytype), dimension(:, :, :), intent(OUT) :: dst
-      TYPE(DECOMP_INFO), intent(IN) :: decomp
-
-      integer :: nsize
-#if defined(_GPU)
-      integer :: istat
-#endif
-
-      nsize = product(decomp%zsz)
-#if defined(_GPU)
-      !$acc host_data use_device(src,dst)
-      istat = cudaMemcpy(dst, src, nsize, cudaMemcpyDeviceToDevice)
-      !$acc end host_data
-      if (istat /= 0) call decomp_2d_abort(__FILE__, __LINE__, istat, "cudaMemcpy")
-#else
-      dst = src
-#endif
-
-   end subroutine transpose_z_to_y_real_fast
 
    ! Default implementation of transpose for real numbers
    subroutine transpose_z_to_y_real(src, dst, decomp, wk1, wk2)

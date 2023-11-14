@@ -503,7 +503,7 @@ contains
       real(mytype), dimension(:, :, :), intent(IN) :: src
       real(mytype), dimension(:, :, :), intent(OUT) :: dst
       TYPE(DECOMP_INFO), intent(IN) :: decomp
-      real(mytype), dimension(:), intent(out) :: wk2
+      real(mytype), dimension(:), intent(in) :: wk2
 #if defined(_GPU)
       attributes(device) :: wk2
 #endif

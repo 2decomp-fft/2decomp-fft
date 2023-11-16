@@ -99,10 +99,8 @@ contains
                            DECOMP_2D_COMM_ROW, ierror)
       end if
       if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_ALLTOALL")
-#else
 
-#if defined(_GPU)
-#if defined(_NCCL)
+#elif defined(_NCCL)
       call decomp_2d_nccl_send_recv_row(wk2, &
                                         wk1, &
                                         decomp%y2disp, &
@@ -110,12 +108,13 @@ contains
                                         decomp%z2disp, &
                                         decomp%z2cnts, &
                                         dims(2))
-#else
+
+#elif defined(_GPU)
       call MPI_ALLTOALLV(wk1, decomp%y2cnts, decomp%y2disp, real_type, &
                          wk2, decomp%z2cnts, decomp%z2disp, real_type, &
                          DECOMP_2D_COMM_ROW, ierror)
       if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_ALLTOALLV")
-#endif
+
 #else
       associate (wk => wk2)
       end associate
@@ -123,8 +122,6 @@ contains
                          dst, decomp%z2cnts, decomp%z2disp, real_type, &
                          DECOMP_2D_COMM_ROW, ierror)
       if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_ALLTOALLV")
-#endif
-
 #endif
 
       ! rearrange receive buffer
@@ -239,10 +236,8 @@ contains
                            DECOMP_2D_COMM_ROW, ierror)
       end if
       if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_ALLTOALL")
-#else
 
-#if defined(_GPU)
-#if defined(_NCCL)
+#elif defined(_NCCL)
       call decomp_2d_nccl_send_recv_row(wk2, &
                                         wk1, &
                                         decomp%y2disp, &
@@ -251,12 +246,13 @@ contains
                                         decomp%z2cnts, &
                                         dims(2), &
                                         decomp_buf_size)
-#else
+
+#elif defined(_GPU)
       call MPI_ALLTOALLV(wk1, decomp%y2cnts, decomp%y2disp, complex_type, &
                          wk2, decomp%z2cnts, decomp%z2disp, complex_type, &
                          DECOMP_2D_COMM_ROW, ierror)
       if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_ALLTOALLV")
-#endif
+
 #else
       associate (wk => wk2)
       end associate
@@ -264,8 +260,6 @@ contains
                          dst, decomp%z2cnts, decomp%z2disp, complex_type, &
                          DECOMP_2D_COMM_ROW, ierror)
       if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_ALLTOALLV")
-#endif
-
 #endif
 
       ! rearrange receive buffer

@@ -93,9 +93,8 @@ contains
                         wk2, decomp%y1count, real_type, &
                         DECOMP_2D_COMM_COL, ierror)
       if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_ALLTOALL")
-#else
 
-#if defined(_GPU) && defined(_NCCL)
+#elif defined(_NCCL)
       call decomp_2d_nccl_send_recv_col(wk2, &
                                         wk1, &
                                         decomp%x1disp, &
@@ -103,13 +102,12 @@ contains
                                         decomp%y1disp, &
                                         decomp%y1cnts, &
                                         dims(1))
+
 #else
       call MPI_ALLTOALLV(wk1, decomp%x1cnts, decomp%x1disp, real_type, &
                          wk2, decomp%y1cnts, decomp%y1disp, real_type, &
                          DECOMP_2D_COMM_COL, ierror)
       if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_ALLTOALLV")
-#endif
-
 #endif
 
       ! rearrange receive buffer
@@ -202,9 +200,8 @@ contains
                         wk2, decomp%y1count, complex_type, &
                         DECOMP_2D_COMM_COL, ierror)
       if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_ALLTOALL")
-#else
 
-#if defined(_GPU) && defined(_NCCL)
+#elif defined(_NCCL)
       call decomp_2d_nccl_send_recv_col(wk2, &
                                         wk1, &
                                         decomp%x1disp, &
@@ -213,13 +210,12 @@ contains
                                         decomp%y1cnts, &
                                         dims(1), &
                                         decomp_buf_size)
+
 #else
       call MPI_ALLTOALLV(wk1, decomp%x1cnts, decomp%x1disp, complex_type, &
                          wk2, decomp%y1cnts, decomp%y1disp, complex_type, &
                          DECOMP_2D_COMM_COL, ierror)
       if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_ALLTOALLV")
-#endif
-
 #endif
 
       ! rearrange receive buffer

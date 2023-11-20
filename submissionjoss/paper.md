@@ -75,7 +75,7 @@ input and output arrays instead of the full MPI communication.
 
 The library also offers a very efficient and flexible interface to perform 3D
 Fast Fourier Transform (FFT) on distributed memory systems. However, 2DECOMP&FFT is mainly designed to perform 
-data management and communication and the actual computation of the 1D FFT is delegated to 3rd-parly libraries. 
+data management and communication and the actual computation of the 1D FFT is delegated to 3rd-party libraries. 
 The supported FFT backends are: FFTW [@FFTW05], the Intel Math Kernel Library (MKL) and the CUDA FFT (cuFFT) 
 which is used for FFT on NVIDIA GPUs. A Generic FFT backend, based on 
 Glassman's general N Fast Fourier Transform [@FERGUSON1982401], 
@@ -104,7 +104,7 @@ An initial port of 2DECOMP&FFT to GPU has been performed within the solver AFiD-
 which was mainly based on CUDA-Fortran for some kernels and CUDA-aware-MPI for communications.
 A second library, named cuDECOMP, which is directly inspired by 2DECOMP&FFT, 
 takes full advantages of CUDA and uses NVIDIA most recent libraries for communications 
-such as NVIDIA Collective Communication Library (NCCL), is presented in [@Romero_2022_cuDecomp].
+such as NVIDIA Collective Communication Library (NCCL), is presented in @Romero_2022_cuDecomp.
 Indeed, cuDECOMP only targets NVIDIA GPUs.
 The updated 2DECOMP&FFT mainly uses a mix of CUDA-Fortran and openACC for the GPU porting 
 together with CUDA-aware-MPI and NCCL for the communications. In addition to previous work,
@@ -112,7 +112,7 @@ the FFT module is ported to GPUs using cuFFT.
 The next step is also to implement OpenMP for GPU porting to support both AMD and Intel GPU hardware.
 
 # How to use 2DECOMP&FFT
-The 2D Pencil Decomposition API is defined with three Fortran module which should be used by applications as:
+The 2D Pencil Decomposition API is defined with three Fortran modules which should be used by applications as:
 ```
   use decomp_2d_constants
   use decomp_2d_mpi
@@ -120,7 +120,7 @@ The 2D Pencil Decomposition API is defined with three Fortran module which shoul
 ```
 where ``use decomp_2d_constants`` defines all the parameters, ``use decomp_2d_mpi`` introduces all the MPI 
 related interfaces and ``use decomp_2d`` contains the main decomposition and transposition APIs.
-The library is initialized using:
+The library is initialised using:
 ```
   call decomp_2d_init(nx, ny, nz, p_row, p_col)
 ```

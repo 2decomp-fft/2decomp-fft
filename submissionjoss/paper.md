@@ -42,7 +42,7 @@ bibliography: paper.bib
 
 The 2DECOMP&FFT library is a software framework written in modern Fortran to build large-scale parallel applications. 
 It is designed for applications using three-dimensional structured meshes with a particular focus on 
-spatially implicit numerical algorithms. However, the library can be easily used also with other discretisation schemes 
+spatially implicit numerical algorithms. However, the library can be easily used with other discretisation schemes 
 based on a structured layout and where pencil decomposition can apply. 
 It is based on a general-purpose 2D pencil decomposition for data distribution and data Input Output (I/O). 
 A 1D slab decomposition is also available as a special case of the 2D pencil decomposition.
@@ -62,7 +62,7 @@ and is used as the core of many CFD solvers such as Xcompact3d [@BARTHOLOMEW2020
 with excellent strong scaling performance up to hundreds of thousands of CPU cores. 
 2DECOMP&FFT mainly relies on MPI, and it offers a user-friendly interface that hides the complexity 
 of the communication. 
-The version 2.0.0 of the library also offers a 1D slab decomposition, which is implemented as a special case of the 
+The version 2.0.1 of the library also offers a 1D slab decomposition, which is implemented as a special case of the 
 2D decomposition. Two alternatives are possible:
 
 - Initial slabs orientation in the `XY` plane; 
@@ -100,7 +100,7 @@ and can now be easily implemented as an independent library for use by other sof
 
 # GPU porting
 
-An initial port of 2DECOMP&FFT to GPU has been performed within the solver AFiD-GPU [@ZHU2018199],
+An initial port of 2DECOMP&FFT to GPUs has been performed within the solver AFiD-GPU [@ZHU2018199],
 which was mainly based on CUDA-Fortran for some kernels and CUDA-aware-MPI for communications.
 A second library, named cuDECOMP, which is directly inspired by 2DECOMP&FFT, 
 takes full advantages of CUDA and uses NVIDIA most recent libraries for communications 

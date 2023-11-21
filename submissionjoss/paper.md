@@ -58,11 +58,11 @@ and NVIDIA GPUs (support for AMD and Intel GPUs to follow).
 The 2DECOMP&FFT library [@li_2010_2decomp] was originally designed for CPU hardware 
 and is now used by many research groups worldwide. 
 The library is based on a 2D-pencil decomposition for data distribution on distributed memory systems 
-and is used as the core of many CFD solvers such as Xcompact3d [@BARTHOLOMEW2020100550] or CaNS [@COSTA20181853], 
+and is used as the core of many CFD solvers such as Xcompact3d [@BARTHOLOMEW2020100550] and CaNS [@COSTA20181853], 
 with excellent strong scaling performance up to hundreds of thousands of CPU cores. 
 2DECOMP&FFT mainly relies on MPI, and it offers a user-friendly interface that hides the complexity 
 of the communication. 
-The version 2.0.1 of the library also offers a 1D slab decomposition, which is implemented as a special case of the 
+Version 2.0.1 of the library also offers a 1D slab decomposition, which is implemented as a special case of the 
 2D decomposition. Two alternatives are possible:
 
 - Initial slabs orientation in the `XY` plane; 
@@ -76,7 +76,7 @@ input and output arrays instead of the full MPI communication.
 The library also offers a very efficient and flexible interface to perform 3D
 Fast Fourier Transform (FFT) on distributed memory systems. However, 2DECOMP&FFT is mainly designed to perform 
 data management and communication and the actual computation of the 1D FFT is delegated to 3rd-party libraries. 
-The supported FFT backends are: FFTW [@FFTW05], the Intel Math Kernel Library (MKL) and the CUDA FFT (cuFFT) 
+The supported FFT backends are: FFTW [@FFTW05], the Intel Math Kernel Library (MKL), and the CUDA FFT (cuFFT), 
 which is used for FFT on NVIDIA GPUs. A Generic FFT backend, based on 
 Glassman's general N Fast Fourier Transform [@FERGUSON1982401], 
 is also available to make the library more portable.   
@@ -92,18 +92,18 @@ backend.
 
 The first version of the library was released in 2010 as a tar.gz package, with a Makefile approach, 
 and could only make use of CPUs. It has not been modified since its release. 
-The new version of the library can now leverage NVIDIA GPUs, modern CPUs and various compilers 
+The new version of the library can now leverage NVIDIA GPUs, modern CPUs, and various compilers 
 (GNU, Intel, NVHPC, CRAY). 
 It has CMAKE capabilities as well as a proper continuous integration framework with automated tests. 
 The new library was designed to be more appealing to the scientific community,
-and can now be easily implemented as an independent library for use by other software.
+and it can now be easily implemented as an independent library for use by other software.
 
 # GPU porting
 
-An initial port of 2DECOMP&FFT to GPUs has been performed within the solver AFiD-GPU [@ZHU2018199],
+An initial port of 2DECOMP&FFT to GPUs was performed within the solver AFiD-GPU [@ZHU2018199],
 which was mainly based on CUDA-Fortran for some kernels and CUDA-aware-MPI for communications.
-A second library, named cuDECOMP, which is directly inspired by 2DECOMP&FFT, 
-takes full advantages of CUDA and uses NVIDIA most recent libraries for communications 
+A second library, named cuDECOMP, which was directly inspired by 2DECOMP&FFT, 
+takes full advantages of CUDA and uses NVIDIA's most recent libraries for communications, 
 such as NVIDIA Collective Communication Library (NCCL), is presented in @Romero_2022_cuDecomp.
 Indeed, cuDECOMP only targets NVIDIA GPUs.
 The updated 2DECOMP&FFT mainly uses a mix of CUDA-Fortran and openACC for the GPU porting 
@@ -119,18 +119,18 @@ The 2D Pencil Decomposition API is defined with three Fortran modules which shou
   use decomp_2d
 ```
 where ``use decomp_2d_constants`` defines all the parameters, ``use decomp_2d_mpi`` introduces all the MPI 
-related interfaces and ``use decomp_2d`` contains the main decomposition and transposition APIs.
+related interfaces, and ``use decomp_2d`` contains the main decomposition and transposition APIs.
 The library is initialised using:
 ```
   call decomp_2d_init(nx, ny, nz, p_row, p_col)
 ```
-where ``nx``, ``ny`` and ``nz`` are the spatial dimensions of the problem, to be distributed over
+where ``nx``, ``ny``, and ``nz`` are the spatial dimensions of the problem, to be distributed over
 a 2D processor grid $p_{row} \times p_{col}$.
 Note that none of the dimensions need to be divisible by ``p_row`` or ``p_col``.
-In the case of ``p_row=p_col=0`` an automatic decomposition is selected among all possible combinations available.
+In the case of ``p_row=p_col=0``, an automatic decomposition is selected among all possible combinations available.
 A key element of this library is a set of communication routines that perform the data transpositions.
 As mentioned, one needs to perform 4 global transpositions to go through all 3 pencil orientations
-(i.e. one has to go from x-pencils to y-pencils to z-pencils to y-pencils to x-pencils).
+(i.e., one has to go from x-pencils to y-pencils to z-pencils to y-pencils to x-pencils).
 Correspondingly, the library provides 4 communication subroutines:
 ```
   call transpose_x_to_y(var_in,var_out)

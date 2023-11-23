@@ -1808,7 +1808,7 @@ contains
 #else
       nplanes = 1 ! Silence unused variable
       associate (crs => icoarse, nm => io_name, pncl => ipencil, pln => iplane, &
-                 opdcmp => opt_decomp, opnpl => opt_nplanes, tp => var_type, &
+                 opdcmp => opt_decomp, opnpl => opt_nplanes, knd => var_kind, tp => var_type, &
                  vnm => varname) ! Silence unused dummy argument
       end associate
 #endif

@@ -1,3 +1,5 @@
+!! SPDX-License-Identifier: BSD-3-Clause
+!!!=====================================================
 !!!! init_test.f90
 !!!  Tests initialising the 2decomp&fft library.
 !!!=====================================================
@@ -7,6 +9,7 @@ program init_test
    use MPI
    use decomp_2d_constants
    use decomp_2d_mpi
+   use decomp_2d_testing
    use decomp_2d
 #if defined(_GPU)
    use cudafor
@@ -20,8 +23,7 @@ program init_test
    integer :: p_row = 0, p_col = 0
    integer :: resize_domain
    integer :: nranks_tot
-   integer :: nargin, arg, FNLength, status, DecInd
-   character(len=80) :: InputFN
+   integer :: nargin
    integer :: nexpect
    integer :: ierror
 
@@ -35,24 +37,9 @@ program init_test
    ny = ny_base * resize_domain
    nz = nz_base * resize_domain
    ! Now we can check if user put some inputs
-   ! Handle input file like a boss -- GD
    nargin = command_argument_count()
    if ((nargin == 0) .or. (nargin == 2) .or. (nargin == 5)) then
-      do arg = 1, nargin
-         call get_command_argument(arg, InputFN, FNLength, status)
-         read (InputFN, *, iostat=status) DecInd
-         if (arg == 1) then
-            p_row = DecInd
-         elseif (arg == 2) then
-            p_col = DecInd
-         elseif (arg == 3) then
-            nx = DecInd
-         elseif (arg == 4) then
-            ny = DecInd
-         elseif (arg == 5) then
-            nz = DecInd
-         end if
-      end do
+      call decomp_2d_testing_init(p_row, p_col, nx, ny, nz)
    else
       ! nrank not yet computed we need to avoid write
       ! for every rank

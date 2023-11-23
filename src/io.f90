@@ -1,14 +1,4 @@
-!=======================================================================
-! This is part of the 2DECOMP&FFT library
-!
-! 2DECOMP&FFT is a software framework for general-purpose 2D (pencil)
-! decomposition. It also implements a highly scalable distributed
-! three-dimensional Fast Fourier Transform (FFT).
-!
-! Copyright (C) 2009-2013 Ning Li, the Numerical Algorithms Group (NAG)
-! Copyright (C) 2021               the University of Edinburgh (UoE)
-!
-!=======================================================================
+!! SPDX-License-Identifier: BSD-3-Clause
 
 ! This module provides parallel IO facilities for applications based on
 ! 2D decomposition.
@@ -574,21 +564,13 @@ contains
 
       call adios2_variable_steps(nsteps, var_handle, ierror)
       if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "adios2_variable_steps")
-      ! print *, "AVAILABLE steps for ", nsteps
 
-      ! print *, "IO_NAME: ", io_name
-      ! print *, "ENGINE_NAME: ", engine_name
-      ! print *, "VAR_NAME: ", varname
       idx = get_io_idx(io_name, engine_name)
-      ! print *, idx
       call adios2_get(engine_registry(idx), var_handle, var, adios2_mode_deferred, ierror)
       if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "adios2_get")
 
-      ! print *, "MAX: ", maxval(var)
-
       call adios2_current_step(curstep, engine_registry(idx), ierror)
       if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "adios2_current_step")
-      ! print *, "Current step: ", curstep
 
 #ifdef PROFILER
       if (decomp_profiler_io) call decomp_profiler_end("adios2_read_one_real")
@@ -1377,7 +1359,8 @@ contains
 
    end subroutine coarse_extents
 
-  subroutine mpiio_write_real_coarse(ipencil, var, dirname, varname, icoarse, io_name, opt_decomp, reduce_prec, opt_deferred_writes)
+   subroutine mpiio_write_real_coarse(ipencil, var, dirname, varname, icoarse, io_name, &
+                                      opt_decomp, reduce_prec, opt_deferred_writes)
 
       ! USE param
       ! USE variables
@@ -1825,7 +1808,7 @@ contains
 #else
       nplanes = 1 ! Silence unused variable
       associate (crs => icoarse, nm => io_name, pncl => ipencil, pln => iplane, &
-                 opdcmp => opt_decomp, opnpl => opt_nplanes, tp => type, &
+                 opdcmp => opt_decomp, opnpl => opt_nplanes, tp => var_type, &
                  vnm => varname) ! Silence unused dummy argument
       end associate
 #endif
@@ -2072,7 +2055,7 @@ contains
             end if
 
             allocate (wk(i1:i2, j1:j2, k1:k2))
-            allocate (wk2(xstart(1):xend(1), xstart(2):xend(2), xstart(3):xend(3)))
+            call alloc_x(wk2, opt_global=.true.)
             wk2 = var
             do k = k1, k2
                do j = j1, j2

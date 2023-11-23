@@ -1,13 +1,4 @@
-!=======================================================================
-! This is part of the 2DECOMP&FFT library
-!
-! 2DECOMP&FFT is a software framework for general-purpose 2D (pencil)
-! decomposition. It also implements a highly scalable distributed
-! three-dimensional Fast Fourier Transform (FFT).
-!
-! Copyright (C) 2009-2011 Ning Li, the Numerical Algorithms Group (NAG)
-!
-!=======================================================================
+!! SPDX-License-Identifier: BSD-3-Clause
 
 ! This is the FFTW (version 3.x) implementation of the FFT library
 
@@ -61,7 +52,7 @@ module decomp_2d_fft
 
       complex(mytype), allocatable, dimension(:, :, :) :: a1
 
-      allocate (a1(decomp%xsz(1), decomp%xsz(2), decomp%xsz(3)))
+      call alloc_x(a1, decomp)
 
 #ifdef DOUBLE_PREC
       call dfftw_plan_many_dft(plan1, 1, decomp%xsz(1), &
@@ -122,7 +113,7 @@ module decomp_2d_fft
 
       complex(mytype), allocatable, dimension(:, :, :) :: a1
 
-      allocate (a1(decomp%zsz(1), decomp%zsz(2), decomp%zsz(3)))
+      call alloc_z(a1, decomp)
 
 #ifdef DOUBLE_PREC
       call dfftw_plan_many_dft(plan1, 1, decomp%zsz(3), &
@@ -153,8 +144,8 @@ module decomp_2d_fft
       real(mytype), allocatable, dimension(:, :, :) :: a1
       complex(mytype), allocatable, dimension(:, :, :) :: a2
 
-      allocate (a1(decomp_ph%xsz(1), decomp_ph%xsz(2), decomp_ph%xsz(3)))
-      allocate (a2(decomp_sp%xsz(1), decomp_sp%xsz(2), decomp_sp%xsz(3)))
+      call alloc_x(a1, decomp_ph)
+      call alloc_x(a2, decomp_sp)
 #ifdef DOUBLE_PREC
       call dfftw_plan_many_dft_r2c(plan1, 1, decomp_ph%xsz(1), &
                                    decomp_ph%xsz(2) * decomp_ph%xsz(3), a1, decomp_ph%xsz(1), 1, &
@@ -183,8 +174,8 @@ module decomp_2d_fft
       complex(mytype), allocatable, dimension(:, :, :) :: a1
       real(mytype), allocatable, dimension(:, :, :) :: a2
 
-      allocate (a1(decomp_sp%xsz(1), decomp_sp%xsz(2), decomp_sp%xsz(3)))
-      allocate (a2(decomp_ph%xsz(1), decomp_ph%xsz(2), decomp_ph%xsz(3)))
+      call alloc_x(a1, decomp_sp)
+      call alloc_x(a2, decomp_ph)
 #ifdef DOUBLE_PREC
       call dfftw_plan_many_dft_c2r(plan1, 1, decomp_ph%xsz(1), &
                                    decomp_ph%xsz(2) * decomp_ph%xsz(3), a1, decomp_sp%xsz(1), 1, &
@@ -213,8 +204,8 @@ module decomp_2d_fft
       real(mytype), allocatable, dimension(:, :, :) :: a1
       complex(mytype), allocatable, dimension(:, :, :) :: a2
 
-      allocate (a1(decomp_ph%zsz(1), decomp_ph%zsz(2), decomp_ph%zsz(3)))
-      allocate (a2(decomp_sp%zsz(1), decomp_sp%zsz(2), decomp_sp%zsz(3)))
+      call alloc_z(a1, decomp_ph)
+      call alloc_z(a2, decomp_sp)
 #ifdef DOUBLE_PREC
       call dfftw_plan_many_dft_r2c(plan1, 1, decomp_ph%zsz(3), &
                                    decomp_ph%zsz(1) * decomp_ph%zsz(2), a1, decomp_ph%zsz(3), &
@@ -243,8 +234,8 @@ module decomp_2d_fft
       complex(mytype), allocatable, dimension(:, :, :) :: a1
       real(mytype), allocatable, dimension(:, :, :) :: a2
 
-      allocate (a1(decomp_sp%zsz(1), decomp_sp%zsz(2), decomp_sp%zsz(3)))
-      allocate (a2(decomp_ph%zsz(1), decomp_ph%zsz(2), decomp_ph%zsz(3)))
+      call alloc_z(a1, decomp_sp)
+      call alloc_z(a2, decomp_ph)
 
 #ifdef DOUBLE_PREC
       call dfftw_plan_many_dft_c2r(plan1, 1, decomp_ph%zsz(3), &
@@ -483,6 +474,10 @@ module decomp_2d_fft
       complex(mytype), allocatable, dimension(:, :, :) :: wk1
 #endif
 
+#ifdef PROFILER
+      if (decomp_profiler_fft) call decomp_profiler_start("fft_c2c")
+#endif
+
       if (format == PHYSICAL_IN_X .AND. isign == DECOMP_2D_FFT_FORWARD .OR. &
           format == PHYSICAL_IN_Z .AND. isign == DECOMP_2D_FFT_BACKWARD) then
 
@@ -490,7 +485,7 @@ module decomp_2d_fft
 #ifdef OVERWRITE
          call c2c_1m_x(in, plan(isign, 1))
 #else
-         allocate (wk1(ph%xsz(1), ph%xsz(2), ph%xsz(3)))
+         call alloc_x(wk1, ph)
          wk1 = in
          call c2c_1m_x(wk1, plan(isign, 1))
 #endif
@@ -532,7 +527,7 @@ module decomp_2d_fft
 #ifdef OVERWRITE
          call c2c_1m_z(in, plan(isign, 3))
 #else
-         allocate (wk1(ph%zsz(1), ph%zsz(2), ph%zsz(3)))
+         call alloc_z(wk1, ph)
          wk1 = in
          call c2c_1m_z(wk1, plan(isign, 3))
 #endif
@@ -566,6 +561,10 @@ module decomp_2d_fft
       deallocate (wk1)
 #endif
 
+#ifdef PROFILER
+      if (decomp_profiler_fft) call decomp_profiler_end("fft_c2c")
+#endif
+
       return
    end subroutine fft_3d_c2c
 
@@ -578,6 +577,10 @@ module decomp_2d_fft
 
       real(mytype), dimension(:, :, :), intent(INOUT) :: in_r
       complex(mytype), dimension(:, :, :), intent(OUT) :: out_c
+
+#ifdef PROFILER
+      if (decomp_profiler_fft) call decomp_profiler_start("fft_r2c")
+#endif
 
       if (format == PHYSICAL_IN_X) then
 
@@ -622,6 +625,10 @@ module decomp_2d_fft
 
       end if
 
+#ifdef PROFILER
+      if (decomp_profiler_fft) call decomp_profiler_end("fft_r2c")
+#endif
+
       return
    end subroutine fft_3d_r2c
 
@@ -639,13 +646,17 @@ module decomp_2d_fft
       complex(mytype), allocatable, dimension(:, :, :) :: wk1
 #endif
 
+#ifdef PROFILER
+      if (decomp_profiler_fft) call decomp_profiler_start("fft_c2r")
+#endif
+
       if (format == PHYSICAL_IN_X) then
 
          ! ===== 1D FFTs in Z =====
 #ifdef OVERWRITE
          call c2c_1m_z(in_c, plan(2, 3))
 #else
-         allocate (wk1(sp%zsz(1), sp%zsz(2), sp%zsz(3)))
+         call alloc_z(wk1, sp)
          wk1 = in_c
          call c2c_1m_z(wk1, plan(2, 3))
 #endif
@@ -672,7 +683,7 @@ module decomp_2d_fft
 #ifdef OVERWRITE
          call c2c_1m_x(in_c, plan(2, 1))
 #else
-         allocate (wk1(sp%xsz(1), sp%xsz(2), sp%xsz(3)))
+         call alloc_x(wk1, sp)
          wk1 = in_c
          call c2c_1m_x(wk1, plan(2, 1))
 #endif
@@ -709,6 +720,10 @@ module decomp_2d_fft
 
 #ifndef OVERWRITE
       deallocate (wk1)
+#endif
+
+#ifdef PROFILER
+      if (decomp_profiler_fft) call decomp_profiler_end("fft_c2r")
 #endif
 
       return

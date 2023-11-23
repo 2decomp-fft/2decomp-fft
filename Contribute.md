@@ -7,12 +7,12 @@
 ## Get started
 
 The recommended strategy to contribute is to start with a [discussion](https://github.com/2decomp-fft/2decomp-fft/discussions) or to pick an existing issue.
-To modify or experiment with the code, fork the 2decomp github repository and commit changes in a dedicated branch of your fork.
+To modify or experiment with the code, fork the 2DECOMP&FFT github repository and commit changes in a dedicated branch of your fork.
 When the modification is ready for review, one can open a pull request as described in the [advanced](#advanced-contribution) section below.
 
 ## Bug
 
-It appears that you have identified a bug in the 2decomp library.
+It appears that you have identified a bug in the 2DECOMP&FFT library.
 If you are not sure this is really a bug in the library, you should go to the [discussions](https://github.com/2decomp-fft/2decomp-fft/discussions) section and open a new discussion.
 Otherwise, follow the steps below.
 
@@ -23,11 +23,11 @@ Please note that for a debug build, the log contains all the environment variabl
 Use it to hunt the bug but think twice before sharing it as it can expose sensitive and personal information.
 At least, please try to reproduce the bug on another machine with another compiler.
 
-Secondly, if you have modified the source code of the 2decomp library, you must reproduce the bug without the modifications in 2decomp.
+Secondly, if you have modified the source code of the 2DECOMP&FFT library, you must reproduce the bug without the modifications in 2DECOMP&FFT.
 The development team can only provide support for sections of code available in the present repository.
 
 Thirdly, you must provide a minimal working example.
-The program using 2decomp and exposing the bug should be relatively small.
+The program using 2DECOMP&FFT and exposing the bug should be relatively small.
 The development team will not provide support if the program exposing the bug is very long.
 The programs available in the examples section are a good starting point for a minimal working example, ideally you could contribute the minimal working example to the existing examples.
 

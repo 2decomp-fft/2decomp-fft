@@ -1,14 +1,5 @@
 !                          -*- mode: f90 -*-
-!=======================================================================
-! This is part of the 2DECOMP&FFT library
-!
-! 2DECOMP&FFT is a software framework for general-purpose 2D (pencil)
-! decomposition. It also implements a highly scalable distributed
-! three-dimensional Fast Fourier Transform (FFT).
-!
-! Copyright (C) 2009-2011 Ning Li, the Numerical Algorithms Group (NAG)
-!
-!=======================================================================
+!! SPDX-License-Identifier: BSD-3-Clause
 
 ! This file contain common code to be included by subroutines
 ! 'write_every_...' in io.f90
@@ -136,7 +127,7 @@ if (color == 1) then ! only ranks in this group do IO collectively
    ! needs a copy of original array in global coordinate
    if (ipencil == 1) then
       allocate (wk(xst(1):xen(1), xst(2):xen(2), xst(3):xen(3)))
-      allocate (wk2(xstart(1):xend(1), xstart(2):xend(2), xstart(3):xend(3)))
+      call alloc_x(wk2, opt_global=.true.)
       wk2 = var
       if (from1) then
          do k = xst(3), xen(3)
@@ -157,7 +148,7 @@ if (color == 1) then ! only ranks in this group do IO collectively
       end if
    else if (ipencil == 2) then
       allocate (wk(yst(1):yen(1), yst(2):yen(2), yst(3):yen(3)))
-      allocate (wk2(ystart(1):yend(1), ystart(2):yend(2), ystart(3):yend(3)))
+      call alloc_y(wk2, opt_global=.true.)
       wk2 = var
       if (from1) then
          do k = yst(3), yen(3)
@@ -178,7 +169,7 @@ if (color == 1) then ! only ranks in this group do IO collectively
       end if
    else if (ipencil == 3) then
       allocate (wk(zst(1):zen(1), zst(2):zen(2), zst(3):zen(3)))
-      allocate (wk2(zstart(1):zend(1), zstart(2):zend(2), zstart(3):zend(3)))
+      call alloc_z(wk2, opt_global=.true.)
       wk2 = var
       if (from1) then
          do k = zst(3), zen(3)

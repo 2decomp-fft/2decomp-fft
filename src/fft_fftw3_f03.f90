@@ -461,14 +461,26 @@ contains
 
       implicit none
 
-      integer, intent(in) :: igrid
+      integer, optional, intent(in) :: igrid
 
-      ! Safety check
-      if (igrid < 1 .or. igrid > n_grid) then
-         call decomp_2d_abort(__FILE__, __LINE__, igrid, "Invalid value for igrid")
+      if (present(igrid)) then
+
+         ! Safety check
+         if (igrid < 1 .or. igrid > n_grid) then
+            call decomp_2d_abort(__FILE__, __LINE__, igrid, "Invalid value for igrid")
+         end if
+         call fft_engines(igrid)%use_it()
+
+      else
+
+         ! Safety check
+         if (n_grid < 1 .or. .not. allocated(fft_engines)) then
+            call decomp_2d_abort(__FILE__, __LINE__, n_grid, &
+                                 "The FFT module was not initialised")
+         end if
+         call fft_engines(1)%use_it()
+
       end if
-
-      call fft_engines(igrid)%use_it()
 
    end subroutine decomp_2d_fft_use_grid
 

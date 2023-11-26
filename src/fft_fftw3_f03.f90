@@ -81,7 +81,8 @@ module decomp_2d_fft
              decomp_2d_fft_finalize, decomp_2d_fft_get_size, &
              decomp_2d_fft_get_ph, decomp_2d_fft_get_sp, &
              decomp_2d_fft_get_ngrid, decomp_2d_fft_set_ngrid, &
-             decomp_2d_fft_use_grid, decomp_2d_fft_engine
+             decomp_2d_fft_use_grid, decomp_2d_fft_engine, &
+             decomp_2d_fft_get_engine
 
    ! Declare generic interfaces to handle different inputs
 
@@ -481,6 +482,35 @@ contains
       wk13 => engine%wk13
 
    end subroutine decomp_2d_fft_engine_use_it
+
+   ! The external code can obtain direct access to internal FFT engines
+   function decomp_2d_fft_get_engine(igrid)
+
+      implicit none
+
+      type(decomp_2d_fft_engine), pointer :: decomp_2d_fft_get_engine
+      integer, intent(in), optional :: igrid
+
+      if (present(igrid)) then
+
+         ! Safety check
+         if (igrid < 1 .or. igrid > n_grid) then
+            call decomp_2d_abort(__FILE__, __LINE__, igrid, "Invalid value for igrid")
+         end if
+         decomp_2d_fft_get_engine => fft_engines(igrid)
+
+      else
+
+         ! Safety check
+         if (n_grid < 1 .or. .not.allocated(fft_engines)) then
+            call decomp_2d_abort(__FILE__, __LINE__, n_grid, &
+                                 "The FFT module was not initialised")
+         endif
+         decomp_2d_fft_get_engine => fft_engines(1)
+
+      endif
+
+   end function decomp_2d_fft_get_engine
 
    ! Return a FFTW3 plan for multiple 1D c2c FFTs in X direction
    subroutine c2c_1m_x_plan(plan1, decomp, isign)

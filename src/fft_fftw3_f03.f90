@@ -50,13 +50,12 @@ module decomp_2d_fft
 
    ! Derived type with all the quantities needed to perform FFT
    type decomp_2d_fft_engine
-      type(c_ptr), pointer, private :: plan(:, :) => null()
-      type(c_ptr), pointer, private :: wk2_c2c_p => null(), wk13_p => null()
-      integer, pointer, private :: format => null()
-      logical, pointer, private :: initialised => null()
-      integer, pointer, private :: nx_fft => null(), ny_fft => null(), nz_fft => null()
+      type(c_ptr), private :: plan(-1:2, 3), wk2_c2c_p, wk13_p
+      integer, private :: format
+      logical, private :: initialised = .false.
+      integer, private :: nx_fft, ny_fft, nz_fft
       type(decomp_info), pointer, public :: ph => null()
-      type(decomp_info), pointer, public :: sp => null()
+      type(decomp_info), public :: sp
       complex(mytype), contiguous, pointer, private :: wk2_c2c(:, :, :) => null()
       complex(mytype), contiguous, pointer, private :: wk2_r2c(:, :, :) => null()
       complex(mytype), contiguous, pointer, private :: wk13(:, :, :) => null()
@@ -76,7 +75,7 @@ module decomp_2d_fft
    ! Number of FFT grids
    integer, save :: n_grid = 0
    ! Array to store all the grids
-   type(decomp_2d_fft_engine), allocatable, save :: fft_engines(:)
+   type(decomp_2d_fft_engine), allocatable, target, save :: fft_engines(:)
 
    public :: decomp_2d_fft_init, decomp_2d_fft_3d, &
              decomp_2d_fft_finalize, decomp_2d_fft_get_size, &
@@ -165,7 +164,7 @@ contains
 
       implicit none
 
-      class(decomp_2d_fft_engine), intent(inout) :: engine
+      class(decomp_2d_fft_engine), intent(inout), target :: engine
       integer, intent(in) :: pencil, nx, ny, nz
 
       integer(C_SIZE_T) :: sz
@@ -175,28 +174,13 @@ contains
 #endif
 
       ! Safety checks
-      if (associated(engine%initialised)) then
-         if (engine%initialised) then
-            call decomp_2d_abort(__FILE__, __LINE__, 4, &
-                                 'FFT engine should only be initialised once')
-         end if
+      if (engine%initialised) then
+         call decomp_2d_abort(__FILE__, __LINE__, 4, &
+                              'FFT engine should only be initialised once')
       end if
       if (nx <= 0) call decomp_2d_abort(__FILE__, __LINE__, nx, "Invalid value for nx")
       if (ny <= 0) call decomp_2d_abort(__FILE__, __LINE__, ny, "Invalid value for ny")
       if (nz <= 0) call decomp_2d_abort(__FILE__, __LINE__, nz, "Invalid value for nz")
-
-      ! Allocate the components of the engine
-      allocate (engine%plan(-1:2, 3))
-      allocate (engine%wk2_c2c_p)
-      allocate (engine%wk13_p)
-      allocate (engine%format)
-      allocate (engine%initialised)
-      allocate (engine%nx_fft)
-      allocate (engine%ny_fft)
-      allocate (engine%nz_fft)
-      ! engine%ph is allocated later if needed
-      allocate (engine%sp)
-      ! engine%wk2_* and engine%wk13 are associated to a memory block later
 
       ! Store the key parameters
       engine%format = pencil
@@ -330,24 +314,16 @@ contains
       end if
       nullify (engine%ph)
       call decomp_info_finalize(engine%sp)
-      deallocate (engine%sp); nullify (engine%sp)
-
-      deallocate (engine%nx_fft); nullify (engine%nx_fft)
-      deallocate (engine%ny_fft); nullify (engine%ny_fft)
-      deallocate (engine%nz_fft); nullify (engine%nz_fft)
 
       call fftw_free(engine%wk2_c2c_p)
-      deallocate (engine%wk2_c2c_p); nullify (engine%wk2_c2c_p)
       nullify (engine%wk2_c2c)
       nullify (engine%wk2_r2c)
       call fftw_free(engine%wk13_p)
-      deallocate (engine%wk13_p); nullify (engine%wk13_p)
       nullify (engine%wk13)
 
       call finalize_fft_engine(engine%plan)
-      deallocate (engine%plan); nullify (engine%plan)
-      deallocate (engine%format); nullify (engine%format)
-      deallocate (engine%initialised); nullify (engine%initialised)
+
+      engine%initialised = .false.
 
 #ifdef PROFILER
       if (decomp_profiler_fft) call decomp_profiler_end("fft_fin")
@@ -486,12 +462,9 @@ contains
 
       implicit none
 
-      class(decomp_2d_fft_engine), intent(in) :: engine
+      class(decomp_2d_fft_engine), intent(in), target :: engine
 
       ! Safety checks
-      if (.not. associated(engine%initialised)) then
-         call decomp_2d_abort(__FILE__, __LINE__, 0, "FFT engine was not initialised")
-      end if
       if (.not. engine%initialised) then
          call decomp_2d_abort(__FILE__, __LINE__, 0, "FFT engine is not ready")
       end if

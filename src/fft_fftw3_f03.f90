@@ -158,9 +158,6 @@ contains
       ! Initialise the engine
       call fft_engines(igrid)%init(pencil, nx, ny, nz)
 
-      ! Print the log only for the first grid
-      if (igrid == 1) call decomp_2d_fft_log("FFTW (F2003 interface)")
-
    end subroutine fft_init_multigrid
 
    ! Initialise the given FFT engine
@@ -805,6 +802,8 @@ contains
    subroutine init_fft_engine
 
       implicit none
+
+      call decomp_2d_fft_log("FFTW (F2003 interface)")
 
       if (format == PHYSICAL_IN_X) then
 

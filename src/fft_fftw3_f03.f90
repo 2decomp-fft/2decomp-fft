@@ -486,6 +486,9 @@ contains
    end subroutine decomp_2d_fft_engine_use_it
 
    ! The external code can obtain direct access to internal FFT engines
+   !
+   ! Warning : The external code should not clean the provided engine
+   !           The subroutine decomp_2d_fft_finalize will do it
    function decomp_2d_fft_get_engine(igrid)
 
       implicit none

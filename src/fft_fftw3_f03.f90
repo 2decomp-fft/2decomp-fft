@@ -1269,7 +1269,7 @@ contains
 
       implicit none
 
-      class(decomp_2d_fft_engine), intent(in) :: engine
+      class(decomp_2d_fft_engine), intent(in), target :: engine
       complex(mytype), dimension(:, :, :), intent(INOUT) :: in
       complex(mytype), dimension(:, :, :), intent(OUT) :: out
       integer, intent(IN) :: isign
@@ -1283,7 +1283,7 @@ contains
 
       implicit none
 
-      class(decomp_2d_fft_engine), intent(in) :: engine
+      class(decomp_2d_fft_engine), intent(in), target :: engine
       real(mytype), dimension(:, :, :), intent(INOUT) :: in
       complex(mytype), dimension(:, :, :), intent(OUT) :: out
 
@@ -1296,7 +1296,7 @@ contains
 
       implicit none
 
-      class(decomp_2d_fft_engine), intent(in) :: engine
+      class(decomp_2d_fft_engine), intent(in), target :: engine
       complex(mytype), dimension(:, :, :), intent(INOUT) :: in
       real(mytype), dimension(:, :, :), intent(OUT) :: out
 

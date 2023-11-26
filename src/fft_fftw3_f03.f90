@@ -464,7 +464,7 @@ contains
 
       class(decomp_2d_fft_engine), intent(in), target :: engine
 
-      ! Safety checks
+      ! Safety check
       if (.not. engine%initialised) then
          call decomp_2d_abort(__FILE__, __LINE__, 0, "FFT engine is not ready")
       end if

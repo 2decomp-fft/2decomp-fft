@@ -27,14 +27,14 @@ module decomp_2d_fft
    ! For r2c/c2r transforms:
    !     use plan(0,j) for r2c transforms;
    !     use plan(2,j) for c2r transforms;
-   type(C_PTR), pointer, save :: plan(:, :)
+   type(C_PTR), pointer, save :: plan(:, :) => null()
 
    integer, parameter, public :: D2D_FFT_BACKEND = D2D_FFT_BACKEND_FFTW3_F03
 
-   integer, pointer, save :: format                 ! input X-pencil or Z-pencil
+   integer, pointer, save :: format => null()  ! input X-pencil or Z-pencil
 
    ! Global size of the FFT
-   integer, pointer, save :: nx_fft, ny_fft, nz_fft
+   integer, pointer, save :: nx_fft => null(), ny_fft => null(), nz_fft => null()
 
    ! 2D processor grid
    ! FIXME this is already available in the module decomp_2d
@@ -42,11 +42,13 @@ module decomp_2d_fft
 
    ! Decomposition objects
    TYPE(DECOMP_INFO), pointer, save :: ph => null()  ! physical space
-   TYPE(DECOMP_INFO), pointer, save :: sp  ! spectral space
+   TYPE(DECOMP_INFO), pointer, save :: sp => null()  ! spectral space
 
    ! Workspace to store the intermediate Y-pencil data
    ! *** TODO: investigate how to use only one workspace array
-   complex(mytype), contiguous, pointer :: wk2_c2c(:, :, :), wk2_r2c(:, :, :), wk13(:, :, :)
+   complex(mytype), contiguous, pointer :: wk2_c2c(:, :, :) => null(), &
+                                           wk2_r2c(:, :, :) => null(), &
+                                           wk13(:, :, :) => null()
 
    ! Derived type with all the quantities needed to perform FFT
    type decomp_2d_fft_engine
@@ -502,13 +504,13 @@ contains
       else
 
          ! Safety check
-         if (n_grid < 1 .or. .not.allocated(fft_engines)) then
+         if (n_grid < 1 .or. .not. allocated(fft_engines)) then
             call decomp_2d_abort(__FILE__, __LINE__, n_grid, &
                                  "The FFT module was not initialised")
-         endif
+         end if
          decomp_2d_fft_get_engine => fft_engines(1)
 
-      endif
+      end if
 
    end function decomp_2d_fft_get_engine
 

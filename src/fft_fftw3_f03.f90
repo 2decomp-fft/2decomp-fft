@@ -27,17 +27,14 @@ module decomp_2d_fft
    ! For r2c/c2r transforms:
    !     use plan(0,j) for r2c transforms;
    !     use plan(2,j) for c2r transforms;
-   type(C_PTR), save :: plan(-1:2, 3)
+   type(C_PTR), pointer, save :: plan(:, :)
 
    integer, parameter, public :: D2D_FFT_BACKEND = D2D_FFT_BACKEND_FFTW3_F03
 
-   integer, save :: format                 ! input X-pencil or Z-pencil
-
-   ! The libary can only be initialised once
-   logical, save :: initialised = .false.
+   integer, pointer, save :: format                 ! input X-pencil or Z-pencil
 
    ! Global size of the FFT
-   integer, save :: nx_fft, ny_fft, nz_fft
+   integer, pointer, save :: nx_fft, ny_fft, nz_fft
 
    ! 2D processor grid
    ! FIXME this is already available in the module decomp_2d
@@ -45,16 +42,47 @@ module decomp_2d_fft
 
    ! Decomposition objects
    TYPE(DECOMP_INFO), pointer, save :: ph => null()  ! physical space
-   TYPE(DECOMP_INFO), target, save :: sp  ! spectral space
+   TYPE(DECOMP_INFO), pointer, save :: sp  ! spectral space
 
    ! Workspace to store the intermediate Y-pencil data
    ! *** TODO: investigate how to use only one workspace array
    complex(mytype), contiguous, pointer :: wk2_c2c(:, :, :), wk2_r2c(:, :, :), wk13(:, :, :)
-   type(C_PTR) :: wk2_c2c_p, wk13_p
+
+   ! Derived type with all the quantities needed to perform FFT
+   type decomp_2d_fft_engine
+      type(c_ptr), pointer, private :: plan(:, :) => null()
+      type(c_ptr), pointer, private :: wk2_c2c_p => null(), wk13_p => null()
+      integer, pointer, private :: format => null()
+      logical, pointer, private :: initialised => null()
+      integer, pointer, private :: nx_fft => null(), ny_fft => null(), nz_fft => null()
+      type(decomp_info), pointer, public :: ph => null()
+      type(decomp_info), pointer, public :: sp => null()
+      complex(mytype), contiguous, pointer, private :: wk2_c2c(:, :, :) => null()
+      complex(mytype), contiguous, pointer, private :: wk2_r2c(:, :, :) => null()
+      complex(mytype), contiguous, pointer, private :: wk13(:, :, :) => null()
+   contains
+      procedure, public :: init => decomp_2d_fft_engine_init
+      procedure, public :: fin => decomp_2d_fft_engine_fin
+      procedure, public :: use_it => decomp_2d_fft_engine_use_it
+      generic, public :: fft => c2c, r2c, c2r
+      procedure, private :: c2c => decomp_2d_fft_engine_fft_c2c
+      procedure, private :: r2c => decomp_2d_fft_engine_fft_r2c
+      procedure, private :: c2r => decomp_2d_fft_engine_fft_c2r
+   end type decomp_2d_fft_engine
+
+   !
+   ! Multigrid options
+   !
+   ! Number of FFT grids
+   integer, save :: n_grid = 0
+   ! Array to store all the grids
+   type(decomp_2d_fft_engine), allocatable, save :: fft_engines(:)
 
    public :: decomp_2d_fft_init, decomp_2d_fft_3d, &
              decomp_2d_fft_finalize, decomp_2d_fft_get_size, &
-             decomp_2d_fft_get_ph, decomp_2d_fft_get_sp
+             decomp_2d_fft_get_ph, decomp_2d_fft_get_sp, &
+             decomp_2d_fft_get_ngrid, decomp_2d_fft_set_ngrid, &
+             decomp_2d_fft_use_grid, decomp_2d_fft_engine
 
    ! Declare generic interfaces to handle different inputs
 
@@ -62,6 +90,7 @@ module decomp_2d_fft
       module procedure fft_init_noarg
       module procedure fft_init_arg
       module procedure fft_init_general
+      module procedure fft_init_multigrid
    end interface
 
    interface decomp_2d_fft_3d
@@ -78,16 +107,15 @@ module decomp_2d_fft
 
 contains
 
-  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
    ! Initialise the FFT module
-  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
    subroutine fft_init_noarg
 
       implicit none
 
       call fft_init_arg(PHYSICAL_IN_X)  ! default input is X-pencil data
 
-      return
    end subroutine fft_init_noarg
 
    subroutine fft_init_arg(pencil)     ! allow to handle Z-pencil input
@@ -98,18 +126,51 @@ contains
 
       call fft_init_general(pencil, nx_global, ny_global, nz_global)
 
-      return
    end subroutine fft_init_arg
 
-   ! Initialise the FFT library to perform arbitrary size transforms
+   ! Initialise one FFT library to perform arbitrary size transforms
    subroutine fft_init_general(pencil, nx, ny, nz)
 
       implicit none
 
-      integer, intent(IN) :: pencil
-      integer, intent(IN) :: nx, ny, nz
+      integer, intent(IN) :: pencil, nx, ny, nz
 
-      integer :: errorcode
+      ! Only one FFT engine will be used
+      call decomp_2d_fft_set_ngrid(1)
+
+      ! Initialise the FFT engine
+      call decomp_2d_fft_init(pencil, nx, ny, nz, 1)
+
+   end subroutine fft_init_general
+
+   ! Initialise the provided FFT grid
+   subroutine fft_init_multigrid(pencil, nx, ny, nz, igrid)
+
+      implicit none
+
+      integer, intent(in) :: pencil, nx, ny, nz, igrid
+
+      ! Safety check
+      if (igrid < 1 .or. igrid > n_grid) then
+         call decomp_2d_abort(__FILE__, __LINE__, igrid, "Invalid value for igrid")
+      end if
+
+      ! Initialise the engine
+      call fft_engines(igrid)%init(pencil, nx, ny, nz)
+
+      ! Print the log only for the first grid
+      if (igrid == 1) call decomp_2d_fft_log("FFTW (F2003 interface)")
+
+   end subroutine fft_init_multigrid
+
+   ! Initialise the given FFT engine
+   subroutine decomp_2d_fft_engine_init(engine, pencil, nx, ny, nz)
+
+      implicit none
+
+      class(decomp_2d_fft_engine), intent(inout) :: engine
+      integer, intent(in) :: pencil, nx, ny, nz
+
       integer(C_SIZE_T) :: sz
 
 #ifdef PROFILER
@@ -117,19 +178,34 @@ contains
 #endif
 
       ! Safety checks
-      if (initialised) then
-         errorcode = 4
-         call decomp_2d_abort(errorcode, &
-                              'FFT library should only be initialised once')
+      if (associated(engine%initialised)) then
+         if (engine%initialised) then
+            call decomp_2d_abort(__FILE__, __LINE__, 4, &
+                                 'FFT engine should only be initialised once')
+         end if
       end if
       if (nx <= 0) call decomp_2d_abort(__FILE__, __LINE__, nx, "Invalid value for nx")
       if (ny <= 0) call decomp_2d_abort(__FILE__, __LINE__, ny, "Invalid value for ny")
       if (nz <= 0) call decomp_2d_abort(__FILE__, __LINE__, nz, "Invalid value for nz")
 
-      format = pencil
-      nx_fft = nx
-      ny_fft = ny
-      nz_fft = nz
+      ! Allocate the components of the engine
+      allocate (engine%plan(-1:2, 3))
+      allocate (engine%wk2_c2c_p)
+      allocate (engine%wk13_p)
+      allocate (engine%format)
+      allocate (engine%initialised)
+      allocate (engine%nx_fft)
+      allocate (engine%ny_fft)
+      allocate (engine%nz_fft)
+      ! engine%ph is allocated later if needed
+      allocate (engine%sp)
+      ! engine%wk2_* and engine%wk13 are associated to a memory block later
+
+      ! Store the key parameters
+      engine%format = pencil
+      engine%nx_fft = nx
+      engine%ny_fft = ny
+      engine%nz_fft = nz
 
       ! determine the processor grid in use
       dims = get_decomp_dims()
@@ -140,27 +216,29 @@ contains
       !         (nx/2+1)*ny*nz, if PHYSICAL_IN_X
       !      or nx*ny*(nz/2+1), if PHYSICAL_IN_Z
 
-      if (nx_fft == nx_global .and. ny_fft == ny_global .and. nz_fft == nz_global) then
-         ph => decomp_main
+      if (nx == nx_global .and. &
+          ny == ny_global .and. &
+          nz == nz_global) then
+         engine%ph => decomp_main
       else
-         if (.not. associated(ph)) allocate (ph)
-         call decomp_info_init(nx, ny, nz, ph)
+         if (.not. associated(engine%ph)) allocate (engine%ph)
+         call decomp_info_init(nx, ny, nz, engine%ph)
       end if
-      if (format == PHYSICAL_IN_X) then
-         call decomp_info_init(nx / 2 + 1, ny, nz, sp)
-      else if (format == PHYSICAL_IN_Z) then
-         call decomp_info_init(nx, ny, nz / 2 + 1, sp)
+      if (pencil == PHYSICAL_IN_X) then
+         call decomp_info_init(nx / 2 + 1, ny, nz, engine%sp)
+      else if (pencil == PHYSICAL_IN_Z) then
+         call decomp_info_init(nx, ny, nz / 2 + 1, engine%sp)
       else
-         call decomp_2d_abort(__FILE__, __LINE__, format, "Invalid value for format")
+         call decomp_2d_abort(__FILE__, __LINE__, pencil, "Invalid value for pencil")
       end if
 
       !
-      ! Allocate the workspace fo intermediate y-pencil data
+      ! Allocate the workspace for intermediate y-pencil data
       ! The largest memory block needed is the one for c2c transforms
       !
-      sz = ph%ysz(1) * ph%ysz(2) * ph%ysz(3)
-      wk2_c2c_p = fftw_alloc_complex(sz)
-      call c_f_pointer(wk2_c2c_p, wk2_c2c, [ph%ysz(1), ph%ysz(2), ph%ysz(3)])
+      sz = product(engine%ph%ysz)
+      engine%wk2_c2c_p = fftw_alloc_complex(sz)
+      call c_f_pointer(engine%wk2_c2c_p, engine%wk2_c2c, engine%ph%ysz)
       !
       ! A smaller memory block is needed for r2c and c2r transforms
       ! wk2_c2c and wk2_r2c start at the same location
@@ -168,7 +246,7 @@ contains
       !    Size of wk2_c2c : ph%ysz(1), ph%ysz(2), ph%ysz(3)
       !    Size of wk2_r2c : sp%ysz(1), sp%ysz(2), sp%ysz(3)
       !
-      call c_f_pointer(wk2_c2c_p, wk2_r2c, [sp%ysz(1), sp%ysz(2), sp%ysz(3)])
+      call c_f_pointer(engine%wk2_c2c_p, engine%wk2_r2c, engine%sp%ysz)
       !
       ! Allocate the workspace for r2c and c2r transforms
       !
@@ -176,67 +254,115 @@ contains
       ! transpose_y_to_x(wk2_r2c, wk13, sp)
       ! transpose_y_to_z(wk2_r2c, wk13, sp)
       !
-      if (format == PHYSICAL_IN_X) then
-         sz = sp%xsz(1) * sp%xsz(2) * sp%xsz(3)
-         wk13_p = fftw_alloc_complex(sz)
-         call c_f_pointer(wk13_p, wk13, [sp%xsz(1), sp%xsz(2), sp%xsz(3)])
-      else if (format == PHYSICAL_IN_Z) then
-         sz = sp%zsz(1) * sp%zsz(2) * sp%zsz(3)
-         wk13_p = fftw_alloc_complex(sz)
-         call c_f_pointer(wk13_p, wk13, [sp%zsz(1), sp%zsz(2), sp%zsz(3)])
+      if (pencil == PHYSICAL_IN_X) then
+         sz = product(engine%sp%xsz)
+         engine%wk13_p = fftw_alloc_complex(sz)
+         call c_f_pointer(engine%wk13_p, engine%wk13, engine%sp%xsz)
+      else if (pencil == PHYSICAL_IN_Z) then
+         sz = product(engine%sp%zsz)
+         engine%wk13_p = fftw_alloc_complex(sz)
+         call c_f_pointer(engine%wk13_p, engine%wk13, engine%sp%zsz)
       end if
 
-      call init_fft_engine
+      ! Warning : replace the default engine
+      call engine%use_it()
 
-      initialised = .true.
+      ! Compute the plan for the current engine
+      call init_fft_engine()
+
+      ! Tag the engine as initialised
+      engine%initialised = .true.
 
 #ifdef PROFILER
       if (decomp_profiler_fft) call decomp_profiler_end("fft_init")
 #endif
 
-      return
-   end subroutine fft_init_general
+   end subroutine decomp_2d_fft_engine_init
 
-  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
    ! Final clean up
-  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
    subroutine decomp_2d_fft_finalize
 
       implicit none
+
+      integer :: igrid
+
+      ! Clean each engine
+      do igrid = 1, n_grid
+         call fft_engines(igrid)%fin()
+      end do
+
+      ! Free memory
+      n_grid = 0
+      deallocate (fft_engines)
+
+      ! Nullify all the pointers in the module
+      nullify (plan)
+      nullify (format)
+      nullify (nx_fft)
+      nullify (ny_fft)
+      nullify (nz_fft)
+      nullify (ph)
+      nullify (sp)
+      nullify (wk2_c2c)
+      nullify (wk2_r2c)
+      nullify (wk13)
+
+      ! Clean the FFTW library
+      call fftw_cleanup()
+
+   end subroutine decomp_2d_fft_finalize
+
+   ! Clean the given FFT engine
+   subroutine decomp_2d_fft_engine_fin(engine)
+
+      implicit none
+
+      class(decomp_2d_fft_engine), intent(inout) :: engine
 
 #ifdef PROFILER
       if (decomp_profiler_fft) call decomp_profiler_start("fft_fin")
 #endif
 
-      if (nx_fft /= nx_global .or. ny_fft /= ny_global .or. nz_fft /= nz_global) then
-         call decomp_info_finalize(ph)
-         deallocate (ph)
+      if (engine%nx_fft /= nx_global .or. &
+          engine%ny_fft /= ny_global .or. &
+          engine%nz_fft /= nz_global) then
+         call decomp_info_finalize(engine%ph)
+         deallocate (engine%ph)
       end if
-      nullify (ph)
-      call decomp_info_finalize(sp)
+      nullify (engine%ph)
+      call decomp_info_finalize(engine%sp)
+      deallocate (engine%sp); nullify (engine%sp)
 
-      call fftw_free(wk2_c2c_p)
-      nullify (wk2_c2c)
-      nullify (wk2_r2c)
-      call fftw_free(wk13_p)
-      nullify (wk13)
+      deallocate (engine%nx_fft); nullify (engine%nx_fft)
+      deallocate (engine%ny_fft); nullify (engine%ny_fft)
+      deallocate (engine%nz_fft); nullify (engine%nz_fft)
 
-      call finalize_fft_engine
+      call fftw_free(engine%wk2_c2c_p)
+      deallocate (engine%wk2_c2c_p); nullify (engine%wk2_c2c_p)
+      nullify (engine%wk2_c2c)
+      nullify (engine%wk2_r2c)
+      call fftw_free(engine%wk13_p)
+      deallocate (engine%wk13_p); nullify (engine%wk13_p)
+      nullify (engine%wk13)
 
-      initialised = .false.
+      call finalize_fft_engine(engine%plan)
+      deallocate (engine%plan); nullify (engine%plan)
+      deallocate (engine%format); nullify (engine%format)
+      deallocate (engine%initialised); nullify (engine%initialised)
 
 #ifdef PROFILER
       if (decomp_profiler_fft) call decomp_profiler_end("fft_fin")
 #endif
 
-      return
-   end subroutine decomp_2d_fft_finalize
+   end subroutine decomp_2d_fft_engine_fin
 
-  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
    ! Return the size, starting/ending index of the distributed array
    !  whose global size is (nx/2+1)*ny*nz, for defining data structures
    !  in r2c and c2r interfaces
-  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
    subroutine decomp_2d_fft_get_size(istart, iend, isize)
 
       implicit none
@@ -255,11 +381,11 @@ contains
       return
    end subroutine decomp_2d_fft_get_size
 
-  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
    ! Return a pointer to the decomp_info object ph
    !
    ! The caller should not apply decomp_info_finalize on the pointer
-  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
    function decomp_2d_fft_get_ph()
 
       implicit none
@@ -273,11 +399,11 @@ contains
 
    end function decomp_2d_fft_get_ph
 
-  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
    ! Return a pointer to the decomp_info object sp
    !
    ! The caller should not apply decomp_info_finalize on the pointer
-  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
    function decomp_2d_fft_get_sp()
 
       implicit none
@@ -290,6 +416,89 @@ contains
       decomp_2d_fft_get_sp => sp
 
    end function decomp_2d_fft_get_sp
+
+   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+   ! Return the number of FFT grids
+   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+   function decomp_2d_fft_get_ngrid()
+
+      implicit none
+
+      integer :: decomp_2d_fft_get_ngrid
+
+      decomp_2d_fft_get_ngrid = n_grid
+
+   end function decomp_2d_fft_get_ngrid
+
+   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+   ! Set the number of FFT grids
+   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+   subroutine decomp_2d_fft_set_ngrid(ngrd)
+
+      implicit none
+
+      integer, intent(in) :: ngrd
+
+      ! Safety checks
+      if (ngrd < 1) then
+         call decomp_2d_abort(__FILE__, __LINE__, ngrd, "Invalid value for n_grid")
+      end if
+      if (n_grid > 0 .or. allocated(fft_engines)) then
+         call decomp_2d_abort(__FILE__, __LINE__, n_grid, &
+                              "The number of FFT grids was already set")
+      end if
+
+      ! Set the number of FFT grids
+      n_grid = ngrd
+      allocate (fft_engines(n_grid))
+
+   end subroutine decomp_2d_fft_set_ngrid
+
+   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+   ! Make the provided grid the default one
+   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+   subroutine decomp_2d_fft_use_grid(igrid)
+
+      implicit none
+
+      integer, intent(in) :: igrid
+
+      ! Safety check
+      if (igrid < 1 .or. igrid > n_grid) then
+         call decomp_2d_abort(__FILE__, __LINE__, igrid, "Invalid value for igrid")
+      end if
+
+      call fft_engines(igrid)%use_it()
+
+   end subroutine decomp_2d_fft_use_grid
+
+   ! Associate the pointers in the module to the ones in the engine
+   subroutine decomp_2d_fft_engine_use_it(engine)
+
+      implicit none
+
+      class(decomp_2d_fft_engine), intent(in) :: engine
+
+      ! Safety checks
+      if (.not. associated(engine%initialised)) then
+         call decomp_2d_abort(__FILE__, __LINE__, 0, "FFT engine was not initialised")
+      end if
+      if (.not. engine%initialised) then
+         call decomp_2d_abort(__FILE__, __LINE__, 0, "FFT engine is not ready")
+      end if
+
+      plan => engine%plan
+      format => engine%format
+      nx_fft => engine%nx_fft
+      ny_fft => engine%ny_fft
+      nz_fft => engine%nz_fft
+      ph => engine%ph
+      sp => engine%sp
+      wk2_c2c => engine%wk2_c2c
+      wk2_r2c => engine%wk2_r2c
+      wk13 => engine%wk13
+
+   end subroutine decomp_2d_fft_engine_use_it
 
    ! Return a FFTW3 plan for multiple 1D c2c FFTs in X direction
    subroutine c2c_1m_x_plan(plan1, decomp, isign)
@@ -578,14 +787,12 @@ contains
       return
    end subroutine c2r_1m_z_plan
 
-  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
    !  This routine performs one-time initialisations for the FFT engine
-  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
    subroutine init_fft_engine
 
       implicit none
-
-      call decomp_2d_fft_log("FFTW (F2003 interface)")
 
       if (format == PHYSICAL_IN_X) then
 
@@ -628,28 +835,27 @@ contains
       return
    end subroutine init_fft_engine
 
-  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
    !  This routine performs one-time finalisations for the FFT engine
-  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-   subroutine finalize_fft_engine
+   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+   subroutine finalize_fft_engine(local_plan)
 
       implicit none
+
+      type(c_ptr) :: local_plan(-1:2, 3)
 
       integer :: i, j
 
       do j = 1, 3
          do i = -1, 2
 #ifdef DOUBLE_PREC
-            call fftw_destroy_plan(plan(i, j))
+            call fftw_destroy_plan(local_plan(i, j))
 #else
-            call fftwf_destroy_plan(plan(i, j))
+            call fftwf_destroy_plan(local_plan(i, j))
 #endif
          end do
       end do
 
-      call fftw_cleanup()
-
-      return
    end subroutine finalize_fft_engine
 
    ! Following routines calculate multiple one-dimensional FFTs to form
@@ -1071,5 +1277,48 @@ contains
 
       return
    end subroutine fft_3d_c2r
+
+   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+   ! Wrappers for calling 3D FFT directly using the engine object
+   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+   subroutine decomp_2d_fft_engine_fft_c2c(engine, in, out, isign)
+
+      implicit none
+
+      class(decomp_2d_fft_engine), intent(in) :: engine
+      complex(mytype), dimension(:, :, :), intent(INOUT) :: in
+      complex(mytype), dimension(:, :, :), intent(OUT) :: out
+      integer, intent(IN) :: isign
+
+      call engine%use_it()
+      call decomp_2d_fft_3d(in, out, isign)
+
+   end subroutine decomp_2d_fft_engine_fft_c2c
+
+   subroutine decomp_2d_fft_engine_fft_r2c(engine, in, out)
+
+      implicit none
+
+      class(decomp_2d_fft_engine), intent(in) :: engine
+      real(mytype), dimension(:, :, :), intent(INOUT) :: in
+      complex(mytype), dimension(:, :, :), intent(OUT) :: out
+
+      call engine%use_it()
+      call decomp_2d_fft_3d(in, out)
+
+   end subroutine decomp_2d_fft_engine_fft_r2c
+
+   subroutine decomp_2d_fft_engine_fft_c2r(engine, in, out)
+
+      implicit none
+
+      class(decomp_2d_fft_engine), intent(in) :: engine
+      complex(mytype), dimension(:, :, :), intent(INOUT) :: in
+      real(mytype), dimension(:, :, :), intent(OUT) :: out
+
+      call engine%use_it()
+      call decomp_2d_fft_3d(in, out)
+
+   end subroutine decomp_2d_fft_engine_fft_c2r
 
 end module decomp_2d_fft

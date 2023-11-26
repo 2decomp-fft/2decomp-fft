@@ -55,6 +55,11 @@ contains
             write (io_unit, *) ''
          end if
 #endif
+         if (n_grid > 1) then
+            write (io_unit, *) 'Multigrid FFT active'
+            write (io_unit, *) 'Number of grids : ', n_grid
+            write (io_unit, *) ''
+         end if
          call d2d_listing_close_unit(io_unit)
       end if
 

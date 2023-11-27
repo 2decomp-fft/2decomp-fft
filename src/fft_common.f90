@@ -192,7 +192,7 @@ subroutine decomp_2d_fft_engine_init(engine, pencil, nx, ny, nz)
    call engine%use_it()
 
    ! Compute engine-specific stuff
-   call init_fft_engine()
+   call init_fft_engine(engine)
 
    ! Tag the engine as initialised
    engine%initialised = .true.

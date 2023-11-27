@@ -279,9 +279,13 @@ module decomp_2d_fft
    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
    !  This routine performs one-time initialisations for the FFT engine
    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-   subroutine init_fft_engine()
+   subroutine init_fft_engine(engine)
 
       implicit none
+
+      type(decomp_2d_fft_engine), target, intent(inout) :: engine
+
+      associate (tmp => engine); end associate
 
       call decomp_2d_fft_log("FFTW (version 3.x)")
 

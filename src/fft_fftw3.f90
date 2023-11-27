@@ -26,7 +26,7 @@ module decomp_2d_fft
    ! For r2c/c2r transforms:
    !     use plan(0,j) for r2c transforms;
    !     use plan(2,j) for c2r transforms;
-   type(C_PTR), save :: plan(-1:2, 3)
+   type(C_PTR), pointer, save :: plan(:, :) => null()
 
    ! This is defined in fftw3.f03 but not in fftw3.f
    interface
@@ -36,6 +36,29 @@ module decomp_2d_fft
    end interface
 
    integer, parameter, public :: D2D_FFT_BACKEND = D2D_FFT_BACKEND_FFTW3
+
+   ! Derived type with all the quantities needed to perform FFT
+   type decomp_2d_fft_engine
+      ! Engine-specific stuff
+      type(c_ptr) :: plan(-1:2, 3)
+      ! All the engines have this
+      integer, private :: format
+      logical, private :: initialised = .false.
+      integer, private :: nx_fft, ny_fft, nz_fft
+      type(decomp_info), pointer, public :: ph => null()
+      type(decomp_info), public :: sp
+      complex(mytype), allocatable, private :: wk2_c2c(:, :, :)
+      complex(mytype), contiguous, pointer, private :: wk2_r2c(:, :, :) => null()
+      complex(mytype), allocatable, private :: wk13(:, :, :)
+   contains
+      procedure, public :: init => decomp_2d_fft_engine_init
+      procedure, public :: fin => decomp_2d_fft_engine_fin
+      procedure, public :: use_it => decomp_2d_fft_engine_use_it
+      generic, public :: fft => c2c, r2c, c2r
+      procedure, private :: c2c => decomp_2d_fft_engine_fft_c2c
+      procedure, private :: r2c => decomp_2d_fft_engine_fft_c2c
+      procedure, private :: c2r => decomp_2d_fft_engine_fft_c2c
+   end type decomp_2d_fft_engine
 
    ! common code used for all engines, including global variables,
    ! generic interface definitions and several subroutines
@@ -253,10 +276,10 @@ module decomp_2d_fft
       return
    end subroutine c2r_1m_z_plan
 
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
    !  This routine performs one-time initialisations for the FFT engine
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-   subroutine init_fft_engine
+   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+   subroutine init_fft_engine()
 
       implicit none
 
@@ -300,32 +323,51 @@ module decomp_2d_fft
 
       end if
 
-      return
    end subroutine init_fft_engine
 
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
    !  This routine performs one-time finalisations for the FFT engine
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-   subroutine finalize_fft_engine
+   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+   subroutine finalize_fft_engine(engine)
 
       implicit none
 
+      type(decomp_2d_fft_engine), optional :: engine
+
       integer :: i, j
 
-      do j = 1, 3
-         do i = -1, 2
+      if (present(engine)) then
+
+         ! Clean the provided engine
+         do j = 1, 3
+            do i = -1, 2
 #ifdef DOUBLE_PREC
-            call dfftw_destroy_plan(plan(i, j))
+               call dfftw_destroy_plan(engine%plan(i, j))
 #else
-            call sfftw_destroy_plan(plan(i, j))
+               call sfftw_destroy_plan(engine%plan(i, j))
 #endif
+            end do
          end do
-      end do
+      else
 
-      call fftw_cleanup()
+         ! Clean engine-specific stuff in the module
+         nullify (plan)
+         call fftw_cleanup()
 
-      return
+      end if
+
    end subroutine finalize_fft_engine
+
+   ! Use engine-specific stuff
+   subroutine use_fft_engine(engine)
+
+      implicit none
+
+      type(decomp_2d_fft_engine), target, intent(in) :: engine
+
+      plan => engine%plan
+
+   end subroutine use_fft_engine
 
    ! Following routines calculate multiple one-dimensional FFTs to form
    ! the basis of three-dimensional FFTs.

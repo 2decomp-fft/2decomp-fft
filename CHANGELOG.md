@@ -12,7 +12,7 @@ _e.g._ vX.Y - YYYY-MM-DD and a new "Unreleased" section started above.
 ### Added
 
 - Add profiling to transpose subroutines when `p_row` or `p_col` is equal to one. See [PR #251](https://github.com/2decomp-fft/2decomp-fft/pull/251)
-- Add multigrid capability for the FFT (experimental support limited to fftw3_f03 currently). Based on the work of [Lionel Gelebart](https://github.com/LionelGelebart) and coworkers, see [AMITEX_FFTP](https://amitexfftp.github.io/AMITEX/index.html) and [2decomp15_mg](https://github.com/LionelGelebart/2decomp15_mg).
+- Add multigrid capability for the FFT (experimental support limited to fftw currently). Based on the work of [Lionel Gelebart](https://github.com/LionelGelebart) and coworkers, see [AMITEX_FFTP](https://amitexfftp.github.io/AMITEX/index.html) and [2decomp15_mg](https://github.com/LionelGelebart/2decomp15_mg).
 
 ### Fixed
 

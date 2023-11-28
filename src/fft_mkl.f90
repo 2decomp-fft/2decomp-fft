@@ -17,14 +17,50 @@ module decomp_2d_fft
    ! engine-specific global variables
 
    ! Descriptors for MKL FFT, one for each set of 1D FFTs
-   !  for c2c transforms
-   type(DFTI_DESCRIPTOR), pointer :: c2c_x, c2c_y, c2c_z
-   !  for r2c/c2r transforms, PHYSICAL_IN_X
-   type(DFTI_DESCRIPTOR), pointer :: r2c_x, c2c_y2, c2c_z2, c2r_x
-   !  for r2c/c2r transforms, PHYSICAL_IN_Z
-   type(DFTI_DESCRIPTOR), pointer :: r2c_z, c2c_x2, c2r_z
+   type(DFTI_DESCRIPTOR), pointer, save :: c2c_x => null(), & ! c2c transforms
+                                           c2c_y => null(), &
+                                           c2c_z => null(), &
+                                           r2c_x => null(), & ! r2c/c2r, physical in x
+                                           c2c_y2 => null(), &
+                                           c2c_z2 => null(), &
+                                           c2r_x => null(), &
+                                           r2c_z => null(), & ! r2c/c2r, physical in z
+                                           c2c_x2 => null(), &
+                                           c2r_z => null()
 
    integer, parameter, public :: D2D_FFT_BACKEND = D2D_FFT_BACKEND_MKL
+
+   ! Derived type with all the quantities needed to perform FFT
+   type decomp_2d_fft_engine
+      ! Engine-specific stuff
+      type(DFTI_DESCRIPTOR), pointer :: c2c_x => null(), & ! c2c transforms
+                                        c2c_y => null(), &
+                                        c2c_z => null(), &
+                                        r2c_x => null(), & ! r2c/c2r, physical in x
+                                        c2c_y2 => null(), &
+                                        c2c_z2 => null(), &
+                                        c2r_x => null(), &
+                                        r2c_z => null(), & ! r2c/c2r, physical in z
+                                        c2c_x2 => null(), &
+                                        c2r_z => null()
+      ! All the engines have this
+      integer, private :: format
+      logical, private :: initialised = .false.
+      integer, private :: nx_fft, ny_fft, nz_fft
+      type(decomp_info), pointer, public :: ph => null()
+      type(decomp_info), public :: sp
+      complex(mytype), allocatable, private :: wk2_c2c(:, :, :)
+      complex(mytype), contiguous, pointer, private :: wk2_r2c(:, :, :) => null()
+      complex(mytype), allocatable, private :: wk13(:, :, :)
+   contains
+      procedure, public :: init => decomp_2d_fft_engine_init
+      procedure, public :: fin => decomp_2d_fft_engine_fin
+      procedure, public :: use_it => decomp_2d_fft_engine_use_it
+      generic, public :: fft => c2c, r2c, c2r
+      procedure, private :: c2c => decomp_2d_fft_engine_fft_c2c
+      procedure, private :: r2c => decomp_2d_fft_engine_fft_c2c
+      procedure, private :: c2r => decomp_2d_fft_engine_fft_c2c
+   end type decomp_2d_fft_engine
 
    ! common code used for all engines, including global variables,
    ! generic interface definitions and several subroutines
@@ -33,9 +69,13 @@ module decomp_2d_fft
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
    !  This routine performs one-time initialisations for the FFT engine
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-   subroutine init_fft_engine
+   subroutine init_fft_engine(engine)
 
       implicit none
+
+      type(decomp_2d_fft_engine), target, intent(inout) :: engine
+
+      associate (tmp => engine); end associate
 
       call decomp_2d_fft_log("MKL")
 
@@ -294,38 +334,79 @@ module decomp_2d_fft
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
    !  This routine performs one-time finalisations for the FFT engine
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-   subroutine finalize_fft_engine
+   subroutine finalize_fft_engine(engine)
 
       implicit none
 
+      type(decomp_2d_fft_engine), optional :: engine
+
       integer :: status
 
-      status = DftiFreeDescriptor(c2c_x)
-      if (status /= 0) call decomp_2d_abort(__FILE__, __LINE__, status, "DftiFreeDescriptor")
-      status = DftiFreeDescriptor(c2c_y)
-      if (status /= 0) call decomp_2d_abort(__FILE__, __LINE__, status, "DftiFreeDescriptor")
-      status = DftiFreeDescriptor(c2c_z)
-      if (status /= 0) call decomp_2d_abort(__FILE__, __LINE__, status, "DftiFreeDescriptor")
-      if (format == PHYSICAL_IN_X) then
-         status = DftiFreeDescriptor(r2c_x)
-         if (status /= 0) call decomp_2d_abort(__FILE__, __LINE__, status, "DftiFreeDescriptor")
-         status = DftiFreeDescriptor(c2c_z2)
-         if (status /= 0) call decomp_2d_abort(__FILE__, __LINE__, status, "DftiFreeDescriptor")
-         status = DftiFreeDescriptor(c2r_x)
-         if (status /= 0) call decomp_2d_abort(__FILE__, __LINE__, status, "DftiFreeDescriptor")
-      else if (format == PHYSICAL_IN_Z) then
-         status = DftiFreeDescriptor(r2c_z)
-         if (status /= 0) call decomp_2d_abort(__FILE__, __LINE__, status, "DftiFreeDescriptor")
-         status = DftiFreeDescriptor(c2c_x2)
-         if (status /= 0) call decomp_2d_abort(__FILE__, __LINE__, status, "DftiFreeDescriptor")
-         status = DftiFreeDescriptor(c2r_z)
-         if (status /= 0) call decomp_2d_abort(__FILE__, __LINE__, status, "DftiFreeDescriptor")
-      end if
-      status = DftiFreeDescriptor(c2c_y2)
-      if (status /= 0) call decomp_2d_abort(__FILE__, __LINE__, status, "DftiFreeDescriptor")
+      if (present(engine)) then
 
-      return
+         status = DftiFreeDescriptor(engine%c2c_x)
+         if (status /= 0) call decomp_2d_abort(__FILE__, __LINE__, status, "DftiFreeDescriptor")
+         status = DftiFreeDescriptor(engine%c2c_y)
+         if (status /= 0) call decomp_2d_abort(__FILE__, __LINE__, status, "DftiFreeDescriptor")
+         status = DftiFreeDescriptor(engine%c2c_z)
+         if (status /= 0) call decomp_2d_abort(__FILE__, __LINE__, status, "DftiFreeDescriptor")
+         if (engine%format == PHYSICAL_IN_X) then
+            status = DftiFreeDescriptor(engine%r2c_x)
+            if (status /= 0) call decomp_2d_abort(__FILE__, __LINE__, status, "DftiFreeDescriptor")
+            status = DftiFreeDescriptor(engine%c2c_z2)
+            if (status /= 0) call decomp_2d_abort(__FILE__, __LINE__, status, "DftiFreeDescriptor")
+            status = DftiFreeDescriptor(engine%c2r_x)
+            if (status /= 0) call decomp_2d_abort(__FILE__, __LINE__, status, "DftiFreeDescriptor")
+         else if (engine%format == PHYSICAL_IN_Z) then
+            status = DftiFreeDescriptor(engine%r2c_z)
+            if (status /= 0) call decomp_2d_abort(__FILE__, __LINE__, status, "DftiFreeDescriptor")
+            status = DftiFreeDescriptor(engine%c2c_x2)
+            if (status /= 0) call decomp_2d_abort(__FILE__, __LINE__, status, "DftiFreeDescriptor")
+            status = DftiFreeDescriptor(engine%c2r_z)
+            if (status /= 0) call decomp_2d_abort(__FILE__, __LINE__, status, "DftiFreeDescriptor")
+         end if
+         status = DftiFreeDescriptor(engine%c2c_y2)
+         if (status /= 0) call decomp_2d_abort(__FILE__, __LINE__, status, "DftiFreeDescriptor")
+
+      else
+
+         if (associated(c2c_x)) nullify (c2c_x)
+         if (associated(c2c_y)) nullify (c2c_y)
+         if (associated(c2c_z)) nullify (c2c_z)
+         if (associated(r2c_x)) nullify (r2c_x)
+         if (associated(c2c_z2)) nullify (c2c_z2)
+         if (associated(c2r_x)) nullify (c2r_x)
+         if (associated(r2c_z)) nullify (r2c_z)
+         if (associated(c2c_x2)) nullify (c2c_x2)
+         if (associated(c2r_z)) nullify (c2r_z)
+         if (associated(c2c_y2)) nullify (c2c_y2)
+
+      end if
+
    end subroutine finalize_fft_engine
+
+   ! Use engine-specific stuff
+   subroutine use_fft_engine(engine)
+
+      implicit none
+
+      type(decomp_2d_fft_engine), target, intent(in) :: engine
+
+      c2c_x => engine%c2c_x
+      c2c_y => engine%c2c_y
+      c2c_z => engine%c2c_z
+      if (format == PHYSICAL_IN_X) then
+         r2c_x => engine%r2c_x
+         c2c_z2 => engine%c2c_z2
+         c2r_x => engine%c2r_x
+      else
+         r2c_z => engine%r2c_z
+         c2c_x2 => engine%c2c_x2
+         c2r_z => engine%c2r_z
+      end if
+      c2c_y2 => engine%c2c_y2
+
+   end subroutine use_fft_engine
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
    ! 3D FFT - complex to complex

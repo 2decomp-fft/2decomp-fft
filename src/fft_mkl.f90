@@ -58,8 +58,8 @@ module decomp_2d_fft
       procedure, public :: use_it => decomp_2d_fft_engine_use_it
       generic, public :: fft => c2c, r2c, c2r
       procedure, private :: c2c => decomp_2d_fft_engine_fft_c2c
-      procedure, private :: r2c => decomp_2d_fft_engine_fft_c2c
-      procedure, private :: c2r => decomp_2d_fft_engine_fft_c2c
+      procedure, private :: r2c => decomp_2d_fft_engine_fft_r2c
+      procedure, private :: c2r => decomp_2d_fft_engine_fft_c2r
    end type decomp_2d_fft_engine
 
    ! common code used for all engines, including global variables,

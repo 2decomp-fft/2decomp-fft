@@ -18,6 +18,9 @@ _e.g._ vX.Y - YYYY-MM-DD and a new "Unreleased" section started above.
 - Fuse transpose CPU and GPU memory buffers to reduce memory usage. See [PR 271](https://github.com/2decomp-fft/2decomp-fft/pull/271)
 
 ### Changed
+
+- Major update in the IO routines. The new IO interface is not backward compatible and still experimental. The examples are updated accordingly. See [PR 269](https://github.com/2decomp-fft/2decomp-fft/pull/269)
+
 ### Deprecated
 ### Removed
 

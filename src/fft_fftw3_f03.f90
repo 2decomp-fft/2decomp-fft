@@ -84,7 +84,7 @@ module decomp_2d_fft
              decomp_2d_fft_get_ph, decomp_2d_fft_get_sp, &
              decomp_2d_fft_get_ngrid, decomp_2d_fft_set_ngrid, &
              decomp_2d_fft_use_grid, decomp_2d_fft_engine, &
-             decomp_2d_fft_get_engine
+             decomp_2d_fft_get_engine, decomp_2d_fft_get_format
 
    ! Declare generic interfaces to handle different inputs
 
@@ -523,6 +523,17 @@ contains
       end if
 
    end function decomp_2d_fft_get_engine
+
+   ! The external code can check if the engine is physical_in_x or physical_in_z
+   function decomp_2d_fft_get_format()
+
+      implicit none
+
+      integer :: decomp_2d_fft_get_format
+
+      decomp_2d_fft_get_format = format
+
+   end function decomp_2d_fft_get_format
 
    ! Return a FFTW3 plan for multiple 1D c2c FFTs in X direction
    subroutine c2c_1m_x_plan(plan1, decomp, isign)

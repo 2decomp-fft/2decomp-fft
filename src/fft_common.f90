@@ -32,7 +32,7 @@ public :: decomp_2d_fft_init, decomp_2d_fft_3d, &
           decomp_2d_fft_get_ph, decomp_2d_fft_get_sp, &
           decomp_2d_fft_get_ngrid, decomp_2d_fft_set_ngrid, &
           decomp_2d_fft_use_grid, decomp_2d_fft_engine, &
-          decomp_2d_fft_get_engine
+          decomp_2d_fft_get_engine, decomp_2d_fft_get_format
 
 ! Declare generic interfaces to handle different inputs
 
@@ -462,6 +462,17 @@ function decomp_2d_fft_get_engine(igrid)
    end if
 
 end function decomp_2d_fft_get_engine
+
+! The external code can check if the engine is physical_in_x or physical_in_z
+function decomp_2d_fft_get_format()
+
+   implicit none
+
+   integer :: decomp_2d_fft_get_format
+
+   decomp_2d_fft_get_format = format
+
+end function decomp_2d_fft_get_format
 
    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 ! Wrappers for calling 3D FFT directly using the engine object

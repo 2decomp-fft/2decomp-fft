@@ -257,6 +257,9 @@ contains
       ! Tag the engine as initialised
       engine%initialised = .true.
 
+      ! All the components of the default engine must be updated
+      call engine%use_it()
+
 #ifdef PROFILER
       if (decomp_profiler_fft) call decomp_profiler_end("fft_init")
 #endif

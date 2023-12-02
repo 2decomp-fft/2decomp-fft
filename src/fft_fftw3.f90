@@ -40,7 +40,7 @@ module decomp_2d_fft
    ! Derived type with all the quantities needed to perform FFT
    type decomp_2d_fft_engine
       ! Engine-specific stuff
-      type(c_ptr) :: plan(-1:2, 3)
+      type(c_ptr), private :: plan(-1:2, 3)
       ! All the engines have this
       integer, private :: format
       logical, private :: initialised = .false.

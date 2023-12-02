@@ -22,7 +22,7 @@ module decomp_2d_fft
    ! Derived type with all the quantities needed to perform FFT
    type decomp_2d_fft_engine
       ! Engine-specific stuff
-      complex(mytype), allocatable :: buf(:), scratch(:)
+      complex(mytype), private, allocatable :: buf(:), scratch(:)
       ! All the engines have this
       integer, private :: format
       logical, private :: initialised = .false.

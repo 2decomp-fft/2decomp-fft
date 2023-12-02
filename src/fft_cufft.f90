@@ -34,8 +34,8 @@ module decomp_2d_fft
    ! Derived type with all the quantities needed to perform FFT
    type decomp_2d_fft_engine
       ! Engine-specific stuff
-      integer*4 :: plan(-1:2, 3)
-      complex*8, device, allocatable, dimension(:) :: cufft_workspace
+      integer*4, private :: plan(-1:2, 3)
+      complex*8, private, device, allocatable, dimension(:) :: cufft_workspace
       ! All the engines have this
       integer, private :: format
       logical, private :: initialised = .false.

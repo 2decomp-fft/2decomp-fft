@@ -33,16 +33,16 @@ module decomp_2d_fft
    ! Derived type with all the quantities needed to perform FFT
    type decomp_2d_fft_engine
       ! Engine-specific stuff
-      type(DFTI_DESCRIPTOR), pointer :: c2c_x => null(), & ! c2c transforms
-                                        c2c_y => null(), &
-                                        c2c_z => null(), &
-                                        r2c_x => null(), & ! r2c/c2r, physical in x
-                                        c2c_y2 => null(), &
-                                        c2c_z2 => null(), &
-                                        c2r_x => null(), &
-                                        r2c_z => null(), & ! r2c/c2r, physical in z
-                                        c2c_x2 => null(), &
-                                        c2r_z => null()
+      type(DFTI_DESCRIPTOR), private, pointer :: c2c_x => null(), & ! c2c transforms
+                                                 c2c_y => null(), &
+                                                 c2c_z => null(), &
+                                                 r2c_x => null(), & ! r2c/c2r, physical in x
+                                                 c2c_y2 => null(), &
+                                                 c2c_z2 => null(), &
+                                                 c2r_x => null(), &
+                                                 r2c_z => null(), & ! r2c/c2r, physical in z
+                                                 c2c_x2 => null(), &
+                                                 c2r_z => null()
       ! All the engines have this
       integer, private :: format
       logical, private :: initialised = .false.

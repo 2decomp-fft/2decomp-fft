@@ -249,7 +249,7 @@ contains
       end if
 
       ! Warning : replace the default engine
-      call engine%use_it()
+      call engine%use_it(opt_force=.true.)
 
       ! Compute the plan for the current engine
       call init_fft_engine()
@@ -461,15 +461,22 @@ contains
    end subroutine decomp_2d_fft_use_grid
 
    ! Associate the pointers in the module to the ones in the engine
-   subroutine decomp_2d_fft_engine_use_it(engine)
+   subroutine decomp_2d_fft_engine_use_it(engine, opt_force)
 
       implicit none
 
       class(decomp_2d_fft_engine), intent(in), target :: engine
+      logical, intent(in), optional :: opt_force ! Skip safety check
 
       ! Safety check
       if (.not. engine%initialised) then
-         call decomp_2d_abort(__FILE__, __LINE__, 0, "FFT engine is not ready")
+         if (present(opt_force)) then
+            if (.not. opt_force) then
+               call decomp_2d_abort(__FILE__, __LINE__, 0, "FFT engine is not ready")
+            end if
+         else
+            call decomp_2d_abort(__FILE__, __LINE__, 0, "FFT engine is not ready")
+         end if
       end if
 
       plan => engine%plan

@@ -1,0 +1,31 @@
+file(GLOB files_fft_multigrid_no_obj fft_multigrid_no_obj.f90)
+file(GLOB files_fft_multigrid fft_multigrid.f90)
+
+include_directories(${CMAKE_SOURCE_DIR}/src)
+
+add_executable(fft_multigrid_no_obj ${files_fft_multigrid_no_obj})
+add_executable(fft_multigrid ${files_fft_multigrid})
+
+target_link_libraries(fft_multigrid_no_obj PRIVATE decomp2d examples_utils)
+target_link_libraries(fft_multigrid PRIVATE decomp2d examples_utils)
+
+# Run the test(s)
+set(run_dir "${test_dir}/fft_multigrid_no_obj")
+message(STATUS "Example dir ${run_dir}")
+file(MAKE_DIRECTORY ${run_dir})
+if (BUILD_TARGET MATCHES "gpu")
+  file(COPY bind.sh DESTINATION ${run_dir})
+  add_test(NAME fft_multigrid_no_obj COMMAND ${MPIEXEC_EXECUTABLE} ${MPIEXEC_NUMPROC_FLAG} ${MPIEXEC_MAX_NUMPROCS} ./bind.sh  $<TARGET_FILE:fft_multigrid_no_obj> ${TEST_ARGUMENTS} WORKING_DIRECTORY ${run_dir})
+else ()  
+  add_test(NAME fft_multigrid_no_obj COMMAND ${MPIEXEC_EXECUTABLE} ${MPIEXEC_NUMPROC_FLAG} ${MPIEXEC_MAX_NUMPROCS} $<TARGET_FILE:fft_multigrid_no_obj> ${TEST_ARGUMENTS} WORKING_DIRECTORY ${run_dir})
+endif()
+
+set(run_dir "${test_dir}/fft_multigrid")
+message(STATUS "Example dir ${run_dir}")
+file(MAKE_DIRECTORY ${run_dir})
+if (BUILD_TARGET MATCHES "gpu")
+  file(COPY bind.sh DESTINATION ${run_dir})
+  add_test(NAME fft_multigrid COMMAND ${MPIEXEC_EXECUTABLE} ${MPIEXEC_NUMPROC_FLAG} ${MPIEXEC_MAX_NUMPROCS} ./bind.sh  $<TARGET_FILE:fft_multigrid> ${TEST_ARGUMENTS} WORKING_DIRECTORY ${run_dir})
+else ()  
+  add_test(NAME fft_multigrid COMMAND ${MPIEXEC_EXECUTABLE} ${MPIEXEC_NUMPROC_FLAG} ${MPIEXEC_MAX_NUMPROCS} $<TARGET_FILE:fft_multigrid> ${TEST_ARGUMENTS} WORKING_DIRECTORY ${run_dir})
+endif()

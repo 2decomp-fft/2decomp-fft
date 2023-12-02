@@ -75,28 +75,26 @@ module decomp_2d_fft
 
       type(decomp_2d_fft_engine), target, intent(inout) :: engine
 
-      associate (tmp => engine); end associate
-
       call decomp_2d_fft_log("MKL")
 
       ! For C2C transforms
-      call c2c_1m_x_plan(c2c_x, ph)
-      call c2c_1m_y_plan(c2c_y, ph)
-      call c2c_1m_z_plan(c2c_z, ph)
+      call c2c_1m_x_plan(engine%c2c_x, ph)
+      call c2c_1m_y_plan(engine%c2c_y, ph)
+      call c2c_1m_z_plan(engine%c2c_z, ph)
 
       ! For R2C/C2R tranfroms with physical space in X-pencil
       if (format == PHYSICAL_IN_X) then
-         call r2c_1m_x_plan(r2c_x, ph, sp, -1)
-         call c2c_1m_y_plan(c2c_y2, sp)
-         call c2c_1m_z_plan(c2c_z2, sp)
-         call r2c_1m_x_plan(c2r_x, ph, sp, 1)
+         call r2c_1m_x_plan(engine%r2c_x, ph, sp, -1)
+         call c2c_1m_y_plan(engine%c2c_y2, sp)
+         call c2c_1m_z_plan(engine%c2c_z2, sp)
+         call r2c_1m_x_plan(engine%c2r_x, ph, sp, 1)
 
          ! For R2C/C2R tranfroms with physical space in Z-pencil
       else if (format == PHYSICAL_IN_Z) then
-         call r2c_1m_z_plan(r2c_z, ph, sp, -1)
-         call c2c_1m_y_plan(c2c_y2, sp)
-         call c2c_1m_x_plan(c2c_x2, sp)
-         call r2c_1m_z_plan(c2r_z, ph, sp, 1)
+         call r2c_1m_z_plan(engine%r2c_z, ph, sp, -1)
+         call c2c_1m_y_plan(engine%c2c_y2, sp)
+         call c2c_1m_x_plan(engine%c2c_x2, sp)
+         call r2c_1m_z_plan(engine%c2r_z, ph, sp, 1)
       end if
 
       return

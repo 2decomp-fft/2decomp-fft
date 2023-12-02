@@ -6,7 +6,7 @@ module reference_data
 
 contains
 
-! This subroutines provides the reference real data
+   ! This subroutines provides the reference real data
    pure function reference_rdata(i, j, k, nx, ny, nz)
 
       !$acc routine seq
@@ -23,7 +23,7 @@ contains
 
    end function reference_rdata
 
-! This subroutine provides the reference complex data
+   ! This subroutine provides the reference complex data
    pure function reference_cdata(i, j, k, nx, ny, nz)
 
       !$acc routine seq

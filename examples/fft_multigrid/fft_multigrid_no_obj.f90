@@ -87,9 +87,9 @@ subroutine ntest_c2c(nt)
 
    ! Initialise input
    if (format == PHYSICAL_IN_X) then
-      st1 => ph%xst(1); en1 => ph%xen(1)
-      st2 => ph%xst(2); en2 => ph%xen(2)
-      st3 => ph%xst(3); en3 => ph%xen(3)
+      st1 = ph%xst(1); en1 = ph%xen(1)
+      st2 = ph%xst(2); en2 = ph%xen(2)
+      st3 = ph%xst(3); en3 = ph%xen(3)
       do k = st3, en3
          do j = st2, en2
             do i = st1, en1
@@ -98,9 +98,9 @@ subroutine ntest_c2c(nt)
          end do
       end do
    else
-      st1 => ph%zst(1); en1 => ph%zen(1)
-      st2 => ph%zst(2); en2 => ph%zen(2)
-      st3 => ph%zst(3); en3 => ph%zen(3)
+      st1 = ph%zst(1); en1 = ph%zen(1)
+      st2 = ph%zst(2); en2 = ph%zen(2)
+      st3 = ph%zst(3); en3 = ph%zen(3)
       do k = st3, en3
          do j = st2, en2
             do i = st1, en1
@@ -177,9 +177,9 @@ subroutine ntest_c2c(nt)
    ! Compute the sqrt of the L2 error
    error = 0._mytype
    if (format == PHYSICAL_IN_X) then
-      st1 => ph%xst(1); en1 => ph%xen(1)
-      st2 => ph%xst(2); en2 => ph%xen(2)
-      st3 => ph%xst(3); en3 => ph%xen(3)
+      st1 = ph%xst(1); en1 = ph%xen(1)
+      st2 = ph%xst(2); en2 = ph%xen(2)
+      st3 = ph%xst(3); en3 = ph%xen(3)
       !$acc parallel loop default(present) reduction(+:error)
       do k = st3, en3
          do j = st2, en2
@@ -191,9 +191,9 @@ subroutine ntest_c2c(nt)
       end do
       !$acc end loop
    else
-      st1 => ph%zst(1); en1 => ph%zen(1)
-      st2 => ph%zst(2); en2 => ph%zen(2)
-      st3 => ph%zst(3); en3 => ph%zen(3)
+      st1 = ph%zst(1); en1 = ph%zen(1)
+      st2 = ph%zst(2); en2 = ph%zen(2)
+      st3 = ph%zst(3); en3 = ph%zen(3)
       !$acc parallel loop default(present) reduction(+:error)
       do k = st3, en3
          do j = st2, en2
@@ -270,9 +270,9 @@ subroutine ntest_r2c(nt)
 
    ! Initialise input
    if (format == PHYSICAL_IN_X) then
-      st1 => ph%xst(1); en1 => ph%xen(1)
-      st2 => ph%xst(2); en2 => ph%xen(2)
-      st3 => ph%xst(3); en3 => ph%xen(3)
+      st1 = ph%xst(1); en1 = ph%xen(1)
+      st2 = ph%xst(2); en2 = ph%xen(2)
+      st3 = ph%xst(3); en3 = ph%xen(3)
       do k = st3, en3
          do j = st2, en2
             do i = st1, en1
@@ -281,9 +281,9 @@ subroutine ntest_r2c(nt)
          end do
       end do
    else
-      st1 => ph%zst(1); en1 => ph%zen(1)
-      st2 => ph%zst(2); en2 => ph%zen(2)
-      st3 => ph%zst(3); en3 => ph%zen(3)
+      st1 = ph%zst(1); en1 = ph%zen(1)
+      st2 = ph%zst(2); en2 = ph%zen(2)
+      st3 = ph%zst(3); en3 = ph%zen(3)
       do k = st3, en3
          do j = st2, en2
             do i = st1, en1
@@ -360,9 +360,9 @@ subroutine ntest_r2c(nt)
    ! Compute the sqrt of the L2 error
    error = 0._mytype
    if (format == PHYSICAL_IN_X) then
-      st1 => ph%xst(1); en1 => ph%xen(1)
-      st2 => ph%xst(2); en2 => ph%xen(2)
-      st3 => ph%xst(3); en3 => ph%xen(3)
+      st1 = ph%xst(1); en1 = ph%xen(1)
+      st2 = ph%xst(2); en2 = ph%xen(2)
+      st3 = ph%xst(3); en3 = ph%xen(3)
       !$acc parallel loop default(present) reduction(+:error)
       do k = st3, en3
          do j = st2, en2
@@ -373,9 +373,9 @@ subroutine ntest_r2c(nt)
       end do
       !$acc end loop
    else
-      st1 => ph%zst(1); en1 => ph%zen(1)
-      st2 => ph%zst(2); en2 => ph%zen(2)
-      st3 => ph%zst(3); en3 => ph%zen(3)
+      st1 = ph%zst(1); en1 = ph%zen(1)
+      st2 = ph%zst(2); en2 = ph%zen(2)
+      st3 = ph%zst(3); en3 = ph%zen(3)
       !$acc parallel loop default(present) reduction(+:error)
       do k = st3, en3
          do j = st2, en2

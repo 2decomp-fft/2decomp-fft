@@ -71,7 +71,7 @@ subroutine ntest_c2c(nt)
 
    ! Get the decomp_info object describing the arrays
    ph => decomp_2d_fft_get_ph()
-   nx => ph%xsz(1); ny => ph%ysz(2); nz => ph%zsz(3)
+   nx = ph%xsz(1); ny = ph%ysz(2); nz = ph%zsz(3)
 
    ! Get the format
    format = decomp_2d_fft_get_format()
@@ -254,7 +254,7 @@ subroutine ntest_r2c(nt)
    ! Get the decomp_info object describing the arrays
    ph => decomp_2d_fft_get_ph()
    sp => decomp_2d_fft_get_sp()
-   nx => ph%xsz(1); ny => ph%ysz(2); nz => ph%zsz(3)
+   nx = ph%xsz(1); ny = ph%ysz(2); nz = ph%zsz(3)
 
    ! Get the format
    format = decomp_2d_fft_get_format()

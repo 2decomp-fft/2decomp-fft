@@ -35,7 +35,7 @@ contains
       complex(mytype) :: reference_cdata
 
       reference_cdata = cmplx(reference_rdata(i, j, k, nx, ny, nz), &
-                              reference_rdata(i, j, k, nx, ny, nz), &
+                              -3._mytype * reference_rdata(i, j, k, nx, ny, nz), &
                               mytype)
 
    end function reference_cdata
@@ -90,25 +90,18 @@ subroutine ntest_c2c(nt)
       st1 = ph%xst(1); en1 = ph%xen(1)
       st2 = ph%xst(2); en2 = ph%xen(2)
       st3 = ph%xst(3); en3 = ph%xen(3)
-      do k = st3, en3
-         do j = st2, en2
-            do i = st1, en1
-               in(i, j, k) = reference_cdata(i, j, k, nx, ny, nz)
-            end do
-         end do
-      end do
    else
       st1 = ph%zst(1); en1 = ph%zen(1)
       st2 = ph%zst(2); en2 = ph%zen(2)
       st3 = ph%zst(3); en3 = ph%zen(3)
-      do k = st3, en3
-         do j = st2, en2
-            do i = st1, en1
-               in(i, j, k) = reference_cdata(i, j, k, nx, ny, nz)
-            end do
+   end if
+   do k = st3, en3
+      do j = st2, en2
+         do i = st1, en1
+            in(i, j, k) = reference_cdata(i, j, k, nx, ny, nz)
          end do
       end do
-   end if
+   end do
 
    !$acc data copyin(in), copyout(out)
 
@@ -180,31 +173,21 @@ subroutine ntest_c2c(nt)
       st1 = ph%xst(1); en1 = ph%xen(1)
       st2 = ph%xst(2); en2 = ph%xen(2)
       st3 = ph%xst(3); en3 = ph%xen(3)
-      !$acc parallel loop default(present) reduction(+:error)
-      do k = st3, en3
-         do j = st2, en2
-            do i = st1, en1
-               error = error + (real(in(i, j, k), mytype) - reference_rdata(i, j, k, nx, ny, nz))**2 &
-                       + (aimag(in(i, j, k)) - reference_rdata(i, j, k, nx, ny, nz))**2
-            end do
-         end do
-      end do
-      !$acc end loop
    else
       st1 = ph%zst(1); en1 = ph%zen(1)
       st2 = ph%zst(2); en2 = ph%zen(2)
       st3 = ph%zst(3); en3 = ph%zen(3)
-      !$acc parallel loop default(present) reduction(+:error)
-      do k = st3, en3
-         do j = st2, en2
-            do i = st1, en1
-               error = error + (real(in(i, j, k), mytype) - reference_rdata(i, j, k, nx, ny, nz))**2 &
-                       + (aimag(in(i, j, k)) - reference_rdata(i, j, k, nx, ny, nz))**2
-            end do
+   end if
+   !$acc parallel loop default(present) reduction(+:error)
+   do k = st3, en3
+      do j = st2, en2
+         do i = st1, en1
+            error = error + (real(in(i, j, k), mytype) - reference_rdata(i, j, k, nx, ny, nz))**2 &
+                    + (aimag(in(i, j, k)) - reference_rdata(i, j, k, nx, ny, nz))**2
          end do
       end do
-      !$acc end loop
-   end if
+   end do
+   !$acc end loop
    call MPI_ALLREDUCE(MPI_IN_PLACE, error, 1, real_type, MPI_SUM, MPI_COMM_WORLD, ierror)
    error = sqrt(error) / (real(nx, mytype) * real(ny, mytype) * real(nz, mytype))
 
@@ -273,25 +256,18 @@ subroutine ntest_r2c(nt)
       st1 = ph%xst(1); en1 = ph%xen(1)
       st2 = ph%xst(2); en2 = ph%xen(2)
       st3 = ph%xst(3); en3 = ph%xen(3)
-      do k = st3, en3
-         do j = st2, en2
-            do i = st1, en1
-               in(i, j, k) = reference_rdata(i, j, k, nx, ny, nz)
-            end do
-         end do
-      end do
    else
       st1 = ph%zst(1); en1 = ph%zen(1)
       st2 = ph%zst(2); en2 = ph%zen(2)
       st3 = ph%zst(3); en3 = ph%zen(3)
-      do k = st3, en3
-         do j = st2, en2
-            do i = st1, en1
-               in(i, j, k) = reference_rdata(i, j, k, nx, ny, nz)
-            end do
+   end if
+   do k = st3, en3
+      do j = st2, en2
+         do i = st1, en1
+            in(i, j, k) = reference_rdata(i, j, k, nx, ny, nz)
          end do
       end do
-   end if
+   end do
 
    !$acc data copyin(in), copyout(out)
 
@@ -363,29 +339,20 @@ subroutine ntest_r2c(nt)
       st1 = ph%xst(1); en1 = ph%xen(1)
       st2 = ph%xst(2); en2 = ph%xen(2)
       st3 = ph%xst(3); en3 = ph%xen(3)
-      !$acc parallel loop default(present) reduction(+:error)
-      do k = st3, en3
-         do j = st2, en2
-            do i = st1, en1
-               error = error + (in(i, j, k) - reference_rdata(i, j, k, nx, ny, nz))**2
-            end do
-         end do
-      end do
-      !$acc end loop
    else
       st1 = ph%zst(1); en1 = ph%zen(1)
       st2 = ph%zst(2); en2 = ph%zen(2)
       st3 = ph%zst(3); en3 = ph%zen(3)
-      !$acc parallel loop default(present) reduction(+:error)
-      do k = st3, en3
-         do j = st2, en2
-            do i = st1, en1
-               error = error + (in(i, j, k) - reference_rdata(i, j, k, nx, ny, nz))**2
-            end do
+   end if
+   !$acc parallel loop default(present) reduction(+:error)
+   do k = st3, en3
+      do j = st2, en2
+         do i = st1, en1
+            error = error + (in(i, j, k) - reference_rdata(i, j, k, nx, ny, nz))**2
          end do
       end do
-      !$acc end loop
-   end if
+   end do
+   !$acc end loop
    call MPI_ALLREDUCE(MPI_IN_PLACE, error, 1, real_type, MPI_SUM, MPI_COMM_WORLD, ierror)
    error = sqrt(error) / (real(nx, mytype) * real(ny, mytype) * real(nz, mytype))
 

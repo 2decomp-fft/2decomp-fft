@@ -109,6 +109,10 @@ subroutine ntest_c2c(nt)
    t1 = MPI_WTIME()
    call decomp_2d_fft_3d(in, out, DECOMP_2D_FFT_FORWARD)
    t1 = MPI_WTIME() - t1
+   ! Reset the initial array
+   !$acc kernels
+   in = 0._mytype
+   !$acc end kernels
    t2 = MPI_WTIME()
    call decomp_2d_fft_3d(out, in, DECOMP_2D_FFT_BACKWARD)
    t2 = MPI_WTIME() - t2
@@ -143,6 +147,11 @@ subroutine ntest_c2c(nt)
       call decomp_2d_fft_3d(in, out, DECOMP_2D_FFT_FORWARD)
       tt = MPI_WTIME() - tt
       t1 = t1 + tt
+
+      ! Reset the initial array
+      !$acc kernels
+      in = 0._mytype
+      !$acc end kernels
 
       ! Inverse FFT
       tt = MPI_WTIME()
@@ -275,6 +284,10 @@ subroutine ntest_r2c(nt)
    t1 = MPI_WTIME()
    call decomp_2d_fft_3d(in, out)
    t1 = MPI_WTIME() - t1
+   ! Reset the initial array
+   !$acc kernels
+   in = 0._mytype
+   !$acc end kernels
    t2 = MPI_WTIME()
    call decomp_2d_fft_3d(out, in)
    t2 = MPI_WTIME() - t2
@@ -309,6 +322,11 @@ subroutine ntest_r2c(nt)
       call decomp_2d_fft_3d(in, out)
       tt = MPI_WTIME() - tt
       t1 = t1 + tt
+
+      ! Reset the initial array
+      !$acc kernels
+      in = 0._mytype
+      !$acc end kernels
 
       ! Inverse FFT
       tt = MPI_WTIME()

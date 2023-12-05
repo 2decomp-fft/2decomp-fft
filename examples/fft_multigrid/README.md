@@ -1,4 +1,4 @@
-# Test FFT for multiople grids
+# Test FFT for multiple grids
 
 List of the tests:
 - [fft_multigrid](fft_multigrid.f90): Test FFT on multiple grids using the dedicated object;

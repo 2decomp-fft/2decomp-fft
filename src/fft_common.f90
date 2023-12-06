@@ -354,13 +354,27 @@ subroutine decomp_2d_fft_set_ngrid(ngrd)
 
    integer, intent(in) :: ngrd
 
-   ! Safety checks
+   type(decomp_2d_fft_engine), allocatable :: tmp(:)
+
+   ! Safety check
    if (ngrd < 1) then
       call decomp_2d_abort(__FILE__, __LINE__, ngrd, "Invalid value for n_grid")
    end if
+
+   ! Change the number of grids
    if (n_grid > 0 .or. allocated(fft_engines)) then
-      call decomp_2d_abort(__FILE__, __LINE__, n_grid, &
-                           "The number of FFT grids was already set")
+      ! Save the current grids
+      tmp = fft_engines
+      ! Re-allocate
+      deallocate (fft_engines)
+      allocate (fft_engines(ngrd))
+      ! Restore
+      fft_engines(1:min(ngrd, n_grid)) = tmp(1:min(ngrd, n_grid))
+      ! Set the number of FFT grids
+      n_grid = ngrd
+      ! Free memory and return
+      deallocate (tmp)
+      return
    end if
 
    ! Set the number of FFT grids

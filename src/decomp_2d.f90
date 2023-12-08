@@ -140,7 +140,7 @@ module decomp_2d
    !    0 => no profiling, default
    !    1 => Caliper (https://github.com/LLNL/Caliper)
    !
-   integer(kind(decomp_profiler_none)), save, public :: decomp_profiler = decomp_profiler_none
+   integer, save, public :: decomp_profiler = decomp_profiler_none
    ! Default : profile everything
    logical, save, public :: decomp_profiler_transpose = .true.
    logical, save, public :: decomp_profiler_io = .true.

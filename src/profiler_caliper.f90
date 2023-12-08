@@ -3,7 +3,6 @@
 !
 ! Submodule for the caliper profiler
 !
-#ifdef PROFILER
 submodule(decomp_2d) d2d_profiler_caliper
 
    use caliper_mod, only: ConfigManager, ConfigManager_new, &
@@ -37,6 +36,9 @@ contains
    ! Finalize
    !
    module subroutine decomp_profiler_fin_noarg
+
+      implicit none
+
       call mgr%flush()
       call manager_error(mgr)
       call mgr%stop()
@@ -135,4 +137,3 @@ contains
    end subroutine manager_error
 
 end submodule d2d_profiler_caliper
-#endif

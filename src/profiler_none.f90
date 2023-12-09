@@ -1,5 +1,8 @@
 !! SPDX-License-Identifier: BSD-3-Clause
 
+! Preprocessor macro to deal with unused variables
+#define unused(x) associate(tmp => x); end associate
+
 !
 ! Dummy module when there is no profiler
 !
@@ -108,7 +111,7 @@ contains
 
       decomp_profiler = decomp_profiler_none
 
-      associate (tmp => profiler_setup); end associate
+      unused(profiler_setup)
 
    end subroutine decomp_profiler_prep_bool
 
@@ -121,7 +124,7 @@ contains
 
       character(len=*), intent(in) :: timer_name
 
-      associate (tmp => timer_name); end associate
+      unused(timer_name)
 
    end subroutine decomp_profiler_start_char
 
@@ -134,7 +137,7 @@ contains
 
       character(len=*), intent(in) :: timer_name
 
-      associate (tmp => timer_name); end associate
+      unused(timer_name)
 
    end subroutine decomp_profiler_end_char
 

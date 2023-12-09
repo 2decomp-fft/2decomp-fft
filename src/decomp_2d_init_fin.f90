@@ -27,13 +27,7 @@
      logical, dimension(2) :: periodic
 
      ! Prepare the profiler if it was not already prepared
-     if (decomp_profiler == decomp_profiler_none) then
-        call decomp_profiler_prep(decomp_profiler, &
-                                  decomp_profiler_transpose, &
-                                  decomp_profiler_io, &
-                                  decomp_profiler_fft, &
-                                  decomp_profiler_d2d)
-     end if
+     if (decomp_profiler == decomp_profiler_none) call decomp_profiler_prep()
 
      ! Start the profiler
      call decomp_profiler_init()
@@ -200,7 +194,7 @@
 
      if (decomp_profiler_d2d) call decomp_profiler_end("decomp_2d_fin")
      ! Finalize the profiler
-     call decomp_profiler_fin(decomp_profiler)
+     call decomp_profiler_fin()
 
      return
   end subroutine decomp_2d_finalize_ref

@@ -9,6 +9,18 @@ module decomp_2d_profiler
 
    implicit none
 
+   !
+   ! Integer to select the profiling tool
+   !    0 => no profiling, default
+   !    1 => Caliper (https://github.com/LLNL/Caliper)
+   !
+   integer, save, public :: decomp_profiler = decomp_profiler_none
+   ! Default : profile everything
+   logical, save, public :: decomp_profiler_transpose = .true.
+   logical, save, public :: decomp_profiler_io = .true.
+   logical, save, public :: decomp_profiler_fft = .true.
+   logical, save, public :: decomp_profiler_d2d = .true.
+
    private
 
    ! public user routines
@@ -26,7 +38,7 @@ module decomp_2d_profiler
 
    ! Generic interface to finalize the profiler
    interface decomp_profiler_fin
-      module procedure decomp_profiler_fin_int
+      module procedure decomp_profiler_fin_noarg
    end interface decomp_profiler_fin
 
    ! Generic interface for the profiler to log setup
@@ -63,15 +75,13 @@ contains
    !
    ! Dummy finalize
    !
-   subroutine decomp_profiler_fin_int(decomp_profiler)
+   subroutine decomp_profiler_fin_noarg()
 
       implicit none
 
-      integer, intent(out) :: decomp_profiler
-
       decomp_profiler = decomp_profiler_none
 
-   end subroutine decomp_profiler_fin_int
+   end subroutine decomp_profiler_fin_noarg
 
    !
    ! Dummy log setup
@@ -89,20 +99,14 @@ contains
    !
    ! Dummy setup
    !
-   subroutine decomp_profiler_prep_bool(decomp_profiler, b_transpose, b_io, b_fft, b_2d, profiler_setup)
+   subroutine decomp_profiler_prep_bool(profiler_setup)
 
       implicit none
 
-      integer, intent(out) :: decomp_profiler
-      logical, intent(out) :: b_transpose, b_io, b_fft, b_2d
       logical, dimension(4), intent(in), optional :: profiler_setup
 
       decomp_profiler = decomp_profiler_none
 
-      associate (tmp => b_transpose); end associate
-      associate (tmp => b_io); end associate
-      associate (tmp => b_fft); end associate
-      associate (tmp => b_2d); end associate
       associate (tmp => profiler_setup); end associate
 
    end subroutine decomp_profiler_prep_bool

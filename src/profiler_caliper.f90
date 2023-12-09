@@ -13,6 +13,19 @@ module decomp_2d_profiler
 
    implicit none
 
+   !
+   ! Integer to select the profiling tool
+   !    0 => no profiling, default
+   !    1 => Caliper (https://github.com/LLNL/Caliper)
+   !
+   integer, save, public :: decomp_profiler = decomp_profiler_none
+   ! Default : profile everything
+   logical, save, public :: decomp_profiler_transpose = .true.
+   logical, save, public :: decomp_profiler_io = .true.
+   logical, save, public :: decomp_profiler_fft = .true.
+   logical, save, public :: decomp_profiler_d2d = .true.
+
+   ! Caliper object
    type(ConfigManager), save :: mgr
 
    private
@@ -32,7 +45,7 @@ module decomp_2d_profiler
 
    ! Generic interface to finalize the profiler
    interface decomp_profiler_fin
-      module procedure decomp_profiler_fin_int
+      module procedure decomp_profiler_fin_noarg
    end interface decomp_profiler_fin
 
    ! Generic interface for the profiler to log setup
@@ -79,11 +92,9 @@ contains
    !
    ! Finalize
    !
-   subroutine decomp_profiler_fin_int(decomp_profiler)
+   subroutine decomp_profiler_fin_noarg()
 
       implicit none
-
-      integer, intent(out) :: decomp_profiler
 
       call mgr%flush()
       call manager_error(mgr)
@@ -91,8 +102,12 @@ contains
       call manager_error(mgr)
       call mgr%delete()
       decomp_profiler = decomp_profiler_none
+      decomp_profiler_transpose = .true.
+      decomp_profiler_io = .true.
+      decomp_profiler_fft = .true.
+      decomp_profiler_d2d = .true.
 
-   end subroutine decomp_profiler_fin_int
+   end subroutine decomp_profiler_fin_noarg
 
    !
    ! Log setup, currently only one profiling option
@@ -115,12 +130,10 @@ contains
    !      Advance setup is possible using
    !         - extra optional argument of type char at prepare stage
    !         - env. variable CALI_CONFIG
-   subroutine decomp_profiler_prep_bool(decomp_profiler, b_transpose, b_io, b_fft, b_2d, profiler_setup)
+   subroutine decomp_profiler_prep_bool(profiler_setup)
 
       implicit none
 
-      integer, intent(out) :: decomp_profiler
-      logical, intent(out) :: b_transpose, b_io, b_fft, b_2d
       logical, dimension(4), intent(in), optional :: profiler_setup
 
       ! Set the profiler id
@@ -128,10 +141,10 @@ contains
 
       ! Change the setup if provided
       if (present(profiler_setup)) then
-         b_transpose = profiler_setup(1)
-         b_io = profiler_setup(2)
-         b_fft = profiler_setup(3)
-         b_2d = profiler_setup(4)
+         decomp_profiler_transpose = profiler_setup(1)
+         decomp_profiler_io = profiler_setup(2)
+         decomp_profiler_fft = profiler_setup(3)
+         decomp_profiler_d2d = profiler_setup(4)
       end if
 
    end subroutine decomp_profiler_prep_bool

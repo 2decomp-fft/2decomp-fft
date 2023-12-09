@@ -134,20 +134,6 @@ module decomp_2d
    integer, save :: iskipV, jskipV, kskipV
    integer, save :: iskipP, jskipP, kskipP
 
-   !
-   ! Profiler section
-   !
-   ! Integer to select the profiling tool
-   !    0 => no profiling, default
-   !    1 => Caliper (https://github.com/LLNL/Caliper)
-   !
-   integer, save, public :: decomp_profiler = decomp_profiler_none
-   ! Default : profile everything
-   logical, save, public :: decomp_profiler_transpose = .true.
-   logical, save, public :: decomp_profiler_io = .true.
-   logical, save, public :: decomp_profiler_fft = .true.
-   logical, save, public :: decomp_profiler_d2d = .true.
-
    ! public user routines
    public :: decomp_2d_init, decomp_2d_finalize, &
              transpose_x_to_y, transpose_y_to_z, &

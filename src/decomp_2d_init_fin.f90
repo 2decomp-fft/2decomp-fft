@@ -28,7 +28,6 @@
 
      ! Prepare the profiler if it was not already prepared
      if (decomp_profiler == decomp_profiler_none) call decomp_profiler_prep()
-
      ! Start the profiler
      call decomp_profiler_init()
      ! Start the timer for decomp_2d_init

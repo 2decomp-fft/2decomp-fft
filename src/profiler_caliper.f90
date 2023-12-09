@@ -20,10 +20,11 @@ module decomp_2d_profiler
    !
    integer, save, public :: decomp_profiler = decomp_profiler_none
    ! Default : profile everything
-   logical, save, public :: decomp_profiler_transpose = .true.
-   logical, save, public :: decomp_profiler_io = .true.
-   logical, save, public :: decomp_profiler_fft = .true.
-   logical, save, public :: decomp_profiler_d2d = .true.
+   logical, parameter :: default_profiler = .true.
+   logical, save, public :: decomp_profiler_transpose = default_profiler
+   logical, save, public :: decomp_profiler_io = default_profiler
+   logical, save, public :: decomp_profiler_fft = default_profiler
+   logical, save, public :: decomp_profiler_d2d = default_profiler
 
    ! Caliper object
    type(ConfigManager), save :: mgr
@@ -102,10 +103,10 @@ contains
       call manager_error(mgr)
       call mgr%delete()
       decomp_profiler = decomp_profiler_none
-      decomp_profiler_transpose = .true.
-      decomp_profiler_io = .true.
-      decomp_profiler_fft = .true.
-      decomp_profiler_d2d = .true.
+      decomp_profiler_transpose = default_profiler
+      decomp_profiler_io = default_profiler
+      decomp_profiler_fft = default_profiler
+      decomp_profiler_d2d = default_profiler
 
    end subroutine decomp_profiler_fin_noarg
 

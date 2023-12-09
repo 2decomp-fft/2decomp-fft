@@ -1,7 +1,7 @@
 !! SPDX-License-Identifier: BSD-3-Clause
 
 !
-! Dummy submodule when there is no profiler
+! Dummy module when there is no profiler
 !
 module decomp_2d_profiler
 
@@ -16,10 +16,11 @@ module decomp_2d_profiler
    !
    integer, save, public :: decomp_profiler = decomp_profiler_none
    ! Default : profile everything
-   logical, save, public :: decomp_profiler_transpose = .true.
-   logical, save, public :: decomp_profiler_io = .true.
-   logical, save, public :: decomp_profiler_fft = .true.
-   logical, save, public :: decomp_profiler_d2d = .true.
+   logical, parameter :: default_profiler = .false.
+   logical, save, public :: decomp_profiler_transpose = default_profiler
+   logical, save, public :: decomp_profiler_io = default_profiler
+   logical, save, public :: decomp_profiler_fft = default_profiler
+   logical, save, public :: decomp_profiler_d2d = default_profiler
 
    private
 

@@ -35,7 +35,7 @@ contains
       complex(mytype) :: reference_cdata
 
       reference_cdata = cmplx(reference_rdata(i, j, k, nx, ny, nz), &
-                              -3._mytype * reference_rdata(i, j, k, nx, ny, nz), &
+                              -3 * reference_rdata(i, j, k, nx, ny, nz), &
                               mytype)
 
    end function reference_cdata
@@ -192,7 +192,7 @@ subroutine ntest_c2c(nt)
       do j = st2, en2
          do i = st1, en1
             error = error + (real(in(i, j, k), mytype) - reference_rdata(i, j, k, nx, ny, nz))**2 &
-                    + (aimag(in(i, j, k)) - reference_rdata(i, j, k, nx, ny, nz))**2
+                    + (aimag(in(i, j, k)) + 3 * reference_rdata(i, j, k, nx, ny, nz))**2
          end do
       end do
    end do
@@ -212,6 +212,11 @@ subroutine ntest_c2c(nt)
    ! Free memory, nullify pointers
    deallocate (in, out)
    nullify (ph)
+
+   ! Abort if the error is too high
+   if (error > epsilon(error) * 5 * nt) then
+      call decomp_2d_abort(__FILE__, __LINE__, int(log10(error)), "c2c test")
+   end if
 
 end subroutine ntest_c2c
 
@@ -387,6 +392,11 @@ subroutine ntest_r2c(nt)
    deallocate (in, out)
    nullify (sp)
    nullify (ph)
+
+   ! Abort if the error is too high
+   if (error > epsilon(error) * 5 * nt) then
+      call decomp_2d_abort(__FILE__, __LINE__, int(log10(error)), "c2c test")
+   end if
 
 end subroutine ntest_r2c
 

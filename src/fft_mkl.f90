@@ -677,7 +677,7 @@ module decomp_2d_fft
       end if
 
       ! Free memory
-      if (allocated(wk2d)) deallocate (wk2b)
+      if (allocated(wk2b)) deallocate (wk2b)
       if (allocated(wk3)) deallocate (wk3)
 
 #ifdef PROFILER

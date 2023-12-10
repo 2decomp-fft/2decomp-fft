@@ -50,6 +50,9 @@ module decomp_2d_fft
                                            wk2_r2c(:, :, :) => null(), &
                                            wk13(:, :, :) => null()
 
+   ! In-place FFT
+   logical, pointer, save :: inplace => null()
+
    ! Derived type with all the quantities needed to perform FFT
    type decomp_2d_fft_engine
       type(c_ptr), private :: plan(-1:2, 3), wk2_c2c_p, wk13_p
@@ -61,6 +64,7 @@ module decomp_2d_fft
       complex(mytype), contiguous, pointer, private :: wk2_c2c(:, :, :) => null()
       complex(mytype), contiguous, pointer, private :: wk2_r2c(:, :, :) => null()
       complex(mytype), contiguous, pointer, private :: wk13(:, :, :) => null()
+      logical, private :: inplace
    contains
       procedure, public :: init => decomp_2d_fft_engine_init
       procedure, public :: fin => decomp_2d_fft_engine_fin
@@ -84,7 +88,8 @@ module decomp_2d_fft
              decomp_2d_fft_get_ph, decomp_2d_fft_get_sp, &
              decomp_2d_fft_get_ngrid, decomp_2d_fft_set_ngrid, &
              decomp_2d_fft_use_grid, decomp_2d_fft_engine, &
-             decomp_2d_fft_get_engine, decomp_2d_fft_get_format
+             decomp_2d_fft_get_engine, decomp_2d_fft_get_format, &
+             decomp_2d_fft_get_inplace
 
    ! Declare generic interfaces to handle different inputs
 
@@ -131,26 +136,28 @@ contains
    end subroutine fft_init_arg
 
    ! Initialise one FFT library to perform arbitrary size transforms
-   subroutine fft_init_general(pencil, nx, ny, nz)
+   subroutine fft_init_general(pencil, nx, ny, nz, opt_inplace)
 
       implicit none
 
       integer, intent(IN) :: pencil, nx, ny, nz
+      logical, intent(in), optional :: opt_inplace
 
       ! Only one FFT engine will be used
       call decomp_2d_fft_set_ngrid(1)
 
       ! Initialise the FFT engine
-      call decomp_2d_fft_init(pencil, nx, ny, nz, 1)
+      call decomp_2d_fft_init(pencil, nx, ny, nz, 1, opt_inplace)
 
    end subroutine fft_init_general
 
    ! Initialise the provided FFT grid
-   subroutine fft_init_multigrid(pencil, nx, ny, nz, igrid)
+   subroutine fft_init_multigrid(pencil, nx, ny, nz, igrid, opt_inplace)
 
       implicit none
 
       integer, intent(in) :: pencil, nx, ny, nz, igrid
+      logical, intent(in), optional :: opt_inplace
 
       ! Safety check
       if (igrid < 1 .or. igrid > n_grid) then
@@ -158,17 +165,18 @@ contains
       end if
 
       ! Initialise the engine
-      call fft_engines(igrid)%init(pencil, nx, ny, nz)
+      call fft_engines(igrid)%init(pencil, nx, ny, nz, opt_inplace)
 
    end subroutine fft_init_multigrid
 
    ! Initialise the given FFT engine
-   subroutine decomp_2d_fft_engine_init(engine, pencil, nx, ny, nz)
+   subroutine decomp_2d_fft_engine_init(engine, pencil, nx, ny, nz, opt_inplace)
 
       implicit none
 
       class(decomp_2d_fft_engine), intent(inout), target :: engine
       integer, intent(in) :: pencil, nx, ny, nz
+      logical, intent(in), optional :: opt_inplace
 
       integer(C_SIZE_T) :: sz
 
@@ -190,6 +198,13 @@ contains
       engine%nx_fft = nx
       engine%ny_fft = ny
       engine%nz_fft = nz
+
+      ! FFT can be inplace
+      if (present(opt_inplace)) then
+         engine%inplace = opt_inplace
+      else
+         engine%inplace = DECOMP_2D_FFT_INPLACE
+      end if
 
       ! determine the processor grid in use
       dims = get_decomp_dims()
@@ -295,6 +310,7 @@ contains
       nullify (wk2_c2c)
       nullify (wk2_r2c)
       nullify (wk13)
+      nullify (inplace)
 
       ! Clean the FFTW library
       call fftw_cleanup()
@@ -506,6 +522,7 @@ contains
       wk2_c2c => engine%wk2_c2c
       wk2_r2c => engine%wk2_r2c
       wk13 => engine%wk13
+      inplace => engine%inplace
 
    end subroutine decomp_2d_fft_engine_use_it
 
@@ -551,6 +568,17 @@ contains
       decomp_2d_fft_get_format = format
 
    end function decomp_2d_fft_get_format
+
+   ! The external code can check if the FFT is inplace
+   function decomp_2d_fft_get_inplace()
+
+      implicit none
+
+      logical :: decomp_2d_fft_get_inplace
+
+      decomp_2d_fft_get_inplace = inplace
+
+   end function decomp_2d_fft_get_inplace
 
    ! Return a FFTW3 plan for multiple 1D c2c FFTs in X direction
    subroutine c2c_1m_x_plan(plan1, decomp, isign)
@@ -886,7 +914,6 @@ contains
 
       end if
 
-      return
    end subroutine init_fft_engine
 
    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -1044,69 +1071,71 @@ contains
 
    end subroutine c2r_1m_z
 
-  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
    ! 3D FFT - complex to complex
-  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
    subroutine fft_3d_c2c(in, out, isign)
 
       implicit none
 
+      ! Arguments
       complex(mytype), dimension(:, :, :), intent(INOUT) :: in
       complex(mytype), dimension(:, :, :), intent(OUT) :: out
       integer, intent(IN) :: isign
 
-#ifndef OVERWRITE
+      ! Local variables
       complex(mytype), pointer :: wk1(:, :, :)
       integer(C_SIZE_T) :: sz
       type(C_PTR) :: wk1_p
-
-      wk1_p = c_null_ptr ! Initialise to NULL pointer
-#endif
 
 #ifdef PROFILER
       if (decomp_profiler_fft) call decomp_profiler_start("fft_c2c")
 #endif
 
+      ! Initialise to NULL pointer
+      nullify (wk1)
+      wk1_p = c_null_ptr
+
       if (format == PHYSICAL_IN_X .AND. isign == DECOMP_2D_FFT_FORWARD .OR. &
           format == PHYSICAL_IN_Z .AND. isign == DECOMP_2D_FFT_BACKWARD) then
 
          ! ===== 1D FFTs in X =====
-#ifdef OVERWRITE
-         call c2c_1m_x(in, plan(isign, 1))
-#else
-         sz = ph%xsz(1) * ph%xsz(2) * ph%xsz(3)
-         wk1_p = fftw_alloc_complex(sz)
-         call c_f_pointer(wk1_p, wk1, [ph%xsz(1), ph%xsz(2), ph%xsz(3)])
-         wk1 = in
-         call c2c_1m_x(wk1, plan(isign, 1))
-#endif
+         if (inplace) then
+            call c2c_1m_x(in, plan(isign, 1))
+         else
+            sz = product(ph%xsz)
+            wk1_p = fftw_alloc_complex(sz)
+            call c_f_pointer(wk1_p, wk1, ph%xsz)
+            wk1 = in
+            call c2c_1m_x(wk1, plan(isign, 1))
+         end if
 
          ! ===== Swap X --> Y; 1D FFTs in Y =====
 
          if (dims(1) > 1) then
-#ifdef OVERWRITE
-            call transpose_x_to_y(in, wk2_c2c, ph)
-#else
-            call transpose_x_to_y(wk1, wk2_c2c, ph)
-#endif
+            if (inplace) then
+               call transpose_x_to_y(in, wk2_c2c, ph)
+            else
+               call transpose_x_to_y(wk1, wk2_c2c, ph)
+            end if
             call c2c_1m_y(wk2_c2c, plan(isign, 2))
          else
-#ifdef OVERWRITE
-            call c2c_1m_y(in, plan(isign, 2))
-#else
-            call c2c_1m_y(wk1, plan(isign, 2))
-#endif
+            if (inplace) then
+               call c2c_1m_y(in, plan(isign, 2))
+            else
+               call c2c_1m_y(wk1, plan(isign, 2))
+            end if
          end if
 
          ! ===== Swap Y --> Z; 1D FFTs in Z =====
          if (dims(1) > 1) then
             call transpose_y_to_z(wk2_c2c, out, ph)
          else
-#ifdef OVERWRITE
-            call transpose_y_to_z(in, out, ph)
-#else
-            call transpose_y_to_z(wk1, out, ph)
-#endif
+            if (inplace) then
+               call transpose_y_to_z(in, out, ph)
+            else
+               call transpose_y_to_z(wk1, out, ph)
+            end if
          end if
          call c2c_1m_z(out, plan(isign, 3))
 
@@ -1115,30 +1144,30 @@ contains
                format == PHYSICAL_IN_Z .AND. isign == DECOMP_2D_FFT_FORWARD) then
 
          ! ===== 1D FFTs in Z =====
-#ifdef OVERWRITE
-         call c2c_1m_z(in, plan(isign, 3))
-#else
-         sz = ph%zsz(1) * ph%zsz(2) * ph%zsz(3)
-         wk1_p = fftw_alloc_complex(sz)
-         call c_f_pointer(wk1_p, wk1, [ph%zsz(1), ph%zsz(2), ph%zsz(3)])
-         wk1 = in
-         call c2c_1m_z(wk1, plan(isign, 3))
-#endif
+         if (inplace) then
+            call c2c_1m_z(in, plan(isign, 3))
+         else
+            sz = product(ph%zsz)
+            wk1_p = fftw_alloc_complex(sz)
+            call c_f_pointer(wk1_p, wk1, ph%zsz)
+            wk1 = in
+            call c2c_1m_z(wk1, plan(isign, 3))
+         end if
 
          ! ===== Swap Z --> Y; 1D FFTs in Y =====
          if (dims(1) > 1) then
-#ifdef OVERWRITE
-            call transpose_z_to_y(in, wk2_c2c, ph)
-#else
-            call transpose_z_to_y(wk1, wk2_c2c, ph)
-#endif
+            if (inplace) then
+               call transpose_z_to_y(in, wk2_c2c, ph)
+            else
+               call transpose_z_to_y(wk1, wk2_c2c, ph)
+            end if
             call c2c_1m_y(wk2_c2c, plan(isign, 2))
          else  ! out==wk2_c2c if 1D decomposition
-#ifdef OVERWRITE
-            call transpose_z_to_y(in, out, ph)
-#else
-            call transpose_z_to_y(wk1, out, ph)
-#endif
+            if (inplace) then
+               call transpose_z_to_y(in, out, ph)
+            else
+               call transpose_z_to_y(wk1, out, ph)
+            end if
             call c2c_1m_y(out, plan(isign, 2))
          end if
 
@@ -1150,21 +1179,21 @@ contains
 
       end if
 
-#ifndef OVERWRITE
-      call fftw_free(wk1_p)
-      nullify (wk1)
-#endif
+      ! Free memory
+      if (associated(wk1)) then
+         call fftw_free(wk1_p)
+         nullify (wk1)
+      end if
 
 #ifdef PROFILER
       if (decomp_profiler_fft) call decomp_profiler_end("fft_c2c")
 #endif
 
-      return
    end subroutine fft_3d_c2c
 
-  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
    ! 3D forward FFT - real to complex
-  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
    subroutine fft_3d_r2c(in_r, out_c)
 
       implicit none
@@ -1226,47 +1255,49 @@ contains
       return
    end subroutine fft_3d_r2c
 
-  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
    ! 3D inverse FFT - complex to real
-  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
    subroutine fft_3d_c2r(in_c, out_r)
 
       implicit none
 
+      ! Arguments
       complex(mytype), dimension(:, :, :), intent(INOUT) :: in_c
       real(mytype), dimension(:, :, :), intent(OUT) :: out_r
 
-#ifndef OVERWRITE
+      ! Local variables
       complex(mytype), pointer :: wk1(:, :, :)
       integer(C_SIZE_T) :: sz
       type(C_PTR) :: wk1_p
-
-      wk1_p = c_null_ptr ! Initialise to NULL pointer
-#endif
 
 #ifdef PROFILER
       if (decomp_profiler_fft) call decomp_profiler_start("fft_c2r")
 #endif
 
+      ! Initialise to NULL pointer
+      nullify (wk1)
+      wk1_p = c_null_ptr
+
       if (format == PHYSICAL_IN_X) then
 
          ! ===== 1D FFTs in Z =====
-#ifdef OVERWRITE
-         call c2c_1m_z(in_c, plan(2, 3))
-#else
-         sz = sp%zsz(1) * sp%zsz(2) * sp%zsz(3)
-         wk1_p = fftw_alloc_complex(sz)
-         call c_f_pointer(wk1_p, wk1, [sp%zsz(1), sp%zsz(2), sp%zsz(3)])
-         wk1 = in_c
-         call c2c_1m_z(wk1, plan(2, 3))
-#endif
+         if (inplace) then
+            call c2c_1m_z(in_c, plan(2, 3))
+         else
+            sz = product(sp%zsz)
+            wk1_p = fftw_alloc_complex(sz)
+            call c_f_pointer(wk1_p, wk1, sp%zsz)
+            wk1 = in_c
+            call c2c_1m_z(wk1, plan(2, 3))
+         end if
 
          ! ===== Swap Z --> Y; 1D FFTs in Y =====
-#ifdef OVERWRITE
-         call transpose_z_to_y(in_c, wk2_r2c, sp)
-#else
-         call transpose_z_to_y(wk1, wk2_r2c, sp)
-#endif
+         if (inplace) then
+            call transpose_z_to_y(in_c, wk2_r2c, sp)
+         else
+            call transpose_z_to_y(wk1, wk2_r2c, sp)
+         end if
          call c2c_1m_y(wk2_r2c, plan(2, 2))
 
          ! ===== Swap Y --> X; 1D FFTs in X =====
@@ -1280,50 +1311,51 @@ contains
       else if (format == PHYSICAL_IN_Z) then
 
          ! ===== 1D FFTs in X =====
-#ifdef OVERWRITE
-         call c2c_1m_x(in_c, plan(2, 1))
-#else
-         sz = sp%xsz(1) * sp%xsz(2) * sp%xsz(3)
-         wk1_p = fftw_alloc_complex(sz)
-         call c_f_pointer(wk1_p, wk1, [sp%xsz(1), sp%xsz(2), sp%xsz(3)])
-         wk1 = in_c
-         call c2c_1m_x(wk1, plan(2, 1))
-#endif
+         if (inplace) then
+            call c2c_1m_x(in_c, plan(2, 1))
+         else
+            sz = product(sp%xsz)
+            wk1_p = fftw_alloc_complex(sz)
+            call c_f_pointer(wk1_p, wk1, sp%xsz)
+            wk1 = in_c
+            call c2c_1m_x(wk1, plan(2, 1))
+         end if
 
          ! ===== Swap X --> Y; 1D FFTs in Y =====
          if (dims(1) > 1) then
-#ifdef OVERWRITE
-            call transpose_x_to_y(in_c, wk2_r2c, sp)
-#else
-            call transpose_x_to_y(wk1, wk2_r2c, sp)
-#endif
+            if (inplace) then
+               call transpose_x_to_y(in_c, wk2_r2c, sp)
+            else
+               call transpose_x_to_y(wk1, wk2_r2c, sp)
+            end if
             call c2c_1m_y(wk2_r2c, plan(2, 2))
          else  ! in_c==wk2_r2c if 1D decomposition
-#ifdef OVERWRITE
-            call c2c_1m_y(in_c, plan(2, 2))
-#else
-            call c2c_1m_y(wk1, plan(2, 2))
-#endif
+            if (inplace) then
+               call c2c_1m_y(in_c, plan(2, 2))
+            else
+               call c2c_1m_y(wk1, plan(2, 2))
+            end if
          end if
 
          ! ===== Swap Y --> Z; 1D FFTs in Z =====
          if (dims(1) > 1) then
             call transpose_y_to_z(wk2_r2c, wk13, sp)
          else
-#ifdef OVERWRITE
-            call transpose_y_to_z(in_c, wk13, sp)
-#else
-            call transpose_y_to_z(wk1, wk13, sp)
-#endif
+            if (inplace) then
+               call transpose_y_to_z(in_c, wk13, sp)
+            else
+               call transpose_y_to_z(wk1, wk13, sp)
+            end if
          end if
          call c2r_1m_z(wk13, out_r)
 
       end if
 
-#ifndef OVERWRITE
-      call fftw_free(wk1_p)
-      nullify (wk1)
-#endif
+      ! Free memory
+      if (associated(wk1)) then
+         call fftw_free(wk1_p)
+         nullify (wk1)
+      end if
 
 #ifdef PROFILER
       if (decomp_profiler_fft) call decomp_profiler_end("fft_c2r")

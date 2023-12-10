@@ -32,6 +32,7 @@ module decomp_2d_fft
       complex(mytype), allocatable, private :: wk2_c2c(:, :, :)
       complex(mytype), contiguous, pointer, private :: wk2_r2c(:, :, :) => null()
       complex(mytype), allocatable, private :: wk13(:, :, :)
+      logical, private :: inplace
    contains
       procedure, public :: init => decomp_2d_fft_engine_init
       procedure, public :: fin => decomp_2d_fft_engine_fin

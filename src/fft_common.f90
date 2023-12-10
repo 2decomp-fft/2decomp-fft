@@ -20,6 +20,9 @@ complex(mytype), contiguous, pointer, dimension(:, :, :) :: wk2_r2c => null(), &
                                                             wk2_c2c => null(), &
                                                             wk13 => null()
 
+! In-place FFT
+logical, pointer, save :: inplace => null()
+
 !
 ! Multigrid options
 !
@@ -32,7 +35,8 @@ public :: decomp_2d_fft_init, decomp_2d_fft_3d, &
           decomp_2d_fft_get_ph, decomp_2d_fft_get_sp, &
           decomp_2d_fft_get_ngrid, decomp_2d_fft_set_ngrid, &
           decomp_2d_fft_use_grid, decomp_2d_fft_engine, &
-          decomp_2d_fft_get_engine, decomp_2d_fft_get_format
+          decomp_2d_fft_get_engine, decomp_2d_fft_get_format, &
+          decomp_2d_fft_get_inplace
 
 ! Declare generic interfaces to handle different inputs
 
@@ -81,26 +85,28 @@ subroutine fft_init_arg(pencil)     ! allow to handle Z-pencil input
 end subroutine fft_init_arg
 
 ! Initialise the FFT library to perform arbitrary size transforms
-subroutine fft_init_general(pencil, nx, ny, nz)
+subroutine fft_init_general(pencil, nx, ny, nz, opt_inplace)
 
    implicit none
 
    integer, intent(IN) :: pencil, nx, ny, nz
+   logical, intent(in), optional :: opt_inplace
 
    ! Only one FFT engine will be used
    call decomp_2d_fft_set_ngrid(1)
 
    ! Initialise the FFT engine
-   call decomp_2d_fft_init(pencil, nx, ny, nz, 1)
+   call decomp_2d_fft_init(pencil, nx, ny, nz, 1, opt_inplace)
 
 end subroutine fft_init_general
 
 ! Initialise the provided FFT grid
-subroutine fft_init_multigrid(pencil, nx, ny, nz, igrid)
+subroutine fft_init_multigrid(pencil, nx, ny, nz, igrid, opt_inplace)
 
    implicit none
 
    integer, intent(in) :: pencil, nx, ny, nz, igrid
+   logical, intent(in), optional :: opt_inplace
 
    ! Safety check
    if (igrid < 1 .or. igrid > n_grid) then
@@ -108,17 +114,18 @@ subroutine fft_init_multigrid(pencil, nx, ny, nz, igrid)
    end if
 
    ! Initialise the engine
-   call fft_engines(igrid)%init(pencil, nx, ny, nz)
+   call fft_engines(igrid)%init(pencil, nx, ny, nz, opt_inplace)
 
 end subroutine fft_init_multigrid
 
 ! Initialise the given FFT engine
-subroutine decomp_2d_fft_engine_init(engine, pencil, nx, ny, nz)
+subroutine decomp_2d_fft_engine_init(engine, pencil, nx, ny, nz, opt_inplace)
 
    implicit none
 
    class(decomp_2d_fft_engine), target, intent(inout) :: engine
    integer, intent(in) :: pencil, nx, ny, nz
+   logical, intent(in), optional :: opt_inplace
 
 #ifdef PROFILER
    if (decomp_profiler_fft) call decomp_profiler_start("fft_init")
@@ -138,6 +145,13 @@ subroutine decomp_2d_fft_engine_init(engine, pencil, nx, ny, nz)
    engine%nx_fft = nx
    engine%ny_fft = ny
    engine%nz_fft = nz
+
+   ! FFT can be inplace
+   if (present(opt_inplace)) then
+      engine%inplace = opt_inplace
+   else
+      engine%inplace = DECOMP_2D_FFT_INPLACE
+   end if
 
    ! determine the processor grid in use
    dims = get_decomp_dims()
@@ -234,6 +248,7 @@ subroutine decomp_2d_fft_finalize
    nullify (wk2_c2c)
    nullify (wk2_r2c)
    nullify (wk13)
+   nullify (inplace)
 
    ! Clean engine-specific stuff located in the module
    call finalize_fft_engine()
@@ -442,6 +457,7 @@ subroutine decomp_2d_fft_engine_use_it(engine, opt_force)
    wk2_c2c => engine%wk2_c2c
    wk2_r2c => engine%wk2_r2c
    wk13 => engine%wk13
+   inplace => engine%inplace
 
    ! Engine-specific stuff
    call use_fft_engine(engine)
@@ -490,6 +506,17 @@ function decomp_2d_fft_get_format()
    decomp_2d_fft_get_format = format
 
 end function decomp_2d_fft_get_format
+
+! The external code can check if the FFT is inplace
+function decomp_2d_fft_get_inplace()
+
+   implicit none
+
+   logical :: decomp_2d_fft_get_inplace
+
+   decomp_2d_fft_get_inplace = inplace
+
+end function decomp_2d_fft_get_inplace
 
    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 ! Wrappers for calling 3D FFT directly using the engine object

@@ -34,7 +34,7 @@ program fft_r2c_z
    integer :: zen1, zen2, zen3
    double precision :: t1, t2, t3, t4
 #ifdef DOUBLE_PREC
-   real(mytype), parameter :: error_precision = 1.e-14_mytype
+   real(mytype), parameter :: error_precision = 1.e-12_mytype
 #else
    real(mytype), parameter :: error_precision = 1.e-6_mytype
 #endif

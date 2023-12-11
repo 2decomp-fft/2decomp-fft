@@ -32,7 +32,13 @@ program fft_r2c_x
    integer :: ierror, i, j, k, m
    integer :: xst1, xst2, xst3
    integer :: xen1, xen2, xen3
-   double precision :: t1, t2, t3, t4
+   double precision :: n1, flops, t1, t2, t3, t4
+#ifdef DOUBLE_PREC
+   real(mytype), parameter :: error_precision = 1.e-14_mytype
+#else
+   real(mytype), parameter :: error_precision = 1.e-6_mytype
+#endif
+   
 
    call MPI_INIT(ierror)
    ! To resize the domain we need to know global number of ranks
@@ -180,6 +186,11 @@ program fft_r2c_x
 
    call MPI_ALLREDUCE(error, err_all, 1, real_type, MPI_SUM, MPI_COMM_WORLD, ierror)
    err_all = err_all / (real(nx, mytype) * real(ny, mytype) * real(nz, mytype))
+
+   if (err_all > error_precision ) then
+      if (nrank == 0 ) write (*, *) 'error / mesh point: ', err_all 
+      call decomp_2d_abort(1, "error for the FFT too large") 
+   endif 
 
    if (nrank == 0) then
       write (*, *) 'error / mesh point: ', err_all

@@ -32,7 +32,7 @@ program fft_r2c_x
    integer :: ierror, i, j, k, m
    integer :: xst1, xst2, xst3
    integer :: xen1, xen2, xen3
-   double precision :: n1, flops, t1, t2, t3, t4
+   double precision :: t1, t2, t3, t4
 #ifdef DOUBLE_PREC
    real(mytype), parameter :: error_precision = 1.e-12_mytype
 #else

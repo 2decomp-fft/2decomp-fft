@@ -136,28 +136,28 @@ contains
    end subroutine fft_init_arg
 
    ! Initialise one FFT library to perform arbitrary size transforms
-   subroutine fft_init_general(pencil, nx, ny, nz, opt_inplace)
+   subroutine fft_init_general(pencil, nx, ny, nz, opt_inplace, opt_inplace_r2c, opt_inplace_c2r)
 
       implicit none
 
       integer, intent(IN) :: pencil, nx, ny, nz
-      logical, intent(in), optional :: opt_inplace
+      logical, intent(in), optional :: opt_inplace, opt_inplace_r2c, opt_inplace_c2r
 
       ! Only one FFT engine will be used
       call decomp_2d_fft_set_ngrid(1)
 
       ! Initialise the FFT engine
-      call decomp_2d_fft_init(pencil, nx, ny, nz, 1, opt_inplace)
+      call decomp_2d_fft_init(pencil, nx, ny, nz, 1, opt_inplace, opt_inplace_r2c, opt_inplace_c2r)
 
    end subroutine fft_init_general
 
    ! Initialise the provided FFT grid
-   subroutine fft_init_multigrid(pencil, nx, ny, nz, igrid, opt_inplace)
+   subroutine fft_init_multigrid(pencil, nx, ny, nz, igrid, opt_inplace, opt_inplace_r2c, opt_inplace_c2r)
 
       implicit none
 
       integer, intent(in) :: pencil, nx, ny, nz, igrid
-      logical, intent(in), optional :: opt_inplace
+      logical, intent(in), optional :: opt_inplace, opt_inplace_r2c, opt_inplace_c2r
 
       ! Safety check
       if (igrid < 1 .or. igrid > n_grid) then
@@ -165,18 +165,18 @@ contains
       end if
 
       ! Initialise the engine
-      call fft_engines(igrid)%init(pencil, nx, ny, nz, opt_inplace)
+      call fft_engines(igrid)%init(pencil, nx, ny, nz, opt_inplace, opt_inplace_r2c, opt_inplace_c2r)
 
    end subroutine fft_init_multigrid
 
    ! Initialise the given FFT engine
-   subroutine decomp_2d_fft_engine_init(engine, pencil, nx, ny, nz, opt_inplace)
+   subroutine decomp_2d_fft_engine_init(engine, pencil, nx, ny, nz, opt_inplace, opt_inplace_r2c, opt_inplace_c2r)
 
       implicit none
 
       class(decomp_2d_fft_engine), intent(inout), target :: engine
       integer, intent(in) :: pencil, nx, ny, nz
-      logical, intent(in), optional :: opt_inplace
+      logical, intent(in), optional :: opt_inplace, opt_inplace_r2c, opt_inplace_c2r
 
       integer(C_SIZE_T) :: sz
 
@@ -204,6 +204,12 @@ contains
          engine%inplace = opt_inplace
       else
          engine%inplace = DECOMP_2D_FFT_INPLACE
+      end if
+      if (present(opt_inplace_r2c)) then
+         call decomp_2d_abort(__FILE__, __LINE__, -1, 'In-place r2c transform is not yet available')
+      end if
+      if (present(opt_inplace_c2r)) then
+         call decomp_2d_abort(__FILE__, __LINE__, -1, 'In-place c2r transform is not yet available')
       end if
 
       ! determine the processor grid in use

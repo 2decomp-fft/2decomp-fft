@@ -1,5 +1,5 @@
-file(GLOB files_fft_multigrid_no_obj fft_multigrid_no_obj.f90)
-file(GLOB files_fft_multigrid fft_multigrid.f90)
+file(GLOB files_fft_multigrid_no_obj fft_multigrid_no_obj.f90 fft_multigrid_utilities.f90)
+file(GLOB files_fft_multigrid fft_multigrid.f90 fft_multigrid_utilities.f90)
 
 include_directories(${CMAKE_SOURCE_DIR}/src)
 

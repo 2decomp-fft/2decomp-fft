@@ -208,12 +208,12 @@ contains
       else
          engine%inplace = DECOMP_2D_FFT_INPLACE
       end if
-      if (present(opt_inplace_r2c)) then
+      if (engine%inplace .and. present(opt_inplace_r2c)) then
          engine%inplace_r2c = opt_inplace_r2c
       else
          engine%inplace_r2c = DECOMP_2D_FFT_INPLACE
       end if
-      if (present(opt_inplace_c2r)) then
+      if (engine%inplace .and. present(opt_inplace_c2r)) then
          engine%inplace_c2r = opt_inplace_c2r
       else
          engine%inplace_r2c = DECOMP_2D_FFT_INPLACE

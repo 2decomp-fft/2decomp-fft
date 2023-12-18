@@ -8,7 +8,7 @@ The following [optional libraries](#optional-dependencies) can be used :
 - FFTW3, version 3.3.10 was tested
 - Intel oneMKL (oneAPI Math Kernel Library), version 2023.0.0 was tested
 - Nvidia GPU-related libraries, NVHPC version 22.7 and CUDA version 11.8 were tested
-- Caliper, version 2.9.1 was tested
+- Caliper, version 2.10.0 was tested
 
 ## Building
 

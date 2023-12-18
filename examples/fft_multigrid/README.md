@@ -3,6 +3,7 @@
 List of the tests:
 - [fft_multigrid](fft_multigrid.f90): Test FFT on multiple grids using the dedicated object;
 - [fft_multigrid_no_obj](fft_multigrid_no_obj.f90): Test FFT on multiple grids without using the dedicated object;
+- [fft_multigrid_inplace](fft_multigrid_inplace.f90): Test FFT on one grid with various options (physical in X or Z, in-place transforms)
 
 
 Both c2c and r2c/c2r transforms are tested.

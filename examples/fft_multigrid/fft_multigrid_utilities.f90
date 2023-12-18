@@ -147,6 +147,9 @@ contains
          else
             write (*, *) 'Format PHYSICAL_IN_Z'
          end if
+         if (decomp_2d_fft_get_inplace()) then
+            write (*, *) 'In-place c2c'
+         end if
          write (*, *) ''
          write (*, *) 'First iteration with dedicated timer'
          write (*, *) '     time (sec): ', t1 / dble(nproc), t2 / dble(nproc)
@@ -259,7 +262,8 @@ contains
       integer :: nx, ny, nz, st1, en1, st2, en2, st3, en3
       integer :: i, j, k, itest, ierror, format
       type(decomp_info), pointer :: ph => null(), sp => null()
-      real(mytype), dimension(:, :, :), allocatable :: in
+      real(mytype), target, dimension(:), allocatable :: in1d
+      real(mytype), pointer, contiguous, dimension(:, :, :) :: in
       complex(mytype), dimension(:, :, :), allocatable :: out
       double precision :: t1, t2, tt
       real(mytype) :: error
@@ -274,10 +278,20 @@ contains
 
       ! Allocate memory
       if (format == PHYSICAL_IN_X) then
-         call alloc_x(in, ph, opt_global=.true.)
+         if (decomp_2d_fft_get_inplace_r2c() .or. decomp_2d_fft_get_inplace_c2r()) then
+            allocate (in1d(max(product(ph%xsz), 2 * product(sp%xsz))))
+            in(ph%xst(1):ph%xen(1), ph%xst(2):ph%xen(2), ph%xst(3):ph%xen(3)) => in1d
+         else
+            allocate (in(ph%xst(1):ph%xen(1), ph%xst(2):ph%xen(2), ph%xst(3):ph%xen(3)))
+         end if
          call alloc_z(out, sp, opt_global=.true.)
       else
-         call alloc_z(in, ph, opt_global=.true.)
+         if (decomp_2d_fft_get_inplace_r2c() .or. decomp_2d_fft_get_inplace_c2r()) then
+            allocate (in1d(max(product(ph%zsz), 2 * product(sp%zsz))))
+            in(ph%zst(1):ph%zen(1), ph%zst(2):ph%zen(2), ph%zst(3):ph%zen(3)) => in1d
+         else
+            allocate (in(ph%zst(1):ph%zen(1), ph%zst(2):ph%zen(2), ph%zst(3):ph%zen(3)))
+         end if
          call alloc_x(out, sp, opt_global=.true.)
       end if
 
@@ -326,6 +340,11 @@ contains
             write (*, *) 'Format PHYSICAL_IN_X'
          else
             write (*, *) 'Format PHYSICAL_IN_Z'
+         end if
+         if (decomp_2d_fft_get_inplace()) then
+            write (*, *) 'In-place c2c'
+            if (decomp_2d_fft_get_inplace_r2c()) write (*, *) 'In-place r2c'
+            if (decomp_2d_fft_get_inplace_c2r()) write (*, *) 'In-place c2r'
          end if
          write (*, *) ''
          write (*, *) 'First iteration with dedicated timer'
@@ -405,7 +424,13 @@ contains
       !$acc end data
 
       ! Free memory, nullify pointers
-      deallocate (in, out)
+      if (allocated(in1d)) then
+         deallocate (in1d)
+      else
+         deallocate (in)
+      end if
+      nullify (in)
+      deallocate (out)
       nullify (sp)
       nullify (ph)
 

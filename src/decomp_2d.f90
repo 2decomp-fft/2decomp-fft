@@ -678,7 +678,7 @@ contains
 
       if (ipencil == 1) then
          allocate (wk(xstS(1):xenS(1), xstS(2):xenS(2), xstS(3):xenS(3)))
-         allocate (wk2(xstart(1):xend(1), xstart(2):xend(2), xstart(3):xend(3)))
+         call alloc_x(wk2, opt_global=.true.)
          wk2 = var_fine
          if (coarse_mesh_starts_from_1) then
             do k = xstS(3), xenS(3)
@@ -700,7 +700,7 @@ contains
          var_coarse = wk
       else if (ipencil == 2) then
          allocate (wk(ystS(1):yenS(1), ystS(2):yenS(2), ystS(3):yenS(3)))
-         allocate (wk2(ystart(1):yend(1), ystart(2):yend(2), ystart(3):yend(3)))
+         call alloc_y(wk2, opt_global=.true.)
          wk2 = var_fine
          if (coarse_mesh_starts_from_1) then
             do k = ystS(3), yenS(3)
@@ -722,7 +722,7 @@ contains
          var_coarse = wk
       else if (ipencil == 3) then
          allocate (wk(zstS(1):zenS(1), zstS(2):zenS(2), zstS(3):zenS(3)))
-         allocate (wk2(zstart(1):zend(1), zstart(2):zend(2), zstart(3):zend(3)))
+         call alloc_z(wk2, opt_global=.true.)
          wk2 = var_fine
          if (coarse_mesh_starts_from_1) then
             do k = zstS(3), zenS(3)
@@ -763,7 +763,7 @@ contains
 
       if (ipencil == 1) then
          allocate (wk(xstV(1):xenV(1), xstV(2):xenV(2), xstV(3):xenV(3)))
-         allocate (wk2(xstart(1):xend(1), xstart(2):xend(2), xstart(3):xend(3)))
+         call alloc_x(wk2, opt_global=.true.)
          wk2 = var_fine
          if (coarse_mesh_starts_from_1) then
             do k = xstV(3), xenV(3)
@@ -785,7 +785,7 @@ contains
          var_coarse = wk
       else if (ipencil == 2) then
          allocate (wk(ystV(1):yenV(1), ystV(2):yenV(2), ystV(3):yenV(3)))
-         allocate (wk2(ystart(1):yend(1), ystart(2):yend(2), ystart(3):yend(3)))
+         call alloc_y(wk2, opt_global=.true.)
          wk2 = var_fine
          if (coarse_mesh_starts_from_1) then
             do k = ystV(3), yenV(3)
@@ -807,7 +807,7 @@ contains
          var_coarse = wk
       else if (ipencil == 3) then
          allocate (wk(zstV(1):zenV(1), zstV(2):zenV(2), zstV(3):zenV(3)))
-         allocate (wk2(zstart(1):zend(1), zstart(2):zend(2), zstart(3):zend(3)))
+         call alloc_z(wk2, opt_global=.true.)
          wk2 = var_fine
          if (coarse_mesh_starts_from_1) then
             do k = zstV(3), zenV(3)
@@ -848,7 +848,7 @@ contains
 
       if (ipencil == 1) then
          allocate (wk(xstP(1):xenP(1), xstP(2):xenP(2), xstP(3):xenP(3)))
-         allocate (wk2(xstart(1):xend(1), xstart(2):xend(2), xstart(3):xend(3)))
+         call alloc_x(wk2, opt_global=.true.)
          wk2 = var_fine
          if (coarse_mesh_starts_from_1) then
             do k = xstP(3), xenP(3)
@@ -870,7 +870,7 @@ contains
          var_coarse = wk
       else if (ipencil == 2) then
          allocate (wk(ystP(1):yenP(1), ystP(2):yenP(2), ystP(3):yenP(3)))
-         allocate (wk2(ystart(1):yend(1), ystart(2):yend(2), ystart(3):yend(3)))
+         call alloc_y(wk2, opt_global=.true.)
          wk2 = var_fine
          if (coarse_mesh_starts_from_1) then
             do k = ystP(3), yenP(3)
@@ -892,7 +892,7 @@ contains
          var_coarse = wk
       else if (ipencil == 3) then
          allocate (wk(zstP(1):zenP(1), zstP(2):zenP(2), zstP(3):zenP(3)))
-         allocate (wk2(zstart(1):zend(1), zstart(2):zend(2), zstart(3):zend(3)))
+         call alloc_z(wk2, opt_global=.true.)
          wk2 = var_fine
          if (coarse_mesh_starts_from_1) then
             do k = zstP(3), zenP(3)

@@ -1,7 +1,11 @@
 # 2DECOMP&FFT
 
+[![DOI](https://joss.theoj.org/papers/10.21105/joss.05813/status.svg)](https://doi.org/10.21105/joss.05813)
+
 This README contains basic instructions for building and installing the 2DECOMP&FFT library, more
-detailed instructions can be found in [INSTALL.md](INSTALL.md).
+detailed instructions about installation and linking to the library within an external project 
+can be found in the [install section](INSTALL.md).
+Please have a look at [HOWTO.md](HOWTO.md) and at the examples [examples](examples/README.md) for how to use the library with your application
 
 ## Building
 
@@ -151,3 +155,8 @@ is ready.
 For example, starting from `v2.0.0` the `main` branch will only be updated to receive fixes giving
 `v2.0.1`, etc. until the next release (either `v2.1.0` or `v3.0.0` depending on the magnitude of the
 change is ready).
+
+### Contributing
+
+If you would like to contribute to the development of the 2DECOMP&FFT library or report a bug please refer to 
+the [Contributing section](Contribute.md)

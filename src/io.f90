@@ -1693,7 +1693,7 @@ contains
             end if
 
             allocate (wk(i1:i2, j1:j2, k1:k2))
-            allocate (wk2(xstart(1):xend(1), xstart(2):xend(2), xstart(3):xend(3)))
+            call alloc_x(wk2, opt_global=.true.)
             wk2 = var
             do k = k1, k2
                do j = j1, j2

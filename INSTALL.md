@@ -1,4 +1,4 @@
-# Bulding and installing 2DECOMP&FFT
+# Building, installing and linking 2DECOMP&FFT
 
 The library 2decomp is a Fortran library compatible with the Fortran 2008 standard.
 It requires a MPI library compatible with MPI-2.0 with extended Fortran support.
@@ -8,7 +8,7 @@ The following [optional libraries](#optional-dependencies) can be used :
 - FFTW3, version 3.3.10 was tested
 - Intel oneMKL (oneAPI Math Kernel Library), version 2023.0.0 was tested
 - Nvidia GPU-related libraries, NVHPC version 22.7 and CUDA version 11.8 were tested
-- Caliper, version 2.9.1 was tested
+- Caliper, version 2.10.0 was tested
 
 ## Building
 

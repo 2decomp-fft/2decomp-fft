@@ -51,7 +51,9 @@ module decomp_2d_fft
                                            wk13(:, :, :) => null()
 
    ! In-place FFT
-   logical, pointer, save :: inplace => null()
+   logical, pointer, save :: inplace => null(), &
+                             inplace_r2c => null(), &
+                             inplace_c2r => null()
 
    ! Derived type with all the quantities needed to perform FFT
    type decomp_2d_fft_engine
@@ -64,7 +66,7 @@ module decomp_2d_fft
       complex(mytype), contiguous, pointer, private :: wk2_c2c(:, :, :) => null()
       complex(mytype), contiguous, pointer, private :: wk2_r2c(:, :, :) => null()
       complex(mytype), contiguous, pointer, private :: wk13(:, :, :) => null()
-      logical, private :: inplace
+      logical, private :: inplace, inplace_r2c, inplace_c2r
    contains
       procedure, public :: init => decomp_2d_fft_engine_init
       procedure, public :: fin => decomp_2d_fft_engine_fin
@@ -89,7 +91,8 @@ module decomp_2d_fft
              decomp_2d_fft_get_ngrid, decomp_2d_fft_set_ngrid, &
              decomp_2d_fft_use_grid, decomp_2d_fft_engine, &
              decomp_2d_fft_get_engine, decomp_2d_fft_get_format, &
-             decomp_2d_fft_get_inplace
+             decomp_2d_fft_get_inplace, decomp_2d_fft_get_inplace_r2c, &
+             decomp_2d_fft_get_inplace_c2r
 
    ! Declare generic interfaces to handle different inputs
 
@@ -206,10 +209,14 @@ contains
          engine%inplace = DECOMP_2D_FFT_INPLACE
       end if
       if (present(opt_inplace_r2c)) then
-         call decomp_2d_abort(__FILE__, __LINE__, -1, 'In-place r2c transform is not yet available')
+         engine%inplace_r2c = opt_inplace_r2c
+      else
+         engine%inplace_r2c = DECOMP_2D_FFT_INPLACE
       end if
       if (present(opt_inplace_c2r)) then
-         call decomp_2d_abort(__FILE__, __LINE__, -1, 'In-place c2r transform is not yet available')
+         engine%inplace_c2r = opt_inplace_c2r
+      else
+         engine%inplace_r2c = DECOMP_2D_FFT_INPLACE
       end if
 
       ! determine the processor grid in use
@@ -259,14 +266,16 @@ contains
       ! transpose_y_to_x(wk2_r2c, wk13, sp)
       ! transpose_y_to_z(wk2_r2c, wk13, sp)
       !
-      if (pencil == PHYSICAL_IN_X) then
-         sz = product(engine%sp%xsz)
-         engine%wk13_p = fftw_alloc_complex(sz)
-         call c_f_pointer(engine%wk13_p, engine%wk13, engine%sp%xsz)
-      else if (pencil == PHYSICAL_IN_Z) then
-         sz = product(engine%sp%zsz)
-         engine%wk13_p = fftw_alloc_complex(sz)
-         call c_f_pointer(engine%wk13_p, engine%wk13, engine%sp%zsz)
+      if (.not. (engine%inplace_r2c .and. engine%inplace_c2r)) then
+         if (pencil == PHYSICAL_IN_X) then
+            sz = product(engine%sp%xsz)
+            engine%wk13_p = fftw_alloc_complex(sz)
+            call c_f_pointer(engine%wk13_p, engine%wk13, engine%sp%xsz)
+         else if (pencil == PHYSICAL_IN_Z) then
+            sz = product(engine%sp%zsz)
+            engine%wk13_p = fftw_alloc_complex(sz)
+            call c_f_pointer(engine%wk13_p, engine%wk13, engine%sp%zsz)
+         end if
       end if
 
       ! Warning : replace the default engine
@@ -317,6 +326,8 @@ contains
       nullify (wk2_r2c)
       nullify (wk13)
       nullify (inplace)
+      nullify (inplace_r2c)
+      nullify (inplace_c2r)
 
       ! Clean the FFTW library
       call fftw_cleanup()
@@ -346,8 +357,11 @@ contains
       call fftw_free(engine%wk2_c2c_p)
       nullify (engine%wk2_c2c)
       nullify (engine%wk2_r2c)
-      call fftw_free(engine%wk13_p)
-      nullify (engine%wk13)
+
+      if (associated(wk13)) then
+         call fftw_free(engine%wk13_p)
+         nullify (engine%wk13)
+      end if
 
       call finalize_fft_engine(engine%plan)
 
@@ -529,6 +543,8 @@ contains
       wk2_r2c => engine%wk2_r2c
       wk13 => engine%wk13
       inplace => engine%inplace
+      inplace_r2c => engine%inplace_r2c
+      inplace_c2r => engine%inplace_c2r
 
    end subroutine decomp_2d_fft_engine_use_it
 
@@ -585,6 +601,28 @@ contains
       decomp_2d_fft_get_inplace = inplace
 
    end function decomp_2d_fft_get_inplace
+
+   ! The external code can check if the r2c is inplace
+   function decomp_2d_fft_get_inplace_r2c()
+
+      implicit none
+
+      logical :: decomp_2d_fft_get_inplace_r2c
+
+      decomp_2d_fft_get_inplace_r2c = inplace_r2c
+
+   end function decomp_2d_fft_get_inplace_r2c
+
+   ! The external code can check if the c2r is inplace
+   function decomp_2d_fft_get_inplace_c2r()
+
+      implicit none
+
+      logical :: decomp_2d_fft_get_inplace_c2r
+
+      decomp_2d_fft_get_inplace_c2r = inplace_c2r
+
+   end function decomp_2d_fft_get_inplace_c2r
 
    ! Return a FFTW3 plan for multiple 1D c2c FFTs in X direction
    subroutine c2c_1m_x_plan(plan1, decomp, isign)
@@ -723,14 +761,20 @@ contains
       type(C_PTR) :: a1_p, a2_p
       integer(C_SIZE_T) :: sz
 
-      sz = decomp_ph%xsz(1) * decomp_ph%xsz(2) * decomp_ph%xsz(3)
+      a1_p = c_null_ptr
+      a2_p = c_null_ptr
+
+      sz = product(decomp_ph%xsz)
+      if (inplace_r2c) sz = max(sz, 2 * product(int(decomp_sp%xsz, kind=C_SIZE_T)))
       a1_p = fftw_alloc_real(sz)
-      call c_f_pointer(a1_p, a1, &
-                       [decomp_ph%xsz(1), decomp_ph%xsz(2), decomp_ph%xsz(3)])
-      sz = decomp_sp%xsz(1) * decomp_sp%xsz(2) * decomp_sp%xsz(3)
-      a2_p = fftw_alloc_complex(sz)
-      call c_f_pointer(a2_p, a2, &
-                       [decomp_sp%xsz(1), decomp_sp%xsz(2), decomp_sp%xsz(3)])
+      call c_f_pointer(a1_p, a1, decomp_ph%xsz)
+      if (inplace_r2c) then
+         call c_f_pointer(a1_p, a2, decomp_sp%xsz)
+      else
+         sz = product(decomp_sp%xsz)
+         a2_p = fftw_alloc_complex(sz)
+         call c_f_pointer(a2_p, a2, decomp_sp%xsz)
+      end if
 
 #ifdef DOUBLE_PREC
       plan1 = fftw_plan_many_dft_r2c(1, decomp_ph%xsz(1), &
@@ -745,9 +789,8 @@ contains
 #endif
 
       call fftw_free(a1_p)
-      call fftw_free(a2_p)
+      if (.not. inplace_r2c) call fftw_free(a2_p)
 
-      return
    end subroutine r2c_1m_x_plan
 
    ! Return a FFTW3 plan for multiple 1D c2r FFTs in X direction
@@ -764,14 +807,20 @@ contains
       type(C_PTR) :: a1_p, a2_p
       integer(C_SIZE_T) :: sz
 
-      sz = decomp_sp%xsz(1) * decomp_sp%xsz(2) * decomp_sp%xsz(3)
-      a1_p = fftw_alloc_complex(sz)
-      call c_f_pointer(a1_p, a1, &
-                       [decomp_sp%xsz(1), decomp_sp%xsz(2), decomp_sp%xsz(3)])
-      sz = decomp_ph%xsz(1) * decomp_ph%xsz(2) * decomp_ph%xsz(3)
+      a1_p = c_null_ptr
+      a2_p = c_null_ptr
+
+      sz = product(decomp_ph%xsz)
+      if (inplace_c2r) sz = max(sz, 2 * product(int(decomp_sp%xsz, kind=C_SIZE_T)))
       a2_p = fftw_alloc_real(sz)
-      call c_f_pointer(a2_p, a2, &
-                       [decomp_ph%xsz(1), decomp_ph%xsz(2), decomp_ph%xsz(3)])
+      call c_f_pointer(a2_p, a2, decomp_ph%xsz)
+      if (inplace_c2r) then
+         call c_f_pointer(a2_p, a1, decomp_sp%xsz)
+      else
+         sz = product(decomp_sp%xsz)
+         a1_p = fftw_alloc_complex(sz)
+         call c_f_pointer(a1_p, a1, decomp_sp%xsz)
+      end if
 
 #ifdef DOUBLE_PREC
       plan1 = fftw_plan_many_dft_c2r(1, decomp_ph%xsz(1), &
@@ -785,10 +834,9 @@ contains
                                       plan_type)
 #endif
 
-      call fftw_free(a1_p)
+      if (.not. inplace_c2r) call fftw_free(a1_p)
       call fftw_free(a2_p)
 
-      return
    end subroutine c2r_1m_x_plan
 
    ! Return a FFTW3 plan for multiple 1D r2c FFTs in Z direction
@@ -805,14 +853,20 @@ contains
       type(C_PTR) :: a1_p, a2_p
       integer(C_SIZE_T) :: sz
 
-      sz = decomp_ph%zsz(1) * decomp_ph%zsz(2) * decomp_ph%zsz(3)
+      a1_p = c_null_ptr
+      a2_p = c_null_ptr
+
+      sz = product(decomp_ph%zsz)
+      if (inplace_r2c) sz = max(sz, 2 * product(int(decomp_sp%zsz, kind=C_SIZE_T)))
       a1_p = fftw_alloc_real(sz)
-      call c_f_pointer(a1_p, a1, &
-                       [decomp_ph%zsz(1), decomp_ph%zsz(2), decomp_ph%zsz(3)])
-      sz = decomp_sp%zsz(1) * decomp_sp%zsz(2) * decomp_sp%zsz(3)
-      a2_p = fftw_alloc_complex(sz)
-      call c_f_pointer(a2_p, a2, &
-                       [decomp_sp%zsz(1), decomp_sp%zsz(2), decomp_sp%zsz(3)])
+      call c_f_pointer(a1_p, a1, decomp_ph%zsz)
+      if (inplace_r2c) then
+         call c_f_pointer(a1_p, a2, decomp_sp%zsz)
+      else
+         sz = product(decomp_sp%zsz)
+         a2_p = fftw_alloc_complex(sz)
+         call c_f_pointer(a2_p, a2, decomp_sp%zsz)
+      end if
 
 #ifdef DOUBLE_PREC
       plan1 = fftw_plan_many_dft_r2c(1, decomp_ph%zsz(3), &
@@ -827,9 +881,8 @@ contains
 #endif
 
       call fftw_free(a1_p)
-      call fftw_free(a2_p)
+      if (.not. inplace_r2c) call fftw_free(a2_p)
 
-      return
    end subroutine r2c_1m_z_plan
 
    ! Return a FFTW3 plan for multiple 1D c2r FFTs in Z direction
@@ -846,14 +899,20 @@ contains
       type(C_PTR) :: a1_p, a2_p
       integer(C_SIZE_T) :: sz
 
-      sz = decomp_sp%zsz(1) * decomp_sp%zsz(2) * decomp_sp%zsz(3)
-      a1_p = fftw_alloc_complex(sz)
-      call c_f_pointer(a1_p, a1, &
-                       [decomp_sp%zsz(1), decomp_sp%zsz(2), decomp_sp%zsz(3)])
-      sz = decomp_ph%zsz(1) * decomp_ph%zsz(2) * decomp_ph%zsz(3)
+      a1_p = c_null_ptr
+      a2_p = c_null_ptr
+
+      sz = product(decomp_ph%zsz)
+      if (inplace_c2r) sz = max(sz, 2 * product(int(decomp_sp%zsz, kind=C_SIZE_T)))
       a2_p = fftw_alloc_real(sz)
-      call c_f_pointer(a2_p, a2, &
-                       [decomp_ph%zsz(1), decomp_ph%zsz(2), decomp_ph%zsz(3)])
+      call c_f_pointer(a2_p, a2, decomp_ph%zsz)
+      if (inplace_c2r) then
+         call c_f_pointer(a2_p, a1, decomp_sp%zsz)
+      else
+         sz = product(decomp_sp%zsz)
+         a1_p = fftw_alloc_complex(sz)
+         call c_f_pointer(a1_p, a1, decomp_sp%zsz)
+      end if
 
 #ifdef DOUBLE_PREC
       plan1 = fftw_plan_many_dft_c2r(1, decomp_ph%zsz(3), &
@@ -867,10 +926,9 @@ contains
                                       decomp_ph%zsz(1) * decomp_ph%zsz(2), 1, plan_type)
 #endif
 
-      call fftw_free(a1_p)
+      if (.not. inplace_c2r) call fftw_free(a1_p)
       call fftw_free(a2_p)
 
-      return
    end subroutine c2r_1m_z_plan
 
    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -1011,7 +1069,7 @@ contains
       implicit none
 
       real(mytype), dimension(:, :, :), intent(INOUT)  ::  input
-      complex(mytype), dimension(:, :, :), intent(OUT) :: output
+      complex(mytype), dimension(:, :, :), intent(INOUT) :: output
 
 #ifdef DOUBLE_PREC
       call fftw_execute_dft_r2c(plan(0, 1), input, output)
@@ -1029,7 +1087,7 @@ contains
       implicit none
 
       real(mytype), dimension(:, :, :), intent(INOUT)  ::  input
-      complex(mytype), dimension(:, :, :), intent(OUT) :: output
+      complex(mytype), dimension(:, :, :), intent(INOUT) :: output
 
 #ifdef DOUBLE_PREC
       call fftw_execute_dft_r2c(plan(0, 3), input, output)
@@ -1047,7 +1105,7 @@ contains
       implicit none
 
       complex(mytype), dimension(:, :, :), intent(INOUT)  ::  input
-      real(mytype), dimension(:, :, :), intent(OUT) :: output
+      real(mytype), dimension(:, :, :), intent(INOUT) :: output
 
 #ifdef DOUBLE_PREC
       call fftw_execute_dft_c2r(plan(2, 1), input, output)
@@ -1065,7 +1123,7 @@ contains
       implicit none
 
       complex(mytype), dimension(:, :, :), intent(INOUT) :: input
-      real(mytype), dimension(:, :, :), intent(OUT) :: output
+      real(mytype), dimension(:, :, :), intent(INOUT) :: output
 
 #ifdef DOUBLE_PREC
       call fftw_execute_dft_c2r(plan(2, 3), input, output)
@@ -1204,45 +1262,62 @@ contains
 
       implicit none
 
-      real(mytype), dimension(:, :, :), intent(INOUT) :: in_r
+      ! Arguments
+      real(mytype), target, contiguous, dimension(:, :, :), intent(INOUT) :: in_r
       complex(mytype), dimension(:, :, :), intent(OUT) :: out_c
+
+      ! Local variable
+      complex(mytype), pointer :: wk0(:, :, :)
 
 #ifdef PROFILER
       if (decomp_profiler_fft) call decomp_profiler_start("fft_r2c")
 #endif
 
+      ! Initialise to NULL pointer
+      nullify (wk0)
+
       if (format == PHYSICAL_IN_X) then
 
          ! ===== 1D FFTs in X =====
-         call r2c_1m_x(in_r, wk13)
+         if (inplace_r2c) then
+            call c_f_pointer(c_loc(in_r), wk0, sp%xsz)
+         else
+            wk0 => wk13
+         end if
+         call r2c_1m_x(in_r, wk0)
 
          ! ===== Swap X --> Y; 1D FFTs in Y =====
          if (dims(1) > 1) then
-            call transpose_x_to_y(wk13, wk2_r2c, sp)
+            call transpose_x_to_y(wk0, wk2_r2c, sp)
             call c2c_1m_y(wk2_r2c, plan(0, 2))
          else
-            call c2c_1m_y(wk13, plan(0, 2))
+            call c2c_1m_y(wk0, plan(0, 2))
          end if
 
          ! ===== Swap Y --> Z; 1D FFTs in Z =====
          if (dims(1) > 1) then
             call transpose_y_to_z(wk2_r2c, out_c, sp)
          else
-            call transpose_y_to_z(wk13, out_c, sp)
+            call transpose_y_to_z(wk0, out_c, sp)
          end if
          call c2c_1m_z(out_c, plan(0, 3))
 
       else if (format == PHYSICAL_IN_Z) then
 
          ! ===== 1D FFTs in Z =====
-         call r2c_1m_z(in_r, wk13)
+         if (inplace_r2c) then
+            call c_f_pointer(c_loc(in_r), wk0, sp%zsz)
+         else
+            wk0 => wk13
+         end if
+         call r2c_1m_z(in_r, wk0)
 
          ! ===== Swap Z --> Y; 1D FFTs in Y =====
          if (dims(1) > 1) then
-            call transpose_z_to_y(wk13, wk2_r2c, sp)
+            call transpose_z_to_y(wk0, wk2_r2c, sp)
             call c2c_1m_y(wk2_r2c, plan(0, 2))
          else  ! out_c==wk2_r2c if 1D decomposition
-            call transpose_z_to_y(wk13, out_c, sp)
+            call transpose_z_to_y(wk0, out_c, sp)
             call c2c_1m_y(out_c, plan(0, 2))
          end if
 
@@ -1253,6 +1328,9 @@ contains
          call c2c_1m_x(out_c, plan(0, 1))
 
       end if
+
+      ! Free memory
+      nullify (wk0)
 
 #ifdef PROFILER
       if (decomp_profiler_fft) call decomp_profiler_end("fft_r2c")
@@ -1270,10 +1348,10 @@ contains
 
       ! Arguments
       complex(mytype), dimension(:, :, :), intent(INOUT) :: in_c
-      real(mytype), dimension(:, :, :), intent(OUT) :: out_r
+      real(mytype), target, contiguous, dimension(:, :, :), intent(OUT) :: out_r
 
       ! Local variables
-      complex(mytype), pointer :: wk1(:, :, :)
+      complex(mytype), pointer :: wk0(:, :, :), wk1(:, :, :)
       integer(C_SIZE_T) :: sz
       type(C_PTR) :: wk1_p
 
@@ -1282,6 +1360,7 @@ contains
 #endif
 
       ! Initialise to NULL pointer
+      nullify (wk0)
       nullify (wk1)
       wk1_p = c_null_ptr
 
@@ -1307,9 +1386,14 @@ contains
          call c2c_1m_y(wk2_r2c, plan(2, 2))
 
          ! ===== Swap Y --> X; 1D FFTs in X =====
+         if (inplace_c2r) then
+            call c_f_pointer(c_loc(out_r), wk0, sp%xsz)
+         else
+            wk0 => wk13
+         end if
          if (dims(1) > 1) then
-            call transpose_y_to_x(wk2_r2c, wk13, sp)
-            call c2r_1m_x(wk13, out_r)
+            call transpose_y_to_x(wk2_r2c, wk0, sp)
+            call c2r_1m_x(wk0, out_r)
          else
             call c2r_1m_x(wk2_r2c, out_r)
          end if
@@ -1344,20 +1428,26 @@ contains
          end if
 
          ! ===== Swap Y --> Z; 1D FFTs in Z =====
+         if (inplace_c2r) then
+            call c_f_pointer(c_loc(out_r), wk0, sp%zsz)
+         else
+            wk0 => wk13
+         end if
          if (dims(1) > 1) then
-            call transpose_y_to_z(wk2_r2c, wk13, sp)
+            call transpose_y_to_z(wk2_r2c, wk0, sp)
          else
             if (inplace) then
-               call transpose_y_to_z(in_c, wk13, sp)
+               call transpose_y_to_z(in_c, wk0, sp)
             else
-               call transpose_y_to_z(wk1, wk13, sp)
+               call transpose_y_to_z(wk1, wk0, sp)
             end if
          end if
-         call c2r_1m_z(wk13, out_r)
+         call c2r_1m_z(wk0, out_r)
 
       end if
 
       ! Free memory
+      if (associated(wk0)) nullify (wk0)
       if (associated(wk1)) then
          call fftw_free(wk1_p)
          nullify (wk1)
@@ -1367,7 +1457,6 @@ contains
       if (decomp_profiler_fft) call decomp_profiler_end("fft_c2r")
 #endif
 
-      return
    end subroutine fft_3d_c2r
 
    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!

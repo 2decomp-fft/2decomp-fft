@@ -21,7 +21,9 @@ complex(mytype), contiguous, pointer, dimension(:, :, :) :: wk2_r2c => null(), &
                                                             wk13 => null()
 
 ! In-place FFT
-logical, pointer, save :: inplace => null()
+logical, pointer, save :: inplace => null(), &
+                          inplace_r2c => null(), &
+                          inplace_c2r => null()
 
 !
 ! Multigrid options
@@ -36,7 +38,8 @@ public :: decomp_2d_fft_init, decomp_2d_fft_3d, &
           decomp_2d_fft_get_ngrid, decomp_2d_fft_set_ngrid, &
           decomp_2d_fft_use_grid, decomp_2d_fft_engine, &
           decomp_2d_fft_get_engine, decomp_2d_fft_get_format, &
-          decomp_2d_fft_get_inplace
+          decomp_2d_fft_get_inplace, decomp_2d_fft_get_inplace_r2c, &
+          decomp_2d_fft_get_inplace_c2r
 
 ! Declare generic interfaces to handle different inputs
 
@@ -255,6 +258,8 @@ subroutine decomp_2d_fft_finalize
    nullify (wk2_r2c)
    nullify (wk13)
    nullify (inplace)
+   nullify (inplace_r2c)
+   nullify (inplace_c2r)
 
    ! Clean engine-specific stuff located in the module
    call finalize_fft_engine()
@@ -523,6 +528,28 @@ function decomp_2d_fft_get_inplace()
    decomp_2d_fft_get_inplace = inplace
 
 end function decomp_2d_fft_get_inplace
+
+! The external code can check if the r2c is inplace
+function decomp_2d_fft_get_inplace_r2c()
+
+   implicit none
+
+   logical :: decomp_2d_fft_get_inplace_r2c
+
+   decomp_2d_fft_get_inplace_r2c = .false. ! inplace_r2c
+
+end function decomp_2d_fft_get_inplace_r2c
+
+! The external code can check if the c2r is inplace
+function decomp_2d_fft_get_inplace_c2r()
+
+   implicit none
+
+   logical :: decomp_2d_fft_get_inplace_c2r
+
+   decomp_2d_fft_get_inplace_c2r = .false. ! inplace_c2r
+
+end function decomp_2d_fft_get_inplace_c2r
 
    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 ! Wrappers for calling 3D FFT directly using the engine object

@@ -154,7 +154,8 @@ program fft_r2c_z
    end if
    !$acc end data
 
-   deallocate (in_r, out)
+   deallocate (in_r)
+   deallocate (out)
    nullify (ph)
    nullify (sp)
    call decomp_2d_fft_finalize

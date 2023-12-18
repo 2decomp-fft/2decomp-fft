@@ -211,12 +211,12 @@ contains
       if (engine%inplace .and. present(opt_inplace_r2c)) then
          engine%inplace_r2c = opt_inplace_r2c
       else
-         engine%inplace_r2c = DECOMP_2D_FFT_INPLACE
+         engine%inplace_r2c = .false.!DECOMP_2D_FFT_INPLACE ! this is experimental
       end if
       if (engine%inplace .and. present(opt_inplace_c2r)) then
          engine%inplace_c2r = opt_inplace_c2r
       else
-         engine%inplace_r2c = DECOMP_2D_FFT_INPLACE
+         engine%inplace_r2c = .false.!DECOMP_2D_FFT_INPLACE ! this is experimental
       end if
 
       ! determine the processor grid in use

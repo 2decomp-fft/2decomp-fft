@@ -1,5 +1,7 @@
 # 2DECOMP&FFT
 
+[![DOI](https://joss.theoj.org/papers/10.21105/joss.05813/status.svg)](https://doi.org/10.21105/joss.05813)
+
 This README contains basic instructions for building and installing the 2DECOMP&FFT library, more
 detailed instructions about installation and linking to the library within an external project 
 can be found in the [install section](INSTALL.md).

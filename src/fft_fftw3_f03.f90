@@ -5,9 +5,10 @@
 
 module decomp_2d_fft
 
+   use decomp_2d
    use decomp_2d_constants
    use decomp_2d_mpi
-   use decomp_2d  ! 2D decomposition module
+   use decomp_2d_profiler
    use, intrinsic :: iso_c_binding
 
    implicit none

@@ -26,7 +26,7 @@ module decomp_2d_fft
    ! For r2c/c2r transforms:
    !     use plan(0,j) for r2c transforms;
    !     use plan(2,j) for c2r transforms;
-   type(C_PTR), pointer, save :: plan(:, :) => null()
+   type(C_PTR), contiguous, pointer, save :: plan(:, :) => null()
 
    ! This is defined in fftw3.f03 but not in fftw3.f
    interface

@@ -27,7 +27,7 @@ module decomp_2d_fft
    ! For r2c/c2r transforms:
    !     use plan(0,j) for r2c transforms;
    !     use plan(2,j) for c2r transforms;
-   type(C_PTR), pointer, save :: plan(:, :) => null()
+   type(C_PTR), contiguous, pointer, save :: plan(:, :) => null()
 
    integer, parameter, public :: D2D_FFT_BACKEND = D2D_FFT_BACKEND_FFTW3_F03
 
@@ -634,11 +634,11 @@ contains
       integer, intent(IN) :: isign
 
 #ifdef DOUBLE_PREC
-      complex(C_DOUBLE_COMPLEX), pointer :: a1(:, :, :)
-      complex(C_DOUBLE_COMPLEX), pointer :: a1o(:, :, :)
+      complex(C_DOUBLE_COMPLEX), contiguous, pointer :: a1(:, :, :)
+      complex(C_DOUBLE_COMPLEX), contiguous, pointer :: a1o(:, :, :)
 #else
-      complex(C_FLOAT_COMPLEX), pointer :: a1(:, :, :)
-      complex(C_FLOAT_COMPLEX), pointer :: a1o(:, :, :)
+      complex(C_FLOAT_COMPLEX), contiguous, pointer :: a1(:, :, :)
+      complex(C_FLOAT_COMPLEX), contiguous, pointer :: a1o(:, :, :)
 #endif
       type(C_PTR) :: a1_p
       integer(C_SIZE_T) :: sz
@@ -675,11 +675,11 @@ contains
       integer, intent(IN) :: isign
 
 #ifdef DOUBLE_PREC
-      complex(C_DOUBLE_COMPLEX), pointer :: a1(:, :)
-      complex(C_DOUBLE_COMPLEX), pointer :: a1o(:, :)
+      complex(C_DOUBLE_COMPLEX), contiguous, pointer :: a1(:, :)
+      complex(C_DOUBLE_COMPLEX), contiguous, pointer :: a1o(:, :)
 #else
-      complex(C_FLOAT_COMPLEX), pointer :: a1(:, :)
-      complex(C_FLOAT_COMPLEX), pointer :: a1o(:, :)
+      complex(C_FLOAT_COMPLEX), contiguous, pointer :: a1(:, :)
+      complex(C_FLOAT_COMPLEX), contiguous, pointer :: a1o(:, :)
 #endif
       type(C_PTR) :: a1_p
       integer(C_SIZE_T) :: sz
@@ -716,11 +716,11 @@ contains
       integer, intent(IN) :: isign
 
 #ifdef DOUBLE_PREC
-      complex(C_DOUBLE_COMPLEX), pointer :: a1(:, :, :)
-      complex(C_DOUBLE_COMPLEX), pointer :: a1o(:, :, :)
+      complex(C_DOUBLE_COMPLEX), contiguous, pointer :: a1(:, :, :)
+      complex(C_DOUBLE_COMPLEX), contiguous, pointer :: a1o(:, :, :)
 #else
-      complex(C_FLOAT_COMPLEX), pointer :: a1(:, :, :)
-      complex(C_FLOAT_COMPLEX), pointer :: a1o(:, :, :)
+      complex(C_FLOAT_COMPLEX), contiguous, pointer :: a1(:, :, :)
+      complex(C_FLOAT_COMPLEX), contiguous, pointer :: a1o(:, :, :)
 #endif
       type(C_PTR) :: a1_p
       integer(C_SIZE_T) :: sz
@@ -756,8 +756,8 @@ contains
       TYPE(DECOMP_INFO), intent(IN) :: decomp_ph
       TYPE(DECOMP_INFO), intent(IN) :: decomp_sp
 
-      real(mytype), pointer :: a1(:, :, :)
-      complex(mytype), pointer :: a2(:, :, :)
+      real(mytype), contiguous, pointer :: a1(:, :, :)
+      complex(mytype), contiguous, pointer :: a2(:, :, :)
       type(C_PTR) :: a1_p, a2_p
       integer(C_SIZE_T) :: sz
 
@@ -802,8 +802,8 @@ contains
       TYPE(DECOMP_INFO), intent(IN) :: decomp_sp
       TYPE(DECOMP_INFO), intent(IN) :: decomp_ph
 
-      complex(mytype), pointer :: a1(:, :, :)
-      real(mytype), pointer :: a2(:, :, :)
+      complex(mytype), contiguous, pointer :: a1(:, :, :)
+      real(mytype), contiguous, pointer :: a2(:, :, :)
       type(C_PTR) :: a1_p, a2_p
       integer(C_SIZE_T) :: sz
 
@@ -848,8 +848,8 @@ contains
       TYPE(DECOMP_INFO), intent(IN) :: decomp_ph
       TYPE(DECOMP_INFO), intent(IN) :: decomp_sp
 
-      real(mytype), pointer :: a1(:, :, :)
-      complex(mytype), pointer :: a2(:, :, :)
+      real(mytype), contiguous, pointer :: a1(:, :, :)
+      complex(mytype), contiguous, pointer :: a2(:, :, :)
       type(C_PTR) :: a1_p, a2_p
       integer(C_SIZE_T) :: sz
 
@@ -894,8 +894,8 @@ contains
       TYPE(DECOMP_INFO), intent(IN) :: decomp_sp
       TYPE(DECOMP_INFO), intent(IN) :: decomp_ph
 
-      complex(mytype), pointer :: a1(:, :, :)
-      real(mytype), pointer :: a2(:, :, :)
+      complex(mytype), contiguous, pointer :: a1(:, :, :)
+      real(mytype), contiguous, pointer :: a2(:, :, :)
       type(C_PTR) :: a1_p, a2_p
       integer(C_SIZE_T) :: sz
 
@@ -1148,7 +1148,7 @@ contains
       integer, intent(IN) :: isign
 
       ! Local variables
-      complex(mytype), pointer :: wk1(:, :, :)
+      complex(mytype), contiguous, pointer :: wk1(:, :, :)
       integer(C_SIZE_T) :: sz
       type(C_PTR) :: wk1_p
 
@@ -1267,7 +1267,7 @@ contains
       complex(mytype), dimension(:, :, :), intent(OUT) :: out_c
 
       ! Local variable
-      complex(mytype), pointer :: wk0(:, :, :)
+      complex(mytype), contiguous, pointer :: wk0(:, :, :)
 
 #ifdef PROFILER
       if (decomp_profiler_fft) call decomp_profiler_start("fft_r2c")
@@ -1351,7 +1351,7 @@ contains
       real(mytype), target, contiguous, dimension(:, :, :), intent(OUT) :: out_r
 
       ! Local variables
-      complex(mytype), pointer :: wk0(:, :, :), wk1(:, :, :)
+      complex(mytype), contiguous, pointer :: wk0(:, :, :), wk1(:, :, :)
       integer(C_SIZE_T) :: sz
       type(C_PTR) :: wk1_p
 

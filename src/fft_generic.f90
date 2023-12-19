@@ -15,7 +15,7 @@ module decomp_2d_fft
    private        ! Make everything private unless declared public
 
    ! engine-specific global variables
-   complex(mytype), pointer, save :: buf(:) => null(), scratch(:) => null()
+   complex(mytype), contiguous, pointer, save :: buf(:) => null(), scratch(:) => null()
 
    integer, parameter, public :: D2D_FFT_BACKEND = D2D_FFT_BACKEND_GENERIC
 

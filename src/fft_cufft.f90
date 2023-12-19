@@ -26,8 +26,8 @@ module decomp_2d_fft
    ! For r2c/c2r transforms:
    !     use plan(0,j) for r2c transforms;
    !     use plan(2,j) for c2r transforms;
-   integer*4, pointer, save :: plan(:, :) => null()
-   complex*8, device, pointer, dimension(:) :: cufft_workspace => null()
+   integer*4, contiguous, pointer, save :: plan(:, :) => null()
+   complex*8, device, contiguous, pointer, dimension(:) :: cufft_workspace => null()
 
    integer, parameter, public :: D2D_FFT_BACKEND = D2D_FFT_BACKEND_CUFFT
 

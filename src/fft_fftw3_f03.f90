@@ -1330,7 +1330,7 @@ contains
       end if
 
       ! Free memory
-      nullify (wk0)
+      if (associated(wk0)) nullify (wk0)
 
 #ifdef PROFILER
       if (decomp_profiler_fft) call decomp_profiler_end("fft_r2c")

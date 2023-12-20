@@ -1,15 +1,14 @@
 !! SPDX-License-Identifier: BSD-3-Clause
 
+! Preprocessor macro to deal with unused variables
+#define unused(x) associate(tmp => x); end associate
+
 !
-! Module for the caliper profiler
+! Dummy module when there is no profiler
 !
 module decomp_2d_profiler
 
-   use caliper_mod, only: ConfigManager, ConfigManager_new, &
-                          cali_begin_region, cali_end_region
-   use decomp_2d_constants, only: decomp_profiler_caliper, &
-                                  decomp_profiler_none
-   use decomp_2d_mpi, only: decomp_2d_warning
+   use decomp_2d_constants, only: decomp_profiler_none
 
    implicit none
 
@@ -20,14 +19,11 @@ module decomp_2d_profiler
    !
    integer, save, public :: decomp_profiler = decomp_profiler_none
    ! Default : profile everything
-   logical, parameter :: default_profiler = .true.
+   logical, parameter :: default_profiler = .false.
    logical, save, public :: decomp_profiler_transpose = default_profiler
    logical, save, public :: decomp_profiler_io = default_profiler
    logical, save, public :: decomp_profiler_fft = default_profiler
    logical, save, public :: decomp_profiler_d2d = default_profiler
-
-   ! Caliper object
-   type(ConfigManager), save :: mgr
 
    private
 
@@ -72,46 +68,27 @@ module decomp_2d_profiler
 contains
 
    !
-   ! Initialize
+   ! Dummy initialize
    !
    subroutine decomp_profiler_init_noarg()
 
       implicit none
 
-      ! Create the config manager with basic reporting
-      mgr = ConfigManager_new()
-      call manager_error(mgr)
-      call mgr%add("runtime-report")
-      call manager_error(mgr)
-
-      ! Start the manager
-      call mgr%start
-      call manager_error(mgr)
-
    end subroutine decomp_profiler_init_noarg
 
    !
-   ! Finalize
+   ! Dummy finalize
    !
    subroutine decomp_profiler_fin_noarg()
 
       implicit none
 
-      call mgr%flush()
-      call manager_error(mgr)
-      call mgr%stop()
-      call manager_error(mgr)
-      call mgr%delete()
       decomp_profiler = decomp_profiler_none
-      decomp_profiler_transpose = default_profiler
-      decomp_profiler_io = default_profiler
-      decomp_profiler_fft = default_profiler
-      decomp_profiler_d2d = default_profiler
 
    end subroutine decomp_profiler_fin_noarg
 
    !
-   ! Log setup, currently only one profiling option
+   ! Dummy log setup
    !
    subroutine decomp_profiler_log_int(io_unit)
 
@@ -119,39 +96,27 @@ contains
 
       integer, intent(in) :: io_unit
 
-      write (io_unit, *) "Caliper profiling active"
-      write (io_unit, *) "   Profiling mode : runtime-report."
+      write (io_unit, *) "No profiling"
 
    end subroutine decomp_profiler_log_int
 
    !
-   ! The setup of the profiler can be modified before init
+   ! Dummy setup
    !
-   ! TODO Current setup is limited to "runtime-report"
-   !      Advance setup is possible using
-   !         - extra optional argument of type char at prepare stage
-   !         - env. variable CALI_CONFIG
    subroutine decomp_profiler_prep_bool(profiler_setup)
 
       implicit none
 
       logical, dimension(4), intent(in), optional :: profiler_setup
 
-      ! Set the profiler id
-      decomp_profiler = decomp_profiler_caliper
+      decomp_profiler = decomp_profiler_none
 
-      ! Change the setup if provided
-      if (present(profiler_setup)) then
-         decomp_profiler_transpose = profiler_setup(1)
-         decomp_profiler_io = profiler_setup(2)
-         decomp_profiler_fft = profiler_setup(3)
-         decomp_profiler_d2d = profiler_setup(4)
-      end if
+      unused(profiler_setup)
 
    end subroutine decomp_profiler_prep_bool
 
    !
-   ! Start a timer
+   ! Dummy start a timer
    !
    subroutine decomp_profiler_start_char(timer_name)
 
@@ -159,12 +124,12 @@ contains
 
       character(len=*), intent(in) :: timer_name
 
-      call cali_begin_region(timer_name)
+      unused(timer_name)
 
    end subroutine decomp_profiler_start_char
 
    !
-   ! Stop a timer
+   ! Dummy stop a timer
    !
    subroutine decomp_profiler_end_char(timer_name)
 
@@ -172,31 +137,8 @@ contains
 
       character(len=*), intent(in) :: timer_name
 
-      call cali_end_region(timer_name)
+      unused(timer_name)
 
    end subroutine decomp_profiler_end_char
-
-   !
-   ! Not frequent, but the manager can produce an error
-   !
-   subroutine manager_error(manager)
-
-      implicit none
-
-      ! Argument
-      type(ConfigManager), intent(in) :: manager
-
-      ! Local variables
-      logical :: ret
-      character(len=:), allocatable :: errmsg
-
-      ret = manager%error()
-      if (ret) then
-         errmsg = manager%error_msg()
-         call decomp_2d_warning(1609, "Caliper manager error: "//trim(errmsg))
-         deallocate (errmsg)
-      end if
-
-   end subroutine manager_error
 
 end module decomp_2d_profiler

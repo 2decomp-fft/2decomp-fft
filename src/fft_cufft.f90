@@ -624,9 +624,7 @@ module decomp_2d_fft
       ! Local variables
       complex(mytype), allocatable, dimension(:, :, :) :: wk1
 
-#ifdef PROFILER
       if (decomp_profiler_fft) call decomp_profiler_start("fft_c2c")
-#endif
 
       !$acc data create(wk2_c2c) present(in,out)
 
@@ -726,9 +724,7 @@ module decomp_2d_fft
 
       !$acc end data
 
-#ifdef PROFILER
       if (decomp_profiler_fft) call decomp_profiler_end("fft_c2c")
-#endif
 
    end subroutine fft_3d_c2c
 
@@ -751,9 +747,7 @@ module decomp_2d_fft
       integer, dimension(3) :: dim3d
 #endif
 
-#ifdef PROFILER
       if (decomp_profiler_fft) call decomp_profiler_start("fft_r2c")
-#endif
 
       !$acc data create(wk13,wk2_r2c) present(in_r,out_c)
 
@@ -874,9 +868,7 @@ module decomp_2d_fft
 
       !$acc end data
 
-#ifdef PROFILER
       if (decomp_profiler_fft) call decomp_profiler_end("fft_r2c")
-#endif
 
    end subroutine fft_3d_r2c
 
@@ -898,9 +890,7 @@ module decomp_2d_fft
       integer, dimension(3) :: dim3d
 #endif
 
-#ifdef PROFILER
       if (decomp_profiler_fft) call decomp_profiler_start("fft_c2r")
-#endif
 
       !$acc data create(wk2_r2c,wk13) present(in_c,out_r)
 
@@ -1114,9 +1104,7 @@ module decomp_2d_fft
 
       !$acc end data
 
-#ifdef PROFILER
       if (decomp_profiler_fft) call decomp_profiler_end("fft_c2r")
-#endif
 
    end subroutine fft_3d_c2r
 

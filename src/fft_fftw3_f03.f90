@@ -184,9 +184,7 @@ contains
 
       integer(C_SIZE_T) :: sz
 
-#ifdef PROFILER
       if (decomp_profiler_fft) call decomp_profiler_start("fft_init")
-#endif
 
       ! Safety checks
       if (engine%initialised) then
@@ -291,9 +289,7 @@ contains
       ! All the components of the default engine must be updated
       call engine%use_it()
 
-#ifdef PROFILER
       if (decomp_profiler_fft) call decomp_profiler_end("fft_init")
-#endif
 
    end subroutine decomp_2d_fft_engine_init
 
@@ -342,9 +338,7 @@ contains
 
       class(decomp_2d_fft_engine), intent(inout) :: engine
 
-#ifdef PROFILER
       if (decomp_profiler_fft) call decomp_profiler_start("fft_fin")
-#endif
 
       if (engine%nx_fft /= nx_global .or. &
           engine%ny_fft /= ny_global .or. &
@@ -368,9 +362,7 @@ contains
 
       engine%initialised = .false.
 
-#ifdef PROFILER
       if (decomp_profiler_fft) call decomp_profiler_end("fft_fin")
-#endif
 
    end subroutine decomp_2d_fft_engine_fin
 
@@ -1153,9 +1145,7 @@ contains
       integer(C_SIZE_T) :: sz
       type(C_PTR) :: wk1_p
 
-#ifdef PROFILER
       if (decomp_profiler_fft) call decomp_profiler_start("fft_c2c")
-#endif
 
       ! Initialise to NULL pointer
       nullify (wk1)
@@ -1250,9 +1240,7 @@ contains
          nullify (wk1)
       end if
 
-#ifdef PROFILER
       if (decomp_profiler_fft) call decomp_profiler_end("fft_c2c")
-#endif
 
    end subroutine fft_3d_c2c
 
@@ -1270,9 +1258,7 @@ contains
       ! Local variable
       complex(mytype), contiguous, pointer :: wk0(:, :, :)
 
-#ifdef PROFILER
       if (decomp_profiler_fft) call decomp_profiler_start("fft_r2c")
-#endif
 
       ! Initialise to NULL pointer
       nullify (wk0)
@@ -1333,9 +1319,7 @@ contains
       ! Free memory
       if (associated(wk0)) nullify (wk0)
 
-#ifdef PROFILER
       if (decomp_profiler_fft) call decomp_profiler_end("fft_r2c")
-#endif
 
       return
    end subroutine fft_3d_r2c
@@ -1356,9 +1340,7 @@ contains
       integer(C_SIZE_T) :: sz
       type(C_PTR) :: wk1_p
 
-#ifdef PROFILER
       if (decomp_profiler_fft) call decomp_profiler_start("fft_c2r")
-#endif
 
       ! Initialise to NULL pointer
       nullify (wk0)
@@ -1454,9 +1436,7 @@ contains
          nullify (wk1)
       end if
 
-#ifdef PROFILER
       if (decomp_profiler_fft) call decomp_profiler_end("fft_c2r")
-#endif
 
    end subroutine fft_3d_c2r
 

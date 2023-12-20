@@ -130,9 +130,7 @@ subroutine decomp_2d_fft_engine_init(engine, pencil, nx, ny, nz, opt_inplace, op
    integer, intent(in) :: pencil, nx, ny, nz
    logical, intent(in), optional :: opt_inplace, opt_inplace_r2c, opt_inplace_c2r
 
-#ifdef PROFILER
    if (decomp_profiler_fft) call decomp_profiler_start("fft_init")
-#endif
 
    ! Safety checks
    if (engine%initialised) then
@@ -223,9 +221,7 @@ subroutine decomp_2d_fft_engine_init(engine, pencil, nx, ny, nz, opt_inplace, op
    ! All the components of the default engine must be updated
    call engine%use_it()
 
-#ifdef PROFILER
    if (decomp_profiler_fft) call decomp_profiler_end("fft_init")
-#endif
 
 end subroutine decomp_2d_fft_engine_init
 
@@ -272,9 +268,8 @@ subroutine decomp_2d_fft_engine_fin(engine)
    implicit none
 
    class(decomp_2d_fft_engine), intent(inout) :: engine
-#ifdef PROFILER
+
    if (decomp_profiler_fft) call decomp_profiler_start("fft_fin")
-#endif
 
    if (engine%nx_fft /= nx_global .or. &
        engine%ny_fft /= ny_global .or. &
@@ -293,9 +288,7 @@ subroutine decomp_2d_fft_engine_fin(engine)
 
    engine%initialised = .false.
 
-#ifdef PROFILER
    if (decomp_profiler_fft) call decomp_profiler_end("fft_fin")
-#endif
 
 end subroutine decomp_2d_fft_engine_fin
 

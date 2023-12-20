@@ -382,10 +382,9 @@ subroutine decomp_2d_fft_set_ngrid(ngrd)
 
    ! Change the number of grids
    if (n_grid > 0 .or. allocated(fft_engines)) then
-      ! Save the current grids
-      tmp = fft_engines
+      ! Save the current grids and deallocate
+      call move_alloc(fft_engines, tmp)
       ! Re-allocate
-      deallocate (fft_engines)
       allocate (fft_engines(ngrd))
       ! Restore
       fft_engines(1:min(ngrd, n_grid)) = tmp(1:min(ngrd, n_grid))

@@ -40,8 +40,8 @@ contains
          if (nx_fft == nx_global .and. ny_fft == ny_global .and. nz_fft == nz_global) then
             write (io_unit, *) 'decomp_info object ph is a pointer to decomp_main'
          end if
-         call decomp_info_print(ph, io_unit, "ph")
-         call decomp_info_print(sp, io_unit, "sp")
+         call decomp_info_print(decomp_2d_fft_get_ph(), io_unit, "ph")
+         call decomp_info_print(decomp_2d_fft_get_sp(), io_unit, "sp")
          write (io_unit, *) ''
 #ifdef OVERWRITE
          if (D2D_FFT_BACKEND == D2D_FFT_BACKEND_GENERIC) then

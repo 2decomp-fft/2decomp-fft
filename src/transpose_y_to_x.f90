@@ -32,9 +32,7 @@ contains
       integer :: istat, nsize
 #endif
 
-#ifdef PROFILER
       if (decomp_profiler_transpose) call decomp_profiler_start("transp_y_x_r")
-#endif
 
       if (dims(1) == 1) then
 #if defined(_GPU)
@@ -54,9 +52,7 @@ contains
 #endif
       end if
 
-#ifdef PROFILER
       if (decomp_profiler_transpose) call decomp_profiler_end("transp_y_x_r")
-#endif
 
    end subroutine transpose_y_to_x_real_long
 
@@ -139,9 +135,7 @@ contains
       integer :: istat, nsize
 #endif
 
-#ifdef PROFILER
       if (decomp_profiler_transpose) call decomp_profiler_start("transp_y_x_c")
-#endif
 
       if (dims(1) == 1) then
 #if defined(_GPU)
@@ -161,9 +155,7 @@ contains
 #endif
       end if
 
-#ifdef PROFILER
       if (decomp_profiler_transpose) call decomp_profiler_end("transp_y_x_c")
-#endif
 
    end subroutine transpose_y_to_x_complex_long
 

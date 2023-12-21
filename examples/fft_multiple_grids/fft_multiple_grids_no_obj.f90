@@ -1,6 +1,6 @@
 !! SPDX-License-Identifier: BSD-3-Clause
 
-program fft_multigrid_no_obj
+program fft_multiple_grids_no_obj
 
    use decomp_2d
    use decomp_2d_constants
@@ -17,8 +17,6 @@ program fft_multigrid_no_obj
 
    implicit none
 
-   type(decomp_2d_fft_engine) :: local_engine
-
    integer, parameter :: nx_base = 17, ny_base = 13, nz_base = 11
    integer :: nx, ny, nz
    integer :: p_row = 0, p_col = 0
@@ -26,7 +24,7 @@ program fft_multigrid_no_obj
    integer :: nranks_tot
 
    integer :: ntest = 10  ! repeat test this times
-   integer :: ngrid = 3
+   integer :: ngrid = 4
    integer :: ierror, igrid
 
    call MPI_INIT(ierror)
@@ -51,7 +49,7 @@ program fft_multigrid_no_obj
    call decomp_2d_fft_init(PHYSICAL_IN_X, nx, ny, nz, 1)
    if (ngrid > 1) call decomp_2d_fft_init(PHYSICAL_IN_Z, nx, ny, nz, 2)
    if (ngrid > 2) call decomp_2d_fft_init(PHYSICAL_IN_X, nx, ny + 2, nz + 16, 3)
-   call local_engine%init(PHYSICAL_IN_Z, nx + 16, ny + 2, nz)
+   if (ngrid > 3) call decomp_2d_fft_init(PHYSICAL_IN_Z, nx + 16, ny + 2, nz, 4)
 
    ! Test each grid
    do igrid = 1, ngrid
@@ -61,13 +59,9 @@ program fft_multigrid_no_obj
       call ntest_c2c(ntest)
       call ntest_r2c(ntest)
    end do
-   call local_engine%use_it()
-   call ntest_c2c(ntest)
-   call ntest_r2c(ntest)
 
-   call local_engine%fin()
    call decomp_2d_fft_finalize
    call decomp_2d_finalize
    call MPI_FINALIZE(ierror)
 
-end program fft_multigrid_no_obj
+end program fft_multiple_grids_no_obj

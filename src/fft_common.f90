@@ -26,7 +26,7 @@ logical, pointer, save :: inplace => null(), &
                           inplace_c2r => null()
 
 !
-! Multigrid options
+! Multiple grid options
 !
 ! Number of FFT grids
 integer, save :: n_grid = 0
@@ -47,7 +47,7 @@ interface decomp_2d_fft_init
    module procedure fft_init_noarg
    module procedure fft_init_arg
    module procedure fft_init_general
-   module procedure fft_init_multigrid
+   module procedure fft_init_multiple_grids
 end interface
 
 interface decomp_2d_fft_3d
@@ -104,7 +104,7 @@ subroutine fft_init_general(pencil, nx, ny, nz, opt_inplace, opt_inplace_r2c, op
 end subroutine fft_init_general
 
 ! Initialise the provided FFT grid
-subroutine fft_init_multigrid(pencil, nx, ny, nz, igrid, opt_inplace, opt_inplace_r2c, opt_inplace_c2r)
+subroutine fft_init_multiple_grids(pencil, nx, ny, nz, igrid, opt_inplace, opt_inplace_r2c, opt_inplace_c2r)
 
    implicit none
 
@@ -119,7 +119,7 @@ subroutine fft_init_multigrid(pencil, nx, ny, nz, igrid, opt_inplace, opt_inplac
    ! Initialise the engine
    call fft_engines(igrid)%init(pencil, nx, ny, nz, opt_inplace, opt_inplace_r2c, opt_inplace_c2r)
 
-end subroutine fft_init_multigrid
+end subroutine fft_init_multiple_grids
 
 ! Initialise the given FFT engine
 subroutine decomp_2d_fft_engine_init(engine, pencil, nx, ny, nz, opt_inplace, opt_inplace_r2c, opt_inplace_c2r)

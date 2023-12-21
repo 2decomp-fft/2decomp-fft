@@ -74,10 +74,8 @@ module decomp_2d_constants
    !    0 => no profiling, default
    !    1 => Caliper (https://github.com/LLNL/Caliper)
    !
-   enum, bind(c)
-      enumerator :: decomp_profiler_none = 0
-      enumerator :: decomp_profiler_caliper = 1
-   end enum
+   integer, parameter, public :: DECOMP_PROFILER_NONE = 0
+   integer, parameter, public :: DECOMP_PROFILER_CALIPER = 1
 
    !
    ! Supported FFT backends

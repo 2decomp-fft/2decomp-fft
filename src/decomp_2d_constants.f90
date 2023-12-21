@@ -99,6 +99,15 @@ module decomp_2d_constants
    integer, parameter, public :: PHYSICAL_IN_Z = 3 ! Forward is input in Z, output in X
 
    !
+   ! FFT can be in-place
+   !
+#ifdef OVERWRITE
+   logical, parameter, public :: DECOMP_2D_FFT_INPLACE = .true.
+#else
+   logical, parameter, public :: DECOMP_2D_FFT_INPLACE = .false.
+#endif
+
+   !
    ! Major and minor version number
    !
    integer, parameter :: D2D_MAJOR = 2

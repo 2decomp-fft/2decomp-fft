@@ -16,9 +16,33 @@ module decomp_2d_fft
    private        ! Make everything private unless declared public
 
    ! engine-specific global variables
-   complex(mytype), allocatable, dimension(:) :: buf, scratch
+   complex(mytype), contiguous, pointer, save :: buf(:) => null(), scratch(:) => null()
 
    integer, parameter, public :: D2D_FFT_BACKEND = D2D_FFT_BACKEND_GENERIC
+
+   ! Derived type with all the quantities needed to perform FFT
+   type decomp_2d_fft_engine
+      ! Engine-specific stuff
+      complex(mytype), private, allocatable :: buf(:), scratch(:)
+      ! All the engines have this
+      integer, private :: format
+      logical, private :: initialised = .false.
+      integer, private :: nx_fft, ny_fft, nz_fft
+      type(decomp_info), pointer, public :: ph => null()
+      type(decomp_info), public :: sp
+      complex(mytype), allocatable, private :: wk2_c2c(:, :, :)
+      complex(mytype), contiguous, pointer, private :: wk2_r2c(:, :, :) => null()
+      complex(mytype), allocatable, private :: wk13(:, :, :)
+      logical, private :: inplace
+   contains
+      procedure, public :: init => decomp_2d_fft_engine_init
+      procedure, public :: fin => decomp_2d_fft_engine_fin
+      procedure, public :: use_it => decomp_2d_fft_engine_use_it
+      generic, public :: fft => c2c, r2c, c2r
+      procedure, private :: c2c => decomp_2d_fft_engine_fft_c2c
+      procedure, private :: r2c => decomp_2d_fft_engine_fft_r2c
+      procedure, private :: c2r => decomp_2d_fft_engine_fft_c2r
+   end type decomp_2d_fft_engine
 
    ! common code used for all engines, including global variables,
    ! generic interface definitions and several subroutines
@@ -27,9 +51,11 @@ module decomp_2d_fft
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
    !  This routine performs one-time initialisations for the FFT engine
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-   subroutine init_fft_engine
+   subroutine init_fft_engine(engine)
 
       implicit none
+
+      type(decomp_2d_fft_engine), target, intent(inout) :: engine
 
       integer :: cbuf_size
 
@@ -37,23 +63,47 @@ module decomp_2d_fft
 
       cbuf_size = max(ph%xsz(1), ph%ysz(2))
       cbuf_size = max(cbuf_size, ph%zsz(3))
-      allocate (buf(cbuf_size))
-      allocate (scratch(cbuf_size))
+      allocate (engine%buf(cbuf_size))
+      allocate (engine%scratch(cbuf_size))
+
+      call use_fft_engine(engine)
 
    end subroutine init_fft_engine
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
    !  This routine performs one-time finalisations for the FFT engine
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-   subroutine finalize_fft_engine
+   subroutine finalize_fft_engine(engine)
 
       implicit none
 
-      if (allocated(buf)) deallocate (buf)
-      if (allocated(scratch)) deallocate (scratch)
+      type(decomp_2d_fft_engine), optional :: engine
 
-      return
+      if (present(engine)) then
+
+         if (allocated(engine%buf)) deallocate (engine%buf)
+         if (allocated(engine%scratch)) deallocate (engine%scratch)
+
+      else
+
+         nullify (buf)
+         nullify (scratch)
+
+      end if
+
    end subroutine finalize_fft_engine
+
+   ! Use engine-specific stuff
+   subroutine use_fft_engine(engine)
+
+      implicit none
+
+      type(decomp_2d_fft_engine), target, intent(in) :: engine
+
+      if (allocated(engine%buf)) buf => engine%buf
+      if (allocated(engine%scratch)) scratch => engine%scratch
+
+   end subroutine use_fft_engine
 
    ! Following routines calculate multiple one-dimensional FFTs to form
    ! the basis of three-dimensional FFTs.

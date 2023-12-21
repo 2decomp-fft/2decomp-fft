@@ -42,61 +42,63 @@ program fft_multiple_grids_inplace
 
    call decomp_2d_testing_log()
 
-   ! Set the number of FFT grids
-   call decomp_2d_fft_set_ngrid(ngrid)
-
-   ! Init each FFT grid
-   if (ngrid > 0) call decomp_2d_fft_init(PHYSICAL_IN_X, nx, ny, nz, 1, &
-                                          opt_inplace=.false., &
-                                          opt_inplace_r2c=.false., &
-                                          opt_inplace_c2r=.false.)
-   if (ngrid > 1) call decomp_2d_fft_init(PHYSICAL_IN_X, nx, ny, nz, 2, &
-                                          opt_inplace=.true., &
-                                          opt_inplace_r2c=.false., &
-                                          opt_inplace_c2r=.false.)
-   if (ngrid > 2) call decomp_2d_fft_init(PHYSICAL_IN_X, nx, ny, nz, 3, &
-                                          opt_inplace=.true., &
-                                          opt_inplace_r2c=.true., &
-                                          opt_inplace_c2r=.false.)
-   if (ngrid > 3) call decomp_2d_fft_init(PHYSICAL_IN_X, nx, ny, nz, 4, &
-                                          opt_inplace=.true., &
-                                          opt_inplace_r2c=.false., &
-                                          opt_inplace_c2r=.true.)
-   if (ngrid > 4) call decomp_2d_fft_init(PHYSICAL_IN_X, nx, ny, nz, 5, &
-                                          opt_inplace=.true., &
-                                          opt_inplace_r2c=.true., &
-                                          opt_inplace_c2r=.true.)
-   if (ngrid > 5) call decomp_2d_fft_init(PHYSICAL_IN_Z, nx, ny, nz, 6, &
-                                          opt_inplace=.false., &
-                                          opt_inplace_r2c=.false., &
-                                          opt_inplace_c2r=.false.)
-   if (ngrid > 6) call decomp_2d_fft_init(PHYSICAL_IN_Z, nx, ny, nz, 7, &
-                                          opt_inplace=.true., &
-                                          opt_inplace_r2c=.false., &
-                                          opt_inplace_c2r=.false.)
-   if (ngrid > 7) call decomp_2d_fft_init(PHYSICAL_IN_Z, nx, ny, nz, 8, &
-                                          opt_inplace=.true., &
-                                          opt_inplace_r2c=.true., &
-                                          opt_inplace_c2r=.false.)
-   if (ngrid > 8) call decomp_2d_fft_init(PHYSICAL_IN_Z, nx, ny, nz, 9, &
-                                          opt_inplace=.true., &
-                                          opt_inplace_r2c=.false., &
-                                          opt_inplace_c2r=.true.)
-   if (ngrid > 9) call decomp_2d_fft_init(PHYSICAL_IN_Z, nx, ny, nz, 10, &
-                                          opt_inplace=.true., &
-                                          opt_inplace_r2c=.true., &
-                                          opt_inplace_c2r=.true.)
-
    ! Test each grid
    do igrid = 1, ngrid
-      ! Use a specific grid
-      call decomp_2d_fft_use_grid(igrid)
+
+      ! Init the main FFT grid
+      if (igrid == 1) call decomp_2d_fft_init(PHYSICAL_IN_X, nx, ny, nz, &
+                                              opt_inplace=.false., &
+                                              opt_inplace_r2c=.false., &
+                                              opt_inplace_c2r=.false.)
+      if (igrid == 2) call decomp_2d_fft_init(PHYSICAL_IN_X, nx, ny, nz, &
+                                              opt_inplace=.true., &
+                                              opt_inplace_r2c=.false., &
+                                              opt_inplace_c2r=.false.)
+      if (igrid == 3) call decomp_2d_fft_init(PHYSICAL_IN_X, nx, ny, nz, &
+                                              opt_inplace=.true., &
+                                              opt_inplace_r2c=.true., &
+                                              opt_inplace_c2r=.false.)
+      if (igrid == 4) call decomp_2d_fft_init(PHYSICAL_IN_X, nx, ny, nz, &
+                                              opt_inplace=.true., &
+                                              opt_inplace_r2c=.false., &
+                                              opt_inplace_c2r=.true.)
+      if (igrid == 5) call decomp_2d_fft_init(PHYSICAL_IN_X, nx, ny, nz, &
+                                              opt_inplace=.true., &
+                                              opt_inplace_r2c=.true., &
+                                              opt_inplace_c2r=.true.)
+      if (igrid == 6) call decomp_2d_fft_init(PHYSICAL_IN_Z, nx, ny, nz, &
+                                              opt_inplace=.false., &
+                                              opt_inplace_r2c=.false., &
+                                              opt_inplace_c2r=.false.)
+      if (igrid == 7) call decomp_2d_fft_init(PHYSICAL_IN_Z, nx, ny, nz, &
+                                              opt_inplace=.true., &
+                                              opt_inplace_r2c=.false., &
+                                              opt_inplace_c2r=.false.)
+      if (igrid == 8) call decomp_2d_fft_init(PHYSICAL_IN_Z, nx, ny, nz, &
+                                              opt_inplace=.true., &
+                                              opt_inplace_r2c=.true., &
+                                              opt_inplace_c2r=.false.)
+      if (igrid == 9) call decomp_2d_fft_init(PHYSICAL_IN_Z, nx, ny, nz, &
+                                              opt_inplace=.true., &
+                                              opt_inplace_r2c=.false., &
+                                              opt_inplace_c2r=.true.)
+      if (igrid == 10) call decomp_2d_fft_init(PHYSICAL_IN_Z, nx, ny, nz, &
+                                               opt_inplace=.true., &
+                                               opt_inplace_r2c=.true., &
+                                               opt_inplace_c2r=.true.)
+
+      ! Use the main FFT grid
+      call decomp_2d_fft_use_grid()
+
       ! Test the grid
       call ntest_c2c(ntest)
       call ntest_r2c(ntest)
+
+      ! Clean the main FFT grid
+      call decomp_2d_fft_finalize
+
    end do
 
-   call decomp_2d_fft_finalize
    call decomp_2d_finalize
    call MPI_FINALIZE(ierror)
 

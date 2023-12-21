@@ -135,7 +135,7 @@ subroutine decomp_2d_fft_engine_init(engine, pencil, nx, ny, nz, opt_inplace, op
    ! Safety checks
    if (engine%initialised) then
       call decomp_2d_abort(__FILE__, __LINE__, 4, &
-                           'FFT library should only be initialised once')
+                           'FFT engine should only be initialised once')
    end if
    if (nx <= 0) call decomp_2d_abort(__FILE__, __LINE__, nx, "Invalid value for nx")
    if (ny <= 0) call decomp_2d_abort(__FILE__, __LINE__, ny, "Invalid value for ny")

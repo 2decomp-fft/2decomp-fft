@@ -1,6 +1,6 @@
 !! SPDX-License-Identifier: BSD-3-Clause
 
-program fft_multiple_grids_no_obj
+program fft_multiple_grids
 
    use decomp_2d
    use decomp_2d_constants
@@ -70,4 +70,4 @@ program fft_multiple_grids_no_obj
    call decomp_2d_finalize
    call MPI_FINALIZE(ierror)
 
-end program fft_multiple_grids_no_obj
+end program fft_multiple_grids

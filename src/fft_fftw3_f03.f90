@@ -100,7 +100,7 @@ module decomp_2d_fft
    interface decomp_2d_fft_init
       module procedure fft_init_noarg
       module procedure fft_init_arg
-      module procedure fft_init_general
+      module procedure fft_init_one_grid
       module procedure fft_init_multiple_grids
    end interface
 
@@ -135,12 +135,12 @@ contains
 
       integer, intent(IN) :: pencil
 
-      call fft_init_general(pencil, nx_global, ny_global, nz_global)
+      call fft_init_one_grid(pencil, nx_global, ny_global, nz_global)
 
    end subroutine fft_init_arg
 
    ! Initialise one FFT library to perform arbitrary size transforms
-   subroutine fft_init_general(pencil, nx, ny, nz, opt_inplace, opt_inplace_r2c, opt_inplace_c2r)
+   subroutine fft_init_one_grid(pencil, nx, ny, nz, opt_inplace, opt_inplace_r2c, opt_inplace_c2r)
 
       implicit none
 
@@ -153,7 +153,7 @@ contains
       ! Initialise the FFT engine
       call decomp_2d_fft_init(pencil, nx, ny, nz, 1, opt_inplace, opt_inplace_r2c, opt_inplace_c2r)
 
-   end subroutine fft_init_general
+   end subroutine fft_init_one_grid
 
    ! Initialise the provided FFT grid
    subroutine fft_init_multiple_grids(pencil, nx, ny, nz, igrid, opt_inplace, opt_inplace_r2c, opt_inplace_c2r)

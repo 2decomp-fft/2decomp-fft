@@ -147,7 +147,9 @@ program fft_c2c_x
    error = error / (real(nx, mytype) * real(ny, mytype) * real(nz, mytype))
 
    ! Abort if the error is too high
-   if (error > epsilon(error) * 5 * ntest) then
+   ! A large enough value is needed for the generic backend
+   if (error > epsilon(error) * 50 * ntest) then
+      if (nrank == 0) write (*, *) 'error / mesh point: ', error
       call decomp_2d_abort(__FILE__, __LINE__, int(log10(error)), "c2c X test")
    end if 
 

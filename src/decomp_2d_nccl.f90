@@ -28,6 +28,9 @@ module decomp_2d_nccl
    type(ncclComm), save, public :: nccl_comm_2decomp
    integer(kind=cuda_stream_kind), save, public :: cuda_stream_2decomp
 
+   ! Extra pointers for nccl complex transpose
+   real(mytype), dimension(:), device, public, pointer, contiguous :: work3_r_d, work4_r_d
+
    public :: decomp_2d_nccl_init, &
              decomp_2d_nccl_fin, &
              decomp_2d_nccl_send_recv_col, &
@@ -108,7 +111,34 @@ contains
       
 
    end subroutine decomp_2d_nccl_fin
+   ! init of the arrays
    !
+   subroutine decomp_2d_nccl_mem_init(buf_size, wk3, wk4)
+
+      use, intrinsic:: iso_c_binding, only: c_f_pointer, c_loc
+
+      implicit none
+
+      integer, intent(in) :: buf_size
+      real(mytype), target, dimension(:), device :: wk3, wk4
+
+      if (associated(work3_r_d)) nullify (work3_r_d)
+      if (associated(work4_r_d)) nullify (work4_r_d)
+      call c_f_pointer(c_loc(wk3), work3_r_d, [buf_size])
+      call c_f_pointer(c_loc(wk4), work4_r_d, [buf_size])
+
+   end subroutine decomp_2d_nccl_mem_init
+   !
+   ! init of the arrays
+   !
+   subroutine decomp_2d_nccl_mem_fin
+
+      implicit none
+
+      if (associated(work3_r_d)) nullify (work3_r_d)
+      if (associated(work4_r_d)) nullify (work4_r_d)
+
+   end subroutine decomp_2d_cumpi_fin!
    ! Send-Recv Real Col
    !
    subroutine decomp_2d_nccl_send_recv_real_col(dst_d, &
@@ -171,11 +201,11 @@ contains
       ! Send-Recv Real part
       !$acc kernels default(present)
       do ii = 1, buf_size
-         work1_r_d(ii) = real(src_d(ii), mytype)
+         work3_r_d(ii) = real(src_d(ii), mytype)
       end do
       !$acc end kernels
-      call decomp_2d_nccl_send_recv_col(work2_r_d, &
-                                        work1_r_d, &
+      call decomp_2d_nccl_send_recv_col(work4_r_d, &
+                                        work3_r_d, &
                                         disp_s, &
                                         cnts_s, &
                                         disp_r, &
@@ -183,17 +213,17 @@ contains
                                         dime)
       !$acc kernels default(present)
       do ii = 1, buf_size
-         dst_d(ii) = cmplx(work2_r_d(ii), 0._mytype, mytype)
+         dst_d(ii) = cmplx(work4_r_d(ii), 0._mytype, mytype)
       end do
       !$acc end kernels
       ! Send-Recv Immaginary Part
       !$acc kernels default(present)
       do ii = 1, buf_size
-         work1_r_d(ii) = aimag(src_d(ii))
+         work3_r_d(ii) = aimag(src_d(ii))
       end do
       !$acc end kernels
-      call decomp_2d_nccl_send_recv_col(work2_r_d, &
-                                        work1_r_d, &
+      call decomp_2d_nccl_send_recv_col(work4_r_d, &
+                                        work3_r_d, &
                                         disp_s, &
                                         cnts_s, &
                                         disp_r, &
@@ -201,7 +231,7 @@ contains
                                         dime)
       !$acc kernels default(present)
       do ii = 1, buf_size
-         dst_d(ii) = cmplx(dst_d(ii), work2_r_d(ii), mytype)
+         dst_d(ii) = cmplx(dst_d(ii), work4_r_d(ii), mytype)
       end do
       !$acc end kernels
    end subroutine decomp_2d_nccl_send_recv_cmplx_col

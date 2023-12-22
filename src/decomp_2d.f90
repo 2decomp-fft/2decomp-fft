@@ -117,6 +117,9 @@ module decomp_2d
    ! Shared real/complex buffers
 #if defined(_GPU)
    real(mytype), target, device, allocatable, dimension(:) :: work1, work2
+#if defined(_NCCL)
+   real(mytype), target, device, allocatable, dimension(:) :: work3, work4
+#endif
 #else
    real(mytype), target, allocatable, dimension(:) :: work1, work2
 #endif
@@ -385,6 +388,21 @@ contains
          call c_f_pointer(c_loc(work2), work2_c, [buf_size])
 #if defined(_GPU)
          call decomp_2d_cumpi_init(buf_size, work1, work2)
+#if defined(_NCCL)
+         allocate (work3(buf_size), STAT=status)
+         if (status /= 0) then
+            errorcode = 2
+            call decomp_2d_abort(__FILE__, __LINE__, errorcode, &
+                                 'Out of memory when allocating 2DECOMP workspace')
+         end if
+         allocate (work4(buf_size), STAT=status)
+         if (status /= 0) then
+            errorcode = 2
+            call decomp_2d_abort(__FILE__, __LINE__, errorcode, &
+                                 'Out of memory when allocating 2DECOMP workspace')
+         end if
+         call decomp_2d_nccl_mem_init(buf_size, work3, work4)
+#endif
 #endif
       end if
 

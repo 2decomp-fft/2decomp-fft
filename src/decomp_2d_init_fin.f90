@@ -187,6 +187,8 @@
 #if defined(_NCCL)
      call decomp_2d_nccl_mem_fin()
      call decomp_2d_nccl_fin()
+     if (allocated(work3)) deallocate (work3)
+     if (allocated(work4)) deallocate (work4)
 #endif
 #endif
 

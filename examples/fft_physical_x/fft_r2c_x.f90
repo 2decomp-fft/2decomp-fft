@@ -145,7 +145,6 @@ program fft_r2c_x
    error = error / (real(nx, mytype) * real(ny, mytype) * real(nz, mytype))
 
    ! Abort if the error is too high
-   ! Abort if the error is too high
    ! A large enough value is needed for the generic backend
    if (error > epsilon(error) * 50 * ntest) then
       if (nrank == 0) write (*, *) 'error / mesh point: ', error

@@ -26,17 +26,11 @@ program fft_c2c_z
    type(decomp_info), pointer :: ph => null()
    complex(mytype), allocatable, dimension(:, :, :) :: in, out
 
-   real(mytype) :: dr, di, error, err_all
+   real(mytype) :: dr, di, error
    integer :: ierror, i, j, k, m
    integer :: zst1, zst2, zst3
    integer :: zen1, zen2, zen3
    double precision :: n1, flops, t1, t2, t3, t4
-#ifdef DOUBLE_PREC
-   real(mytype), parameter :: error_precision = 1.e-12_mytype
-#else
-   real(mytype), parameter :: error_precision = 1.e-6_mytype
-#endif
-   
 
    call MPI_INIT(ierror)
    ! To resize the domain we need to know global number of ranks
@@ -150,16 +144,16 @@ program fft_c2c_z
       end do
    end do
    !$acc end loop
-   call MPI_ALLREDUCE(error, err_all, 1, real_type, MPI_SUM, MPI_COMM_WORLD, ierror)
-   err_all = err_all / (real(nx, mytype) * real(ny, mytype) * real(nz, mytype))
+   call MPI_ALLREDUCE(MPI_IN_PLACE, error, 1, real_type, MPI_SUM, MPI_COMM_WORLD, ierror)
+   error = error / (real(nx, mytype) * real(ny, mytype) * real(nz, mytype))
 
-   if (err_all > error_precision ) then
-      if (nrank == 0 ) write (*, *) 'error / mesh point: ', err_all 
-      call decomp_2d_abort(1, "error for the FFT too large") 
-   endif 
+   ! Abort if the error is too high
+   if (error > epsilon(error) * 5 * ntest) then
+      call decomp_2d_abort(__FILE__, __LINE__, int(log10(error)), "c2c Z test")
+   end if 
 
    if (nrank == 0) then
-      write (*, *) 'error / mesh point: ', err_all
+      write (*, *) 'error / mesh point: ', error
       write (*, *) 'Avg time (sec): ', t1, t3
       n1 = real(nx) * real(ny) * real(nz)
       n1 = n1**(1.d0 / 3.d0)

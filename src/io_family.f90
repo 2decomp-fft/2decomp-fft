@@ -8,10 +8,11 @@
 
 module decomp_2d_io_family
 
+   use decomp_2d
    use decomp_2d_constants
    use decomp_2d_mpi
    use decomp_2d_io_utilities
-   use decomp_2d
+   use decomp_2d_profiler
    use MPI
 #ifdef ADIOS2
    use adios2
@@ -94,9 +95,7 @@ contains
       class(d2d_io_family), intent(inout) :: family
       character(len=*), intent(in) :: label
 
-#ifdef PROFILER
       if (decomp_profiler_io) call decomp_profiler_start("d2d_io_family_mpi_init")
-#endif
 
       ! Safety check
       if (family%type /= decomp_2d_io_none) then
@@ -108,9 +107,7 @@ contains
 
       if (decomp_debug >= D2D_DEBUG_LEVEL_INFO) call family%log()
 
-#ifdef PROFILER
       if (decomp_profiler_io) call decomp_profiler_end("d2d_io_family_mpi_init")
-#endif
 
    end subroutine d2d_io_family_mpi_init
 
@@ -130,9 +127,7 @@ contains
       call decomp_2d_abort(__FILE__, __LINE__, -1, "ADIOS2 is not available")
 #endif
 
-#ifdef PROFILER
       if (decomp_profiler_io) call decomp_profiler_start("d2d_io_family_adios2_init")
-#endif
 
       ! Safety check
       if (family%type /= decomp_2d_io_none) then
@@ -165,9 +160,7 @@ contains
 
       if (decomp_debug >= D2D_DEBUG_LEVEL_INFO) call family%log()
 
-#ifdef PROFILER
       if (decomp_profiler_io) call decomp_profiler_end("d2d_io_family_adios2_init")
-#endif
 
    end subroutine d2d_io_family_adios2_init
 
@@ -184,9 +177,7 @@ contains
       integer :: ierror
 #endif
 
-#ifdef PROFILER
       if (decomp_profiler_io) call decomp_profiler_start("d2d_io_family_fin")
-#endif
 
       ! Safety check
       if (family%type == decomp_2d_io_none) then
@@ -218,9 +209,7 @@ contains
       family%type = decomp_2d_io_none
       deallocate (family%label)
 
-#ifdef PROFILER
       if (decomp_profiler_io) call decomp_profiler_end("d2d_io_family_fin")
-#endif
 
    end subroutine d2d_io_family_fin
 
@@ -251,9 +240,7 @@ contains
 
       logical :: reduce_prec
 
-#ifdef PROFILER
       if (decomp_profiler_io) call decomp_profiler_start("d2d_io_family_register_var3d")
-#endif
 
       if (present(opt_reduce_prec)) then
          reduce_prec = opt_reduce_prec
@@ -267,9 +254,7 @@ contains
          call register_var3d(family, varname, ipencil, type, reduce_prec, decomp_main)
       end if
 
-#ifdef PROFILER
       if (decomp_profiler_io) call decomp_profiler_end("d2d_io_family_register_var3d")
-#endif
 
    end subroutine d2d_io_family_register_var3d
    !
@@ -347,9 +332,7 @@ contains
       logical :: reduce_prec
       integer :: nplanes
 
-#ifdef PROFILER
       if (decomp_profiler_io) call decomp_profiler_start("d2d_io_family_register_var2d")
-#endif
 
       if (present(opt_reduce_prec)) then
          reduce_prec = opt_reduce_prec
@@ -369,9 +352,7 @@ contains
          call register_var2d(family, varname, ipencil, type, reduce_prec, decomp_main, nplanes)
       end if
 
-#ifdef PROFILER
       if (decomp_profiler_io) call decomp_profiler_end("d2d_io_family_register_var2d")
-#endif
 
    end subroutine d2d_io_family_register_var2d
    !

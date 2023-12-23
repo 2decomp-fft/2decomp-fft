@@ -52,10 +52,11 @@
 
 module decomp_2d_io_object
 
+   use decomp_2d
    use decomp_2d_constants
    use decomp_2d_io_family
    use decomp_2d_mpi
-   use decomp_2d
+   use decomp_2d_profiler
 #ifdef ADIOS2
    use adios2
 #endif
@@ -109,9 +110,7 @@ contains
 
       integer :: access_mode, ierror
 
-#ifdef PROFILER
       if (decomp_profiler_io) call decomp_profiler_start("d2d_io_open")
-#endif
 
       ! Safety check
       if (writer%is_open) then
@@ -200,9 +199,7 @@ contains
 #endif
       end if
 
-#ifdef PROFILER
       if (decomp_profiler_io) call decomp_profiler_end("d2d_io_open")
-#endif
 
    end subroutine d2d_io_open
 
@@ -219,9 +216,7 @@ contains
       integer :: ierror
 #endif
 
-#ifdef PROFILER
       if (decomp_profiler_io) call decomp_profiler_start("d2d_io_start")
-#endif
 
       ! Safety check
       if (.not. writer%is_open) then
@@ -254,9 +249,7 @@ contains
       end if
 #endif
 
-#ifdef PROFILER
       if (decomp_profiler_io) call decomp_profiler_end("d2d_io_start")
-#endif
 
    end subroutine d2d_io_start
 
@@ -294,9 +287,7 @@ contains
       integer :: ierror
 #endif
 
-#ifdef PROFILER
       if (decomp_profiler_io) call decomp_profiler_start("d2d_io_end")
-#endif
 
 #ifdef ADIOS2
       ! Safety check
@@ -326,9 +317,7 @@ contains
       end associate
 #endif
 
-#ifdef PROFILER
       if (decomp_profiler_io) call decomp_profiler_end("d2d_io_end")
-#endif
 
    end subroutine d2d_io_end
 
@@ -343,9 +332,7 @@ contains
 
       integer :: ierror
 
-#ifdef PROFILER
       if (decomp_profiler_io) call decomp_profiler_start("d2d_io_close")
-#endif
 
       ! Safety check
       if (.not. writer%is_open) then
@@ -374,9 +361,7 @@ contains
       deallocate (writer%label)
       writer%is_open = .false.
 
-#ifdef PROFILER
       if (decomp_profiler_io) call decomp_profiler_end("d2d_io_close")
-#endif
 
    end subroutine d2d_io_close
 

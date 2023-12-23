@@ -11,6 +11,7 @@ module decomp_2d_io
    use decomp_2d_io_object
    use decomp_2d_io_utilities
    use decomp_2d_mpi
+   use decomp_2d_profiler
    use MPI
    use, intrinsic :: iso_fortran_env, only: real32, real64
 #ifdef ADIOS2
@@ -178,9 +179,7 @@ contains
       character(len=80) :: config_file = "adios2_config.xml"
 #endif
 
-#ifdef PROFILER
       if (decomp_profiler_io) call decomp_profiler_start("io_init")
-#endif
 
       ! Initialize the IO family module
       call decomp_2d_io_family_init()
@@ -213,9 +212,7 @@ contains
       ! Send the default family to the IO object module
       call decomp_2d_io_object_set_default_family(default_io_family)
 
-#ifdef PROFILER
       if (decomp_profiler_io) call decomp_profiler_end("io_init")
-#endif
 
    end subroutine decomp_2d_io_init
 
@@ -234,9 +231,7 @@ contains
       integer :: ierror
 #endif
 
-#ifdef PROFILER
       if (decomp_profiler_io) call decomp_profiler_start("io_fin")
-#endif
 
 #ifdef ADIOS2
       call adios2_finalize(adios, ierror)
@@ -261,9 +256,7 @@ contains
       ! Finalize the IO family module
       call decomp_2d_io_family_fin()
 
-#ifdef PROFILER
       if (decomp_profiler_io) call decomp_profiler_end("io_fin")
-#endif
 
    end subroutine decomp_2d_io_fin
 
@@ -290,9 +283,7 @@ contains
       ! Local variable(s)
       TYPE(DECOMP_INFO), pointer :: decomp
 
-#ifdef PROFILER
       if (decomp_profiler_io) call decomp_profiler_start("io_write_one")
-#endif
 
       ! Use the provided decomp_info or the default one
       if (present(opt_decomp)) then
@@ -313,9 +304,7 @@ contains
       associate (p => opt_reduce_prec)
       end associate
 
-#ifdef PROFILER
       if (decomp_profiler_io) call decomp_profiler_end("io_write_one")
-#endif
 
    end subroutine write_one_freal
    !
@@ -338,9 +327,7 @@ contains
       ! Local variable(s)
       TYPE(DECOMP_INFO), pointer :: decomp
 
-#ifdef PROFILER
       if (decomp_profiler_io) call decomp_profiler_start("io_write_one")
-#endif
 
       ! Use the provided decomp_info or the default one
       if (present(opt_decomp)) then
@@ -361,9 +348,7 @@ contains
       associate (p => opt_reduce_prec)
       end associate
 
-#ifdef PROFILER
       if (decomp_profiler_io) call decomp_profiler_end("io_write_one")
-#endif
 
    end subroutine write_one_fcplx
    !
@@ -387,9 +372,7 @@ contains
       logical :: reduce
       TYPE(DECOMP_INFO), pointer :: decomp
 
-#ifdef PROFILER
       if (decomp_profiler_io) call decomp_profiler_start("io_write_one")
-#endif
 
       ! Use the provided decomp_info or the default one
       if (present(opt_decomp)) then
@@ -423,9 +406,7 @@ contains
 
       nullify (decomp)
 
-#ifdef PROFILER
       if (decomp_profiler_io) call decomp_profiler_end("io_write_one")
-#endif
 
    end subroutine write_one_dreal
    !
@@ -449,9 +430,7 @@ contains
       logical :: reduce
       TYPE(DECOMP_INFO), pointer :: decomp
 
-#ifdef PROFILER
       if (decomp_profiler_io) call decomp_profiler_start("io_write_one")
-#endif
 
       ! Use the provided decomp_info or the default one
       if (present(opt_decomp)) then
@@ -485,9 +464,7 @@ contains
 
       nullify (decomp)
 
-#ifdef PROFILER
       if (decomp_profiler_io) call decomp_profiler_end("io_write_one")
-#endif
 
    end subroutine write_one_dcplx
 
@@ -513,9 +490,7 @@ contains
       ! Local variable(s)
       TYPE(DECOMP_INFO), pointer :: decomp
 
-#ifdef PROFILER
       if (decomp_profiler_io) call decomp_profiler_start("io_read_one")
-#endif
 
       ! Use the provided decomp_info or the default one
       if (present(opt_decomp)) then
@@ -535,9 +510,7 @@ contains
       associate (p => opt_reduce_prec)
       end associate
 
-#ifdef PROFILER
       if (decomp_profiler_io) call decomp_profiler_end("io_read_one")
-#endif
 
    end subroutine read_one_freal
    !
@@ -559,9 +532,7 @@ contains
       ! Local variable(s)
       TYPE(DECOMP_INFO), pointer :: decomp
 
-#ifdef PROFILER
       if (decomp_profiler_io) call decomp_profiler_start("io_read_one")
-#endif
 
       ! Use the provided decomp_info or the default one
       if (present(opt_decomp)) then
@@ -581,9 +552,7 @@ contains
       associate (p => opt_reduce_prec)
       end associate
 
-#ifdef PROFILER
       if (decomp_profiler_io) call decomp_profiler_end("io_read_one")
-#endif
 
    end subroutine read_one_fcplx
    !
@@ -607,9 +576,7 @@ contains
       TYPE(DECOMP_INFO), pointer :: decomp
       real(real32), allocatable, dimension(:, :, :) :: tmp
 
-#ifdef PROFILER
       if (decomp_profiler_io) call decomp_profiler_start("io_read_one")
-#endif
 
       ! Use the provided decomp_info or the default one
       if (present(opt_decomp)) then
@@ -654,9 +621,7 @@ contains
 
       nullify (decomp)
 
-#ifdef PROFILER
       if (decomp_profiler_io) call decomp_profiler_end("io_read_one")
-#endif
 
    end subroutine read_one_dreal
    !
@@ -680,9 +645,7 @@ contains
       TYPE(DECOMP_INFO), pointer :: decomp
       complex(real32), allocatable, dimension(:, :, :) :: tmp
 
-#ifdef PROFILER
       if (decomp_profiler_io) call decomp_profiler_start("io_read_one")
-#endif
 
       ! Use the provided decomp_info or the default one
       if (present(opt_decomp)) then
@@ -727,9 +690,7 @@ contains
 
       nullify (decomp)
 
-#ifdef PROFILER
       if (decomp_profiler_io) call decomp_profiler_end("io_read_one")
-#endif
 
    end subroutine read_one_dcplx
 
@@ -760,9 +721,7 @@ contains
       TYPE(DECOMP_INFO), pointer :: decomp
       integer :: nplanes, iplane
 
-#ifdef PROFILER
       if (decomp_profiler_io) call decomp_profiler_start("io_write_plane")
-#endif
 
       if (present(opt_nplanes)) then
          nplanes = opt_nplanes
@@ -819,9 +778,7 @@ contains
       associate (p => opt_reduce_prec)
       end associate
 
-#ifdef PROFILER
       if (decomp_profiler_io) call decomp_profiler_end("io_write_plane")
-#endif
 
    end subroutine write_plane_freal
    !
@@ -848,9 +805,7 @@ contains
       TYPE(DECOMP_INFO), pointer :: decomp
       integer :: nplanes, iplane
 
-#ifdef PROFILER
       if (decomp_profiler_io) call decomp_profiler_start("io_write_plane")
-#endif
 
       if (present(opt_nplanes)) then
          nplanes = opt_nplanes
@@ -907,9 +862,7 @@ contains
       associate (p => opt_reduce_prec)
       end associate
 
-#ifdef PROFILER
       if (decomp_profiler_io) call decomp_profiler_end("io_write_plane")
-#endif
 
    end subroutine write_plane_fcplx
    !
@@ -937,9 +890,7 @@ contains
       TYPE(DECOMP_INFO), pointer :: decomp
       integer :: nplanes, iplane
 
-#ifdef PROFILER
       if (decomp_profiler_io) call decomp_profiler_start("io_write_plane")
-#endif
 
       if (present(opt_nplanes)) then
          nplanes = opt_nplanes
@@ -1018,9 +969,7 @@ contains
 
       nullify (decomp)
 
-#ifdef PROFILER
       if (decomp_profiler_io) call decomp_profiler_end("io_write_plane")
-#endif
 
    end subroutine write_plane_dreal
    !
@@ -1048,9 +997,7 @@ contains
       TYPE(DECOMP_INFO), pointer :: decomp
       integer :: nplanes, iplane
 
-#ifdef PROFILER
       if (decomp_profiler_io) call decomp_profiler_start("io_write_plane")
-#endif
 
       if (present(opt_nplanes)) then
          nplanes = opt_nplanes
@@ -1129,9 +1076,7 @@ contains
 
       nullify (decomp)
 
-#ifdef PROFILER
       if (decomp_profiler_io) call decomp_profiler_end("io_write_plane")
-#endif
 
    end subroutine write_plane_dcplx
 
@@ -1848,17 +1793,13 @@ contains
       integer :: newtype
 #endif
 
-#ifdef PROFILER
       if (decomp_profiler_io) call decomp_profiler_start("io_write_outflow")
-#endif
 
       data_type = real_type
 
 #include "io_write_outflow.f90"
 
-#ifdef PROFILER
       if (decomp_profiler_io) call decomp_profiler_end("io_write_outflow")
-#endif
 
    end subroutine write_outflow
 
@@ -1929,17 +1870,13 @@ contains
       integer :: newtype
 #endif
 
-#ifdef PROFILER
       if (decomp_profiler_io) call decomp_profiler_start("io_read_inflow")
-#endif
 
       data_type = real_type
 
 #include "io_read_inflow.f90"
 
-#ifdef PROFILER
       if (decomp_profiler_io) call decomp_profiler_end("io_read_inflow")
-#endif
 
    end subroutine read_inflow
 
@@ -2192,17 +2129,13 @@ contains
       integer :: i, j, k, ierror, newtype, fh, key, color, newcomm, data_type
       integer, dimension(3) :: xsz, ysz, zsz, xst, yst, zst, xen, yen, zen, skip
 
-#ifdef PROFILER
       if (decomp_profiler_io) call decomp_profiler_start("io_write_every_real")
-#endif
 
       data_type = real_type
 
 #include "io_write_every.inc"
 
-#ifdef PROFILER
       if (decomp_profiler_io) call decomp_profiler_end("io_write_every_real")
-#endif
 
    end subroutine write_every_real
 
@@ -2224,17 +2157,13 @@ contains
       integer :: i, j, k, ierror, newtype, fh, key, color, newcomm, data_type
       integer, dimension(3) :: xsz, ysz, zsz, xst, yst, zst, xen, yen, zen, skip
 
-#ifdef PROFILER
       if (decomp_profiler_io) call decomp_profiler_start("io_write_every_cplx")
-#endif
 
       data_type = complex_type
 
 #include "io_write_every.inc"
 
-#ifdef PROFILER
       if (decomp_profiler_io) call decomp_profiler_end("io_write_every_cplx")
-#endif
 
    end subroutine write_every_complex
 
@@ -2257,9 +2186,7 @@ contains
       integer :: newtype, fh, data_type, i, j, k
       integer :: i1, i2, j1, j2, k1, k2
 
-#ifdef PROFILER
       if (decomp_profiler_io) call decomp_profiler_start("io_write_subdomain")
-#endif
 
       data_type = real_type
 
@@ -2451,9 +2378,7 @@ contains
 
       call decomp_2d_mpi_comm_free(newcomm)
 
-#ifdef PROFILER
       if (decomp_profiler_io) call decomp_profiler_end("io_write_subdomain")
-#endif
 
    end subroutine write_subdomain
 

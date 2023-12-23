@@ -39,6 +39,8 @@ list(APPEND files_fft fft_log.f90)
 
 if (ENABLE_PROFILER)
   file(GLOB prof_files profiler_${ENABLE_PROFILER}.f90)
+else (ENABLE_PROFILER)
+  file(GLOB prof_files profiler_none.f90)
 endif()
 
 set(SRCFILES ${files_decomp} ${files_fft} ${prof_files})

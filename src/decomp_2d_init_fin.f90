@@ -26,14 +26,12 @@
      integer :: errorcode, ierror, row, col, iounit
      logical, dimension(2) :: periodic
 
-#ifdef PROFILER
      ! Prepare the profiler if it was not already prepared
      if (decomp_profiler == decomp_profiler_none) call decomp_profiler_prep()
      ! Start the profiler
      call decomp_profiler_init()
      ! Start the timer for decomp_2d_init
      if (decomp_profiler_d2d) call decomp_profiler_start("decomp_2d_init")
-#endif
 
      call decomp_2d_mpi_init(comm)
 
@@ -154,10 +152,8 @@
      !
      call d2d_log(iounit)
 
-#ifdef PROFILER
      ! Stop the timer for decomp_2d_init
      if (decomp_profiler_d2d) call decomp_profiler_end("decomp_2d_init")
-#endif
 
      return
   end subroutine decomp_2d_init_ref
@@ -169,9 +165,7 @@
 
      implicit none
 
-#ifdef PROFILER
      if (decomp_profiler_d2d) call decomp_profiler_start("decomp_2d_fin")
-#endif
 
      call decomp_2d_mpi_comm_free(DECOMP_2D_COMM_ROW)
      call decomp_2d_mpi_comm_free(DECOMP_2D_COMM_COL)
@@ -191,17 +185,16 @@
 #if defined(_GPU)
      call decomp_2d_cumpi_fin()
 #if defined(_NCCL)
+     call decomp_2d_nccl_mem_fin()
      call decomp_2d_nccl_fin()
 #endif
 #endif
 
      call decomp_2d_mpi_fin()
 
-#ifdef PROFILER
      if (decomp_profiler_d2d) call decomp_profiler_end("decomp_2d_fin")
      ! Finalize the profiler
      call decomp_profiler_fin()
-#endif
 
      return
   end subroutine decomp_2d_finalize_ref

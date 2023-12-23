@@ -214,13 +214,13 @@ contains
 #endif
       write (io_unit, *) '==========================================================='
       write (io_unit, *) 'Profiler id : ', decomp_profiler
-#ifdef PROFILER
       call decomp_profiler_log(io_unit)
-      write (io_unit, *) "   Profiling transpose : ", decomp_profiler_transpose
-      write (io_unit, *) "   Profiling IO : ", decomp_profiler_io
-      write (io_unit, *) "   Profiling FFT : ", decomp_profiler_fft
-      write (io_unit, *) "   Profiling decomp_2d : ", decomp_profiler_d2d
-#endif
+      if (decomp_profiler /= decomp_profiler_none) then
+         write (io_unit, *) "   Profiling transpose : ", decomp_profiler_transpose
+         write (io_unit, *) "   Profiling IO : ", decomp_profiler_io
+         write (io_unit, *) "   Profiling FFT : ", decomp_profiler_fft
+         write (io_unit, *) "   Profiling decomp_2d : ", decomp_profiler_d2d
+      end if
       write (io_unit, *) '==========================================================='
       ! Info about each decomp_info object
       call decomp_info_print(decomp_main, io_unit, "decomp_main")

@@ -31,7 +31,6 @@ program fft_physical_x
    integer :: xst1, xst2, xst3
    integer :: xen1, xen2, xen3
    double precision :: n1, flops, t1, t2, t3, t4
-   
 
    call MPI_INIT(ierror)
    ! To resize the domain we need to know global number of ranks

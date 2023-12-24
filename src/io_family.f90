@@ -31,6 +31,11 @@ module decomp_2d_io_family
    type, public :: d2d_io_family
       integer :: type = decomp_2d_io_none                     ! Type of the family of writer
       character(:), allocatable :: label                      ! Label of the family writer
+      ! Hints for MPI IO
+      !    The external code can allocate / associate the pointers
+      !    If allocated, the external code should deallocate
+      integer, public, pointer :: mpi_file_open_info => null()
+      integer, public, pointer :: mpi_file_set_view_info => null()
 #ifdef ADIOS2
       type(adios2_adios), pointer :: adios                    ! adios2 only
       type(adios2_io) :: io                                   ! adios2 only
@@ -208,6 +213,8 @@ contains
 
       family%type = decomp_2d_io_none
       deallocate (family%label)
+      if (associated(family%mpi_file_open_info)) nullify (family%mpi_file_open_info)
+      if (associated(family%mpi_file_set_view_info)) nullify (family%mpi_file_set_view_info)
 
       if (decomp_profiler_io) call decomp_profiler_end("d2d_io_family_fin")
 

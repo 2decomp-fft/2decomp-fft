@@ -1501,12 +1501,19 @@ contains
       integer, contiguous, dimension(:, :, :), optional :: ints
       logical, contiguous, dimension(:, :, :), optional :: logs
 
-      integer :: ierror, data_type, newtype, type_bytes
+      integer :: my_mpi_info, ierror, data_type, newtype, type_bytes
 
       ! Safety check
       if (.not. io%is_open) then
          call decomp_2d_abort(__FILE__, __LINE__, 0, &
                               "IO reader / writer was not opened "//io%label)
+      end if
+
+      ! Hints for MPI IO
+      if (associated(io%mpi_file_set_view_info)) then
+         my_mpi_info = io%mpi_file_set_view_info
+      else
+         my_mpi_info = MPI_INFO_NULL
       end if
 
       ! Select the MPI data type
@@ -1536,7 +1543,7 @@ contains
       if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_TYPE_CREATE_SUBARRAY")
       call MPI_TYPE_COMMIT(newtype, ierror)
       if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_TYPE_COMMIT")
-      call MPI_FILE_SET_VIEW(io%fh, io%disp, data_type, newtype, 'native', MPI_INFO_NULL, ierror)
+      call MPI_FILE_SET_VIEW(io%fh, io%disp, data_type, newtype, 'native', my_mpi_info, ierror)
       if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_FILE_SET_VIEW")
       if (flag_read) then
          if (present(freal)) then

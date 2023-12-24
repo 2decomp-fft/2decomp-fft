@@ -77,6 +77,11 @@ module decomp_2d_io_object
 #endif
       integer :: fh                                 ! File handle (mpi only)
       integer(kind=MPI_OFFSET_KIND) :: disp         ! Displacement offset (mpi only)
+      ! Hints for MPI IO
+      !    The external code can allocate / associate the pointers
+      !    If allocated, the external code should deallocate
+      integer, public, pointer :: mpi_file_open_info => null()
+      integer, public, pointer :: mpi_file_set_view_info => null()
    contains
       procedure :: open => d2d_io_open              ! Open the IO
       procedure :: start => d2d_io_start            ! Start the IO
@@ -99,7 +104,7 @@ contains
    !
    ! Open the given reader / writer
    !
-   subroutine d2d_io_open(writer, io_dir, mode, family)
+   subroutine d2d_io_open(writer, io_dir, mode, family, opt_mpi_info)
 
       implicit none
 
@@ -107,8 +112,9 @@ contains
       character(len=*), intent(in) :: io_dir
       integer, intent(in) :: mode
       type(d2d_io_family), target, intent(in) :: family
+      integer, intent(in), optional :: opt_mpi_info
 
-      integer :: access_mode, ierror
+      integer :: my_mpi_info, access_mode, ierror
 
       if (decomp_profiler_io) call decomp_profiler_start("d2d_io_open")
 
@@ -116,6 +122,25 @@ contains
       if (writer%is_open) then
          call decomp_2d_abort(__FILE__, __LINE__, -1, &
                               "Writer was not closed "//writer%label)
+      end if
+
+      ! The external code can provide hints for MPI IO
+      if (present(opt_mpi_info)) then
+         ! Hints provided directly with the optional argument
+         my_mpi_info = opt_mpi_info
+      else if (associated(writer%mpi_file_open_info)) then
+         ! Hints provided using the IO object
+         my_mpi_info = writer%mpi_file_open_info
+      else if (associated(family%mpi_file_open_info)) then
+         ! Hints provided using the IO family object
+         my_mpi_info = family%mpi_file_open_info
+      else
+         ! Default value for hints
+         my_mpi_info = MPI_INFO_NULL
+      end if
+      if (associated(family%mpi_file_set_view_info) &
+          .and. (.not. associated(writer%mpi_file_set_view_info))) then
+         writer%mpi_file_set_view_info => family%mpi_file_set_view_info
       end if
 
       ! Prepare the writer
@@ -157,7 +182,7 @@ contains
       ! Open IO
       if (family%type == decomp_2d_io_mpi) then
          call MPI_FILE_OPEN(decomp_2d_comm, io_dir, &
-                            access_mode, MPI_INFO_NULL, &
+                            access_mode, my_mpi_info, &
                             writer%fh, ierror)
          if (ierror /= 0) then
             call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_FILE_OPEN "//io_dir)
@@ -256,7 +281,7 @@ contains
    !
    ! Open the given reader / writer and start IO
    !
-   subroutine d2d_io_open_start(writer, io_dir, mode, opt_family)
+   subroutine d2d_io_open_start(writer, io_dir, mode, opt_family, opt_mpi_info)
 
       implicit none
 
@@ -264,11 +289,12 @@ contains
       character(len=*), intent(in) :: io_dir
       integer, intent(in) :: mode
       type(d2d_io_family), target, intent(in), optional :: opt_family
+      integer, intent(in), optional :: opt_mpi_info
 
       if (present(opt_family)) then
-         call writer%open(io_dir, mode, opt_family)
+         call writer%open(io_dir, mode, opt_family, opt_mpi_info)
       else
-         call writer%open(io_dir, mode, default_family)
+         call writer%open(io_dir, mode, default_family, opt_mpi_info)
       end if
       call writer%start()
 
@@ -360,6 +386,8 @@ contains
       nullify (writer%family)
       deallocate (writer%label)
       writer%is_open = .false.
+      if (associated(writer%mpi_file_open_info)) nullify (writer%mpi_file_open_info)
+      if (associated(writer%mpi_file_set_view_info)) nullify (writer%mpi_file_set_view_info)
 
       if (decomp_profiler_io) call decomp_profiler_end("d2d_io_close")
 

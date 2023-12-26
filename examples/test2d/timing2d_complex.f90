@@ -144,11 +144,8 @@ program timing2d_complex
       end if
 #endif
 
-      ! call decomp_2d_write_one(2,u2,'u2.dat')
-      ! 'u1.dat' and 'u2.dat' should be identical byte-by-byte
-
       ! also check the transposition this way
-      !$acc parallel loop default(present) private(m,cm)
+      !$acc parallel loop default(present) collapse(3) private(m,cm) reduction(.or.:error_flag)
       do k = yst3, yen3
          do j = yst2, yen2
             do i = yst1, yen1
@@ -178,10 +175,7 @@ program timing2d_complex
       end if
 #endif
 
-      ! call decomp_2d_write_one(3,u3,'u3.dat')
-      ! 'u1.dat','u2.dat' and 'u3.dat' should be identical
-
-      !$acc parallel loop default(present) private(m,cm)
+      !$acc parallel loop default(present) collapse(3) private(m,cm) reduction(.or.:error_flag)
       do k = zst3, zen3
          do j = zst2, zen2
             do i = zst1, zen1
@@ -201,9 +195,8 @@ program timing2d_complex
       t5 = MPI_WTIME()
       call transpose_z_to_y(u3, u2)
       t6 = t6 + MPI_WTIME() - t5
-      ! call decomp_2d_write_one(2,u2,'u2b.dat')
 
-      !$acc parallel loop default(present) private(m,cm)
+      !$acc parallel loop default(present) collapse(3) private(m,cm) reduction(.or.:error_flag)
       do k = yst3, yen3
          do j = yst2, yen2
             do i = yst1, yen1
@@ -223,9 +216,8 @@ program timing2d_complex
       t7 = MPI_WTIME()
       call transpose_y_to_x(u2, u1)
       t8 = t8 + MPI_WTIME() - t7
-      ! call decomp_2d_write_one(1,u1,'u1b.dat')
 
-      !$acc parallel loop default(present) private(m,cm)
+      !$acc parallel loop default(present) collapse(3) private(m,cm) reduction(.or.:error_flag)
       do k = xst3, xen3
          do j = xst2, xen2
             do i = xst1, xen1

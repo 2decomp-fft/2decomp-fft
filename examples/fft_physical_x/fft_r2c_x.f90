@@ -27,7 +27,7 @@ program fft_r2c_x
    complex(mytype), allocatable, dimension(:, :, :) :: out
    real(mytype), allocatable, dimension(:, :, :) :: in_r
 
-   real(mytype) :: dr, error, err_all
+   real(mytype) :: dr, error
    integer :: ierror, i, j, k, m
    integer :: xst1, xst2, xst3
    integer :: xen1, xen2, xen3
@@ -141,12 +141,19 @@ program fft_r2c_x
    end do
    !$acc end loop
 
-   call MPI_ALLREDUCE(error, err_all, 1, real_type, MPI_SUM, MPI_COMM_WORLD, ierror)
-   err_all = err_all / (real(nx, mytype) * real(ny, mytype) * real(nz, mytype))
+   call MPI_ALLREDUCE(MPI_IN_PLACE, error, 1, real_type, MPI_SUM, MPI_COMM_WORLD, ierror)
+   error = error / (real(nx, mytype) * real(ny, mytype) * real(nz, mytype))
+
+   ! Abort if the error is too high
+   ! A large enough value is needed for the generic backend
+   if (error > epsilon(error) * 50 * ntest) then
+      if (nrank == 0) write (*, *) 'error / mesh point: ', error
+      call decomp_2d_abort(__FILE__, __LINE__, int(log10(error)), "r2c X test")
+   end if 
 
    if (nrank == 0) then
-      write (*, *) 'error / mesh point: ', err_all
-      write (*, *) 'time (sec): ', t1, t3
+      write (*, *) 'error / mesh point: ', error
+      write (*, *) 'Avg time (sec): ', t1, t3
       write (*, *) '   '
       write (*, *) 'fft_r2c_x completed '
       write (*, *) '   '

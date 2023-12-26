@@ -49,18 +49,6 @@ program test2d
 
    call decomp_2d_testing_log()
 
-   !! ***** global data *****
-   !allocate(data1(nx,ny,nz))
-   !m = 1
-   !do k = 1, nz
-   !   do j = 1, ny
-   !      do i = 1, nx
-   !         data1(i, j, k) = float(m)
-   !         m = m + 1
-   !      end do
-   !   end do
-   !end do
-
    ! Fill the local index
    xst1 = xstart(1); xen1 = xend(1)
    xst2 = xstart(2); xen2 = xend(2)
@@ -82,7 +70,7 @@ program test2d
 
    !$acc data copy(u1,u2,u3)
    ! original x-pensil based data
-   !$acc parallel loop default(present) collapse(3)
+   !$acc parallel loop default(present) collapse(3) private(m)
    do k = xst3, xen3
       do j = xst2, xen2
          do i = xst1, xen1
@@ -124,7 +112,7 @@ program test2d
    ! 'u1.dat' and 'u2.dat' should be identical byte-by-byte
 
    ! also check the transposition this way
-   !$acc parallel loop default(present) collapse(3)
+   !$acc parallel loop default(present) collapse(3) private(m) reduction(.or.:error_flag)
    do k = yst3, yen3
       do j = yst2, yen2
          do i = yst1, yen1
@@ -154,7 +142,7 @@ program test2d
    ! call decomp_2d_write_one(3,u3,'u3.dat')
    ! 'u1.dat','u2.dat' and 'u3.dat' should be identical
 
-   !$acc parallel loop default(present) collapse(3)
+   !$acc parallel loop default(present) collapse(3) private(m) reduction(.or.:error_flag)
    do k = zst3, zen3
       do j = zst2, zen2
          do i = zst1, zen1
@@ -173,7 +161,7 @@ program test2d
    call transpose_z_to_y(u3, u2)
    ! call decomp_2d_write_one(2,u2,'u2b.dat')
 
-   !$acc parallel loop default(present) collapse(3)
+   !$acc parallel loop default(present) collapse(3) private(m) reduction(.or.:error_flag)
    do k = yst3, yen3
       do j = yst2, yen2
          do i = yst1, yen1
@@ -192,7 +180,7 @@ program test2d
    call transpose_y_to_x(u2, u1)
    ! call decomp_2d_write_one(1,u1,'u1b.dat')
 
-   !$acc parallel loop default(present) collapse(3)
+   !$acc parallel loop default(present) collapse(3) private(m) reduction(.or.:error_flag)
    do k = xst3, xen3
       do j = xst2, xen2
          do i = xst1, xen1

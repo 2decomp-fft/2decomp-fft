@@ -70,9 +70,7 @@ for i in range(nformat):
     #
     # Start profiling
     #
-    f.write("#ifdef PROFILER\n")
     f.write("      if (decomp_profiler_io) call decomp_profiler_start(\"io_read_one\")\n")
-    f.write("#endif\n")
     f.write("\n")
     #
     # Deal with optional arguments
@@ -151,9 +149,7 @@ for i in range(nformat):
     #
     # End profiling
     #
-    f.write("#ifdef PROFILER\n")
     f.write("      if (decomp_profiler_io) call decomp_profiler_end(\"io_read_one\")\n")
-    f.write("#endif\n")
     f.write("\n")
     #
     # Footer

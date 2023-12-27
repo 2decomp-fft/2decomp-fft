@@ -68,9 +68,7 @@ for i in range(nformat):
     #
     # Start profiling
     #
-    f.write("#ifdef PROFILER\n")
     f.write("      if (decomp_profiler_io) call decomp_profiler_start(\"io_write_one\")\n")
-    f.write("#endif\n")
     f.write("\n")
     #
     # Deal with optional arguments
@@ -107,7 +105,7 @@ for i in range(nformat):
     if (i==2 or i==3):
         f.write("      if (reduce) then\n")
         f.write("         call write_one(ipencil, varname, decomp, &\n")
-        f.write("                        opt_mode=decomp_2d_write_sync, &\n")
+        f.write("                        opt_mode=decomp_2d_io_sync, &\n")
         f.write("                        opt_family=opt_family, &\n")
         f.write("                        opt_io=opt_io, &\n")
         f.write("                        opt_dirname=opt_dirname, &\n")
@@ -139,9 +137,7 @@ for i in range(nformat):
     #
     # End profiling
     #
-    f.write("#ifdef PROFILER\n")
     f.write("      if (decomp_profiler_io) call decomp_profiler_end(\"io_write_one\")\n")
-    f.write("#endif\n")
     f.write("\n")
     #
     # Footer

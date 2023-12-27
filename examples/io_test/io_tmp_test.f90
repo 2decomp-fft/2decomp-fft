@@ -179,19 +179,19 @@ program io_test
 #endif
    ! Copy data to temporary memory and write from the temporary memory
    tmp1(:, :, :) = u1(:, :, :)
-   call decomp_2d_write_one(1, tmp1, 'u1.dat', opt_dirname='out', opt_io=io, opt_mode=decomp_2d_write_sync)
+   call decomp_2d_write_one(1, tmp1, 'u1.dat', opt_dirname='out', opt_io=io, opt_mode=decomp_2d_io_sync)
    tmp1(:, :, :) = v1(:, :, :)
-   call decomp_2d_write_one(1, tmp1, 'v1.dat', opt_dirname='out', opt_io=io, opt_mode=decomp_2d_write_sync)
+   call decomp_2d_write_one(1, tmp1, 'v1.dat', opt_dirname='out', opt_io=io, opt_mode=decomp_2d_io_sync)
 
    tmp2(:, :, :) = u2(:, :, :)
-   call decomp_2d_write_one(2, tmp2, 'u2.dat', opt_dirname='out', opt_io=io, opt_mode=decomp_2d_write_sync)
+   call decomp_2d_write_one(2, tmp2, 'u2.dat', opt_dirname='out', opt_io=io, opt_mode=decomp_2d_io_sync)
    tmp2(:, :, :) = v2(:, :, :)
-   call decomp_2d_write_one(2, tmp2, 'v2.dat', opt_dirname='out', opt_io=io, opt_mode=decomp_2d_write_sync)
+   call decomp_2d_write_one(2, tmp2, 'v2.dat', opt_dirname='out', opt_io=io, opt_mode=decomp_2d_io_sync)
 
    tmp3(:, :, :) = u3(:, :, :)
-   call decomp_2d_write_one(3, tmp3, 'u3.dat', opt_dirname='out', opt_io=io, opt_mode=decomp_2d_write_sync)
+   call decomp_2d_write_one(3, tmp3, 'u3.dat', opt_dirname='out', opt_io=io, opt_mode=decomp_2d_io_sync)
    tmp3(:, :, :) = v3(:, :, :)
-   call decomp_2d_write_one(3, tmp3, 'v3.dat', opt_dirname='out', opt_io=io, opt_mode=decomp_2d_write_sync)
+   call decomp_2d_write_one(3, tmp3, 'v3.dat', opt_dirname='out', opt_io=io, opt_mode=decomp_2d_io_sync)
 #ifdef ADIOS2
    call io%end_close
 #endif
@@ -219,19 +219,19 @@ program io_test
    call io%open_start("checkpoint", decomp_2d_write_mode, opt_family=io_family_restart)
 
    tmp1(:, :, :) = u1(:, :, :)
-   call decomp_2d_write_one(1, tmp1, 'u1.dat', opt_io=io, opt_mode=decomp_2d_write_sync)
+   call decomp_2d_write_one(1, tmp1, 'u1.dat', opt_io=io, opt_mode=decomp_2d_io_sync)
    tmp1(:, :, :) = v1(:, :, :)
-   call decomp_2d_write_one(1, tmp1, 'v1.dat', opt_io=io, opt_mode=decomp_2d_write_sync)
+   call decomp_2d_write_one(1, tmp1, 'v1.dat', opt_io=io, opt_mode=decomp_2d_io_sync)
 
    tmp2(:, :, :) = u2(:, :, :)
-   call decomp_2d_write_one(2, tmp2, 'u2.dat', opt_io=io, opt_mode=decomp_2d_write_sync)
+   call decomp_2d_write_one(2, tmp2, 'u2.dat', opt_io=io, opt_mode=decomp_2d_io_sync)
    tmp2(:, :, :) = v2(:, :, :)
-   call decomp_2d_write_one(2, tmp2, 'v2.dat', opt_io=io, opt_mode=decomp_2d_write_sync)
+   call decomp_2d_write_one(2, tmp2, 'v2.dat', opt_io=io, opt_mode=decomp_2d_io_sync)
 
    tmp3(:, :, :) = u3(:, :, :)
-   call decomp_2d_write_one(3, tmp3, 'u3.dat', opt_io=io, opt_mode=decomp_2d_write_sync)
+   call decomp_2d_write_one(3, tmp3, 'u3.dat', opt_io=io, opt_mode=decomp_2d_io_sync)
    tmp3(:, :, :) = v3(:, :, :)
-   call decomp_2d_write_one(3, tmp3, 'v3.dat', opt_io=io, opt_mode=decomp_2d_write_sync)
+   call decomp_2d_write_one(3, tmp3, 'v3.dat', opt_io=io, opt_mode=decomp_2d_io_sync)
 
    call io%end_close()
 

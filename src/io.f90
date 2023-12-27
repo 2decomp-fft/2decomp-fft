@@ -390,7 +390,7 @@ contains
 
       if (reduce) then
          call write_one(ipencil, varname, decomp, &
-                        opt_mode=decomp_2d_write_sync, &
+                        opt_mode=decomp_2d_io_sync, &
                         opt_family=opt_family, &
                         opt_io=opt_io, &
                         opt_dirname=opt_dirname, &
@@ -448,7 +448,7 @@ contains
 
       if (reduce) then
          call write_one(ipencil, varname, decomp, &
-                        opt_mode=decomp_2d_write_sync, &
+                        opt_mode=decomp_2d_io_sync, &
                         opt_family=opt_family, &
                         opt_io=opt_io, &
                         opt_dirname=opt_dirname, &
@@ -925,7 +925,7 @@ contains
       if (nplanes > 1) then
          if (reduce) then
             call write_plane(ipencil, varname, decomp, nplanes, &
-                             opt_mode=decomp_2d_write_sync, &
+                             opt_mode=decomp_2d_io_sync, &
                              opt_family=opt_family, &
                              opt_io=opt_io, &
                              opt_dirname=opt_dirname, &
@@ -951,7 +951,7 @@ contains
          end if
          if (reduce) then
             call write_plane(ipencil, varname, decomp, nplanes, &
-                             opt_mode=decomp_2d_write_sync, &
+                             opt_mode=decomp_2d_io_sync, &
                              opt_family=opt_family, &
                              opt_io=opt_io, &
                              opt_dirname=opt_dirname, &
@@ -1032,7 +1032,7 @@ contains
       if (nplanes > 1) then
          if (reduce) then
             call write_plane(ipencil, varname, decomp, nplanes, &
-                             opt_mode=decomp_2d_write_sync, &
+                             opt_mode=decomp_2d_io_sync, &
                              opt_family=opt_family, &
                              opt_io=opt_io, &
                              opt_dirname=opt_dirname, &
@@ -1058,7 +1058,7 @@ contains
          end if
          if (reduce) then
             call write_plane(ipencil, varname, decomp, nplanes, &
-                             opt_mode=decomp_2d_write_sync, &
+                             opt_mode=decomp_2d_io_sync, &
                              opt_family=opt_family, &
                              opt_io=opt_io, &
                              opt_dirname=opt_dirname, &
@@ -1149,9 +1149,9 @@ contains
       if (present(opt_mode)) then
          mode = opt_mode
       else
-         mode = decomp_2d_write_deferred
+         mode = decomp_2d_io_deferred
       end if
-      if (use_opt_io .and. mode == decomp_2d_write_deferred .and. present(opt_nb_req)) then
+      if (use_opt_io .and. mode == decomp_2d_io_deferred .and. present(opt_nb_req)) then
          opt_nb = .true.
       else
          opt_nb = .false.
@@ -1371,9 +1371,9 @@ contains
       if (present(opt_mode)) then
          mode = opt_mode
       else
-         mode = decomp_2d_write_deferred
+         mode = decomp_2d_io_deferred
       end if
-      if (use_opt_io .and. mode == decomp_2d_write_deferred .and. present(opt_nb_req)) then
+      if (use_opt_io .and. mode == decomp_2d_io_deferred .and. present(opt_nb_req)) then
          opt_nb = .true.
       else
          opt_nb = .false.
@@ -1702,8 +1702,8 @@ contains
                               "IO reader / writer has not started "//io%label)
       end if
 #endif
-      if (mode < decomp_2d_write_deferred .or. &
-          mode > decomp_2d_write_sync) then
+      if (mode < decomp_2d_io_deferred .or. &
+          mode > decomp_2d_io_sync) then
          call decomp_2d_abort(__FILE__, __LINE__, mode, "Invalid value")
       end if
 
@@ -1716,9 +1716,9 @@ contains
                               "ERROR: trying to write variable before registering! "//trim(varname))
       end if
 
-      if (mode == decomp_2d_write_deferred) then
+      if (mode == decomp_2d_io_deferred) then
          write_mode = adios2_mode_deferred
-      else if (mode == decomp_2d_write_sync) then
+      else if (mode == decomp_2d_io_sync) then
          write_mode = adios2_mode_sync
       end if
 

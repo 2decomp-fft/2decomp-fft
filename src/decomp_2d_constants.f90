@@ -113,8 +113,8 @@ module decomp_2d_constants
    integer, parameter, public :: DECOMP_2D_READ_MODE = 2
    integer, parameter, public :: DECOMP_2D_APPEND_MODE = 3
 
-   integer, parameter, public :: DECOMP_2D_WRITE_DEFERRED = 1
-   integer, parameter, public :: DECOMP_2D_WRITE_SYNC = 2
+   integer, parameter, public :: DECOMP_2D_IO_DEFERRED = 1
+   integer, parameter, public :: DECOMP_2D_IO_SYNC = 2
 
    !
    ! Interpolation methods

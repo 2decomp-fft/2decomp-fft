@@ -472,7 +472,7 @@ contains
    ! High-level. Using MPI-IO / ADIOS2 to read a 3D array from a file
    !
    ! The code below below was generated with the script gen_io_read_one.py
-   subroutine read_one_freal(ipencil, var, varname, opt_family, &
+   subroutine read_one_freal(ipencil, var, varname, opt_mode, opt_family, &
                              opt_io, opt_dirname, opt_reduce_prec, opt_decomp)
 
       implicit none
@@ -481,6 +481,7 @@ contains
       integer, intent(IN) :: ipencil
       real(real32), contiguous, dimension(:, :, :), intent(out) :: var
       character(len=*), intent(in) :: varname
+      integer, intent(inout), optional :: opt_mode
       type(d2d_io_family), target, intent(in), optional :: opt_family
       type(d2d_io), intent(inout), optional :: opt_io
       character(len=*), intent(in), optional :: opt_dirname
@@ -500,6 +501,7 @@ contains
       end if
 
       call read_one(ipencil, varname, decomp, &
+                    opt_mode=opt_mode, &
                     opt_family=opt_family, &
                     opt_io=opt_io, &
                     opt_dirname=opt_dirname, &
@@ -514,7 +516,7 @@ contains
 
    end subroutine read_one_freal
    !
-   subroutine read_one_fcplx(ipencil, var, varname, opt_family, &
+   subroutine read_one_fcplx(ipencil, var, varname, opt_mode, opt_family, &
                              opt_io, opt_dirname, opt_reduce_prec, opt_decomp)
 
       implicit none
@@ -523,6 +525,7 @@ contains
       integer, intent(IN) :: ipencil
       complex(real32), contiguous, dimension(:, :, :), intent(out) :: var
       character(len=*), intent(in) :: varname
+      integer, intent(inout), optional :: opt_mode
       type(d2d_io_family), target, intent(in), optional :: opt_family
       type(d2d_io), intent(inout), optional :: opt_io
       character(len=*), intent(in), optional :: opt_dirname
@@ -542,6 +545,7 @@ contains
       end if
 
       call read_one(ipencil, varname, decomp, &
+                    opt_mode=opt_mode, &
                     opt_family=opt_family, &
                     opt_io=opt_io, &
                     opt_dirname=opt_dirname, &
@@ -556,7 +560,7 @@ contains
 
    end subroutine read_one_fcplx
    !
-   subroutine read_one_dreal(ipencil, var, varname, opt_family, &
+   subroutine read_one_dreal(ipencil, var, varname, opt_mode, opt_family, &
                              opt_io, opt_dirname, opt_reduce_prec, opt_decomp)
 
       implicit none
@@ -565,6 +569,7 @@ contains
       integer, intent(IN) :: ipencil
       real(real64), contiguous, dimension(:, :, :), intent(out) :: var
       character(len=*), intent(in) :: varname
+      integer, intent(inout), optional :: opt_mode
       type(d2d_io_family), target, intent(in), optional :: opt_family
       type(d2d_io), intent(inout), optional :: opt_io
       character(len=*), intent(in), optional :: opt_dirname
@@ -602,6 +607,7 @@ contains
             call alloc_z(tmp, decomp)
          end if
          call read_one(ipencil, varname, decomp, &
+                       opt_mode=decomp_2d_io_sync, &
                        opt_family=opt_family, &
                        opt_io=opt_io, &
                        opt_dirname=opt_dirname, &
@@ -612,6 +618,7 @@ contains
       else
 
          call read_one(ipencil, varname, decomp, &
+                       opt_mode=opt_mode, &
                        opt_family=opt_family, &
                        opt_io=opt_io, &
                        opt_dirname=opt_dirname, &
@@ -625,7 +632,7 @@ contains
 
    end subroutine read_one_dreal
    !
-   subroutine read_one_dcplx(ipencil, var, varname, opt_family, &
+   subroutine read_one_dcplx(ipencil, var, varname, opt_mode, opt_family, &
                              opt_io, opt_dirname, opt_reduce_prec, opt_decomp)
 
       implicit none
@@ -634,6 +641,7 @@ contains
       integer, intent(IN) :: ipencil
       complex(real64), contiguous, dimension(:, :, :), intent(out) :: var
       character(len=*), intent(in) :: varname
+      integer, intent(inout), optional :: opt_mode
       type(d2d_io_family), target, intent(in), optional :: opt_family
       type(d2d_io), intent(inout), optional :: opt_io
       character(len=*), intent(in), optional :: opt_dirname
@@ -671,6 +679,7 @@ contains
             call alloc_z(tmp, decomp)
          end if
          call read_one(ipencil, varname, decomp, &
+                       opt_mode=decomp_2d_io_sync, &
                        opt_family=opt_family, &
                        opt_io=opt_io, &
                        opt_dirname=opt_dirname, &
@@ -681,6 +690,7 @@ contains
       else
 
          call read_one(ipencil, varname, decomp, &
+                       opt_mode=opt_mode, &
                        opt_family=opt_family, &
                        opt_io=opt_io, &
                        opt_dirname=opt_dirname, &

@@ -29,7 +29,7 @@ for i in range(nformat):
     #
     # Header
     #
-    f.write("   subroutine read_one_"+ext[i]+"(ipencil, var, varname, opt_family, &\n")
+    f.write("   subroutine read_one_"+ext[i]+"(ipencil, var, varname, opt_mode, opt_family, &\n")
     f.write("                             opt_io, opt_dirname, opt_reduce_prec, opt_decomp)\n")
     f.write("\n")
     f.write("      implicit none\n")
@@ -49,6 +49,7 @@ for i in range(nformat):
         f.write("      complex(real64), contiguous, dimension(:, :, :), intent(out) :: var\n")
     #
     f.write("      character(len=*), intent(in) :: varname\n")
+    f.write("      integer, intent(inout), optional :: opt_mode\n")
     f.write("      type(d2d_io_family), target, intent(in), optional :: opt_family\n")
     f.write("      type(d2d_io), intent(inout), optional :: opt_io\n")
     f.write("      character(len=*), intent(in), optional :: opt_dirname\n")
@@ -95,6 +96,7 @@ for i in range(nformat):
     #
     if (i==0 or i==1):
         f.write("      call read_one(ipencil, varname, decomp, &\n")
+        f.write("                    opt_mode=opt_mode, &\n")
         f.write("                    opt_family=opt_family, &\n")
         f.write("                    opt_io=opt_io, &\n")
         f.write("                    opt_dirname=opt_dirname, &\n")
@@ -114,6 +116,7 @@ for i in range(nformat):
         f.write("            call alloc_z(tmp, decomp)\n")
         f.write("         end if\n")
         f.write("         call read_one(ipencil, varname, decomp, &\n")
+        f.write("                       opt_mode=decomp_2d_io_sync, &\n")
         f.write("                       opt_family=opt_family, &\n")
         f.write("                       opt_io=opt_io, &\n")
         f.write("                       opt_dirname=opt_dirname, &\n")
@@ -127,6 +130,7 @@ for i in range(nformat):
         f.write("      else\n")
         f.write("\n")
         f.write("         call read_one(ipencil, varname, decomp, &\n")
+        f.write("                       opt_mode=opt_mode, &\n")
         f.write("                       opt_family=opt_family, &\n")
         f.write("                       opt_io=opt_io, &\n")
         f.write("                       opt_dirname=opt_dirname, &\n")

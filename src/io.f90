@@ -1205,6 +1205,9 @@ contains
          opt_nb = .false.
       end if
 
+      ! Default value
+      if (present(opt_nb_req)) opt_nb_req = MPI_REQUEST_NULL
+
       if (use_opt_io) then
 
          if (opt_io%family%type == DECOMP_2D_IO_MPI) then
@@ -1318,6 +1321,9 @@ contains
       else
          opt_nb = .false.
       end if
+
+      ! Default value
+      if (present(opt_nb_req)) opt_nb_req = MPI_REQUEST_NULL
 
       if (use_opt_io) then
 
@@ -1442,6 +1448,9 @@ contains
       else
          opt_nb = .false.
       end if
+
+      ! Default value
+      if (present(opt_nb_req)) opt_nb_req = MPI_REQUEST_NULL
 
       if (use_opt_io) then
 

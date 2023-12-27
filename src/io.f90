@@ -1407,12 +1407,12 @@ contains
 
    !
    !
-   ! Low-level MPI. This could be moved ot a dedicated module.
+   ! Low-level MPI. This could be moved to a dedicated module.
    !
    !
    ! Write a 3D array to a file
    !
-   subroutine mpi_write_var(ipencil, io, decomp, freal, dreal, fcplx, dcplx)
+   subroutine mpi_write_var(ipencil, io, decomp, freal, dreal, fcplx, dcplx, opt_nb, opt_nb_req)
 
       implicit none
 
@@ -1423,6 +1423,8 @@ contains
       real(real64), contiguous, dimension(:, :, :), intent(IN), optional :: dreal
       complex(real32), contiguous, dimension(:, :, :), intent(IN), optional :: fcplx
       complex(real64), contiguous, dimension(:, :, :), intent(IN), optional :: dcplx
+      logical, intent(in), optional :: opt_nb
+      integer, intent(inout), optional :: opt_nb_req
 
       integer, dimension(3) :: sizes, subsizes, starts
 
@@ -1431,13 +1433,17 @@ contains
 
       ! Do the MPI IO
       call mpi_read_or_write(.false., io, sizes, subsizes, starts, &
-                             freal, dreal, fcplx, dcplx)
+                             freal=freal, &
+                             dreal=dreal, &
+                             fcplx=fcplx, &
+                             dcplx=dcplx, &
+                             opt_nb=opt_nb, opt_nb_req=opt_nb_req)
 
    end subroutine mpi_write_var
    !
    ! Read a 3D array from a file
    !
-   subroutine mpi_read_var(ipencil, io, decomp, freal, dreal, fcplx, dcplx)
+   subroutine mpi_read_var(ipencil, io, decomp, freal, dreal, fcplx, dcplx, opt_nb, opt_nb_req)
 
       implicit none
 
@@ -1448,6 +1454,8 @@ contains
       real(real64), contiguous, dimension(:, :, :), intent(out), optional :: dreal
       complex(real32), contiguous, dimension(:, :, :), intent(out), optional :: fcplx
       complex(real64), contiguous, dimension(:, :, :), intent(out), optional :: dcplx
+      logical, intent(in), optional :: opt_nb
+      integer, intent(inout), optional :: opt_nb_req
 
       integer, dimension(3) :: sizes, subsizes, starts
 
@@ -1456,13 +1464,17 @@ contains
 
       ! Do the MPI IO
       call mpi_read_or_write(.true., io, sizes, subsizes, starts, &
-                             freal, dreal, fcplx, dcplx)
+                             freal=freal, &
+                             dreal=dreal, &
+                             fcplx=fcplx, &
+                             dcplx=dcplx, &
+                             opt_nb=opt_nb, opt_nb_req=opt_nb_req)
 
    end subroutine mpi_read_var
    !
    ! Write planes to a file
    !
-   subroutine mpi_write_plane(ipencil, io, decomp, nplanes, freal, dreal, fcplx, dcplx)
+   subroutine mpi_write_plane(ipencil, io, decomp, nplanes, freal, dreal, fcplx, dcplx, opt_nb, opt_nb_req)
 
       implicit none
 
@@ -1474,6 +1486,8 @@ contains
       real(real64), contiguous, dimension(:, :, :), intent(IN), optional :: dreal
       complex(real32), contiguous, dimension(:, :, :), intent(IN), optional :: fcplx
       complex(real64), contiguous, dimension(:, :, :), intent(IN), optional :: dcplx
+      logical, intent(in), optional :: opt_nb
+      integer, intent(inout), optional :: opt_nb_req
 
       integer, dimension(3) :: sizes, subsizes, starts
 
@@ -1482,12 +1496,17 @@ contains
 
       ! Do the MPI IO
       call mpi_read_or_write(.false., io, sizes, subsizes, starts, &
-                             freal, dreal, fcplx, dcplx)
+                             freal=freal, &
+                             dreal=dreal, &
+                             fcplx=fcplx, &
+                             dcplx=dcplx, &
+                             opt_nb=opt_nb, opt_nb_req=opt_nb_req)
 
    end subroutine mpi_write_plane
    !
    subroutine mpi_read_or_write(flag_read, io, sizes, subsizes, starts, &
-                                freal, dreal, fcplx, dcplx, ints, logs)
+                                freal, dreal, fcplx, dcplx, ints, logs, &
+                                opt_nb, opt_nb_req)
 
       implicit none
 
@@ -1500,13 +1519,28 @@ contains
       complex(real64), contiguous, dimension(:, :, :), optional :: dcplx
       integer, contiguous, dimension(:, :, :), optional :: ints
       logical, contiguous, dimension(:, :, :), optional :: logs
+      logical, intent(in), optional :: opt_nb
+      integer, intent(inout), optional :: opt_nb_req
 
+      logical :: non_blocking
       integer :: my_mpi_info, ierror, data_type, newtype, type_bytes
 
       ! Safety check
       if (.not. io%is_open) then
          call decomp_2d_abort(__FILE__, __LINE__, 0, &
                               "IO reader / writer was not opened "//io%label)
+      end if
+
+      ! Allow non-blocking MPI IO
+      if (present(opt_nb)) then
+         non_blocking = opt_nb
+      else
+         non_blocking = .false.
+      end if
+      if (non_blocking) then
+         if (.not. present(opt_nb_req)) then
+            call decomp_2d_abort(__FILE__, __LINE__, 0, "Missing argument")
+         end if
       end if
 
       ! Hints for MPI IO
@@ -1546,35 +1580,69 @@ contains
       call MPI_FILE_SET_VIEW(io%fh, io%disp, data_type, newtype, 'native', my_mpi_info, ierror)
       if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_FILE_SET_VIEW")
       if (flag_read) then
-         if (present(freal)) then
-            call MPI_FILE_READ_ALL(io%fh, freal, product(subsizes), data_type, MPI_STATUS_IGNORE, ierror)
-         else if (present(dreal)) then
-            call MPI_FILE_READ_ALL(io%fh, dreal, product(subsizes), data_type, MPI_STATUS_IGNORE, ierror)
-         else if (present(fcplx)) then
-            call MPI_FILE_READ_ALL(io%fh, fcplx, product(subsizes), data_type, MPI_STATUS_IGNORE, ierror)
-         else if (present(dcplx)) then
-            call MPI_FILE_READ_ALL(io%fh, dcplx, product(subsizes), data_type, MPI_STATUS_IGNORE, ierror)
-         else if (present(ints)) then
-            call MPI_FILE_READ_ALL(io%fh, ints, product(subsizes), data_type, MPI_STATUS_IGNORE, ierror)
-         else if (present(logs)) then
-            call MPI_FILE_READ_ALL(io%fh, logs, product(subsizes), data_type, MPI_STATUS_IGNORE, ierror)
+         if (non_blocking) then
+            if (present(freal)) then
+               call MPI_FILE_IREAD_ALL(io%fh, freal, product(subsizes), data_type, opt_nb_req, ierror)
+            else if (present(dreal)) then
+               call MPI_FILE_IREAD_ALL(io%fh, dreal, product(subsizes), data_type, opt_nb_req, ierror)
+            else if (present(fcplx)) then
+               call MPI_FILE_IREAD_ALL(io%fh, fcplx, product(subsizes), data_type, opt_nb_req, ierror)
+            else if (present(dcplx)) then
+               call MPI_FILE_IREAD_ALL(io%fh, dcplx, product(subsizes), data_type, opt_nb_req, ierror)
+            else if (present(ints)) then
+               call MPI_FILE_IREAD_ALL(io%fh, ints, product(subsizes), data_type, opt_nb_req, ierror)
+            else if (present(logs)) then
+               call MPI_FILE_IREAD_ALL(io%fh, logs, product(subsizes), data_type, opt_nb_req, ierror)
+            end if
+            if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_FILE_IREAD_ALL")
+         else
+            if (present(freal)) then
+               call MPI_FILE_READ_ALL(io%fh, freal, product(subsizes), data_type, MPI_STATUS_IGNORE, ierror)
+            else if (present(dreal)) then
+               call MPI_FILE_READ_ALL(io%fh, dreal, product(subsizes), data_type, MPI_STATUS_IGNORE, ierror)
+            else if (present(fcplx)) then
+               call MPI_FILE_READ_ALL(io%fh, fcplx, product(subsizes), data_type, MPI_STATUS_IGNORE, ierror)
+            else if (present(dcplx)) then
+               call MPI_FILE_READ_ALL(io%fh, dcplx, product(subsizes), data_type, MPI_STATUS_IGNORE, ierror)
+            else if (present(ints)) then
+               call MPI_FILE_READ_ALL(io%fh, ints, product(subsizes), data_type, MPI_STATUS_IGNORE, ierror)
+            else if (present(logs)) then
+               call MPI_FILE_READ_ALL(io%fh, logs, product(subsizes), data_type, MPI_STATUS_IGNORE, ierror)
+            end if
+            if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_FILE_READ_ALL")
          end if
-         if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_FILE_READ_ALL")
       else
-         if (present(freal)) then
-            call MPI_FILE_WRITE_ALL(io%fh, freal, product(subsizes), data_type, MPI_STATUS_IGNORE, ierror)
-         else if (present(dreal)) then
-            call MPI_FILE_WRITE_ALL(io%fh, dreal, product(subsizes), data_type, MPI_STATUS_IGNORE, ierror)
-         else if (present(fcplx)) then
-            call MPI_FILE_WRITE_ALL(io%fh, fcplx, product(subsizes), data_type, MPI_STATUS_IGNORE, ierror)
-         else if (present(dcplx)) then
-            call MPI_FILE_WRITE_ALL(io%fh, dcplx, product(subsizes), data_type, MPI_STATUS_IGNORE, ierror)
-         else if (present(ints)) then
-            call MPI_FILE_WRITE_ALL(io%fh, ints, product(subsizes), data_type, MPI_STATUS_IGNORE, ierror)
-         else if (present(logs)) then
-            call MPI_FILE_WRITE_ALL(io%fh, logs, product(subsizes), data_type, MPI_STATUS_IGNORE, ierror)
+         if (non_blocking) then
+            if (present(freal)) then
+               call MPI_FILE_IWRITE_ALL(io%fh, freal, product(subsizes), data_type, opt_nb_req, ierror)
+            else if (present(dreal)) then
+               call MPI_FILE_IWRITE_ALL(io%fh, dreal, product(subsizes), data_type, opt_nb_req, ierror)
+            else if (present(fcplx)) then
+               call MPI_FILE_IWRITE_ALL(io%fh, fcplx, product(subsizes), data_type, opt_nb_req, ierror)
+            else if (present(dcplx)) then
+               call MPI_FILE_IWRITE_ALL(io%fh, dcplx, product(subsizes), data_type, opt_nb_req, ierror)
+            else if (present(ints)) then
+               call MPI_FILE_IWRITE_ALL(io%fh, ints, product(subsizes), data_type, opt_nb_req, ierror)
+            else if (present(logs)) then
+               call MPI_FILE_IWRITE_ALL(io%fh, logs, product(subsizes), data_type, opt_nb_req, ierror)
+            end if
+            if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_FILE_IWRITE_ALL")
+         else
+            if (present(freal)) then
+               call MPI_FILE_WRITE_ALL(io%fh, freal, product(subsizes), data_type, MPI_STATUS_IGNORE, ierror)
+            else if (present(dreal)) then
+               call MPI_FILE_WRITE_ALL(io%fh, dreal, product(subsizes), data_type, MPI_STATUS_IGNORE, ierror)
+            else if (present(fcplx)) then
+               call MPI_FILE_WRITE_ALL(io%fh, fcplx, product(subsizes), data_type, MPI_STATUS_IGNORE, ierror)
+            else if (present(dcplx)) then
+               call MPI_FILE_WRITE_ALL(io%fh, dcplx, product(subsizes), data_type, MPI_STATUS_IGNORE, ierror)
+            else if (present(ints)) then
+               call MPI_FILE_WRITE_ALL(io%fh, ints, product(subsizes), data_type, MPI_STATUS_IGNORE, ierror)
+            else if (present(logs)) then
+               call MPI_FILE_WRITE_ALL(io%fh, logs, product(subsizes), data_type, MPI_STATUS_IGNORE, ierror)
+            end if
+            if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_FILE_WRITE_ALL")
          end if
-         if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_FILE_WRITE_ALL")
       end if
       call MPI_TYPE_FREE(newtype, ierror)
       if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_TYPE_FREE")

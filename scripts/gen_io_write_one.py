@@ -30,7 +30,7 @@ for i in range(nformat):
     # Header
     #
     f.write("   subroutine write_one_"+ext[i]+"(ipencil, var, varname, opt_mode, opt_family, &\n")
-    f.write("                              opt_io, opt_dirname, opt_reduce_prec, opt_decomp)\n")
+    f.write("                              opt_io, opt_dirname, opt_reduce_prec, opt_decomp, opt_nb_req)\n")
     f.write("\n")
     f.write("      implicit none\n")
     f.write("\n")
@@ -55,6 +55,7 @@ for i in range(nformat):
     f.write("      character(len=*), intent(in), optional :: opt_dirname\n")
     f.write("      logical, intent(in), optional :: opt_reduce_prec\n")
     f.write("      TYPE(DECOMP_INFO), target, intent(IN), optional :: opt_decomp\n")
+    f.write("      integer, intent(out), optional :: opt_nb_req\n")
     f.write("\n")
     #
     # Local variables
@@ -97,6 +98,7 @@ for i in range(nformat):
         f.write("                     opt_family=opt_family, &\n")
         f.write("                     opt_io=opt_io, &\n")
         f.write("                     opt_dirname=opt_dirname, &\n")
+        f.write("                     opt_nb_req=opt_nb_req, &\n")
         if (i==0):
             f.write("                     freal=var)\n")
         elif (i==1):
@@ -109,6 +111,7 @@ for i in range(nformat):
         f.write("                        opt_family=opt_family, &\n")
         f.write("                        opt_io=opt_io, &\n")
         f.write("                        opt_dirname=opt_dirname, &\n")
+        f.write("                        opt_nb_req=opt_nb_req, &\n")
         if (i==2):
             f.write("                        freal=real(var, kind=real32)) ! Warning, implicit memory allocation\n")
         elif (i==3):
@@ -119,6 +122,7 @@ for i in range(nformat):
         f.write("                        opt_family=opt_family, &\n")
         f.write("                        opt_io=opt_io, &\n")
         f.write("                        opt_dirname=opt_dirname, &\n")
+        f.write("                        opt_nb_req=opt_nb_req, &\n")
         if (i==2):
             f.write("                        dreal=var)\n")
         elif (i==3):

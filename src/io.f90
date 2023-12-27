@@ -265,7 +265,7 @@ contains
    !
    ! The code below below was generated with the script gen_io_write_one.py
    subroutine write_one_freal(ipencil, var, varname, opt_mode, opt_family, &
-                              opt_io, opt_dirname, opt_reduce_prec, opt_decomp)
+                              opt_io, opt_dirname, opt_reduce_prec, opt_decomp, opt_nb_req)
 
       implicit none
 
@@ -279,6 +279,7 @@ contains
       character(len=*), intent(in), optional :: opt_dirname
       logical, intent(in), optional :: opt_reduce_prec
       TYPE(DECOMP_INFO), target, intent(IN), optional :: opt_decomp
+      integer, intent(out), optional :: opt_nb_req
 
       ! Local variable(s)
       TYPE(DECOMP_INFO), pointer :: decomp
@@ -297,6 +298,7 @@ contains
                      opt_family=opt_family, &
                      opt_io=opt_io, &
                      opt_dirname=opt_dirname, &
+                     opt_nb_req=opt_nb_req, &
                      freal=var)
 
       nullify (decomp)
@@ -309,7 +311,7 @@ contains
    end subroutine write_one_freal
    !
    subroutine write_one_fcplx(ipencil, var, varname, opt_mode, opt_family, &
-                              opt_io, opt_dirname, opt_reduce_prec, opt_decomp)
+                              opt_io, opt_dirname, opt_reduce_prec, opt_decomp, opt_nb_req)
 
       implicit none
 
@@ -323,6 +325,7 @@ contains
       character(len=*), intent(in), optional :: opt_dirname
       logical, intent(in), optional :: opt_reduce_prec
       TYPE(DECOMP_INFO), target, intent(IN), optional :: opt_decomp
+      integer, intent(out), optional :: opt_nb_req
 
       ! Local variable(s)
       TYPE(DECOMP_INFO), pointer :: decomp
@@ -341,6 +344,7 @@ contains
                      opt_family=opt_family, &
                      opt_io=opt_io, &
                      opt_dirname=opt_dirname, &
+                     opt_nb_req=opt_nb_req, &
                      fcplx=var)
 
       nullify (decomp)
@@ -353,7 +357,7 @@ contains
    end subroutine write_one_fcplx
    !
    subroutine write_one_dreal(ipencil, var, varname, opt_mode, opt_family, &
-                              opt_io, opt_dirname, opt_reduce_prec, opt_decomp)
+                              opt_io, opt_dirname, opt_reduce_prec, opt_decomp, opt_nb_req)
 
       implicit none
 
@@ -367,6 +371,7 @@ contains
       character(len=*), intent(in), optional :: opt_dirname
       logical, intent(in), optional :: opt_reduce_prec
       TYPE(DECOMP_INFO), target, intent(IN), optional :: opt_decomp
+      integer, intent(out), optional :: opt_nb_req
 
       ! Local variable(s)
       logical :: reduce
@@ -394,6 +399,7 @@ contains
                         opt_family=opt_family, &
                         opt_io=opt_io, &
                         opt_dirname=opt_dirname, &
+                        opt_nb_req=opt_nb_req, &
                         freal=real(var, kind=real32)) ! Warning, implicit memory allocation
       else
          call write_one(ipencil, varname, decomp, &
@@ -401,6 +407,7 @@ contains
                         opt_family=opt_family, &
                         opt_io=opt_io, &
                         opt_dirname=opt_dirname, &
+                        opt_nb_req=opt_nb_req, &
                         dreal=var)
       end if
 
@@ -411,7 +418,7 @@ contains
    end subroutine write_one_dreal
    !
    subroutine write_one_dcplx(ipencil, var, varname, opt_mode, opt_family, &
-                              opt_io, opt_dirname, opt_reduce_prec, opt_decomp)
+                              opt_io, opt_dirname, opt_reduce_prec, opt_decomp, opt_nb_req)
 
       implicit none
 
@@ -425,6 +432,7 @@ contains
       character(len=*), intent(in), optional :: opt_dirname
       logical, intent(in), optional :: opt_reduce_prec
       TYPE(DECOMP_INFO), target, intent(IN), optional :: opt_decomp
+      integer, intent(out), optional :: opt_nb_req
 
       ! Local variable(s)
       logical :: reduce
@@ -452,6 +460,7 @@ contains
                         opt_family=opt_family, &
                         opt_io=opt_io, &
                         opt_dirname=opt_dirname, &
+                        opt_nb_req=opt_nb_req, &
                         fcplx=cmplx(var, kind=real32)) ! Warning, implicit memory allocation
       else
          call write_one(ipencil, varname, decomp, &
@@ -459,6 +468,7 @@ contains
                         opt_family=opt_family, &
                         opt_io=opt_io, &
                         opt_dirname=opt_dirname, &
+                        opt_nb_req=opt_nb_req, &
                         dcplx=var)
       end if
 
@@ -473,7 +483,7 @@ contains
    !
    ! The code below below was generated with the script gen_io_read_one.py
    subroutine read_one_freal(ipencil, var, varname, opt_mode, opt_family, &
-                             opt_io, opt_dirname, opt_reduce_prec, opt_decomp)
+                             opt_io, opt_dirname, opt_reduce_prec, opt_decomp, opt_nb_req)
 
       implicit none
 
@@ -487,6 +497,7 @@ contains
       character(len=*), intent(in), optional :: opt_dirname
       logical, intent(in), optional :: opt_reduce_prec
       TYPE(DECOMP_INFO), target, intent(IN), optional :: opt_decomp
+      integer, intent(out), optional :: opt_nb_req
 
       ! Local variable(s)
       TYPE(DECOMP_INFO), pointer :: decomp
@@ -505,6 +516,7 @@ contains
                     opt_family=opt_family, &
                     opt_io=opt_io, &
                     opt_dirname=opt_dirname, &
+                    opt_nb_req=opt_nb_req, &
                     freal=var)
 
       nullify (decomp)
@@ -517,7 +529,7 @@ contains
    end subroutine read_one_freal
    !
    subroutine read_one_fcplx(ipencil, var, varname, opt_mode, opt_family, &
-                             opt_io, opt_dirname, opt_reduce_prec, opt_decomp)
+                             opt_io, opt_dirname, opt_reduce_prec, opt_decomp, opt_nb_req)
 
       implicit none
 
@@ -531,6 +543,7 @@ contains
       character(len=*), intent(in), optional :: opt_dirname
       logical, intent(in), optional :: opt_reduce_prec
       TYPE(DECOMP_INFO), target, intent(IN), optional :: opt_decomp
+      integer, intent(out), optional :: opt_nb_req
 
       ! Local variable(s)
       TYPE(DECOMP_INFO), pointer :: decomp
@@ -549,6 +562,7 @@ contains
                     opt_family=opt_family, &
                     opt_io=opt_io, &
                     opt_dirname=opt_dirname, &
+                    opt_nb_req=opt_nb_req, &
                     fcplx=var)
 
       nullify (decomp)
@@ -561,7 +575,7 @@ contains
    end subroutine read_one_fcplx
    !
    subroutine read_one_dreal(ipencil, var, varname, opt_mode, opt_family, &
-                             opt_io, opt_dirname, opt_reduce_prec, opt_decomp)
+                             opt_io, opt_dirname, opt_reduce_prec, opt_decomp, opt_nb_req)
 
       implicit none
 
@@ -575,6 +589,7 @@ contains
       character(len=*), intent(in), optional :: opt_dirname
       logical, intent(in), optional :: opt_reduce_prec
       TYPE(DECOMP_INFO), target, intent(IN), optional :: opt_decomp
+      integer, intent(out), optional :: opt_nb_req
 
       ! Local variable(s)
       logical :: reduce
@@ -611,6 +626,7 @@ contains
                        opt_family=opt_family, &
                        opt_io=opt_io, &
                        opt_dirname=opt_dirname, &
+                       opt_nb_req=opt_nb_req, &
                        freal=tmp)
          var = tmp
          deallocate (tmp)
@@ -622,6 +638,7 @@ contains
                        opt_family=opt_family, &
                        opt_io=opt_io, &
                        opt_dirname=opt_dirname, &
+                       opt_nb_req=opt_nb_req, &
                        dreal=var)
 
       end if
@@ -633,7 +650,7 @@ contains
    end subroutine read_one_dreal
    !
    subroutine read_one_dcplx(ipencil, var, varname, opt_mode, opt_family, &
-                             opt_io, opt_dirname, opt_reduce_prec, opt_decomp)
+                             opt_io, opt_dirname, opt_reduce_prec, opt_decomp, opt_nb_req)
 
       implicit none
 
@@ -647,6 +664,7 @@ contains
       character(len=*), intent(in), optional :: opt_dirname
       logical, intent(in), optional :: opt_reduce_prec
       TYPE(DECOMP_INFO), target, intent(IN), optional :: opt_decomp
+      integer, intent(out), optional :: opt_nb_req
 
       ! Local variable(s)
       logical :: reduce
@@ -683,6 +701,7 @@ contains
                        opt_family=opt_family, &
                        opt_io=opt_io, &
                        opt_dirname=opt_dirname, &
+                       opt_nb_req=opt_nb_req, &
                        fcplx=tmp)
          var = tmp
          deallocate (tmp)
@@ -694,6 +713,7 @@ contains
                        opt_family=opt_family, &
                        opt_io=opt_io, &
                        opt_dirname=opt_dirname, &
+                       opt_nb_req=opt_nb_req, &
                        dcplx=var)
 
       end if
@@ -710,7 +730,7 @@ contains
    ! The code below below was generated with the script gen_io_write_plane.py
    subroutine write_plane_freal(ipencil, var, varname, &
                                 opt_nplanes, opt_iplane, opt_mode, opt_family, &
-                                opt_io, opt_dirname, opt_reduce_prec, opt_decomp)
+                                opt_io, opt_dirname, opt_reduce_prec, opt_decomp, opt_nb_req)
 
       implicit none
 
@@ -725,6 +745,7 @@ contains
       character(len=*), intent(in), optional :: opt_dirname
       logical, intent(in), optional :: opt_reduce_prec
       TYPE(DECOMP_INFO), target, intent(IN), optional :: opt_decomp
+      integer, intent(out), optional :: opt_nb_req
 
       ! Local variables
       real(real32), allocatable, dimension(:, :, :) :: var2d
@@ -762,6 +783,7 @@ contains
                           opt_family=opt_family, &
                           opt_io=opt_io, &
                           opt_dirname=opt_dirname, &
+                          opt_nb_req=opt_nb_req, &
                           freal=var)
       else
          if (ipencil == 1) then
@@ -775,10 +797,11 @@ contains
             var2d(:, :, 1) = var(:, :, iplane)
          end if
          call write_plane(ipencil, varname, decomp, nplanes, &
-                          opt_mode=opt_mode, &
+                          opt_mode=decomp_2d_io_sync, &
                           opt_family=opt_family, &
                           opt_io=opt_io, &
                           opt_dirname=opt_dirname, &
+                          opt_nb_req=opt_nb_req, &
                           freal=var2d)
          deallocate (var2d)
       end if
@@ -794,7 +817,7 @@ contains
    !
    subroutine write_plane_fcplx(ipencil, var, varname, &
                                 opt_nplanes, opt_iplane, opt_mode, opt_family, &
-                                opt_io, opt_dirname, opt_reduce_prec, opt_decomp)
+                                opt_io, opt_dirname, opt_reduce_prec, opt_decomp, opt_nb_req)
 
       implicit none
 
@@ -809,6 +832,7 @@ contains
       character(len=*), intent(in), optional :: opt_dirname
       logical, intent(in), optional :: opt_reduce_prec
       TYPE(DECOMP_INFO), target, intent(IN), optional :: opt_decomp
+      integer, intent(out), optional :: opt_nb_req
 
       ! Local variables
       complex(real32), allocatable, dimension(:, :, :) :: var2d
@@ -846,6 +870,7 @@ contains
                           opt_family=opt_family, &
                           opt_io=opt_io, &
                           opt_dirname=opt_dirname, &
+                          opt_nb_req=opt_nb_req, &
                           fcplx=var)
       else
          if (ipencil == 1) then
@@ -859,10 +884,11 @@ contains
             var2d(:, :, 1) = var(:, :, iplane)
          end if
          call write_plane(ipencil, varname, decomp, nplanes, &
-                          opt_mode=opt_mode, &
+                          opt_mode=decomp_2d_io_sync, &
                           opt_family=opt_family, &
                           opt_io=opt_io, &
                           opt_dirname=opt_dirname, &
+                          opt_nb_req=opt_nb_req, &
                           fcplx=var2d)
          deallocate (var2d)
       end if
@@ -878,7 +904,7 @@ contains
    !
    subroutine write_plane_dreal(ipencil, var, varname, &
                                 opt_nplanes, opt_iplane, opt_mode, opt_family, &
-                                opt_io, opt_dirname, opt_reduce_prec, opt_decomp)
+                                opt_io, opt_dirname, opt_reduce_prec, opt_decomp, opt_nb_req)
 
       implicit none
 
@@ -893,6 +919,7 @@ contains
       character(len=*), intent(in), optional :: opt_dirname
       logical, intent(in), optional :: opt_reduce_prec
       TYPE(DECOMP_INFO), target, intent(IN), optional :: opt_decomp
+      integer, intent(out), optional :: opt_nb_req
 
       ! Local variables
       logical :: reduce
@@ -939,6 +966,7 @@ contains
                              opt_family=opt_family, &
                              opt_io=opt_io, &
                              opt_dirname=opt_dirname, &
+                             opt_nb_req=opt_nb_req, &
                              freal=real(var, kind=real32)) ! Warning, implicit memory allocation
          else
             call write_plane(ipencil, varname, decomp, nplanes, &
@@ -946,6 +974,7 @@ contains
                              opt_family=opt_family, &
                              opt_io=opt_io, &
                              opt_dirname=opt_dirname, &
+                             opt_nb_req=opt_nb_req, &
                              dreal=var)
          end if
       else
@@ -965,13 +994,15 @@ contains
                              opt_family=opt_family, &
                              opt_io=opt_io, &
                              opt_dirname=opt_dirname, &
+                             opt_nb_req=opt_nb_req, &
                              freal=real(var2d, kind=real32)) ! Warning, implicit memory allocation
          else
             call write_plane(ipencil, varname, decomp, nplanes, &
-                             opt_mode=opt_mode, &
+                             opt_mode=decomp_2d_io_sync, &
                              opt_family=opt_family, &
                              opt_io=opt_io, &
                              opt_dirname=opt_dirname, &
+                             opt_nb_req=opt_nb_req, &
                              dreal=var2d)
          end if
          deallocate (var2d)
@@ -985,7 +1016,7 @@ contains
    !
    subroutine write_plane_dcplx(ipencil, var, varname, &
                                 opt_nplanes, opt_iplane, opt_mode, opt_family, &
-                                opt_io, opt_dirname, opt_reduce_prec, opt_decomp)
+                                opt_io, opt_dirname, opt_reduce_prec, opt_decomp, opt_nb_req)
 
       implicit none
 
@@ -1000,6 +1031,7 @@ contains
       character(len=*), intent(in), optional :: opt_dirname
       logical, intent(in), optional :: opt_reduce_prec
       TYPE(DECOMP_INFO), target, intent(IN), optional :: opt_decomp
+      integer, intent(out), optional :: opt_nb_req
 
       ! Local variables
       logical :: reduce
@@ -1046,6 +1078,7 @@ contains
                              opt_family=opt_family, &
                              opt_io=opt_io, &
                              opt_dirname=opt_dirname, &
+                             opt_nb_req=opt_nb_req, &
                              fcplx=cmplx(var, kind=real32)) ! Warning, implicit memory allocation
          else
             call write_plane(ipencil, varname, decomp, nplanes, &
@@ -1053,6 +1086,7 @@ contains
                              opt_family=opt_family, &
                              opt_io=opt_io, &
                              opt_dirname=opt_dirname, &
+                             opt_nb_req=opt_nb_req, &
                              dcplx=var)
          end if
       else
@@ -1072,13 +1106,15 @@ contains
                              opt_family=opt_family, &
                              opt_io=opt_io, &
                              opt_dirname=opt_dirname, &
+                             opt_nb_req=opt_nb_req, &
                              fcplx=cmplx(var2d, kind=real32)) ! Warning, implicit memory allocation
          else
             call write_plane(ipencil, varname, decomp, nplanes, &
-                             opt_mode=opt_mode, &
+                             opt_mode=decomp_2d_io_sync, &
                              opt_family=opt_family, &
                              opt_io=opt_io, &
                              opt_dirname=opt_dirname, &
+                             opt_nb_req=opt_nb_req, &
                              dcplx=var2d)
          end if
          deallocate (var2d)
@@ -1130,7 +1166,7 @@ contains
       real(real64), contiguous, dimension(:, :, :), intent(IN), optional :: dreal
       complex(real32), contiguous, dimension(:, :, :), intent(IN), optional :: fcplx
       complex(real64), contiguous, dimension(:, :, :), intent(IN), optional :: dcplx
-      integer, intent(inout), optional :: opt_nb_req
+      integer, intent(out), optional :: opt_nb_req
 
       logical :: use_opt_io, opt_nb
       integer :: mode
@@ -1248,7 +1284,7 @@ contains
       real(real64), contiguous, dimension(:, :, :), intent(out), optional :: dreal
       complex(real32), contiguous, dimension(:, :, :), intent(out), optional :: fcplx
       complex(real64), contiguous, dimension(:, :, :), intent(out), optional :: dcplx
-      integer, intent(inout), optional :: opt_nb_req
+      integer, intent(out), optional :: opt_nb_req
 
       logical :: use_opt_io, opt_nb
       type(d2d_io) :: io
@@ -1365,7 +1401,7 @@ contains
       real(real64), contiguous, dimension(:, :, :), intent(IN), optional :: dreal
       complex(real32), contiguous, dimension(:, :, :), intent(IN), optional :: fcplx
       complex(real64), contiguous, dimension(:, :, :), intent(IN), optional :: dcplx
-      integer, intent(inout), optional :: opt_nb_req
+      integer, intent(out), optional :: opt_nb_req
 
       logical :: use_opt_io, opt_nb
       integer :: mode
@@ -1466,7 +1502,7 @@ contains
       complex(real32), contiguous, dimension(:, :, :), intent(IN), optional :: fcplx
       complex(real64), contiguous, dimension(:, :, :), intent(IN), optional :: dcplx
       logical, intent(in), optional :: opt_nb
-      integer, intent(inout), optional :: opt_nb_req
+      integer, intent(out), optional :: opt_nb_req
 
       integer, dimension(3) :: sizes, subsizes, starts
 
@@ -1497,7 +1533,7 @@ contains
       complex(real32), contiguous, dimension(:, :, :), intent(out), optional :: fcplx
       complex(real64), contiguous, dimension(:, :, :), intent(out), optional :: dcplx
       logical, intent(in), optional :: opt_nb
-      integer, intent(inout), optional :: opt_nb_req
+      integer, intent(out), optional :: opt_nb_req
 
       integer, dimension(3) :: sizes, subsizes, starts
 
@@ -1529,7 +1565,7 @@ contains
       complex(real32), contiguous, dimension(:, :, :), intent(IN), optional :: fcplx
       complex(real64), contiguous, dimension(:, :, :), intent(IN), optional :: dcplx
       logical, intent(in), optional :: opt_nb
-      integer, intent(inout), optional :: opt_nb_req
+      integer, intent(out), optional :: opt_nb_req
 
       integer, dimension(3) :: sizes, subsizes, starts
 
@@ -1562,7 +1598,7 @@ contains
       integer, contiguous, dimension(:, :, :), optional :: ints
       logical, contiguous, dimension(:, :, :), optional :: logs
       logical, intent(in), optional :: opt_nb
-      integer, intent(inout), optional :: opt_nb_req
+      integer, intent(out), optional :: opt_nb_req
 
       logical :: non_blocking
       integer :: my_mpi_info, ierror, data_type, newtype, type_bytes
@@ -1652,6 +1688,7 @@ contains
                call MPI_FILE_READ_ALL(io%fh, logs, product(subsizes), data_type, MPI_STATUS_IGNORE, ierror)
             end if
             if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_FILE_READ_ALL")
+            if (present(opt_nb_req)) opt_nb_req = MPI_REQUEST_NULL
          end if
       else
          if (non_blocking) then
@@ -1684,6 +1721,7 @@ contains
                call MPI_FILE_WRITE_ALL(io%fh, logs, product(subsizes), data_type, MPI_STATUS_IGNORE, ierror)
             end if
             if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_FILE_WRITE_ALL")
+            if (present(opt_nb_req)) opt_nb_req = MPI_REQUEST_NULL
          end if
       end if
       call MPI_TYPE_FREE(newtype, ierror)

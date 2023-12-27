@@ -1087,7 +1087,7 @@ contains
    !   - ipencil : pencil orientation of the variable
    !   - varname : name of the variable
    !   - decomp : decomp_info for the variable
-   !   - opt_mode : writing mode, no impact on MPI IO
+   !   - opt_mode : writing mode
    !   - opt_family : IO family can be provided to avoid the default one
    !   - opt_io : IO reader / writer can be provided
    !   - opt_dirname : This is mandatory if no IO reader / writer was provided
@@ -1151,6 +1151,8 @@ contains
       else
          mode = decomp_2d_io_deferred
       end if
+
+      ! Default MPI IO for writing is blocking
       if (use_opt_io .and. mode == decomp_2d_io_deferred .and. present(opt_nb_req)) then
          opt_nb = .true.
       else
@@ -1204,6 +1206,7 @@ contains
    !   - ipencil : pencil orientation of the variable
    !   - varname : name of the variable
    !   - decomp : decomp_info for the variable
+   !   - opt_mode : reading mode, no impact on ADIOS2
    !   - opt_family : IO family can be provided to avoid the default one
    !   - opt_io : IO reader / writer can be provided
    !   - opt_dirname : This is mandatory if no IO reader / writer was provided
@@ -1218,15 +1221,16 @@ contains
    !    - MPI IO will read from the file opt_dirname/varname
    !    - ADIOS2 IO will read from the folder opt_dirname
    !
-   subroutine read_one(ipencil, varname, decomp, &
+   subroutine read_one(ipencil, varname, decomp, opt_mode, &
                        opt_family, opt_io, opt_dirname, &
-                       freal, dreal, fcplx, dcplx)
+                       freal, dreal, fcplx, dcplx, opt_nb_req)
 
       implicit none
 
       integer, intent(IN) :: ipencil
       character(len=*), intent(in) :: varname
       TYPE(DECOMP_INFO), intent(IN) :: decomp
+      integer, intent(in), optional :: opt_mode
       type(d2d_io_family), target, intent(in), optional :: opt_family
       type(d2d_io), intent(inout), optional :: opt_io
       character(len=*), intent(in), optional :: opt_dirname
@@ -1234,8 +1238,9 @@ contains
       real(real64), contiguous, dimension(:, :, :), intent(out), optional :: dreal
       complex(real32), contiguous, dimension(:, :, :), intent(out), optional :: fcplx
       complex(real64), contiguous, dimension(:, :, :), intent(out), optional :: dcplx
+      integer, intent(inout), optional :: opt_nb_req
 
-      logical :: use_opt_io
+      logical :: use_opt_io, opt_nb
       type(d2d_io) :: io
 
       ! Use opt_io only if present and open
@@ -1257,12 +1262,23 @@ contains
          call decomp_2d_abort(__FILE__, __LINE__, 0, "Invalid arguments")
       end if
 
+      ! Default MPI IO for reading is blocking
+      if (present(opt_mode)) then
+         if (use_opt_io .and. opt_mode == decomp_2d_io_deferred .and. present(opt_nb_req)) then
+            opt_nb = .true.
+         else
+            opt_nb = .false.
+         end if
+      else
+         opt_nb = .false.
+      end if
+
       if (use_opt_io) then
 
          if (opt_io%family%type == DECOMP_2D_IO_MPI) then
 
             ! MPI-IO
-            call mpi_read_var(ipencil, opt_io, decomp, freal, dreal, fcplx, dcplx)
+            call mpi_read_var(ipencil, opt_io, decomp, freal, dreal, fcplx, dcplx, opt_nb, opt_nb_req)
 
          else if (opt_io%family%type == DECOMP_2D_IO_ADIOS2) then
 
@@ -1305,7 +1321,7 @@ contains
    !   - varname : name of the variable
    !   - decomp : decomp_info for the variable
    !   - nplanes : number of planes in the variable
-   !   - opt_mode : writing mode, no impact on MPI IO
+   !   - opt_mode : writing mode
    !   - opt_family : IO family can be provided to avoid the default one
    !   - opt_io : IO reader / writer can be provided
    !   - opt_dirname : This is mandatory if no IO reader / writer was provided
@@ -1373,6 +1389,8 @@ contains
       else
          mode = decomp_2d_io_deferred
       end if
+
+      ! Default MPI IO for writing is blocking
       if (use_opt_io .and. mode == decomp_2d_io_deferred .and. present(opt_nb_req)) then
          opt_nb = .true.
       else

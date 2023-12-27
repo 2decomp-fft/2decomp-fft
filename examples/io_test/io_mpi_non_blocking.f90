@@ -47,9 +47,7 @@ program io_test
    integer :: xst1, xst2, xst3
    integer :: xen1, xen2, xen3
 
-#ifndef ADIOS2
    logical :: dir_exists
-#endif
 
    integer, parameter :: output2D = 0 ! Which plane to write in 2D (0 for 3D)
 

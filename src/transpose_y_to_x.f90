@@ -90,7 +90,7 @@ contains
                         DECOMP_2D_COMM_COL, ierror)
       if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_ALLTOALL")
 
-#elif defined(_GPU) && defined(_NCCL)
+#elif defined(_NCCL)
       call decomp_2d_nccl_send_recv_col(wk2, &
                                         wk1, &
                                         decomp%y1disp, &
@@ -193,7 +193,7 @@ contains
                         DECOMP_2D_COMM_COL, ierror)
       if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_ALLTOALL")
 
-#elif defined(_GPU) && defined(_NCCL)
+#elif defined(_NCCL)
       call decomp_2d_nccl_send_recv_col(wk2, &
                                         wk1, &
                                         decomp%y1disp, &

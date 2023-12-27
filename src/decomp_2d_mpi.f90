@@ -20,6 +20,7 @@ module decomp_2d_mpi
    public :: decomp_2d_mpi_init, &
              decomp_2d_mpi_fin, &
              decomp_2d_mpi_comm_free, &
+             decomp_2d_mpi_wait, &
              decomp_2d_abort, &
              decomp_2d_warning
 
@@ -108,6 +109,26 @@ contains
       mpi_comm = MPI_COMM_NULL
 
    end subroutine decomp_2d_mpi_comm_free
+
+   !
+   ! Small wrapper to wait for a MPI request
+   !
+   subroutine decomp_2d_mpi_wait(req)
+
+      implicit none
+
+      integer, intent(inout) :: req
+      integer :: ierror
+
+      ! Return if no MPI request
+      if (req == MPI_REQUEST_NULL) return
+
+      ! Wait
+      call MPI_WAIT(req, MPI_STATUS_IGNORE, ierror)
+      if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_WAIT")
+      req = MPI_REQUEST_NULL
+
+   end subroutine decomp_2d_mpi_wait
 
    subroutine decomp_2d_abort_basic(errorcode, msg)
 

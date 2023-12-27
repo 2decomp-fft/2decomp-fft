@@ -19,6 +19,9 @@ _e.g._ vX.Y - YYYY-MM-DD and a new "Unreleased" section started above.
 - Fuse transpose CPU and GPU memory buffers to reduce memory usage. See [PR 271](https://github.com/2decomp-fft/2decomp-fft/pull/271)
 
 ### Changed
+
+- The transpose subroutines have been moved into submodules rather than `#include` files. See [PR #206](https://github.com/2decomp-fft/2decomp-fft/pull/206)
+
 ### Deprecated
 ### Removed
 

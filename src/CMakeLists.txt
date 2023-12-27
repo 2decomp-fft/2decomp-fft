@@ -3,7 +3,11 @@ file(GLOB files_decomp factor.f90
 		       decomp_2d_mpi.f90
 	               decomp_2d.f90
 		       log.f90
-		       io.f90)
+		       io.f90
+		       transpose_x_to_y.f90
+		       transpose_y_to_x.f90
+		       transpose_y_to_z.f90
+		       transpose_z_to_y.f90)
 include_directories(${CMAKE_SOURCE_DIR}/src)
 
 if(${BUILD_TARGET} MATCHES "gpu")
@@ -70,7 +74,6 @@ endif(FFTW_FOUND)
 
 if (ENABLE_PROFILER)
   target_compile_definitions(decomp2d PUBLIC -DPROFILER)
-
   if (caliper_FOUND)
     target_include_directories(decomp2d PUBLIC ${caliper_INCLUDE_DIR}/caliper/fortran)
     target_link_libraries(decomp2d PRIVATE caliper)

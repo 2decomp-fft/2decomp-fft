@@ -1092,6 +1092,7 @@ contains
    !   - opt_io : IO reader / writer can be provided
    !   - opt_dirname : This is mandatory if no IO reader / writer was provided
    !   - freal / dreal / fcplx / dcplx : array
+   !   - opt_nb_req : id of the request for non-blocking MPI IO
    !
    ! If opt_io is provided and open
    !    - MPI IO will write to the file handle opt_io%fh
@@ -1104,7 +1105,7 @@ contains
    !
    subroutine write_one(ipencil, varname, decomp, opt_mode, &
                         opt_family, opt_io, opt_dirname, &
-                        freal, dreal, fcplx, dcplx)
+                        freal, dreal, fcplx, dcplx, opt_nb_req)
 
       implicit none
 
@@ -1119,8 +1120,9 @@ contains
       real(real64), contiguous, dimension(:, :, :), intent(IN), optional :: dreal
       complex(real32), contiguous, dimension(:, :, :), intent(IN), optional :: fcplx
       complex(real64), contiguous, dimension(:, :, :), intent(IN), optional :: dcplx
+      integer, intent(inout), optional :: opt_nb_req
 
-      logical :: use_opt_io
+      logical :: use_opt_io, opt_nb
       integer :: mode
       type(d2d_io) :: io
 
@@ -1149,13 +1151,18 @@ contains
       else
          mode = decomp_2d_write_deferred
       end if
+      if (use_opt_io .and. mode == decomp_2d_write_deferred .and. present(opt_nb_req)) then
+         opt_nb = .true.
+      else
+         opt_nb = .false.
+      end if
 
       if (use_opt_io) then
 
          if (opt_io%family%type == DECOMP_2D_IO_MPI) then
 
             ! MPI-IO
-            call mpi_write_var(ipencil, opt_io, decomp, freal, dreal, fcplx, dcplx)
+            call mpi_write_var(ipencil, opt_io, decomp, freal, dreal, fcplx, dcplx, opt_nb, opt_nb_req)
 
          else if (opt_io%family%type == DECOMP_2D_IO_ADIOS2) then
 
@@ -1303,6 +1310,7 @@ contains
    !   - opt_io : IO reader / writer can be provided
    !   - opt_dirname : This is mandatory if no IO reader / writer was provided
    !   - freal / dreal / fcplx / dcplx : array
+   !   - opt_nb_req : id of the request for non-blocking MPI IO
    !
    ! If opt_io is provided and open
    !    - MPI IO will write to the file handle opt_io%fh
@@ -1315,7 +1323,7 @@ contains
    !
    subroutine write_plane(ipencil, varname, decomp, nplanes, opt_mode, &
                           opt_family, opt_io, opt_dirname, &
-                          freal, dreal, fcplx, dcplx)
+                          freal, dreal, fcplx, dcplx, opt_nb_req)
 
       implicit none
 
@@ -1331,8 +1339,9 @@ contains
       real(real64), contiguous, dimension(:, :, :), intent(IN), optional :: dreal
       complex(real32), contiguous, dimension(:, :, :), intent(IN), optional :: fcplx
       complex(real64), contiguous, dimension(:, :, :), intent(IN), optional :: dcplx
+      integer, intent(inout), optional :: opt_nb_req
 
-      logical :: use_opt_io
+      logical :: use_opt_io, opt_nb
       integer :: mode
       type(d2d_io) :: io
 
@@ -1364,13 +1373,18 @@ contains
       else
          mode = decomp_2d_write_deferred
       end if
+      if (use_opt_io .and. mode == decomp_2d_write_deferred .and. present(opt_nb_req)) then
+         opt_nb = .true.
+      else
+         opt_nb = .false.
+      end if
 
       if (use_opt_io) then
 
          if (opt_io%family%type == DECOMP_2D_IO_MPI) then
 
             ! MPI-IO
-            call mpi_write_plane(ipencil, opt_io, decomp, nplanes, freal, dreal, fcplx, dcplx)
+            call mpi_write_plane(ipencil, opt_io, decomp, nplanes, freal, dreal, fcplx, dcplx, opt_nb, opt_nb_req)
 
          else if (opt_io%family%type == DECOMP_2D_IO_ADIOS2) then
 

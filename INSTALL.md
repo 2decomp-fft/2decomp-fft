@@ -2,13 +2,21 @@
 
 The library 2decomp is a Fortran library compatible with the Fortran 2008 standard.
 It requires a MPI library compatible with MPI-2.0 with extended Fortran support.
-The following [optional libraries](#optional-dependencies) can be used :
+The following compilers and [optional libraries](#optional-dependencies) have been tested 
+as part of of our CI/CD toolchain:
 
-- ADIOS2, version 2.9.0 was tested
-- FFTW3, version 3.3.10 was tested
-- Intel oneMKL (oneAPI Math Kernel Library), version 2023.0.0 was tested
-- Nvidia GPU-related libraries, NVHPC version 22.7 and CUDA version 11.8 were tested
-- Caliper, version 2.10.0 was tested
+- GNU compilers version 13.2.0 together with OpenMPI version 4.1.6;
+- Intel oneAPI with: intel LLVM compilers version 2023.2.0, 
+  oneMKL (math Kernel Library) version 2023.2.0, intel MPI version 2021.10.0, 
+  intel classic compiler version 2021.10.0; 
+- Nvidia NVHPC version 23.11 with CUDA version 12.3.52 and NCCL version 2.18.5 for GPU acceleration 
+- ADIOS2, version 2.9.0;
+- FFTW3, version 3.3.10;
+- Caliper, version 2.10.0.
+
+Other version of the compilers and libraries are tested, but this is not done on a regular base 
+and as part of a properly defined CI/CD toolchain. 
+We will also aim at updating the versions of the different compilers and libraries every 6-12 months.
 
 ## Building
 

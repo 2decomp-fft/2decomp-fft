@@ -1,11 +1,12 @@
 !! SPDX-License-Identifier: BSD-3-Clause
 program io_bench
 
+   use decomp_2d
    use decomp_2d_constants
    use decomp_2d_io
+   use decomp_2d_io_object
    use decomp_2d_mpi
    use decomp_2d_testing
-   use decomp_2d
    use MPI
 #if defined(_GPU)
    use cudafor
@@ -40,11 +41,14 @@ program io_bench
 
    call decomp_2d_testing_log()
 
+   call decomp_2d_io_init()
+   call decomp_2d_io_register_var3d("io.dat", 1, real_type)
+
    call alloc_x(u1, .true.)
    call random_number(u1)
 
    t1 = MPI_WTIME()
-   call decomp_2d_write_one(1, u1, 'io.dat')
+   call decomp_2d_write_one(1, u1, 'io.dat', opt_dirname="./")
    t2 = MPI_WTIME()
 
    if (nrank == 0) then
@@ -55,6 +59,7 @@ program io_bench
    end if
 
    deallocate (u1)
+   call decomp_2d_io_fin
    call decomp_2d_finalize
    call MPI_FINALIZE(ierror)
 

@@ -146,11 +146,11 @@
      !
      ! Get the IO unit for decomp_2d setup
      !
-     iounit = d2d_listing_get_unit()
+     iounit = d2d_log_get_unit()
      !
      ! Print the decomp_2d setup
      !
-     call d2d_listing(iounit)
+     call d2d_log(iounit)
 
      ! Stop the timer for decomp_2d_init
      if (decomp_profiler_d2d) call decomp_profiler_end("decomp_2d_init")

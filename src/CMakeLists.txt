@@ -4,6 +4,10 @@ file(GLOB files_decomp factor.f90
 	               decomp_2d.f90
 		       log.f90
 		       io.f90
+		       io_family.f90
+  		       io_object.f90
+		       io_utilities.f90
+		       interp.f90
 		       transpose_x_to_y.f90
 		       transpose_y_to_x.f90
 		       transpose_y_to_z.f90

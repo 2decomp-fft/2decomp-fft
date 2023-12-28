@@ -23,10 +23,8 @@ contains
       ! Local variable
       integer :: io_unit
 
-      if ((decomp_log == D2D_LOG_STDOUT .and. nrank == 0) .or. &
-          (decomp_log == D2D_LOG_TOFILE .and. nrank == 0) .or. &
-          (decomp_log == D2D_LOG_TOFILE_FULL)) then
-         io_unit = d2d_listing_get_unit()
+      if (d2d_log_is_active()) then
+         io_unit = d2d_log_get_unit()
          write (io_unit, *) ''
          write (io_unit, *) '***** Using the '//trim(backend)//' FFT engine *****'
          write (io_unit, *) ''
@@ -59,7 +57,7 @@ contains
                write (io_unit, *) ''
             end if
          end if
-         call d2d_listing_close_unit(io_unit)
+         call d2d_log_close_unit(io_unit)
       end if
 
    end subroutine decomp_2d_fft_log

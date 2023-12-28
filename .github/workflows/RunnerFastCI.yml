@@ -29,7 +29,6 @@ jobs:
         ls -ltr ~/.bashrc
         source ~/.bashrc
         source ~/.profile_github
-        module load CMake 
         module load nvhpc
         export FC=mpif90
         cmake -S . -B build -DBUILD_TESTING=ON
@@ -48,7 +47,6 @@ jobs:
         ls -ltr ~/.bashrc
         source ~/.bashrc
         source ~/.profile_github
-        module load CMake 
         module load nvhpc
         export FC=mpif90
         cmake -S . -B build -DBUILD_TESTING=ON -DBUILD_TARGET=gpu -DENABLE_NCCL=yes
@@ -67,7 +65,6 @@ jobs:
         ls -ltr ~/.bashrc
         source ~/.bashrc
         source ~/.profile_github
-        module load CMake 
         module load foss
         export FC=mpif90
         export CC=mpicc
@@ -88,7 +85,6 @@ jobs:
         ls -ltr ~/.bashrc
         source ~/.bashrc
         source ~/.profile_github
-        module load CMake 
         module load intel
         export export FC="mpiifort -fc=ifx"
         export MKL_DIR=${MKLROOT}/lib/cmake/mkl

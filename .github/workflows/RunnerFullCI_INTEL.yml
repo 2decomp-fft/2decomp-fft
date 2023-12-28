@@ -29,7 +29,6 @@ jobs:
         ls -ltr ~/.bashrc
         source ~/.bashrc
         source ~/.profile_github
-        module load CMake 
         module load intel
         export FC=mpiifort
         export MKL_DIR=${MKLROOT}/lib/cmake/mkl
@@ -49,7 +48,6 @@ jobs:
         ls -ltr ~/.bashrc
         source ~/.bashrc
         source ~/.profile_github
-        module load CMake 
         module load intel
         export export FC="mpiifort -fc=ifx"
         export MKL_DIR=${MKLROOT}/lib/cmake/mkl
@@ -69,7 +67,6 @@ jobs:
         ls -ltr ~/.bashrc
         source ~/.bashrc
         source ~/.profile_github
-        module load CMake 
         module load intel
         export export FC="mpiifort -fc=ifx"
         export CXX="mpiicpc -cxx=icpx"

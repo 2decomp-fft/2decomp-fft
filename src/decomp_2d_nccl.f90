@@ -111,7 +111,6 @@ contains
       if (nccl_stat /= ncclSuccess) call decomp_2d_abort(__FILE__, __LINE__, nccl_stat, "ncclCommDestroy")
       cuda_stat = cudaStreamDestroy(cuda_stream_2decomp)
       if (cuda_stat /= 0) call decomp_2d_abort(__FILE__, __LINE__, cuda_stat, "cudaStreamDestroy")
-      
 
    end subroutine decomp_2d_nccl_fin
    ! init of the arrays
@@ -190,7 +189,7 @@ contains
       end do
       nccl_stat = ncclGroupEnd()
       if (nccl_stat /= ncclSuccess) call decomp_2d_abort(__FILE__, __LINE__, nccl_stat, "ncclGroupEnd")
-      cuda_stat = cudaStreamSynchronize(cuda_stream_2decomp)     
+      cuda_stat = cudaStreamSynchronize(cuda_stream_2decomp)
       if (cuda_stat /= 0) call decomp_2d_abort(__FILE__, __LINE__, cuda_stat, "cudaStreamSynchronize")
 
    end subroutine decomp_2d_nccl_send_recv_real_col
@@ -287,7 +286,7 @@ contains
       end do
       nccl_stat = ncclGroupEnd()
       if (nccl_stat /= ncclSuccess) call decomp_2d_abort(__FILE__, __LINE__, nccl_stat, "ncclGroupEnd")
-      cuda_stat = cudaStreamSynchronize(cuda_stream_2decomp)     
+      cuda_stat = cudaStreamSynchronize(cuda_stream_2decomp)
       if (cuda_stat /= 0) call decomp_2d_abort(__FILE__, __LINE__, cuda_stat, "cudaStreamSynchronize")
 
    end subroutine decomp_2d_nccl_send_recv_real_row

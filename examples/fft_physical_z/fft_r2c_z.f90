@@ -150,7 +150,7 @@ program fft_r2c_z
    if (error > epsilon(error) * 50 * ntest) then
       if (nrank == 0) write (*, *) 'error / mesh point: ', error
       call decomp_2d_abort(__FILE__, __LINE__, int(log10(error)), "r2c X test")
-   end if 
+   end if
 
    if (nrank == 0) then
       write (*, *) 'error / mesh point: ', error

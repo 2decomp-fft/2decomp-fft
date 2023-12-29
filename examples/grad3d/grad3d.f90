@@ -450,10 +450,11 @@ contains
    subroutine write_data()
 
       use decomp_2d_io
+      use decomp_2d_io_object
 
       implicit none
 
-      character(len=*), parameter :: io_name = "grad-io"
+      type(d2d_io) :: io
 #ifndef ADIOS2
       logical :: dir_exists
 #endif
@@ -472,28 +473,28 @@ contains
 #endif
 
       call decomp_2d_io_init()
-      call decomp_2d_init_io(io_name)
 
-      call decomp_2d_register_variable(io_name, "phi1.dat", 1, 0, 0, mytype)
-      call decomp_2d_register_variable(io_name, "dphiX.dat", 1, 0, 0, mytype)
-      call decomp_2d_register_variable(io_name, "dphiY.dat", 1, 0, 0, mytype)
-      call decomp_2d_register_variable(io_name, "dphiZ.dat", 1, 0, 0, mytype)
+      call decomp_2d_io_register_var3d("phi1.dat", 1, real_type)
+      call decomp_2d_io_register_var3d("dphiX.dat", 1, real_type)
+      call decomp_2d_io_register_var3d("dphiY.dat", 1, real_type)
+      call decomp_2d_io_register_var3d("dphiZ.dat", 1, real_type)
 
-      ! Standard I/O pattern - file per field
+      ! Standard I/O pattern - 1 file per field
+      ! Using the default IO family
 #ifdef ADIOS2
-      call decomp_2d_open_io(io_name, "out", decomp_2d_write_mode)
-      call decomp_2d_start_io(io_name, "out")
+      call io%open_start("out", decomp_2d_write_mode)
 #endif
-      call decomp_2d_write_one(1, phi1, 'out', 'phi1.dat', 0, io_name)
-      call decomp_2d_write_one(1, dphiX, 'out', 'dphiX.dat', 0, io_name)
-      call decomp_2d_write_one(1, dphiY, 'out', 'dphiY.dat', 0, io_name)
-      call decomp_2d_write_one(1, dphiZ, 'out', 'dphiZ.dat', 0, io_name)
+      call decomp_2d_write_one(1, phi1, 'phi1.dat', opt_dirname='out', opt_io=io)
+      call decomp_2d_write_one(1, dphiX, 'dphiX.dat', opt_dirname='out', opt_io=io)
+      call decomp_2d_write_one(1, dphiY, 'dphiY.dat', opt_dirname='out', opt_io=io)
+      call decomp_2d_write_one(1, dphiZ, 'dphiZ.dat', opt_dirname='out', opt_io=io)
 #ifdef ADIOS2
-      call decomp_2d_end_io(io_name, "out")
-      call decomp_2d_close_io(io_name, "out")
-#else
+      call io%end_close
+#endif
+
+      call decomp_2d_io_fin
+
       call write_xdmf()
-#endif
 
    end subroutine write_data
    !=====================================================================
@@ -600,4 +601,5 @@ contains
       end if
 
    end subroutine write_xdmf
+
 end program grad3d

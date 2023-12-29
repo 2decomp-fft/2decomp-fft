@@ -49,3 +49,6 @@ TAGS
 
 # vim
 *.swp
+
+# XCode
+*.xcworkspace

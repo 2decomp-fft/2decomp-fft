@@ -1,5 +1,5 @@
 # This is a basic workflow to help you get started with Actions
-name: FullCI4PR_nvhpc
+name: FullCI4PR_nvhpc_single
 
 defaults:
   run:
@@ -31,10 +31,7 @@ jobs:
         source ~/.profile_github
         module load nvhpc
         export FC=mpif90
-        cmake -S . -B build -DBUILD_TESTING=ON
-        cmake --build build -j 4
-        cmake --install build 
-        ctest --test-dir build 
+        cmake -S . -B build -DDOUBLE_PRECISION=OFF -DBUILD_TESTING=ON
         cmake -S . -B build -DNX=128 -DNY=128 -DNX=128 -DMPIEXEC_MAX_NUMPROCS=4
         cmake --build build -j 4
         cmake --install build 
@@ -53,10 +50,7 @@ jobs:
         export FC=mpif90
         export CC=mpicc
         export CXX=mpicxx
-        cmake -S . -B build -DBUILD_TESTING=ON -DIO_BACKEND=adios2 -Dadios2_DIR=~/GIT_Work/ADIOS2/build_install_nvhpc_cpu/opt/lib/cmake/adios2
-        cmake --build build -j 4
-        cmake --install build 
-        ctest --test-dir build 
+        cmake -S . -B build -DDOUBLE_PRECISION=OFF -DBUILD_TESTING=ON -DIO_BACKEND=adios2 -Dadios2_DIR=~/GIT_Work/ADIOS2/build_install_nvhpc_cpu/opt/lib/cmake/adios2
         cmake -S . -B build -DNX=128 -DNY=128 -DNX=128 -DMPIEXEC_MAX_NUMPROCS=4
         cmake --build build -j 4
         cmake --install build 
@@ -71,11 +65,7 @@ jobs:
         source ~/.profile_github
         module load nvhpc
         export FC=mpif90
-        cmake -S . -B build -DBUILD_TESTING=ON -DBUILD_TARGET=gpu -DENABLE_NCCL=no
-        cmake --build build -j 4
-        cmake --install build 
-        ctest --test-dir build 
-        cmake -S . -B build -DNX=128 -DNY=128 -DNX=128
+        cmake -S . -B build -DDOUBLE_PRECISION=OFF -DBUILD_TESTING=ON -DBUILD_TARGET=gpu -DENABLE_NCCL=no -DNX=128 -DNY=128 -DNX=128
         cmake --build build -j 4
         cmake --install build 
         ctest --test-dir build
@@ -89,11 +79,7 @@ jobs:
         source ~/.profile_github
         module load nvhpc
         export FC=mpif90
-        cmake -S . -B build -DBUILD_TESTING=ON -DBUILD_TARGET=gpu -DENABLE_NCCL=no -DENABLE_INPLACE=ON
-        cmake --build build -j 4
-        cmake --install build 
-        ctest --test-dir build 
-        cmake -S . -B build -DNX=128 -DNY=128 -DNX=128
+        cmake -S . -B build -DDOUBLE_PRECISION=OFF -DBUILD_TESTING=ON -DBUILD_TARGET=gpu -DENABLE_NCCL=no -DENABLE_INPLACE=ON -DNX=128 -DNY=128 -DNX=128
         cmake --build build -j 4
         cmake --install build 
         ctest --test-dir build
@@ -107,11 +93,7 @@ jobs:
         source ~/.profile_github
         module load nvhpc
         export FC=mpif90
-        cmake -S . -B build -DBUILD_TESTING=ON -DBUILD_TARGET=gpu -DENABLE_NCCL=yes
-        cmake --build build -j 4
-        cmake --install build 
-        ctest --test-dir build 
-        cmake -S . -B build -DNX=128 -DNY=128 -DNX=128
+        cmake -S . -B build -DDOUBLE_PRECISION=OFF -DBUILD_TESTING=ON -DBUILD_TARGET=gpu -DENABLE_NCCL=yes -DNX=128 -DNY=128 -DNX=128
         cmake --build build -j 4
         cmake --install build 
         ctest --test-dir build
@@ -125,11 +107,7 @@ jobs:
         source ~/.profile_github
         module load nvhpc
         export FC=mpif90
-        cmake -S . -B build -DBUILD_TESTING=ON -DBUILD_TARGET=gpu -DENABLE_NCCL=yes -DENABLE_MANAGED=yes
-        cmake --build build -j 4
-        cmake --install build 
-        ctest --test-dir build 
-        cmake -S . -B build -DNX=128 -DNY=128 -DNX=128
+        cmake -S . -B build -DDOUBLE_PRECISION=OFF -DBUILD_TESTING=ON -DBUILD_TARGET=gpu -DENABLE_NCCL=yes -DENABLE_MANAGED=yes -DNX=128 -DNY=128 -DNX=128
         cmake --build build -j 4
         cmake --install build 
         ctest --test-dir build

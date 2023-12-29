@@ -1,5 +1,5 @@
 # This is a basic workflow to help you get started with Actions
-name: FullCI4PR_gnu
+name: FullCI4PR_nvhpc_double
 
 defaults:
   run:
@@ -12,7 +12,7 @@ on: [pull_request, fork]
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
   # This workflow contains a job called "bld_gnu_ompi"
-  Full_CI_GNU:
+  Full_CI_NVHPC:
     # The type of runner that the job will run on
     runs-on: [self-hosted, linux, x64]
 
@@ -24,56 +24,33 @@ jobs:
         clean: true
 
     # Configure-Build-Run-Run on 4 cores 
-    - name: Compile GNU openMPI FFTW CPU
+    - name: Compile NHVHPC CPU
       run: |
         ls -ltr ~/.bashrc
         source ~/.bashrc
         source ~/.profile_github
-        module load foss
+        module load nvhpc
         export FC=mpif90
-        cmake -S . -B build -DBUILD_TESTING=ON -DFFT_Choice=fftw
-        cmake --build build -j 4
-        cmake --install build 
-        ctest --test-dir build 
+        cmake -S . -B build -DBUILD_TESTING=ON
         cmake -S . -B build -DNX=128 -DNY=128 -DNX=128 -DMPIEXEC_MAX_NUMPROCS=4
         cmake --build build -j 4
         cmake --install build 
         ctest --test-dir build
         rm -rf build  
-
-    # Configure-Build-Run-Run on 4 cores 
-    - name: Compile GNU openMPI FFTW_F03 CPU
+    
+    # Run and Compile NHHPC for CPU with ADIOS2
+    # Need to fix issue with latest NVHPC and ADIOS
+    # Need to revert to 23.1
+    - name: Compile NHVHPC CPU & ADIOS2
       run: |
         ls -ltr ~/.bashrc
         source ~/.bashrc
         source ~/.profile_github
-        module load foss
-        export FC=mpif90
-        cmake -S . -B build -DBUILD_TESTING=ON -DFFT_Choice=fftw_f03
-        cmake --build build -j 4
-        cmake --install build 
-        ctest --test-dir build 
-        cmake -S . -B build -DNX=128 -DNY=128 -DNX=128 -DMPIEXEC_MAX_NUMPROCS=4
-        cmake --build build -j 4
-        cmake --install build 
-        ctest --test-dir build
-        rm -rf build
-
-    # Configure-Build-Run-Run on 4 cores 
-    - name: Compile GNU openMPI FFTW_F03 Caliper CPU
-      run: |
-        ls -ltr ~/.bashrc
-        source ~/.bashrc
-        source ~/.profile_github
-        module load foss
+        module load nvhpc/23.1
         export FC=mpif90
         export CC=mpicc
         export CXX=mpicxx
-        export caliper_DIR=~/GIT_Work/caliper_github/build_gnu/opt/share/cmake/caliper/
-        cmake -S . -B build -DBUILD_TESTING=ON -DFFT_Choice=fftw_f03 -DENABLE_PROFILER=caliper
-        cmake --build build -j 4
-        cmake --install build 
-        ctest --test-dir build 
+        cmake -S . -B build -DBUILD_TESTING=ON -DIO_BACKEND=adios2 -Dadios2_DIR=~/GIT_Work/ADIOS2/build_install_nvhpc_cpu/opt/lib/cmake/adios2
         cmake -S . -B build -DNX=128 -DNY=128 -DNX=128 -DMPIEXEC_MAX_NUMPROCS=4
         cmake --build build -j 4
         cmake --install build 
@@ -81,20 +58,56 @@ jobs:
         rm -rf build  
     
     # Configure-Build-Run-Run on 4 cores 
-    - name: Compile GNU_Dev openMPI FFTW_F03 ADIOS2 CPU
+    - name: Compile NHVHPC GPU cuMPI
       run: |
         ls -ltr ~/.bashrc
         source ~/.bashrc
         source ~/.profile_github
-        module load foss
+        module load nvhpc
         export FC=mpif90
-        export CC=mpicc
-        export CXX=mpicxx
-        cmake -S . -B build -DCMAKE_BUILD_TYPE=Dev -DBUILD_TESTING=ON -DIO_BACKEND=adios2 -Dadios2_DIR=~/GIT_Work/ADIOS2/build_install_gcc12_cpu/opt/lib/cmake/adios2 -DFFT_Choice=fftw_f03
+        cmake -S . -B build -DBUILD_TESTING=ON -DBUILD_TARGET=gpu -DENABLE_NCCL=no -DNX=128 -DNY=128 -DNX=128
         cmake --build build -j 4
         cmake --install build 
-        ctest --test-dir build 
-        cmake -S . -B build -DNX=128 -DNY=128 -DNX=128 -DMPIEXEC_MAX_NUMPROCS=4
+        ctest --test-dir build
+        rm -rf build  
+
+    # Configure-Build-Run-Run
+    - name: Compile NHVHPC GPU cuMPI inplace
+      run: |
+        ls -ltr ~/.bashrc
+        source ~/.bashrc
+        source ~/.profile_github
+        module load nvhpc
+        export FC=mpif90
+        cmake -S . -B build -DBUILD_TESTING=ON -DBUILD_TARGET=gpu -DENABLE_NCCL=no -DENABLE_INPLACE=ON -DNX=128 -DNY=128 -DNX=128
+        cmake --build build -j 4
+        cmake --install build 
+        ctest --test-dir build
+        rm -rf build
+
+    # Configure-Build-Run 
+    - name: Compile NHVHPC GPU NCCL
+      run: |
+        ls -ltr ~/.bashrc
+        source ~/.bashrc
+        source ~/.profile_github
+        module load nvhpc
+        export FC=mpif90
+        cmake -S . -B build -DBUILD_TESTING=ON -DBUILD_TARGET=gpu -DENABLE_NCCL=yes -DNX=128 -DNY=128 -DNX=128
+        cmake --build build -j 4
+        cmake --install build 
+        ctest --test-dir build
+        rm -rf build  
+    
+    # Configure-Build-Run 
+    - name: Compile NHVHPC GPU NCCL MemManag
+      run: |
+        ls -ltr ~/.bashrc
+        source ~/.bashrc
+        source ~/.profile_github
+        module load nvhpc
+        export FC=mpif90
+        cmake -S . -B build -DBUILD_TESTING=ON -DBUILD_TARGET=gpu -DENABLE_NCCL=yes -DENABLE_MANAGED=yes -DNX=128 -DNY=128 -DNX=128
         cmake --build build -j 4
         cmake --install build 
         ctest --test-dir build

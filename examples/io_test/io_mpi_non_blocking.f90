@@ -154,8 +154,8 @@ program io_test
 
    ! read back to different arrays
    u1b = 0; u2b = 0; u3b = 0
-   call decomp_2d_read_one(1, u1b, 'u1.dat', opt_reduce_prec=.false., opt_dirname='out')             
-   call decomp_2d_read_one(2, u2b, 'u2.dat', opt_reduce_prec=.false., opt_dirname='out')             
+   call decomp_2d_read_one(1, u1b, 'u1.dat', opt_reduce_prec=.false., opt_dirname='out')
+   call decomp_2d_read_one(2, u2b, 'u2.dat', opt_reduce_prec=.false., opt_dirname='out')
    call decomp_2d_read_one(3, u3b, 'u3.dat', opt_reduce_prec=.false., opt_dirname='out')
 
    call MPI_Barrier(MPI_COMM_WORLD, ierr)

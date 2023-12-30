@@ -56,9 +56,9 @@ program io_plane_test
 
    call decomp_2d_io_init()
 
-   call decomp_2d_io_register_var2d("x_pencil-x_plane.dat", 1, real_type)
-   call decomp_2d_io_register_var2d("y_pencil-y_plane.dat", 2, real_type)
-   call decomp_2d_io_register_var2d("z_pencil-z_plane.dat", 3, real_type)
+   call decomp_2d_io_register_var2d("x_pencil-x_plane.dat", 1, real_type, opt_reduce_prec=.false.)
+   call decomp_2d_io_register_var2d("y_pencil-y_plane.dat", 2, real_type, opt_reduce_prec=.false.)
+   call decomp_2d_io_register_var2d("z_pencil-z_plane.dat", 3, real_type, opt_reduce_prec=.false.)
 
    ! ***** global data *****
    allocate (data1(nx, ny, nz))
@@ -115,13 +115,13 @@ program io_plane_test
    call io%open_start("out", decomp_2d_write_mode)
 #endif
    call decomp_2d_write_plane(1, u1, 'x_pencil-x_plane.dat', &
-                              opt_iplane=nx / 2, opt_dirname='out', opt_io=io)
+                              opt_iplane=nx / 2, opt_dirname='out', opt_io=io, opt_reduce_prec=.false.)
    ! Y-pencil data
    call decomp_2d_write_plane(2, u2, 'y_pencil-y_plane.dat', &
-                              opt_iplane=ny / 2, opt_dirname='out', opt_io=io)
+                              opt_iplane=ny / 2, opt_dirname='out', opt_io=io, opt_reduce_prec=.false.)
    ! Z-pencil data
    call decomp_2d_write_plane(3, u3, 'z_pencil-z_plane.dat', &
-                              opt_iplane=nz / 2, opt_dirname='out', opt_io=io)
+                              opt_iplane=nz / 2, opt_dirname='out', opt_io=io, opt_reduce_prec=.false.)
 #ifdef ADIOS2
    call io%end_close
 #endif

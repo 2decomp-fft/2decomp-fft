@@ -87,3 +87,20 @@ jobs:
         cmake --install build 
         ctest --test-dir build
         rm -rf build
+
+    # Configure-Build-Run-Run on 4 cores 
+    - name: Compile GNU_Dev openMPI FFTW_F03 SINGLE_PRECISION_OUTPUT CPU
+      run: |
+        ls -ltr ~/.bashrc
+        source ~/.bashrc
+        source ~/.profile_github
+        module load foss
+        export FC=mpif90
+        export CC=mpicc
+        export CXX=mpicxx
+        cmake -S . -B build -DCMAKE_BUILD_TYPE=Dev -DBUILD_TESTING=ON -DFFT_Choice=fftw_f03 -DSINGLE_PRECISION_OUTPUT=on
+        cmake -S . -B build -DNX=128 -DNY=128 -DNX=128 -DMPIEXEC_MAX_NUMPROCS=4
+        cmake --build build -j 4
+        cmake --install build 
+        ctest --test-dir build
+        rm -rf build

@@ -154,9 +154,9 @@ program io_test
 
    ! read back to different arrays
    u1b = 0; u2b = 0; u3b = 0
-   call decomp_2d_read_one(1, u1b, 'u1.dat', opt_dirname='out')
-   call decomp_2d_read_one(2, u2b, 'u2.dat', opt_dirname='out')
-   call decomp_2d_read_one(3, u3b, 'u3.dat', opt_dirname='out')
+   call decomp_2d_read_one(1, u1b, 'u1.dat', opt_reduce_prec=.false., opt_dirname='out')
+   call decomp_2d_read_one(2, u2b, 'u2.dat', opt_reduce_prec=.false., opt_dirname='out')
+   call decomp_2d_read_one(3, u3b, 'u3.dat', opt_reduce_prec=.false., opt_dirname='out')
 
    call MPI_Barrier(MPI_COMM_WORLD, ierr)
 
@@ -189,8 +189,8 @@ contains
          do j = xstart(2), xend(2)
             do i = xstart(1), xend(1)
                if (abs((u1(i, j, k) - u1b(i, j, k))) > eps) then
-                  print *, u1(i, j, k), u1b(i, j, k)
-                  stop 1
+                  print *, i, j, k, u1(i, j, k), u1b(i, j, k)
+                  call decomp_2d_abort(1, "x_plane")
                end if
             end do
          end do
@@ -199,7 +199,10 @@ contains
       do k = ystart(3), yend(3)
          do j = ystart(2), yend(2)
             do i = ystart(1), yend(1)
-               if (abs((u2(i, j, k) - u2b(i, j, k))) > eps) stop 2
+               if (abs((u2(i, j, k) - u2b(i, j, k))) > eps) then
+                  print *, i, j, k, u2(i, j, k), u2b(i, j, k)
+                  call decomp_2d_abort(2, "y_plane")
+               end if
             end do
          end do
       end do
@@ -207,7 +210,10 @@ contains
       do k = zstart(3), zend(3)
          do j = zstart(2), zend(2)
             do i = zstart(1), zend(1)
-               if (abs((u3(i, j, k) - u3b(i, j, k))) > eps) stop 3
+               if (abs((u3(i, j, k) - u3b(i, j, k))) > eps) then
+                  print *, i, j, k, u3(i,j,k), u3b(i,j,k)
+                  call decomp_2d_abort(3, "z_plane")
+               end if
             end do
          end do
       end do
@@ -216,7 +222,10 @@ contains
       do k = xstart(3), xend(3)
          do j = xstart(2), xend(2)
             do i = xstart(1), xend(1)
-               if (abs(data1(i, j, k) - u1b(i, j, k)) > eps) stop 4
+               if (abs(data1(i, j, k) - u1b(i, j, k)) > eps) then
+                  print *, i, j, k, data1(i, j, k), u1b(i, j, k)
+                  call decomp_2d_abort(4, "x_plane")
+               end if
             end do
          end do
       end do
@@ -224,7 +233,10 @@ contains
       do k = ystart(3), yend(3)
          do j = ystart(2), yend(2)
             do i = ystart(1), yend(1)
-               if (abs((data1(i, j, k) - u2b(i, j, k))) > eps) stop 5
+               if (abs(data1(i, j, k) - u2b(i, j, k)) > eps) then
+                  print *, i, j, k, data1(i, j, k), u2b(i, j, k)
+                  call decomp_2d_abort(5, "y_plane")
+               end if
             end do
          end do
       end do
@@ -232,7 +244,10 @@ contains
       do k = zstart(3), zend(3)
          do j = zstart(2), zend(2)
             do i = zstart(1), zend(1)
-               if (abs((data1(i, j, k) - u3b(i, j, k))) > eps) stop 6
+               if (abs(data1(i, j, k) - u3b(i, j, k)) > eps) then
+                  print *, i, j, k, data1(i, j, k), u3b(i, j, k)
+                  call decomp_2d_abort(6, "z_plane")
+               end if
             end do
          end do
       end do

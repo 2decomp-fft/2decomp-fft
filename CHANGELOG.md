@@ -29,7 +29,7 @@ _e.g._ vX.Y - YYYY-MM-DD and a new "Unreleased" section started above.
 
 ## v2.0.1
 
-- See JOSS paper (under submission)
+- See JOSS paper ([10.21105/joss.05813](https://doi.org/10.21105/joss.05813))
 
 ### Added
 ### Fixed

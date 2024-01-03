@@ -5,9 +5,10 @@
 module decomp_2d_fft
 
    use iso_c_binding, only: c_f_pointer, c_loc
+   use decomp_2d
    use decomp_2d_constants
    use decomp_2d_mpi
-   use decomp_2d  ! 2D decomposition module
+   use decomp_2d_profiler
    use MKL_DFTI   ! MKL FFT module
 
    implicit none
@@ -17,14 +18,51 @@ module decomp_2d_fft
    ! engine-specific global variables
 
    ! Descriptors for MKL FFT, one for each set of 1D FFTs
-   !  for c2c transforms
-   type(DFTI_DESCRIPTOR), pointer :: c2c_x, c2c_y, c2c_z
-   !  for r2c/c2r transforms, PHYSICAL_IN_X
-   type(DFTI_DESCRIPTOR), pointer :: r2c_x, c2c_y2, c2c_z2, c2r_x
-   !  for r2c/c2r transforms, PHYSICAL_IN_Z
-   type(DFTI_DESCRIPTOR), pointer :: r2c_z, c2c_x2, c2r_z
+   type(DFTI_DESCRIPTOR), pointer, save :: c2c_x => null(), & ! c2c transforms
+                                           c2c_y => null(), &
+                                           c2c_z => null(), &
+                                           r2c_x => null(), & ! r2c/c2r, physical in x
+                                           c2c_y2 => null(), &
+                                           c2c_z2 => null(), &
+                                           c2r_x => null(), &
+                                           r2c_z => null(), & ! r2c/c2r, physical in z
+                                           c2c_x2 => null(), &
+                                           c2r_z => null()
 
    integer, parameter, public :: D2D_FFT_BACKEND = D2D_FFT_BACKEND_MKL
+
+   ! Derived type with all the quantities needed to perform FFT
+   type decomp_2d_fft_engine
+      ! Engine-specific stuff
+      type(DFTI_DESCRIPTOR), private, pointer :: c2c_x => null(), & ! c2c transforms
+                                                 c2c_y => null(), &
+                                                 c2c_z => null(), &
+                                                 r2c_x => null(), & ! r2c/c2r, physical in x
+                                                 c2c_y2 => null(), &
+                                                 c2c_z2 => null(), &
+                                                 c2r_x => null(), &
+                                                 r2c_z => null(), & ! r2c/c2r, physical in z
+                                                 c2c_x2 => null(), &
+                                                 c2r_z => null()
+      ! All the engines have this
+      integer, private :: format
+      logical, private :: initialised = .false.
+      integer, private :: nx_fft, ny_fft, nz_fft
+      type(decomp_info), pointer, public :: ph => null()
+      type(decomp_info), public :: sp
+      complex(mytype), allocatable, private :: wk2_c2c(:, :, :)
+      complex(mytype), contiguous, pointer, private :: wk2_r2c(:, :, :) => null()
+      complex(mytype), allocatable, private :: wk13(:, :, :)
+      logical, private :: inplace
+   contains
+      procedure, public :: init => decomp_2d_fft_engine_init
+      procedure, public :: fin => decomp_2d_fft_engine_fin
+      procedure, public :: use_it => decomp_2d_fft_engine_use_it
+      generic, public :: fft => c2c, r2c, c2r
+      procedure, private :: c2c => decomp_2d_fft_engine_fft_c2c
+      procedure, private :: r2c => decomp_2d_fft_engine_fft_r2c
+      procedure, private :: c2r => decomp_2d_fft_engine_fft_c2r
+   end type decomp_2d_fft_engine
 
    ! common code used for all engines, including global variables,
    ! generic interface definitions and several subroutines
@@ -33,30 +71,32 @@ module decomp_2d_fft
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
    !  This routine performs one-time initialisations for the FFT engine
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-   subroutine init_fft_engine
+   subroutine init_fft_engine(engine)
 
       implicit none
+
+      type(decomp_2d_fft_engine), target, intent(inout) :: engine
 
       call decomp_2d_fft_log("MKL")
 
       ! For C2C transforms
-      call c2c_1m_x_plan(c2c_x, ph)
-      call c2c_1m_y_plan(c2c_y, ph)
-      call c2c_1m_z_plan(c2c_z, ph)
+      call c2c_1m_x_plan(engine%c2c_x, ph)
+      call c2c_1m_y_plan(engine%c2c_y, ph)
+      call c2c_1m_z_plan(engine%c2c_z, ph)
 
       ! For R2C/C2R tranfroms with physical space in X-pencil
       if (format == PHYSICAL_IN_X) then
-         call r2c_1m_x_plan(r2c_x, ph, sp, -1)
-         call c2c_1m_y_plan(c2c_y2, sp)
-         call c2c_1m_z_plan(c2c_z2, sp)
-         call r2c_1m_x_plan(c2r_x, ph, sp, 1)
+         call r2c_1m_x_plan(engine%r2c_x, ph, sp, -1)
+         call c2c_1m_y_plan(engine%c2c_y2, sp)
+         call c2c_1m_z_plan(engine%c2c_z2, sp)
+         call r2c_1m_x_plan(engine%c2r_x, ph, sp, 1)
 
          ! For R2C/C2R tranfroms with physical space in Z-pencil
       else if (format == PHYSICAL_IN_Z) then
-         call r2c_1m_z_plan(r2c_z, ph, sp, -1)
-         call c2c_1m_y_plan(c2c_y2, sp)
-         call c2c_1m_x_plan(c2c_x2, sp)
-         call r2c_1m_z_plan(c2r_z, ph, sp, 1)
+         call r2c_1m_z_plan(engine%r2c_z, ph, sp, -1)
+         call c2c_1m_y_plan(engine%c2c_y2, sp)
+         call c2c_1m_x_plan(engine%c2c_x2, sp)
+         call r2c_1m_z_plan(engine%c2r_z, ph, sp, 1)
       end if
 
       return
@@ -83,11 +123,11 @@ module decomp_2d_fft
       status = DftiSetValue(desc, DFTI_NUMBER_OF_TRANSFORMS, &
                             decomp%xsz(2) * decomp%xsz(3))
       if (status /= 0) call decomp_2d_abort(__FILE__, __LINE__, status, "DftiSetValue")
-#ifdef OVERWRITE
-      status = DftiSetValue(desc, DFTI_PLACEMENT, DFTI_INPLACE)
-#else
-      status = DftiSetValue(desc, DFTI_PLACEMENT, DFTI_NOT_INPLACE)
-#endif
+      if (inplace) then
+         status = DftiSetValue(desc, DFTI_PLACEMENT, DFTI_INPLACE)
+      else
+         status = DftiSetValue(desc, DFTI_PLACEMENT, DFTI_NOT_INPLACE)
+      end if
       if (status /= 0) call decomp_2d_abort(__FILE__, __LINE__, status, "DftiSetValue")
       status = DftiSetValue(desc, DFTI_INPUT_DISTANCE, decomp%xsz(1))
       if (status /= 0) call decomp_2d_abort(__FILE__, __LINE__, status, "DftiSetValue")
@@ -120,11 +160,11 @@ module decomp_2d_fft
                                     DFTI_COMPLEX, 1, decomp%ysz(2))
 #endif
       if (status /= 0) call decomp_2d_abort(__FILE__, __LINE__, status, "DftiCreateDescriptor")
-#ifdef OVERWRITE
-      status = DftiSetValue(desc, DFTI_PLACEMENT, DFTI_INPLACE)
-#else
-      status = DftiSetValue(desc, DFTI_PLACEMENT, DFTI_NOT_INPLACE)
-#endif
+      if (inplace) then
+         status = DftiSetValue(desc, DFTI_PLACEMENT, DFTI_INPLACE)
+      else
+         status = DftiSetValue(desc, DFTI_PLACEMENT, DFTI_NOT_INPLACE)
+      end if
       if (status /= 0) call decomp_2d_abort(__FILE__, __LINE__, status, "DftiSetValue")
       status = DftiSetValue(desc, DFTI_NUMBER_OF_TRANSFORMS, decomp%ysz(1))
       if (status /= 0) call decomp_2d_abort(__FILE__, __LINE__, status, "DftiSetValue")
@@ -162,11 +202,11 @@ module decomp_2d_fft
                                     DFTI_COMPLEX, 1, decomp%zsz(3))
 #endif
       if (status /= 0) call decomp_2d_abort(__FILE__, __LINE__, status, "DftiCreateDescriptor")
-#ifdef OVERWRITE
-      status = DftiSetValue(desc, DFTI_PLACEMENT, DFTI_INPLACE)
-#else
-      status = DftiSetValue(desc, DFTI_PLACEMENT, DFTI_NOT_INPLACE)
-#endif
+      if (inplace) then
+         status = DftiSetValue(desc, DFTI_PLACEMENT, DFTI_INPLACE)
+      else
+         status = DftiSetValue(desc, DFTI_PLACEMENT, DFTI_NOT_INPLACE)
+      end if
       if (status /= 0) call decomp_2d_abort(__FILE__, __LINE__, status, "DftiSetValue")
       status = DftiSetValue(desc, DFTI_NUMBER_OF_TRANSFORMS, &
                             decomp%zsz(1) * decomp%zsz(2))
@@ -294,58 +334,97 @@ module decomp_2d_fft
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
    !  This routine performs one-time finalisations for the FFT engine
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-   subroutine finalize_fft_engine
+   subroutine finalize_fft_engine(engine)
 
       implicit none
 
+      type(decomp_2d_fft_engine), optional :: engine
+
       integer :: status
 
-      status = DftiFreeDescriptor(c2c_x)
-      if (status /= 0) call decomp_2d_abort(__FILE__, __LINE__, status, "DftiFreeDescriptor")
-      status = DftiFreeDescriptor(c2c_y)
-      if (status /= 0) call decomp_2d_abort(__FILE__, __LINE__, status, "DftiFreeDescriptor")
-      status = DftiFreeDescriptor(c2c_z)
-      if (status /= 0) call decomp_2d_abort(__FILE__, __LINE__, status, "DftiFreeDescriptor")
-      if (format == PHYSICAL_IN_X) then
-         status = DftiFreeDescriptor(r2c_x)
-         if (status /= 0) call decomp_2d_abort(__FILE__, __LINE__, status, "DftiFreeDescriptor")
-         status = DftiFreeDescriptor(c2c_z2)
-         if (status /= 0) call decomp_2d_abort(__FILE__, __LINE__, status, "DftiFreeDescriptor")
-         status = DftiFreeDescriptor(c2r_x)
-         if (status /= 0) call decomp_2d_abort(__FILE__, __LINE__, status, "DftiFreeDescriptor")
-      else if (format == PHYSICAL_IN_Z) then
-         status = DftiFreeDescriptor(r2c_z)
-         if (status /= 0) call decomp_2d_abort(__FILE__, __LINE__, status, "DftiFreeDescriptor")
-         status = DftiFreeDescriptor(c2c_x2)
-         if (status /= 0) call decomp_2d_abort(__FILE__, __LINE__, status, "DftiFreeDescriptor")
-         status = DftiFreeDescriptor(c2r_z)
-         if (status /= 0) call decomp_2d_abort(__FILE__, __LINE__, status, "DftiFreeDescriptor")
-      end if
-      status = DftiFreeDescriptor(c2c_y2)
-      if (status /= 0) call decomp_2d_abort(__FILE__, __LINE__, status, "DftiFreeDescriptor")
+      if (present(engine)) then
 
-      return
+         status = DftiFreeDescriptor(engine%c2c_x)
+         if (status /= 0) call decomp_2d_abort(__FILE__, __LINE__, status, "DftiFreeDescriptor")
+         status = DftiFreeDescriptor(engine%c2c_y)
+         if (status /= 0) call decomp_2d_abort(__FILE__, __LINE__, status, "DftiFreeDescriptor")
+         status = DftiFreeDescriptor(engine%c2c_z)
+         if (status /= 0) call decomp_2d_abort(__FILE__, __LINE__, status, "DftiFreeDescriptor")
+         if (engine%format == PHYSICAL_IN_X) then
+            status = DftiFreeDescriptor(engine%r2c_x)
+            if (status /= 0) call decomp_2d_abort(__FILE__, __LINE__, status, "DftiFreeDescriptor")
+            status = DftiFreeDescriptor(engine%c2c_z2)
+            if (status /= 0) call decomp_2d_abort(__FILE__, __LINE__, status, "DftiFreeDescriptor")
+            status = DftiFreeDescriptor(engine%c2r_x)
+            if (status /= 0) call decomp_2d_abort(__FILE__, __LINE__, status, "DftiFreeDescriptor")
+         else if (engine%format == PHYSICAL_IN_Z) then
+            status = DftiFreeDescriptor(engine%r2c_z)
+            if (status /= 0) call decomp_2d_abort(__FILE__, __LINE__, status, "DftiFreeDescriptor")
+            status = DftiFreeDescriptor(engine%c2c_x2)
+            if (status /= 0) call decomp_2d_abort(__FILE__, __LINE__, status, "DftiFreeDescriptor")
+            status = DftiFreeDescriptor(engine%c2r_z)
+            if (status /= 0) call decomp_2d_abort(__FILE__, __LINE__, status, "DftiFreeDescriptor")
+         end if
+         status = DftiFreeDescriptor(engine%c2c_y2)
+         if (status /= 0) call decomp_2d_abort(__FILE__, __LINE__, status, "DftiFreeDescriptor")
+
+      else
+
+         if (associated(c2c_x)) nullify (c2c_x)
+         if (associated(c2c_y)) nullify (c2c_y)
+         if (associated(c2c_z)) nullify (c2c_z)
+         if (associated(r2c_x)) nullify (r2c_x)
+         if (associated(c2c_z2)) nullify (c2c_z2)
+         if (associated(c2r_x)) nullify (c2r_x)
+         if (associated(r2c_z)) nullify (r2c_z)
+         if (associated(c2c_x2)) nullify (c2c_x2)
+         if (associated(c2r_z)) nullify (c2r_z)
+         if (associated(c2c_y2)) nullify (c2c_y2)
+
+      end if
+
    end subroutine finalize_fft_engine
 
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+   ! Use engine-specific stuff
+   subroutine use_fft_engine(engine)
+
+      implicit none
+
+      type(decomp_2d_fft_engine), target, intent(in) :: engine
+
+      c2c_x => engine%c2c_x
+      c2c_y => engine%c2c_y
+      c2c_z => engine%c2c_z
+      if (format == PHYSICAL_IN_X) then
+         r2c_x => engine%r2c_x
+         c2c_z2 => engine%c2c_z2
+         c2r_x => engine%c2r_x
+      else
+         r2c_z => engine%r2c_z
+         c2c_x2 => engine%c2c_x2
+         c2r_z => engine%c2r_z
+      end if
+      c2c_y2 => engine%c2c_y2
+
+   end subroutine use_fft_engine
+
+   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
    ! 3D FFT - complex to complex
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
    subroutine fft_3d_c2c(in, out, isign)
 
       implicit none
 
+      ! Arguments
       complex(mytype), dimension(:, :, :), intent(IN) :: in
       complex(mytype), dimension(:, :, :), intent(OUT) :: out
       integer, intent(IN) :: isign
 
-#ifndef OVERWRITE
+      ! Local variables
       complex(mytype), allocatable, dimension(:, :, :) :: wk1, wk2b, wk3
-#endif
       integer :: k, status
 
-#ifdef PROFILER
       if (decomp_profiler_fft) call decomp_profiler_start("fft_c2c")
-#endif
 
       if (format == PHYSICAL_IN_X .AND. isign == DECOMP_2D_FFT_FORWARD .OR. &
           format == PHYSICAL_IN_Z .AND. isign == DECOMP_2D_FFT_BACKWARD) then
@@ -356,47 +435,47 @@ module decomp_2d_fft
          !       else if (isign==DECOMP_2D_FFT_BACKWARD) then
          !          status = DftiComputeBackward(c2c_x, in(:,1,1), wk1(:,1,1))
          !       end if
-#ifdef OVERWRITE
-         status = wrapper_c2c_inplace(c2c_x, in, isign)
-#else
-         call alloc_x(wk1, ph)
-         status = wrapper_c2c(c2c_x, in, wk1, isign)
-#endif
+         if (inplace) then
+            status = wrapper_c2c_inplace(c2c_x, in, isign)
+         else
+            call alloc_x(wk1, ph)
+            status = wrapper_c2c(c2c_x, in, wk1, isign)
+         end if
          if (status /= 0) call decomp_2d_abort(__FILE__, __LINE__, status, "wrapper_c2c")
 
          ! ===== Swap X --> Y =====
-#ifdef OVERWRITE
-         call transpose_x_to_y(in, wk2_c2c, ph)
-#else
-         call transpose_x_to_y(wk1, wk2_c2c, ph)
-#endif
+         if (inplace) then
+            call transpose_x_to_y(in, wk2_c2c, ph)
+         else
+            call transpose_x_to_y(wk1, wk2_c2c, ph)
+         end if
 
          ! ===== 1D FFTs in Y =====
-#ifdef OVERWRITE
-         do k = 1, ph%xsz(3)
-            status = wrapper_c2c_inplace(c2c_y, wk2_c2c(1, 1, k), isign)
-            if (status /= 0) call decomp_2d_abort(__FILE__, __LINE__, status, "wrapper_c2c")
-         end do
-#else
-         call alloc_y(wk2b, ph)
-         do k = 1, ph%xsz(3) ! one Z-plane at a time
-            !          if (isign==DECOMP_2D_FFT_FORWARD) then
-            !             status = DftiComputeForward(c2c_y, wk2(:,1,k), wk2b(:,1,k))
-            !          else if (isign==DECOMP_2D_FFT_BACKWARD) then
-            !             status = DftiComputeBackward(c2c_y, wk2(:,1,k), wk2b(:,1,k))
-            !          end if
-            status = wrapper_c2c(c2c_y, wk2_c2c(1, 1, k), wk2b(1, 1, k), isign)
-            if (status /= 0) call decomp_2d_abort(__FILE__, __LINE__, status, "wrapper_c2c")
-         end do
-#endif
+         if (inplace) then
+            do k = 1, ph%xsz(3)
+               status = wrapper_c2c_inplace(c2c_y, wk2_c2c(:, :, k), isign)
+               if (status /= 0) call decomp_2d_abort(__FILE__, __LINE__, status, "wrapper_c2c")
+            end do
+         else
+            call alloc_y(wk2b, ph)
+            do k = 1, ph%xsz(3) ! one Z-plane at a time
+               !          if (isign==DECOMP_2D_FFT_FORWARD) then
+               !             status = DftiComputeForward(c2c_y, wk2(:,1,k), wk2b(:,1,k))
+               !          else if (isign==DECOMP_2D_FFT_BACKWARD) then
+               !             status = DftiComputeBackward(c2c_y, wk2(:,1,k), wk2b(:,1,k))
+               !          end if
+               status = wrapper_c2c(c2c_y, wk2_c2c(:, :, k), wk2b(1, 1, k), isign)
+               if (status /= 0) call decomp_2d_abort(__FILE__, __LINE__, status, "wrapper_c2c")
+            end do
+         end if
 
          ! ===== Swap Y --> Z =====
-#ifdef OVERWRITE
-         call transpose_y_to_z(wk2_c2c, out, ph)
-#else
-         call alloc_z(wk3, ph)
-         call transpose_y_to_z(wk2b, wk3, ph)
-#endif
+         if (inplace) then
+            call transpose_y_to_z(wk2_c2c, out, ph)
+         else
+            call alloc_z(wk3, ph)
+            call transpose_y_to_z(wk2b, wk3, ph)
+         end if
 
          ! ===== 1D FFTs in Z =====
          !       if (isign==DECOMP_2D_FFT_FORWARD) then
@@ -404,11 +483,11 @@ module decomp_2d_fft
          !       else if (isign==DECOMP_2D_FFT_BACKWARD) then
          !          status = DftiComputeBackward(c2c_z, wk3(:,1,1), out(:,1,1))
          !       end if
-#ifdef OVERWRITE
-         status = wrapper_c2c_inplace(c2c_z, out, isign)
-#else
-         status = wrapper_c2c(c2c_z, wk3, out, isign)
-#endif
+         if (inplace) then
+            status = wrapper_c2c_inplace(c2c_z, out, isign)
+         else
+            status = wrapper_c2c(c2c_z, wk3, out, isign)
+         end if
          if (status /= 0) call decomp_2d_abort(__FILE__, __LINE__, status, "wrapper_c2c")
 
       else if (format == PHYSICAL_IN_X .AND. isign == DECOMP_2D_FFT_BACKWARD &
@@ -421,47 +500,47 @@ module decomp_2d_fft
          !       else if (isign==DECOMP_2D_FFT_BACKWARD) then
          !          status = DftiComputeBackward(c2c_z, in(:,1,1), wk1(:,1,1))
          !       end if
-#ifdef OVERWRITE
-         status = wrapper_c2c_inplace(c2c_z, in, isign)
-#else
-         call alloc_z(wk1, ph)
-         status = wrapper_c2c(c2c_z, in, wk1, isign)
-#endif
+         if (inplace) then
+            status = wrapper_c2c_inplace(c2c_z, in, isign)
+         else
+            call alloc_z(wk1, ph)
+            status = wrapper_c2c(c2c_z, in, wk1, isign)
+         end if
          if (status /= 0) call decomp_2d_abort(__FILE__, __LINE__, status, "wrapper_c2c")
 
          ! ===== Swap Z --> Y =====
-#ifdef OVERWRITE
-         call transpose_z_to_y(in, wk2_c2c, ph)
-#else
-         call transpose_z_to_y(wk1, wk2_c2c, ph)
-#endif
+         if (inplace) then
+            call transpose_z_to_y(in, wk2_c2c, ph)
+         else
+            call transpose_z_to_y(wk1, wk2_c2c, ph)
+         end if
 
          ! ===== 1D FFTs in Y =====
-#ifdef OVERWRITE
-         do k = 1, ph%xsz(3)
-            status = wrapper_c2c_inplace(c2c_y, wk2_c2c(1, 1, k), isign)
-            if (status /= 0) call decomp_2d_abort(__FILE__, __LINE__, status, "wrapper_c2c")
-         end do
-#else
-         call alloc_y(wk2b, ph)
-         do k = 1, ph%xsz(3) ! one Z-plane at a time
-            !          if (isign==DECOMP_2D_FFT_FORWARD) then
-            !             status = DftiComputeForward(c2c_y, wk2(:,1,k), wk2b(:,1,k))
-            !          else if (isign==DECOMP_2D_FFT_BACKWARD) then
-            !             status = DftiComputeBackward(c2c_y, wk2(:,1,k), wk2b(:,1,k))
-            !          end if
-            status = wrapper_c2c(c2c_y, wk2_c2c(1, 1, k), wk2b(1, 1, k), isign)
-            if (status /= 0) call decomp_2d_abort(__FILE__, __LINE__, status, "wrapper_c2c")
-         end do
-#endif
+         if (inplace) then
+            do k = 1, ph%xsz(3)
+               status = wrapper_c2c_inplace(c2c_y, wk2_c2c(:, :, k), isign)
+               if (status /= 0) call decomp_2d_abort(__FILE__, __LINE__, status, "wrapper_c2c")
+            end do
+         else
+            call alloc_y(wk2b, ph)
+            do k = 1, ph%xsz(3) ! one Z-plane at a time
+               !          if (isign==DECOMP_2D_FFT_FORWARD) then
+               !             status = DftiComputeForward(c2c_y, wk2(:,1,k), wk2b(:,1,k))
+               !          else if (isign==DECOMP_2D_FFT_BACKWARD) then
+               !             status = DftiComputeBackward(c2c_y, wk2(:,1,k), wk2b(:,1,k))
+               !          end if
+               status = wrapper_c2c(c2c_y, wk2_c2c(:, :, k), wk2b(1, 1, k), isign)
+               if (status /= 0) call decomp_2d_abort(__FILE__, __LINE__, status, "wrapper_c2c")
+            end do
+         end if
 
          ! ===== Swap Y --> X =====
-#ifdef OVERWRITE
-         call transpose_y_to_x(wk2_c2c, out, ph)
-#else
-         call alloc_x(wk3, ph)
-         call transpose_y_to_x(wk2b, wk3, ph)
-#endif
+         if (inplace) then
+            call transpose_y_to_x(wk2_c2c, out, ph)
+         else
+            call alloc_x(wk3, ph)
+            call transpose_y_to_x(wk2b, wk3, ph)
+         end if
 
          ! ===== 1D FFTs in X =====
          !       if (isign==DECOMP_2D_FFT_FORWARD) then
@@ -469,25 +548,22 @@ module decomp_2d_fft
          !       else if (isign==DECOMP_2D_FFT_BACKWARD) then
          !          status = DftiComputeBackward(c2c_x, wk3(:,1,1), out(:,1,1))
          !       end if
-#ifdef OVERWRITE
-         status = wrapper_c2c_inplace(c2c_x, out, isign)
-#else
-         status = wrapper_c2c(c2c_x, wk3, out, isign)
-#endif
+         if (inplace) then
+            status = wrapper_c2c_inplace(c2c_x, out, isign)
+         else
+            status = wrapper_c2c(c2c_x, wk3, out, isign)
+         end if
          if (status /= 0) call decomp_2d_abort(__FILE__, __LINE__, status, "wrapper_c2c")
 
       end if
 
       ! Free memory
-#ifndef OVERWRITE
-      deallocate (wk1, wk2b, wk3)
-#endif
+      if (allocated(wk1)) deallocate (wk1)
+      if (allocated(wk2b)) deallocate (wk2b)
+      if (allocated(wk3)) deallocate (wk3)
 
-#ifdef PROFILER
       if (decomp_profiler_fft) call decomp_profiler_end("fft_c2c")
-#endif
 
-      return
    end subroutine fft_3d_c2c
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -497,17 +573,15 @@ module decomp_2d_fft
 
       implicit none
 
+      ! Arguments
       real(mytype), dimension(:, :, :), intent(IN) :: in_r
       complex(mytype), dimension(:, :, :), intent(OUT) :: out_c
 
-#ifndef OVERWRITE
+      ! Local variables
       complex(mytype), allocatable, dimension(:, :, :) :: wk2b, wk3
-#endif
       integer :: k, status, isign
 
-#ifdef PROFILER
       if (decomp_profiler_fft) call decomp_profiler_start("fft_r2c")
-#endif
 
       isign = DECOMP_2D_FFT_FORWARD
 
@@ -522,35 +596,35 @@ module decomp_2d_fft
          call transpose_x_to_y(wk13, wk2_r2c, sp)
 
          ! ===== 1D FFTs in Y =====
-#ifdef OVERWRITE
-         do k = 1, sp%ysz(3)
-            status = wrapper_c2c_inplace(c2c_y2, wk2_r2c(:, :, k), isign)
-            if (status /= 0) call decomp_2d_abort(__FILE__, __LINE__, status, "wrapper_c2c")
-         end do
-#else
-         call alloc_y(wk2b, sp)
-         do k = 1, sp%ysz(3)
-            !          status = DftiComputeForward(c2c_y2, wk2(:,1,k), wk2b(:,1,k))
-            status = wrapper_c2c(c2c_y2, wk2_r2c(:, :, k), wk2b(1, 1, k), isign)
-            if (status /= 0) call decomp_2d_abort(__FILE__, __LINE__, status, "wrapper_c2c")
-         end do
-#endif
+         if (inplace) then
+            do k = 1, sp%ysz(3)
+               status = wrapper_c2c_inplace(c2c_y2, wk2_r2c(:, :, k), isign)
+               if (status /= 0) call decomp_2d_abort(__FILE__, __LINE__, status, "wrapper_c2c")
+            end do
+         else
+            call alloc_y(wk2b, sp)
+            do k = 1, sp%ysz(3)
+               !          status = DftiComputeForward(c2c_y2, wk2(:,1,k), wk2b(:,1,k))
+               status = wrapper_c2c(c2c_y2, wk2_r2c(:, :, k), wk2b(1, 1, k), isign)
+               if (status /= 0) call decomp_2d_abort(__FILE__, __LINE__, status, "wrapper_c2c")
+            end do
+         end if
 
          ! ===== Swap Y --> Z =====
-#ifdef OVERWRITE
-         call transpose_y_to_z(wk2_r2c, out_c, sp)
-#else
-         call alloc_z(wk3, sp)
-         call transpose_y_to_z(wk2b, wk3, sp)
-#endif
+         if (inplace) then
+            call transpose_y_to_z(wk2_r2c, out_c, sp)
+         else
+            call alloc_z(wk3, sp)
+            call transpose_y_to_z(wk2b, wk3, sp)
+         end if
 
          ! ===== 1D FFTs in Z =====
          !       status = DftiComputeForward(c2c_z2, wk3(:,1,1), out_c(:,1,1))
-#ifdef OVERWRITE
-         status = wrapper_c2c_inplace(c2c_z2, out_c, isign)
-#else
-         status = wrapper_c2c(c2c_z2, wk3, out_c, isign)
-#endif
+         if (inplace) then
+            status = wrapper_c2c_inplace(c2c_z2, out_c, isign)
+         else
+            status = wrapper_c2c(c2c_z2, wk3, out_c, isign)
+         end if
          if (status /= 0) call decomp_2d_abort(__FILE__, __LINE__, status, "wrapper_c2c")
 
       else if (format == PHYSICAL_IN_Z) then
@@ -564,47 +638,44 @@ module decomp_2d_fft
          call transpose_z_to_y(wk13, wk2_r2c, sp)
 
          ! ===== 1D FFTs in Y =====
-#ifdef OVERWRITE
-         do k = 1, sp%ysz(3)
-            status = wrapper_c2c_inplace(c2c_y2, wk2_r2c(:, :, k), isign)
-            if (status /= 0) call decomp_2d_abort(__FILE__, __LINE__, status, "wrapper_c2c")
-         end do
-#else
-         call alloc_y(wk2b, sp)
-         do k = 1, sp%ysz(3)
-            !          status = DftiComputeForward(c2c_y2, wk2(:,1,k), wk2b(:,1,k))
-            status = wrapper_c2c(c2c_y2, wk2_r2c(:, :, k), wk2b(1, 1, k), isign)
-            if (status /= 0) call decomp_2d_abort(__FILE__, __LINE__, status, "wrapper_c2c")
-         end do
-#endif
+         if (inplace) then
+            do k = 1, sp%ysz(3)
+               status = wrapper_c2c_inplace(c2c_y2, wk2_r2c(:, :, k), isign)
+               if (status /= 0) call decomp_2d_abort(__FILE__, __LINE__, status, "wrapper_c2c")
+            end do
+         else
+            call alloc_y(wk2b, sp)
+            do k = 1, sp%ysz(3)
+               !          status = DftiComputeForward(c2c_y2, wk2(:,1,k), wk2b(:,1,k))
+               status = wrapper_c2c(c2c_y2, wk2_r2c(:, :, k), wk2b(1, 1, k), isign)
+               if (status /= 0) call decomp_2d_abort(__FILE__, __LINE__, status, "wrapper_c2c")
+            end do
+         end if
 
          ! ===== Swap Y --> X =====
-#ifdef OVERWRITE
-         call transpose_y_to_x(wk2_r2c, out_c, sp)
-#else
-         call alloc_x(wk3, sp)
-         call transpose_y_to_x(wk2b, wk3, sp)
-#endif
+         if (inplace) then
+            call transpose_y_to_x(wk2_r2c, out_c, sp)
+         else
+            call alloc_x(wk3, sp)
+            call transpose_y_to_x(wk2b, wk3, sp)
+         end if
 
          ! ===== 1D FFTs in X =====
          !       status = DftiComputeForward(c2c_x2, wk3(:,1,1), out_c(:,1,1))
-#ifdef OVERWRITE
-         status = wrapper_c2c_inplace(c2c_x2, out_c, isign)
-#else
-         status = wrapper_c2c(c2c_x2, wk3, out_c, isign)
-#endif
+         if (inplace) then
+            status = wrapper_c2c_inplace(c2c_x2, out_c, isign)
+         else
+            status = wrapper_c2c(c2c_x2, wk3, out_c, isign)
+         end if
          if (status /= 0) call decomp_2d_abort(__FILE__, __LINE__, status, "wrapper_c2c")
 
       end if
 
       ! Free memory
-#ifndef OVERWRITE
-      deallocate (wk2b, wk3)
-#endif
+      if (allocated(wk2b)) deallocate (wk2b)
+      if (allocated(wk3)) deallocate (wk3)
 
-#ifdef PROFILER
       if (decomp_profiler_fft) call decomp_profiler_end("fft_r2c")
-#endif
 
       return
    end subroutine fft_3d_r2c
@@ -616,60 +687,58 @@ module decomp_2d_fft
 
       implicit none
 
+      ! Arguments
       complex(mytype), dimension(:, :, :), intent(IN) :: in_c
       real(mytype), dimension(:, :, :), intent(OUT) :: out_r
 
-#ifndef OVERWRITE
+      ! Local variables
       complex(mytype), allocatable, dimension(:, :, :) :: wk1, wk2b
-#endif
       integer :: k, status, isign
 
-#ifdef PROFILER
       if (decomp_profiler_fft) call decomp_profiler_start("fft_c2r")
-#endif
 
       isign = DECOMP_2D_FFT_BACKWARD
 
       if (format == PHYSICAL_IN_X) then
 
          ! ===== 1D FFTs in Z =====
-#ifdef OVERWRITE
-         status = wrapper_c2c_inplace(c2c_z2, in_c, isign)
-#else
-         call alloc_z(wk1, sp)
-         !       status = DftiComputeBackward(c2c_z2, in_c(:,1,1), wk1(:,1,1))
-         status = wrapper_c2c(c2c_z2, in_c, wk1, isign)
-#endif
+         if (inplace) then
+            status = wrapper_c2c_inplace(c2c_z2, in_c, isign)
+         else
+            call alloc_z(wk1, sp)
+            !       status = DftiComputeBackward(c2c_z2, in_c(:,1,1), wk1(:,1,1))
+            status = wrapper_c2c(c2c_z2, in_c, wk1, isign)
+         end if
          if (status /= 0) call decomp_2d_abort(__FILE__, __LINE__, status, "wrapper_c2c")
 
          ! ===== Swap Z --> Y =====
-#ifdef OVERWRITE
-         call transpose_z_to_y(in_c, wk2_r2c, sp)
-#else
-         call transpose_z_to_y(wk1, wk2_r2c, sp)
-#endif
+         if (inplace) then
+            call transpose_z_to_y(in_c, wk2_r2c, sp)
+         else
+            call transpose_z_to_y(wk1, wk2_r2c, sp)
+         end if
 
          ! ===== 1D FFTs in Y =====
-#ifdef OVERWRITE
-         do k = 1, sp%ysz(3)
-            status = wrapper_c2c_inplace(c2c_y2, wk2_r2c(:, :, k), isign)
-            if (status /= 0) call decomp_2d_abort(__FILE__, __LINE__, status, "wrapper_c2c")
-         end do
-#else
-         call alloc_y(wk2b, sp)
-         do k = 1, sp%ysz(3)
-            !          status = DftiComputeBackward(c2c_y2, wk2(:,1,k), wk2b(:,1,k))
-            status = wrapper_c2c(c2c_y2, wk2_r2c(:, :, k), wk2b(1, 1, k), isign)
-            if (status /= 0) call decomp_2d_abort(__FILE__, __LINE__, status, "wrapper_c2c")
-         end do
-#endif
+         if (inplace) then
+            do k = 1, sp%ysz(3)
+               status = wrapper_c2c_inplace(c2c_y2, wk2_r2c(:, :, k), isign)
+               if (status /= 0) call decomp_2d_abort(__FILE__, __LINE__, status, "wrapper_c2c")
+            end do
+         else
+            call alloc_y(wk2b, sp)
+            do k = 1, sp%ysz(3)
+               !          status = DftiComputeBackward(c2c_y2, wk2(:,1,k), wk2b(:,1,k))
+               status = wrapper_c2c(c2c_y2, wk2_r2c(:, :, k), wk2b(1, 1, k), isign)
+               if (status /= 0) call decomp_2d_abort(__FILE__, __LINE__, status, "wrapper_c2c")
+            end do
+         end if
 
          ! ===== Swap Y --> X =====
-#ifdef OVERWRITE
-         call transpose_y_to_x(wk2_r2c, wk13, sp)
-#else
-         call transpose_y_to_x(wk2b, wk13, sp)
-#endif
+         if (inplace) then
+            call transpose_y_to_x(wk2_r2c, wk13, sp)
+         else
+            call transpose_y_to_x(wk2b, wk13, sp)
+         end if
 
          ! ===== 1D FFTs in X =====
          !       status = DftiComputeBackward(c2r_x, wk3(:,1,1), out_r(:,1,1))
@@ -679,43 +748,43 @@ module decomp_2d_fft
       else if (format == PHYSICAL_IN_Z) then
 
          ! ===== 1D FFTs in X =====
-#ifdef OVERWRITE
-         status = wrapper_c2c_inplace(c2c_x2, in_c, isign)
-#else
-         call alloc_x(wk1, sp)
-         !       status = DftiComputeBackward(c2c_x2, in_c(:,1,1), wk1(:,1,1))
-         status = wrapper_c2c(c2c_x2, in_c, wk1, isign)
-#endif
+         if (inplace) then
+            status = wrapper_c2c_inplace(c2c_x2, in_c, isign)
+         else
+            call alloc_x(wk1, sp)
+            !       status = DftiComputeBackward(c2c_x2, in_c(:,1,1), wk1(:,1,1))
+            status = wrapper_c2c(c2c_x2, in_c, wk1, isign)
+         end if
          if (status /= 0) call decomp_2d_abort(__FILE__, __LINE__, status, "wrapper_c2c")
 
          ! ===== Swap X --> Y =====
-#ifdef OVERWRITE
-         call transpose_x_to_y(in_c, wk2_r2c, sp)
-#else
-         call transpose_x_to_y(wk1, wk2_r2c, sp)
-#endif
+         if (inplace) then
+            call transpose_x_to_y(in_c, wk2_r2c, sp)
+         else
+            call transpose_x_to_y(wk1, wk2_r2c, sp)
+         end if
 
          ! ===== 1D FFTs in Y =====
-#ifdef OVERWRITE
-         do k = 1, sp%ysz(3)
-            status = wrapper_c2c_inplace(c2c_y2, wk2_r2c(:, :, k), isign)
-            if (status /= 0) call decomp_2d_abort(__FILE__, __LINE__, status, "wrapper_c2c")
-         end do
-#else
-         call alloc_y(wk2b, sp)
-         do k = 1, sp%ysz(3)
-            !          status = DftiComputeBackward(c2c_y2, wk2(:,1,k), wk2b(:,1,k))
-            status = wrapper_c2c(c2c_y2, wk2_r2c(:, :, k), wk2b(1, 1, k), isign)
-            if (status /= 0) call decomp_2d_abort(__FILE__, __LINE__, status, "wrapper_c2c")
-         end do
-#endif
+         if (inplace) then
+            do k = 1, sp%ysz(3)
+               status = wrapper_c2c_inplace(c2c_y2, wk2_r2c(:, :, k), isign)
+               if (status /= 0) call decomp_2d_abort(__FILE__, __LINE__, status, "wrapper_c2c")
+            end do
+         else
+            call alloc_y(wk2b, sp)
+            do k = 1, sp%ysz(3)
+               !          status = DftiComputeBackward(c2c_y2, wk2(:,1,k), wk2b(:,1,k))
+               status = wrapper_c2c(c2c_y2, wk2_r2c(:, :, k), wk2b(1, 1, k), isign)
+               if (status /= 0) call decomp_2d_abort(__FILE__, __LINE__, status, "wrapper_c2c")
+            end do
+         end if
 
          ! ===== Swap Y --> Z =====
-#ifdef OVERWRITE
-         call transpose_y_to_z(wk2_r2c, wk13, sp)
-#else
-         call transpose_y_to_z(wk2b, wk13, sp)
-#endif
+         if (inplace) then
+            call transpose_y_to_z(wk2_r2c, wk13, sp)
+         else
+            call transpose_y_to_z(wk2b, wk13, sp)
+         end if
 
          ! ===== 1D FFTs in Z =====
          !       status = DftiComputeBackward(c2r_z, wk3(:,1,1), out_r(:,1,1))
@@ -725,18 +794,14 @@ module decomp_2d_fft
       end if
 
       ! Free memory
-#ifndef OVERWRITE
-      deallocate (wk1, wk2b)
-#endif
+      if (allocated(wk1)) deallocate (wk1)
+      if (allocated(wk2b)) deallocate (wk2b)
 
-#ifdef PROFILER
       if (decomp_profiler_fft) call decomp_profiler_end("fft_c2r")
-#endif
 
-      return
    end subroutine fft_3d_c2r
 
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
    ! Wrapper functions so that one can pass 3D arrays to DftiCompute
    !  -- MKL accepts only 1D arrays as input/output for its multi-
    !     dimensional FFTs.
@@ -748,7 +813,7 @@ module decomp_2d_fft
    !     rather than referring to the same memory address, i.e. 3D array
    !     A and 1D array A(:,1,1) may refer to different memory location.
    !  -- Using the following wrappers is safe and standard conforming.
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
    integer function wrapper_c2c(desc, in, out, isign)
 
@@ -766,10 +831,8 @@ module decomp_2d_fft
 
       wrapper_c2c = status
 
-      return
    end function wrapper_c2c
 
-#ifdef OVERWRITE
    integer function wrapper_c2c_inplace(desc, inout, isign)
 
       implicit none
@@ -786,9 +849,7 @@ module decomp_2d_fft
 
       wrapper_c2c_inplace = status
 
-      return
    end function wrapper_c2c_inplace
-#endif
 
    integer function wrapper_r2c(desc, in, out)
 
@@ -800,7 +861,6 @@ module decomp_2d_fft
 
       wrapper_r2c = DftiComputeForward(desc, in, out)
 
-      return
    end function wrapper_r2c
 
    integer function wrapper_c2r(desc, in, out)
@@ -813,7 +873,6 @@ module decomp_2d_fft
 
       wrapper_c2r = DftiComputeBackward(desc, in, out)
 
-      return
    end function wrapper_c2r
 
 end module decomp_2d_fft

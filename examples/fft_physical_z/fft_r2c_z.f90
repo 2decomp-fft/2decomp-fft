@@ -27,7 +27,7 @@ program fft_r2c_z
    complex(mytype), allocatable, dimension(:, :, :) :: out
    real(mytype), allocatable, dimension(:, :, :) :: in_r
 
-   real(mytype) :: dr, error, err_all
+   real(mytype) :: dr, error
    integer :: ierror, i, j, k, m
    integer :: zst1, zst2, zst3
    integer :: zen1, zen2, zen3
@@ -142,19 +142,27 @@ program fft_r2c_z
    end do
    !$acc end loop
 
-   call MPI_ALLREDUCE(error, err_all, 1, real_type, MPI_SUM, MPI_COMM_WORLD, ierror)
-   err_all = err_all / (real(nx, mytype) * real(ny, mytype) * real(nz, mytype))
+   call MPI_ALLREDUCE(MPI_IN_PLACE, error, 1, real_type, MPI_SUM, MPI_COMM_WORLD, ierror)
+   error = error / (real(nx, mytype) * real(ny, mytype) * real(nz, mytype))
+
+   ! Abort if the error is too high
+   ! A large enough value is needed for the generic backend
+   if (error > epsilon(error) * 50 * ntest) then
+      if (nrank == 0) write (*, *) 'error / mesh point: ', error
+      call decomp_2d_abort(__FILE__, __LINE__, int(log10(error)), "r2c X test")
+   end if
 
    if (nrank == 0) then
-      write (*, *) 'error / mesh point: ', err_all
-      write (*, *) 'time (sec): ', t1, t3
+      write (*, *) 'error / mesh point: ', error
+      write (*, *) 'Avg time (sec): ', t1, t3
       write (*, *) '   '
       write (*, *) 'fft_r2c_z completed '
       write (*, *) '   '
    end if
    !$acc end data
 
-   deallocate (in_r, out)
+   deallocate (in_r)
+   deallocate (out)
    nullify (ph)
    nullify (sp)
    call decomp_2d_fft_finalize

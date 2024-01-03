@@ -9,6 +9,7 @@ program visu
    use decomp_2d
    use decomp_2d_constants
    use decomp_2d_io
+   use decomp_2d_io_object
    use decomp_2d_mpi
    use decomp_2d_testing
 
@@ -60,10 +61,9 @@ contains
       call decomp_2d_testing_log()
 
       call decomp_2d_io_init()
-      call decomp_2d_init_io(io_name)
-      call decomp_2d_register_variable(io_name, "u1.dat", 1, 0, output2D, mytype)
-      call decomp_2d_register_variable(io_name, "u2.dat", 2, 0, output2D, mytype)
-      call decomp_2d_register_variable(io_name, "u3.dat", 3, 0, output2D, mytype)
+      call decomp_2d_io_register_var3d("u1.dat", 1, real_type)
+      call decomp_2d_io_register_var3d("u2.dat", 2, real_type)
+      call decomp_2d_io_register_var3d("u3.dat", 3, real_type)
 
    end subroutine init_example
 
@@ -125,6 +125,8 @@ contains
 
    subroutine write_data()
 
+      type(d2d_io) :: io
+
     !! Write arrays + visu data from orientations 1, 2 and 3
 #ifndef ADIOS2
       if (nrank == 0) then
@@ -137,17 +139,13 @@ contains
 
       ! Standard I/O pattern - file per field
 #ifdef ADIOS2
-      call decomp_2d_open_io(io_name, "out", decomp_2d_write_mode)
-      call decomp_2d_start_io(io_name, "out")
+      call io%open_start("out", decomp_2d_write_mode)
 #endif
-
-      call decomp_2d_write_one(1, u1, 'out', 'u1.dat', 0, io_name)
-      call decomp_2d_write_one(2, u2, 'out', 'u2.dat', 0, io_name)
-      call decomp_2d_write_one(3, u3, 'out', 'u3.dat', 0, io_name)
-
+      call decomp_2d_write_one(1, u1, 'u1.dat', opt_dirname='out', opt_io=io)
+      call decomp_2d_write_one(2, u2, 'u2.dat', opt_dirname='out', opt_io=io)
+      call decomp_2d_write_one(3, u3, 'u3.dat', opt_dirname='out', opt_io=io)
 #ifdef ADIOS2
-      call decomp_2d_end_io(io_name, "out")
-      call decomp_2d_close_io(io_name, "out")
+      call io%end_close
 #endif
 
    end subroutine write_data
@@ -248,6 +246,7 @@ contains
 
       integer :: ierr
 
+      call decomp_2d_io_fin
       call decomp_2d_finalize
       call MPI_FINALIZE(ierr)
 

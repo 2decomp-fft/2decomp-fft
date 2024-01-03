@@ -23,10 +23,8 @@ contains
       ! Local variable
       integer :: io_unit
 
-      if ((decomp_log == D2D_LOG_STDOUT .and. nrank == 0) .or. &
-          (decomp_log == D2D_LOG_TOFILE .and. nrank == 0) .or. &
-          (decomp_log == D2D_LOG_TOFILE_FULL)) then
-         io_unit = d2d_listing_get_unit()
+      if (d2d_log_is_active()) then
+         io_unit = d2d_log_get_unit()
          write (io_unit, *) ''
          write (io_unit, *) '***** Using the '//trim(backend)//' FFT engine *****'
          write (io_unit, *) ''
@@ -43,19 +41,23 @@ contains
          call decomp_info_print(decomp_2d_fft_get_ph(), io_unit, "ph")
          call decomp_info_print(decomp_2d_fft_get_sp(), io_unit, "sp")
          write (io_unit, *) ''
-#ifdef OVERWRITE
-         if (D2D_FFT_BACKEND == D2D_FFT_BACKEND_GENERIC) then
-            write (io_unit, *) 'OVERWRITE is supported but transforms are not performed in-place'
-            write (io_unit, *) ''
-         else if (D2D_FFT_BACKEND == D2D_FFT_BACKEND_CUFFT .or. &
-                  D2D_FFT_BACKEND == D2D_FFT_BACKEND_FFTW3 .or. &
-                  D2D_FFT_BACKEND == D2D_FFT_BACKEND_FFTW3_F03 .or. &
-                  D2D_FFT_BACKEND == D2D_FFT_BACKEND_MKL) then
-            write (io_unit, *) 'OVERWRITE is supported but in-place transforms is limited to complex transforms'
-            write (io_unit, *) ''
+         if (inplace) then
+            if (D2D_FFT_BACKEND == D2D_FFT_BACKEND_GENERIC) then
+               write (io_unit, *) 'OVERWRITE is supported but transforms are not performed in-place'
+               write (io_unit, *) ''
+            else if (D2D_FFT_BACKEND == D2D_FFT_BACKEND_CUFFT .or. &
+                     D2D_FFT_BACKEND == D2D_FFT_BACKEND_FFTW3 .or. &
+                     D2D_FFT_BACKEND == D2D_FFT_BACKEND_MKL) then
+               write (io_unit, *) 'OVERWRITE is supported but in-place FFT is limited to complex FFT'
+               write (io_unit, *) ''
+            else if (D2D_FFT_BACKEND == D2D_FFT_BACKEND_FFTW3_F03) then
+               write (io_unit, *) 'OVERWRITE is supported for all transforms'
+               if (inplace_r2c) write (io_unit, *) '   in-place r2c transform'
+               if (inplace_c2r) write (io_unit, *) '   in-place c2r transform'
+               write (io_unit, *) ''
+            end if
          end if
-#endif
-         call d2d_listing_close_unit(io_unit)
+         call d2d_log_close_unit(io_unit)
       end if
 
    end subroutine decomp_2d_fft_log

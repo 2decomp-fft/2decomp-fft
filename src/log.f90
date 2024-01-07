@@ -224,11 +224,6 @@ contains
       write (io_unit, *) '==========================================================='
       ! Info about each decomp_info object
       call decomp_info_print(decomp_main, io_unit, "decomp_main")
-      call decomp_info_print(phG, io_unit, "phG")
-      call decomp_info_print(ph1, io_unit, "ph1")
-      call decomp_info_print(ph2, io_unit, "ph2")
-      call decomp_info_print(ph3, io_unit, "ph3")
-      call decomp_info_print(ph4, io_unit, "ph4")
       write (io_unit, *) '==========================================================='
       write (io_unit, *) '==========================================================='
 

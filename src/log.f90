@@ -1,5 +1,6 @@
 !! SPDX-License-Identifier: BSD-3-Clause
 
+! This file contains routines easing the output to stdout / log files
 submodule(decomp_2d) d2d_log_submodule
 
    use decomp_2d_constants

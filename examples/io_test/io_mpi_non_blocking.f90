@@ -8,6 +8,7 @@ program io_test
    use decomp_2d_io_family
    use decomp_2d_io_object
    use decomp_2d_mpi
+   use decomp_2d_profiler
    use decomp_2d_testing
 #if defined(_GPU)
    use cudafor
@@ -145,11 +146,17 @@ program io_test
    !
 
    call MPI_Barrier(MPI_COMM_WORLD, ierr)
+   if (decomp_profiler_io) call decomp_profiler_start("io_wait")
    call decomp_2d_mpi_wait(req1)
+   if (decomp_profiler_io) call decomp_profiler_end("io_wait")
    call io1%end_close
+   if (decomp_profiler_io) call decomp_profiler_start("io_wait")
    call decomp_2d_mpi_wait(req2)
+   if (decomp_profiler_io) call decomp_profiler_end("io_wait")
    call io2%end_close
+   if (decomp_profiler_io) call decomp_profiler_start("io_wait")
    call decomp_2d_mpi_wait(req3)
+   if (decomp_profiler_io) call decomp_profiler_end("io_wait")
    call io3%end_close
 
    ! read back to different arrays

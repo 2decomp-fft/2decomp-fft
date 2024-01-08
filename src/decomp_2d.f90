@@ -1073,10 +1073,13 @@ contains
          sz(i) = size1
          en(i) = en(i - 1) + size1
       end do
-      en(proc - 1) = data1
-      sz(proc - 1) = data1 - st(proc - 1) + 1
 
-      return
+      ! Safety checks
+      if (en(proc - 1) /= data1) &
+         call decomp_2d_abort(__FILE__, __LINE__, en(proc - 1), "Invalid distribution.")
+      if (sz(proc - 1) /= (data1 - st(proc - 1) + 1)) &
+         call decomp_2d_abort(__FILE__, __LINE__, sz(proc - 1), "Invalid distribution.")
+
    end subroutine distribute
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!

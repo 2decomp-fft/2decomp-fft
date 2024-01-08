@@ -27,6 +27,7 @@ _e.g._ vX.Y - YYYY-MM-DD and a new "Unreleased" section started above.
 ### Deprecated
 ### Removed
 
+- Removed unused `decomp_info` objects `phg`, `ph1`, `ph2`, `ph3` and `ph4`. See [PR #315](https://github.com/2decomp-fft/2decomp-fft/pull/315).
 - Remoeve unused variable `real2_type`. See [PR #314](https://github.com/2decomp-fft/2decomp-fft/pull/314).
 
 ## v2.0.1

@@ -211,7 +211,7 @@ contains
          do j = zstart(2), zend(2)
             do i = zstart(1), zend(1)
                if (abs((u3(i, j, k) - u3b(i, j, k))) > eps) then
-                  print *, i, j, k, u3(i,j,k), u3b(i,j,k)
+                  print *, i, j, k, u3(i, j, k), u3b(i, j, k)
                   call decomp_2d_abort(3, "z_plane")
                end if
             end do

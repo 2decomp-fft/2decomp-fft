@@ -27,6 +27,8 @@ _e.g._ vX.Y - YYYY-MM-DD and a new "Unreleased" section started above.
 ### Deprecated
 ### Removed
 
+- Remoeve unused variable `real2_type`. See [PR #314](https://github.com/2decomp-fft/2decomp-fft/pull/314).
+
 ## v2.0.1
 
 - See JOSS paper ([10.21105/joss.05813](https://doi.org/10.21105/joss.05813))

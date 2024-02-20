@@ -6,16 +6,6 @@ project(decomp2d
 set(version 2.0.0)
 enable_testing()
 
-option(DOUBLE_PRECISION "Build 2decomp_fft with double precision" ON)
-if (DOUBLE_PRECISION)
-  add_definitions("-DDOUBLE_PREC")
-endif()
-
-option(SINGLE_PRECISION_OUTPUT "Build 2decomp_fft with output in single precision" OFF)
-if (SINGLE_PRECISION_OUTPUT)
-  add_definitions("-DSAVE_SINGLE")
-endif()
-
 set(BUILD_TARGET "mpi" CACHE STRING "Target for acceleration (mpi (default) or gpu)")
 set_property(CACHE BUILD_TARGET PROPERTY STRINGS mpi gpu)
 

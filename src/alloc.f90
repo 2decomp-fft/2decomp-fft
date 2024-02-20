@@ -18,7 +18,7 @@
 
      implicit none
 
-     real(mytype), allocatable, dimension(:,:,:) :: var
+     real(mytype), allocatable, dimension(:, :, :) :: var
      logical, intent(IN), optional :: opt_global
      integer, dimension(3), intent(IN), optional :: opt_xlevel
      integer, dimension(3) :: xlevel
@@ -60,15 +60,15 @@
      end if
 
      if (global) then
-        allocate(var(decomp%xst(1)-xlevel(1):decomp%xen(1)+xlevel(1), &
-             decomp%xst(2)-xlevel(2):decomp%xen(2)+xlevel(2), &
-             decomp%xst(3)-xlevel(3):decomp%xen(3)+xlevel(3)), &
-             stat=alloc_stat)
+        allocate (var(decomp%xst(1) - xlevel(1):decomp%xen(1) + xlevel(1), &
+                      decomp%xst(2) - xlevel(2):decomp%xen(2) + xlevel(2), &
+                      decomp%xst(3) - xlevel(3):decomp%xen(3) + xlevel(3)), &
+                  stat=alloc_stat)
      else
-        allocate(var(1-xlevel(1):decomp%xsz(1)+xlevel(1), &
-             1-xlevel(2):decomp%xsz(2)+xlevel(2), &
-             1-xlevel(3):decomp%xsz(3)+xlevel(3)), &
-             stat=alloc_stat)
+        allocate (var(1 - xlevel(1):decomp%xsz(1) + xlevel(1), &
+                      1 - xlevel(2):decomp%xsz(2) + xlevel(2), &
+                      1 - xlevel(3):decomp%xsz(3) + xlevel(3)), &
+                  stat=alloc_stat)
      end if
 
      if (alloc_stat /= 0) then
@@ -85,18 +85,18 @@
 
      implicit none
 
-    complex(mytype), allocatable, dimension(:,:,:) :: var
-    logical, intent(IN), optional :: opt_global
-    integer, dimension(3), intent(IN), optional :: opt_xlevel
-    integer, dimension(3) :: xlevel
+     complex(mytype), allocatable, dimension(:, :, :) :: var
+     logical, intent(IN), optional :: opt_global
+     integer, dimension(3), intent(IN), optional :: opt_xlevel
+     integer, dimension(3) :: xlevel
 
-    if (present(opt_xlevel)) then
-       xlevel = opt_xlevel
-    else
-       xlevel = decomp_main%xlevel
-    end if
+     if (present(opt_xlevel)) then
+        xlevel = opt_xlevel
+     else
+        xlevel = decomp_main%xlevel
+     end if
 
-    call alloc_x(var, decomp_main, xlevel, opt_global)
+     call alloc_x(var, decomp_main, xlevel, opt_global)
 
   end subroutine alloc_x_complex_short
 
@@ -126,15 +126,15 @@
      end if
 
      if (global) then
-        allocate(var(decomp%xst(1)-xlevel(1):decomp%xen(1)+xlevel(1), &
-             decomp%xst(2)-xlevel(2):decomp%xen(2)+xlevel(2), &
-             decomp%xst(3)-xlevel(3):decomp%xen(3)+xlevel(3)), &
-             stat=alloc_stat)
+        allocate (var(decomp%xst(1) - xlevel(1):decomp%xen(1) + xlevel(1), &
+                      decomp%xst(2) - xlevel(2):decomp%xen(2) + xlevel(2), &
+                      decomp%xst(3) - xlevel(3):decomp%xen(3) + xlevel(3)), &
+                  stat=alloc_stat)
      else
-        allocate(var(1-xlevel(1):decomp%xsz(1)+xlevel(1), &
-             1-xlevel(2):decomp%xsz(2)+xlevel(2), &
-             1-xlevel(3):decomp%xsz(3)+xlevel(3)), &
-             stat=alloc_stat)
+        allocate (var(1 - xlevel(1):decomp%xsz(1) + xlevel(1), &
+                      1 - xlevel(2):decomp%xsz(2) + xlevel(2), &
+                      1 - xlevel(3):decomp%xsz(3) + xlevel(3)), &
+                  stat=alloc_stat)
      end if
 
      if (alloc_stat /= 0) then
@@ -151,7 +151,7 @@
 
      implicit none
 
-     real(mytype), allocatable, dimension(:,:,:) :: var
+     real(mytype), allocatable, dimension(:, :, :) :: var
      logical, intent(IN), optional :: opt_global
      integer, dimension(3), intent(IN), optional :: opt_ylevel
      integer, dimension(3) :: ylevel
@@ -192,15 +192,15 @@
      end if
 
      if (global) then
-        allocate(var(decomp%yst(1)-ylevel(1):decomp%yen(1)+ylevel(1), &
-             decomp%yst(2)-ylevel(2):decomp%yen(2)+ylevel(2), &
-             decomp%yst(3)-ylevel(3):decomp%yen(3)+ylevel(3)), &
-             stat=alloc_stat)
+        allocate (var(decomp%yst(1) - ylevel(1):decomp%yen(1) + ylevel(1), &
+                      decomp%yst(2) - ylevel(2):decomp%yen(2) + ylevel(2), &
+                      decomp%yst(3) - ylevel(3):decomp%yen(3) + ylevel(3)), &
+                  stat=alloc_stat)
      else
-        allocate(var(1-ylevel(1):decomp%ysz(1)+ylevel(1), &
-             1-ylevel(2):decomp%ysz(2)+ylevel(2), &
-             1-ylevel(3):decomp%ysz(3)+ylevel(3)), &
-             stat=alloc_stat)
+        allocate (var(1 - ylevel(1):decomp%ysz(1) + ylevel(1), &
+                      1 - ylevel(2):decomp%ysz(2) + ylevel(2), &
+                      1 - ylevel(3):decomp%ysz(3) + ylevel(3)), &
+                  stat=alloc_stat)
      end if
 
      if (alloc_stat /= 0) then
@@ -217,7 +217,7 @@
 
      implicit none
 
-     complex(mytype), allocatable, dimension(:,:,:) :: var
+     complex(mytype), allocatable, dimension(:, :, :) :: var
      logical, intent(IN), optional :: opt_global
      integer, dimension(3), intent(IN), optional :: opt_ylevel
      integer, dimension(3) :: ylevel
@@ -258,15 +258,15 @@
      end if
 
      if (global) then
-        allocate(var(decomp%yst(1)-ylevel(1):decomp%yen(1)+ylevel(1), &
-             decomp%yst(2)-ylevel(2):decomp%yen(2)+ylevel(2), &
-             decomp%yst(3)-ylevel(3):decomp%yen(3)+ylevel(3)), &
-             stat=alloc_stat)
+        allocate (var(decomp%yst(1) - ylevel(1):decomp%yen(1) + ylevel(1), &
+                      decomp%yst(2) - ylevel(2):decomp%yen(2) + ylevel(2), &
+                      decomp%yst(3) - ylevel(3):decomp%yen(3) + ylevel(3)), &
+                  stat=alloc_stat)
      else
-        allocate(var(1-ylevel(1):decomp%ysz(1)+ylevel(1), &
-             1-ylevel(2):decomp%ysz(2)+ylevel(2), &
-             1-ylevel(3):decomp%ysz(3)+ylevel(3)), &
-             stat=alloc_stat)
+        allocate (var(1 - ylevel(1):decomp%ysz(1) + ylevel(1), &
+                      1 - ylevel(2):decomp%ysz(2) + ylevel(2), &
+                      1 - ylevel(3):decomp%ysz(3) + ylevel(3)), &
+                  stat=alloc_stat)
      end if
 
      if (alloc_stat /= 0) then
@@ -283,7 +283,7 @@
 
      implicit none
 
-     real(mytype), allocatable, dimension(:,:,:) :: var
+     real(mytype), allocatable, dimension(:, :, :) :: var
      logical, intent(IN), optional :: opt_global
      integer, dimension(3), intent(IN), optional :: opt_zlevel
      integer, dimension(3) :: zlevel
@@ -324,21 +324,21 @@
      end if
 
      if (global) then
-        allocate(var(decomp%zst(1)-zlevel(1):decomp%zen(1)+zlevel(1), &
-             decomp%zst(2)-zlevel(2):decomp%zen(2)+zlevel(2), &
-             decomp%zst(3)-zlevel(3):decomp%zen(3)+zlevel(3)), &
-             stat=alloc_stat)
+        allocate (var(decomp%zst(1) - zlevel(1):decomp%zen(1) + zlevel(1), &
+                      decomp%zst(2) - zlevel(2):decomp%zen(2) + zlevel(2), &
+                      decomp%zst(3) - zlevel(3):decomp%zen(3) + zlevel(3)), &
+                  stat=alloc_stat)
      else
-        allocate(var(1-zlevel(1):decomp%zsz(1)+zlevel(1), &
-             1-zlevel(2):decomp%zsz(2)+zlevel(2), &
-             1-zlevel(3):decomp%zsz(3)+zlevel(3)), &
-             stat=alloc_stat)
+        allocate (var(1 - zlevel(1):decomp%zsz(1) + zlevel(1), &
+                      1 - zlevel(2):decomp%zsz(2) + zlevel(2), &
+                      1 - zlevel(3):decomp%zsz(3) + zlevel(3)), &
+                  stat=alloc_stat)
      end if
 
      if (alloc_stat /= 0) then
         errorcode = 8
         call decomp_2d_abort(errorcode, &
-             'Memory allocation failed when creating new arrays')
+                             'Memory allocation failed when creating new arrays')
      end if
 
      return
@@ -349,7 +349,7 @@
 
      implicit none
 
-     complex(mytype), allocatable, dimension(:,:,:) :: var
+     complex(mytype), allocatable, dimension(:, :, :) :: var
      logical, intent(IN), optional :: opt_global
      integer, dimension(3), intent(IN), optional :: opt_zlevel
      integer, dimension(3) :: zlevel
@@ -362,9 +362,9 @@
 
      call alloc_z(var, decomp_main, zlevel, opt_global)
 
-   end subroutine alloc_z_complex_short
+  end subroutine alloc_z_complex_short
 
-   subroutine alloc_z_complex(var, decomp, opt_zlevel, opt_global)
+  subroutine alloc_z_complex(var, decomp, opt_zlevel, opt_global)
 
      implicit none
 
@@ -390,21 +390,21 @@
      end if
 
      if (global) then
-        allocate(var(decomp%zst(1)-zlevel(1):decomp%zen(1)+zlevel(1), &
-             decomp%zst(2)-zlevel(2):decomp%zen(2)+zlevel(2), &
-             decomp%zst(3)-zlevel(3):decomp%zen(3)+zlevel(3)), &
-             stat=alloc_stat)
+        allocate (var(decomp%zst(1) - zlevel(1):decomp%zen(1) + zlevel(1), &
+                      decomp%zst(2) - zlevel(2):decomp%zen(2) + zlevel(2), &
+                      decomp%zst(3) - zlevel(3):decomp%zen(3) + zlevel(3)), &
+                  stat=alloc_stat)
      else
-        allocate(var(1-zlevel(1):decomp%zsz(1)+zlevel(1), &
-             1-zlevel(2):decomp%zsz(2)+zlevel(2), &
-             1-zlevel(3):decomp%zsz(3)+zlevel(3)), &
-             stat=alloc_stat)
+        allocate (var(1 - zlevel(1):decomp%zsz(1) + zlevel(1), &
+                      1 - zlevel(2):decomp%zsz(2) + zlevel(2), &
+                      1 - zlevel(3):decomp%zsz(3) + zlevel(3)), &
+                  stat=alloc_stat)
      end if
 
      if (alloc_stat /= 0) then
         errorcode = 8
         call decomp_2d_abort(errorcode, &
-             'Memory allocation failed when creating new arrays')
+                             'Memory allocation failed when creating new arrays')
      end if
 
      return

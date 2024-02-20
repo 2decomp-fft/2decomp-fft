@@ -107,8 +107,8 @@ module decomp_2d
       logical :: even
 #endif
 
-     ! number of halo cells in each direction (index 1,2,3), for each pencil (x,y,z)
-     integer, dimension(3) :: xlevel, ylevel, zlevel
+      ! number of halo cells in each direction (index 1,2,3), for each pencil (x,y,z)
+      integer, dimension(3) :: xlevel, ylevel, zlevel
 
    END TYPE DECOMP_INFO
 

@@ -175,9 +175,9 @@
     end if
 
     if (ipencil == 1) then
-      call exchange_halo_x(out,opt_xlevel=(/0,level,level/))
+       call exchange_halo_x(out, opt_xlevel=(/0, level, level/))
     else if (ipencil == 2) then
-      call exchange_halo_y(out,opt_ylevel=(/level,0,level/))
+       call exchange_halo_y(out, opt_ylevel=(/level, 0, level/))
     else if (ipencil == 3) then
-      call exchange_halo_z(out,opt_zlevel=(/level,level,0/))
+       call exchange_halo_z(out, opt_zlevel=(/level, level, 0/))
     end if

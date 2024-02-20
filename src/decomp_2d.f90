@@ -227,16 +227,22 @@ module decomp_2d
    interface exchange_halo_x
       module procedure exchange_halo_x_real
       module procedure exchange_halo_x_complex
+      module procedure exchange_halo_x_real_short
+      module procedure exchange_halo_x_complex_short
    end interface exchange_halo_x
 
    interface exchange_halo_y
       module procedure exchange_halo_y_real
       module procedure exchange_halo_y_complex
+      module procedure exchange_halo_y_real_short
+      module procedure exchange_halo_y_complex_short
    end interface exchange_halo_y
 
    interface exchange_halo_z
       module procedure exchange_halo_z_real
       module procedure exchange_halo_z_complex
+      module procedure exchange_halo_z_real_short
+      module procedure exchange_halo_z_complex_short
    end interface exchange_halo_z
 
    interface update_halo

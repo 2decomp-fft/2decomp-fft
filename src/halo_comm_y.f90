@@ -12,12 +12,6 @@
 ! This file contain common code to be included by subroutines
 ! 'exchange_halo_y_...' in halo.f90
 
-    if (present(opt_decomp)) then
-       decomp = opt_decomp
-    else
-       decomp = decomp_main
-    end if
-
     if (present(opt_ylevel)) then
        level_x = opt_ylevel(1)
        level_y = opt_ylevel(2)

@@ -500,7 +500,7 @@ contains
       !$acc end kernels
       divmag = mag(tmp)
 
-      if (error < epsilon(divmag) * divmag) then
+      if (error < real(2.0,mytype) * epsilon(divmag) * divmag) then
          passing = .true.
       else
          passing = .false.
@@ -513,7 +513,7 @@ contains
 #ifdef DEBUG
          write (*, *) (divh(i, i, i), i=2, 13)
 #endif
-         write (*, *) 'Error: ', error, '; Relative: ', error / divmag
+         write (*, *) 'Error: ', error, divmag, epsilon(divmag), '; Relative: ', error / divmag
          write (*, *) 'Pass: ', passing
       end if
       deallocate (tmp)

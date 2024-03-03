@@ -431,7 +431,6 @@ contains
          else if (opt_family%type == DECOMP_2D_IO_ADIOS2) then
             fullname = trim(dirname)
          else
-            fullname = ""
             call decomp_2d_abort(__FILE__, __LINE__, opt_family%type, "Invalid value")
          end if
          call writer%open_start(fullname, mode, opt_family)

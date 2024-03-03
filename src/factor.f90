@@ -14,6 +14,8 @@ contains
 
    subroutine findfactor(num, factors, nfact)
 
+      use, intrinsic :: iso_fortran_env, only: real64
+
       implicit none
 
       integer, intent(IN) :: num
@@ -24,7 +26,7 @@ contains
       ! find the factors <= sqrt(num)
       ! Cast the int as double to make sure of the correct result of sqrt
       ! IntelLLVM got an issue with 1.0 but not with 1.d0
-      m = int(sqrt(num * 1.d0))
+      m = int(sqrt(num * 1._real64))
       nfact = 1
       do i = 1, m
          if (num / i * i == num) then

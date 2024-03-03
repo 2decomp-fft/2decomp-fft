@@ -15,7 +15,6 @@ module decomp_2d_constants
 #ifdef DOUBLE_PREC
    integer, parameter, public :: mytype = KIND(0._real64)
    integer, parameter, public :: real_type = MPI_DOUBLE_PRECISION
-   integer, parameter, public :: real2_type = MPI_2DOUBLE_PRECISION
    integer, parameter, public :: complex_type = MPI_DOUBLE_COMPLEX
 #ifdef SAVE_SINGLE
    integer, parameter, public :: mytype_single = KIND(0._real32)
@@ -27,7 +26,6 @@ module decomp_2d_constants
 #else
    integer, parameter, public :: mytype = KIND(0._real32)
    integer, parameter, public :: real_type = MPI_REAL
-   integer, parameter, public :: real2_type = MPI_2REAL
    integer, parameter, public :: complex_type = MPI_COMPLEX
    integer, parameter, public :: mytype_single = KIND(0._real32)
    integer, parameter, public :: real_type_single = MPI_REAL

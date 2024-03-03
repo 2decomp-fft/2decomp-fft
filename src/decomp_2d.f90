@@ -105,9 +105,6 @@ module decomp_2d
 
    ! main (default) decomposition information for global size nx*ny*nz
    TYPE(DECOMP_INFO), target, save, public :: decomp_main
-   ! FIXME The extra decomp_info objects should be defined in the external code, not here
-   !       Currently keeping them to avoid breaking external codes
-   TYPE(DECOMP_INFO), save, public :: phG, ph1, ph2, ph3, ph4
 
    ! staring/ending index and size of data held by current processor
    ! duplicate 'decomp_main', needed by apps to define data structure
@@ -508,6 +505,12 @@ contains
 
       integer, dimension(3) :: skip
       integer :: i
+      logical, save :: first_call = .true.
+
+      if (first_call) then
+         first_call = .false.
+         call decomp_2d_warning(__FILE__, __LINE__, 0, "init_coarser_mesh_stat is deprecated and will be removed")
+      end if
 
       coarse_mesh_starts_from_1 = from1
       iskipS = i_skip
@@ -573,6 +576,12 @@ contains
 
       integer, dimension(3) :: skip
       integer :: i
+      logical, save :: first_call = .true.
+
+      if (first_call) then
+         first_call = .false.
+         call decomp_2d_warning(__FILE__, __LINE__, 0, "init_coarser_mesh_stat is deprecated and will be removed")
+      end if
 
       coarse_mesh_starts_from_1 = from1
       iskipV = i_skip
@@ -638,6 +647,12 @@ contains
 
       integer, dimension(3) :: skip
       integer :: i
+      logical, save :: first_call = .true.
+
+      if (first_call) then
+         first_call = .false.
+         call decomp_2d_warning(__FILE__, __LINE__, 0, "init_coarser_mesh_stat is deprecated and will be removed")
+      end if
 
       coarse_mesh_starts_from_1 = from1
       iskipP = i_skip
@@ -701,6 +716,12 @@ contains
 
       real(mytype), allocatable, dimension(:, :, :) :: wk, wk2
       integer :: i, j, k
+      logical, save :: first_call = .true.
+
+      if (first_call) then
+         first_call = .false.
+         call decomp_2d_warning(__FILE__, __LINE__, 0, "fine_to_coarse is deprecated and will be removed")
+      end if
 
       if (ipencil == 1) then
          allocate (wk(xstS(1):xenS(1), xstS(2):xenS(2), xstS(3):xenS(3)))
@@ -786,6 +807,12 @@ contains
 
       real(mytype), allocatable, dimension(:, :, :) :: wk, wk2
       integer :: i, j, k
+      logical, save :: first_call = .true.
+
+      if (first_call) then
+         first_call = .false.
+         call decomp_2d_warning(__FILE__, __LINE__, 0, "fine_to_coarse is deprecated and will be removed")
+      end if
 
       if (ipencil == 1) then
          allocate (wk(xstV(1):xenV(1), xstV(2):xenV(2), xstV(3):xenV(3)))
@@ -871,6 +898,12 @@ contains
 
       real(mytype), allocatable, dimension(:, :, :) :: wk, wk2
       integer :: i, j, k
+      logical, save :: first_call = .true.
+
+      if (first_call) then
+         first_call = .false.
+         call decomp_2d_warning(__FILE__, __LINE__, 0, "fine_to_coarse is deprecated and will be removed")
+      end if
 
       if (ipencil == 1) then
          allocate (wk(xstP(1):xenP(1), xstP(2):xenP(2), xstP(3):xenP(3)))
@@ -1040,10 +1073,13 @@ contains
          sz(i) = size1
          en(i) = en(i - 1) + size1
       end do
-      en(proc - 1) = data1
-      sz(proc - 1) = data1 - st(proc - 1) + 1
 
-      return
+      ! Safety checks
+      if (en(proc - 1) /= data1) &
+         call decomp_2d_abort(__FILE__, __LINE__, en(proc - 1), "Invalid distribution.")
+      if (sz(proc - 1) /= (data1 - st(proc - 1) + 1)) &
+         call decomp_2d_abort(__FILE__, __LINE__, sz(proc - 1), "Invalid distribution.")
+
    end subroutine distribute
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!

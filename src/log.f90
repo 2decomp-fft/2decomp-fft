@@ -1,7 +1,9 @@
 !! SPDX-License-Identifier: BSD-3-Clause
 
+! This file contains routines easing the output to stdout / log files
 submodule(decomp_2d) d2d_log_submodule
 
+   use iso_fortran_env, only: output_unit
    use decomp_2d_constants
    use decomp_2d_mpi
 
@@ -35,8 +37,6 @@ contains
    ! Get the IO unit for the log
    !
    module function d2d_log_get_unit()
-
-      use iso_fortran_env, only: output_unit
 
       implicit none
 
@@ -92,8 +92,6 @@ contains
    !
    module subroutine d2d_log_close_unit(io_unit)
 
-      use iso_fortran_env, only: output_unit
-
       implicit none
 
       ! Input
@@ -117,7 +115,7 @@ contains
    !
    module subroutine d2d_log(given_io_unit)
 
-      use iso_fortran_env, only: output_unit, compiler_version, compiler_options
+      use iso_fortran_env, only: compiler_version, compiler_options
 
       implicit none
 
@@ -125,16 +123,13 @@ contains
       integer, intent(in), optional :: given_io_unit
 
       ! Local variable
-      integer :: io_unit
-      integer :: version, subversion, ierror
+      integer :: io_unit, version, subversion, ierror
 #ifdef DEBUG
       character(len=512) :: fname
 #endif
 
       ! Output log if needed
-      if (decomp_log == D2D_LOG_QUIET) return
-      if (decomp_log == D2D_LOG_STDOUT .and. nrank /= 0) return
-      if (decomp_log == D2D_LOG_TOFILE .and. nrank /= 0) return
+      if (.not.d2d_log_is_active()) return
 
       ! If no IO unit provided, use stdout
       if (present(given_io_unit)) then
@@ -143,7 +138,7 @@ contains
          io_unit = output_unit
       end if
 
-      ! Header
+      ! Print the header
       write (io_unit, *) '==========================================================='
       write (io_unit, *) '=================== Decomp2D - log ========================'
       write (io_unit, *) '==========================================================='
@@ -222,13 +217,7 @@ contains
          write (io_unit, *) "   Profiling decomp_2d : ", decomp_profiler_d2d
       end if
       write (io_unit, *) '==========================================================='
-      ! Info about each decomp_info object
       call decomp_info_print(decomp_main, io_unit, "decomp_main")
-      call decomp_info_print(phG, io_unit, "phG")
-      call decomp_info_print(ph1, io_unit, "ph1")
-      call decomp_info_print(ph2, io_unit, "ph2")
-      call decomp_info_print(ph3, io_unit, "ph3")
-      call decomp_info_print(ph4, io_unit, "ph4")
       write (io_unit, *) '==========================================================='
       write (io_unit, *) '==========================================================='
 

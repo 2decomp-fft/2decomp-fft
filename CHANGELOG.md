@@ -25,7 +25,13 @@ _e.g._ vX.Y - YYYY-MM-DD and a new "Unreleased" section started above.
 - The transpose subroutines have been moved into submodules rather than `#include` files. See [PR #206](https://github.com/2decomp-fft/2decomp-fft/pull/206)
 
 ### Deprecated
+
+- Subroutines `init_coarser_mesh_stat*` and `fine_to_coarse*` will be removed. See [PR #316](https://github.com/2decomp-fft/2decomp-fft/pull/316).
+
 ### Removed
+
+- Removed unused `decomp_info` objects `phg`, `ph1`, `ph2`, `ph3` and `ph4`. See [PR #315](https://github.com/2decomp-fft/2decomp-fft/pull/315).
+- Remoeve unused variable `real2_type`. See [PR #314](https://github.com/2decomp-fft/2decomp-fft/pull/314).
 
 ## v2.0.1
 

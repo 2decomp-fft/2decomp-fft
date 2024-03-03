@@ -157,11 +157,6 @@ contains
 
       implicit none
 
-#ifdef HALO_GLOBAL
-      logical, parameter :: global = .true.
-#else
-      logical, parameter :: global = .false.
-#endif
       integer :: ifirst, ilast ! I loop start/end
       integer :: jfirst, jlast ! J loop start/end
       integer :: kfirst, klast ! K loop start/end

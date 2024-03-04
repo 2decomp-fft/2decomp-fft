@@ -50,8 +50,6 @@ program io_test
 
    logical :: dir_exists
 
-   integer, parameter :: output2D = 0 ! Which plane to write in 2D (0 for 3D)
-
    call MPI_INIT(ierror)
    ! To resize the domain we need to know global number of ranks
    ! This operation is also done as part of decomp_2d_init

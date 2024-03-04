@@ -50,7 +50,6 @@ program io_test
 
    real(mytype), parameter :: eps = 1.0E-7_mytype
 
-   character(len=*), parameter :: io_name = "test-io"
    character(len=*), parameter :: io_restart = "restart-io"
    type(d2d_io_family), save :: io_family_restart
    type(d2d_io), save :: io
@@ -62,8 +61,6 @@ program io_test
 #ifndef ADIOS2
    logical :: dir_exists
 #endif
-
-   integer, parameter :: output2D = 0 ! Which plane to write in 2D (0 for 3D)
 
    call MPI_INIT(ierror)
    ! To resize the domain we need to know global number of ranks

@@ -186,6 +186,10 @@ subroutine decomp_2d_fft_finalize
 
    if (nx_fft /= nx_global .or. ny_fft /= ny_global .or. nz_fft /= nz_global) then
       call decomp_info_finalize(ph)
+      ! Intel compiler does not like a deallocated on a pointer
+      ! We expect the nullify below to free the memory
+      ! Indeed, this is the end of the FFT and memory should be 
+      ! cleared in any case
       !deallocate (ph)
    end if
    nullify (ph)

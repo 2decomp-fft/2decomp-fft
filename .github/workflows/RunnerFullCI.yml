@@ -26,6 +26,9 @@ jobs:
     # Configure-Build-Run-Run on 4 cores 
     - name: Compile NHVHPC CPU
       run: |
+        ls -ltr ~/.bashrc
+        source /etc/profile.d/lmod.sh
+        source ~/.bash_aliases
         module load nvhpc
         export FC=mpif90
         cmake -S . -B build -DBUILD_TESTING=ON
@@ -40,6 +43,9 @@ jobs:
     # Need to revert to 23.1
     - name: Compile NHVHPC CPU & ADIOS2
       run: |
+        ls -ltr ~/.bashrc
+        source /etc/profile.d/lmod.sh
+        source ~/.bash_aliases
         module load nvhpc/23.1
         export FC=mpif90
         export CC=mpicc
@@ -55,6 +61,9 @@ jobs:
     # Configure-Build-Run-Run on 4 cores 
     - name: Compile NHVHPC GPU cuMPI
       run: |
+        ls -ltr ~/.bashrc
+        source /etc/profile.d/lmod.sh
+        source ~/.bash_aliases
         module load nvhpc
         export FC=mpif90
         cmake -S . -B build -DBUILD_TESTING=ON -DBUILD_TARGET=gpu -DENABLE_NCCL=no
@@ -67,6 +76,9 @@ jobs:
     # Configure-Build-Run 
     - name: Compile NHVHPC GPU NCCL
       run: |
+        ls -ltr ~/.bashrc
+        source /etc/profile.d/lmod.sh
+        source ~/.bash_aliases
         module load nvhpc
         export FC=mpif90
         cmake -S . -B build -DBUILD_TESTING=ON -DBUILD_TARGET=gpu -DENABLE_NCCL=yes
@@ -79,6 +91,9 @@ jobs:
     # Configure-Build-Run 
     - name: Compile NHVHPC GPU NCCL MemManag
       run: |
+        ls -ltr ~/.bashrc
+        source /etc/profile.d/lmod.sh
+        source ~/.bash_aliases
         module load nvhpc
         export FC=mpif90
         cmake -S . -B build -DBUILD_TESTING=ON -DBUILD_TARGET=gpu -DENABLE_NCCL=yes -DENABLE_MANAGED=yes
@@ -91,6 +106,9 @@ jobs:
     # Configure-Build-Run-Run on 4 cores 
     - name: Compile GNU openMPI FFTW CPU
       run: |
+        ls -ltr ~/.bashrc
+        source /etc/profile.d/lmod.sh
+        source ~/.bash_aliases
         module load foss
         export FC=mpif90
         cmake -S . -B build -DBUILD_TESTING=ON -DFFT_Choice=fftw
@@ -103,6 +121,9 @@ jobs:
     # Configure-Build-Run-Run on 4 cores 
     - name: Compile GNU openMPI FFTW_F03 CPU
       run: |
+        ls -ltr ~/.bashrc
+        source /etc/profile.d/lmod.sh
+        source ~/.bash_aliases
         module load foss
         export FC=mpif90
         cmake -S . -B build -DBUILD_TESTING=ON -DFFT_Choice=fftw_f03
@@ -115,6 +136,9 @@ jobs:
     # Configure-Build-Run-Run on 4 cores 
     - name: Compile GNU openMPI FFTW_F03 Caliper CPU
       run: |
+        ls -ltr ~/.bashrc
+        source /etc/profile.d/lmod.sh
+        source ~/.bash_aliases
         module load foss
         export FC=mpif90
         export CC=mpicc
@@ -131,6 +155,9 @@ jobs:
     # Configure-Build-Run-Run on 4 cores 
     - name: Compile GNU_Dev openMPI FFTW_F03 ADIOS2 CPU
       run: |
+        ls -ltr ~/.bashrc
+        source /etc/profile.d/lmod.sh
+        source ~/.bash_aliases
         module load foss
         export FC=mpif90
         export CC=mpicc
@@ -146,6 +173,15 @@ jobs:
     # Configure-Build-Run-Run on 4 cores 
     - name: Compile Intel MKL CPU
       run: |
+        ls -ltr ~/.bashrc
+        source /etc/profile.d/lmod.sh
+        source ~/.bash_aliases
+        ml tbb
+        ml compiler-rt
+        ml oclfpga
+        ml compiler
+        ml mpi
+        ml mkl
         export FC=mpiifort
         export MKL_DIR=${MKLROOT}/lib/cmake/mkl
         cmake -S . -B build -DCMAKE_BUILD_TYPE=Dev -DBUILD_TESTING=ON -DFFT_Choice=mkl
@@ -158,7 +194,15 @@ jobs:
     # Configure-Build-Run-Run on 4 cores 
     - name: Compile IntelLLVM MKL CPU
       run: |
-        module load intel
+        ls -ltr ~/.bashrc
+        source /etc/profile.d/lmod.sh
+        source ~/.bash_aliases
+        ml tbb
+        ml compiler-rt
+        ml oclfpga
+        ml compiler
+        ml mpi
+        ml mkl
         export export FC=mpiifx
         export MKL_DIR=${MKLROOT}/lib/cmake/mkl
         cmake -S . -B build -DCMAKE_BUILD_TYPE=Dev -DBUILD_TESTING=ON -DFFT_Choice=mkl
@@ -171,7 +215,15 @@ jobs:
     # Configure-Build-Run-Run on 4 cores 
     - name: Compile IntelLLVM MKL ADIOS2 CPU
       run: |
-        module load intel
+        ls -ltr ~/.bashrc
+        source /etc/profile.d/lmod.sh
+        source ~/.bash_aliases
+        ml tbb
+        ml compiler-rt
+        ml oclfpga
+        ml compiler
+        ml mpi
+        ml mkl
         export FC=mpiifx
         export CXX=mpiicpx
         export CC=mpiicx

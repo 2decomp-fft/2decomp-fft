@@ -46,7 +46,8 @@ jobs:
         ls -ltr ~/.bashrc
         source /etc/profile.d/lmod.sh
         source ~/.bash_aliases
-        module load nvhpc/23.1
+        #module load nvhpc/23.1
+        module load nvhpc
         export FC=mpif90
         export CC=mpicc
         export CXX=mpicxx

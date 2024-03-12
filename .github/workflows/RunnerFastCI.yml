@@ -76,7 +76,12 @@ jobs:
         ls -ltr ~/.bashrc
         source /etc/profile.d/lmod.sh
         source ~/.bash_aliases
-        load_intel
+        ml tbb
+        ml compiler-rt
+        ml oclfpga
+        ml compiler
+        ml mpi
+        ml mkl
         export FC=mpiifx
         export MKL_DIR=${MKLROOT}/lib/cmake/mkl
         cmake -S . -B build -DCMAKE_BUILD_TYPE=Dev -DBUILD_TESTING=ON -DFFT_Choice=mkl

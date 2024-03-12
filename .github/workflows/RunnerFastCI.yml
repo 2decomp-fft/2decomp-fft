@@ -28,6 +28,7 @@ jobs:
       run: |
         ls -ltr ~/.bashrc
         source /etc/profile.d/lmod.sh
+        echo $MODULESHOME
         source ~/.bashrc
         module load nvhpc
         export FC=mpif90

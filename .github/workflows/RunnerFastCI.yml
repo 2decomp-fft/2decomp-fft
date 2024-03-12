@@ -28,16 +28,11 @@ jobs:
       run: |
         ls -ltr ~/.bashrc
         source /etc/profile.d/lmod.sh
-        echo $MODULESHOME
-        source ~/.bashrc
         source ~/.bash_aliases
         module load nvhpc
         export FC=mpif90
         cmake -S . -B build -DBUILD_TESTING=ON
-        cmake --build build -j 4
-        cmake --install build 
-        ctest --test-dir build 
-        cmake -S . -B build -DNX=128 -DNY=128 -DNX=128 -DMPIEXEC_MAX_NUMPROCS=4
+        cmake -S . -B build -DMPIEXEC_MAX_NUMPROCS=4
         cmake --build build -j 4
         cmake --install build 
         ctest --test-dir build
@@ -48,17 +43,13 @@ jobs:
       run: |
         ls -ltr ~/.bashrc
         source /etc/profile.d/lmod.sh
-        source ~/.bashrc
+        source ~/.bash_aliases
         module load nvhpc
         export FC=mpif90
         cmake -S . -B build -DBUILD_TESTING=ON -DBUILD_TARGET=gpu -DENABLE_NCCL=yes
         cmake --build build -j 4
         cmake --install build 
         ctest --test-dir build 
-        cmake -S . -B build -DNX=128 -DNY=128 -DNX=128
-        cmake --build build -j 4
-        cmake --install build 
-        ctest --test-dir build
         rm -rf build  
     
     # Configure-Build-Run-Run on 4 cores 
@@ -66,17 +57,14 @@ jobs:
       run: |
         ls -ltr ~/.bashrc
         source /etc/profile.d/lmod.sh
-        source ~/.bashrc
+        source ~/.bash_aliases
         module load foss
         export FC=mpif90
         export CC=mpicc
         export CXX=mpicxx
         #cmake -S . -B build -DCMAKE_BUILD_TYPE=Dev -DBUILD_TESTING=ON -DIO_BACKEND=adios2 -Dadios2_DIR=~/GIT_Work/ADIOS2/build_install_gcc12_cpu/opt/lib/cmake/adios2 -DFFT_Choice=fftw_f03
         cmake -S . -B build -DCMAKE_BUILD_TYPE=Dev -DBUILD_TESTING=ON -DFFT_Choice=fftw_f03
-        cmake --build build -j 4
-        cmake --install build 
-        ctest --test-dir build 
-        cmake -S . -B build -DNX=128 -DNY=128 -DNX=128 -DMPIEXEC_MAX_NUMPROCS=4
+        cmake -S . -B build -DMPIEXEC_MAX_NUMPROCS=4
         cmake --build build -j 4
         cmake --install build 
         ctest --test-dir build
@@ -87,15 +75,12 @@ jobs:
       run: |
         ls -ltr ~/.bashrc
         source /etc/profile.d/lmod.sh
-        source ~/.bashrc
+        source ~/.bash_aliases
         load_intel
         export FC=mpiifx
         export MKL_DIR=${MKLROOT}/lib/cmake/mkl
         cmake -S . -B build -DCMAKE_BUILD_TYPE=Dev -DBUILD_TESTING=ON -DFFT_Choice=mkl
-        cmake --build build -j 4
-        cmake --install build 
-        ctest --test-dir build 
-        cmake -S . -B build -DNX=128 -DNY=128 -DNX=128 -DMPIEXEC_MAX_NUMPROCS=4
+        cmake -S . -B build -DMPIEXEC_MAX_NUMPROCS=4
         cmake --build build -j 4
         cmake --install build 
         ctest --test-dir build

@@ -226,6 +226,10 @@ This variable leads to overwrite the input array when computing FFT. The support
 
 This variable is used to debug the halo operations. This preprocessor variable is driven by the CMake on/off variable `HALO_DEBUG`.
 
+#### HALO_GLOBAL
+
+This variable is used in the example used to test the halo operations. If the variable is defined, the test are using arrays defined with the key `opt_global` set to `.true.`. Otherwise, the arrays are defined with the key set to `.false.`.
+
 #### _GPU
 
 This variable is automatically added in GPU builds.

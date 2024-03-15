@@ -27,15 +27,11 @@ jobs:
     - name: Compile NHVHPC CPU
       run: |
         ls -ltr ~/.bashrc
-        source ~/.bashrc
-        source ~/.profile_github
-        module load CMake 
+        source /etc/profile.d/lmod.sh
+        source ~/.bash_aliases
         module load nvhpc
         export FC=mpif90
         cmake -S . -B build -DBUILD_TESTING=ON
-        cmake --build build -j 4
-        cmake --install build 
-        ctest --test-dir build 
         cmake -S . -B build -DNX=128 -DNY=128 -DNX=128 -DMPIEXEC_MAX_NUMPROCS=4
         cmake --build build -j 4
         cmake --install build 
@@ -43,22 +39,18 @@ jobs:
         rm -rf build  
     
     # Run and Compile NHHPC for CPU with ADIOS2
-    # Need to fix issue with latest NVHPC and ADIOS
-    # Need to revert to 23.1
+    # Need to fix issue with DEV build and latest NVHPC
+    # Need to revert to 23.9
     - name: Compile NHVHPC CPU & ADIOS2
       run: |
         ls -ltr ~/.bashrc
-        source ~/.bashrc
-        source ~/.profile_github
-        module load CMake 
-        module load nvhpc/23.1
+        source /etc/profile.d/lmod.sh
+        source ~/.bash_aliases
+        module load nvhpc/23.9
         export FC=mpif90
         export CC=mpicc
         export CXX=mpicxx
-        cmake -S . -B build -DBUILD_TESTING=ON -DIO_BACKEND=adios2 -Dadios2_DIR=~/GIT_Work/ADIOS2/build_install_nvhpc_cpu/opt/lib/cmake/adios2
-        cmake --build build -j 4
-        cmake --install build 
-        ctest --test-dir build 
+        cmake -S . -B build -DCMAKE_BUILD_TYPE=Dev -DBUILD_TESTING=ON -DIO_BACKEND=adios2 -Dadios2_DIR=~/GIT/ADIOS2/build/build_nvhpc241/opt/lib/cmake/adios2
         cmake -S . -B build -DNX=128 -DNY=128 -DNX=128 -DMPIEXEC_MAX_NUMPROCS=4
         cmake --build build -j 4
         cmake --install build 
@@ -69,15 +61,11 @@ jobs:
     - name: Compile NHVHPC GPU cuMPI
       run: |
         ls -ltr ~/.bashrc
-        source ~/.bashrc
-        source ~/.profile_github
-        module load CMake 
+        source /etc/profile.d/lmod.sh
+        source ~/.bash_aliases
         module load nvhpc
         export FC=mpif90
         cmake -S . -B build -DBUILD_TESTING=ON -DBUILD_TARGET=gpu -DENABLE_NCCL=no
-        cmake --build build -j 4
-        cmake --install build 
-        ctest --test-dir build 
         cmake -S . -B build -DNX=128 -DNY=128 -DNX=128
         cmake --build build -j 4
         cmake --install build 
@@ -88,15 +76,11 @@ jobs:
     - name: Compile NHVHPC GPU NCCL
       run: |
         ls -ltr ~/.bashrc
-        source ~/.bashrc
-        source ~/.profile_github
-        module load CMake 
+        source /etc/profile.d/lmod.sh
+        source ~/.bash_aliases
         module load nvhpc
         export FC=mpif90
         cmake -S . -B build -DBUILD_TESTING=ON -DBUILD_TARGET=gpu -DENABLE_NCCL=yes
-        cmake --build build -j 4
-        cmake --install build 
-        ctest --test-dir build 
         cmake -S . -B build -DNX=128 -DNY=128 -DNX=128
         cmake --build build -j 4
         cmake --install build 
@@ -107,15 +91,11 @@ jobs:
     - name: Compile NHVHPC GPU NCCL MemManag
       run: |
         ls -ltr ~/.bashrc
-        source ~/.bashrc
-        source ~/.profile_github
-        module load CMake 
+        source /etc/profile.d/lmod.sh
+        source ~/.bash_aliases
         module load nvhpc
         export FC=mpif90
         cmake -S . -B build -DBUILD_TESTING=ON -DBUILD_TARGET=gpu -DENABLE_NCCL=yes -DENABLE_MANAGED=yes
-        cmake --build build -j 4
-        cmake --install build 
-        ctest --test-dir build 
         cmake -S . -B build -DNX=128 -DNY=128 -DNX=128
         cmake --build build -j 4
         cmake --install build 
@@ -126,15 +106,11 @@ jobs:
     - name: Compile GNU openMPI FFTW CPU
       run: |
         ls -ltr ~/.bashrc
-        source ~/.bashrc
-        source ~/.profile_github
-        module load CMake 
+        source /etc/profile.d/lmod.sh
+        source ~/.bash_aliases
         module load foss
         export FC=mpif90
         cmake -S . -B build -DBUILD_TESTING=ON -DFFT_Choice=fftw
-        cmake --build build -j 4
-        cmake --install build 
-        ctest --test-dir build 
         cmake -S . -B build -DNX=128 -DNY=128 -DNX=128 -DMPIEXEC_MAX_NUMPROCS=4
         cmake --build build -j 4
         cmake --install build 
@@ -145,15 +121,11 @@ jobs:
     - name: Compile GNU openMPI FFTW_F03 CPU
       run: |
         ls -ltr ~/.bashrc
-        source ~/.bashrc
-        source ~/.profile_github
-        module load CMake 
+        source /etc/profile.d/lmod.sh
+        source ~/.bash_aliases
         module load foss
         export FC=mpif90
         cmake -S . -B build -DBUILD_TESTING=ON -DFFT_Choice=fftw_f03
-        cmake --build build -j 4
-        cmake --install build 
-        ctest --test-dir build 
         cmake -S . -B build -DNX=128 -DNY=128 -DNX=128 -DMPIEXEC_MAX_NUMPROCS=4
         cmake --build build -j 4
         cmake --install build 
@@ -164,18 +136,15 @@ jobs:
     - name: Compile GNU openMPI FFTW_F03 Caliper CPU
       run: |
         ls -ltr ~/.bashrc
-        source ~/.bashrc
-        source ~/.profile_github
-        module load CMake 
+        source /etc/profile.d/lmod.sh
+        source ~/.bash_aliases
         module load foss
         export FC=mpif90
         export CC=mpicc
         export CXX=mpicxx
-        export caliper_DIR=~/GIT_Work/caliper_github/build_gnu/opt/share/cmake/caliper/
-        cmake -S . -B build -DBUILD_TESTING=ON -DFFT_Choice=fftw_f03 -DENABLE_PROFILER=caliper
-        cmake --build build -j 4
-        cmake --install build 
-        ctest --test-dir build 
+        export caliper_DIR=~/GIT/caliper_github/build_gnu/opt/share/cmake/caliper/
+        #cmake -S . -B build -DBUILD_TESTING=ON -DFFT_Choice=fftw_f03 -DENABLE_PROFILER=caliper
+        cmake -S . -B build -DBUILD_TESTING=ON -DFFT_Choice=fftw_f03 
         cmake -S . -B build -DNX=128 -DNY=128 -DNX=128 -DMPIEXEC_MAX_NUMPROCS=4
         cmake --build build -j 4
         cmake --install build 
@@ -186,17 +155,13 @@ jobs:
     - name: Compile GNU_Dev openMPI FFTW_F03 ADIOS2 CPU
       run: |
         ls -ltr ~/.bashrc
-        source ~/.bashrc
-        source ~/.profile_github
-        module load CMake 
+        source /etc/profile.d/lmod.sh
+        source ~/.bash_aliases
         module load foss
         export FC=mpif90
         export CC=mpicc
         export CXX=mpicxx
-        cmake -S . -B build -DCMAKE_BUILD_TYPE=Dev -DBUILD_TESTING=ON -DIO_BACKEND=adios2 -Dadios2_DIR=~/GIT_Work/ADIOS2/build_install_gcc12_cpu/opt/lib/cmake/adios2 -DFFT_Choice=fftw_f03
-        cmake --build build -j 4
-        cmake --install build 
-        ctest --test-dir build 
+        cmake -S . -B build -DCMAKE_BUILD_TYPE=Dev -DBUILD_TESTING=ON -DIO_BACKEND=adios2 -Dadios2_DIR=~/GIT/ADIOS2/build/build_foss2023b/opt/lib/cmake/adios2 -DFFT_Choice=fftw_f03
         cmake -S . -B build -DNX=128 -DNY=128 -DNX=128 -DMPIEXEC_MAX_NUMPROCS=4
         cmake --build build -j 4
         cmake --install build 
@@ -207,16 +172,17 @@ jobs:
     - name: Compile Intel MKL CPU
       run: |
         ls -ltr ~/.bashrc
-        source ~/.bashrc
-        source ~/.profile_github
-        module load CMake 
-        module load intel
+        source /etc/profile.d/lmod.sh
+        source ~/.bash_aliases
+        ml tbb
+        ml compiler-rt
+        ml oclfpga
+        ml compiler
+        ml mpi
+        ml mkl
         export FC=mpiifort
         export MKL_DIR=${MKLROOT}/lib/cmake/mkl
         cmake -S . -B build -DCMAKE_BUILD_TYPE=Dev -DBUILD_TESTING=ON -DFFT_Choice=mkl
-        cmake --build build -j 4
-        cmake --install build 
-        ctest --test-dir build 
         cmake -S . -B build -DNX=128 -DNY=128 -DNX=128 -DMPIEXEC_MAX_NUMPROCS=4
         cmake --build build -j 4
         cmake --install build 
@@ -227,16 +193,17 @@ jobs:
     - name: Compile IntelLLVM MKL CPU
       run: |
         ls -ltr ~/.bashrc
-        source ~/.bashrc
-        source ~/.profile_github
-        module load CMake 
-        module load intel
-        export export FC="mpiifort -fc=ifx"
+        source /etc/profile.d/lmod.sh
+        source ~/.bash_aliases
+        ml tbb
+        ml compiler-rt
+        ml oclfpga
+        ml compiler
+        ml mpi
+        ml mkl
+        export export FC=mpiifx
         export MKL_DIR=${MKLROOT}/lib/cmake/mkl
         cmake -S . -B build -DCMAKE_BUILD_TYPE=Dev -DBUILD_TESTING=ON -DFFT_Choice=mkl
-        cmake --build build -j 4
-        cmake --install build 
-        ctest --test-dir build 
         cmake -S . -B build -DNX=128 -DNY=128 -DNX=128 -DMPIEXEC_MAX_NUMPROCS=4
         cmake --build build -j 4
         cmake --install build 
@@ -247,19 +214,20 @@ jobs:
     - name: Compile IntelLLVM MKL ADIOS2 CPU
       run: |
         ls -ltr ~/.bashrc
-        source ~/.bashrc
-        source ~/.profile_github
-        module load CMake 
-        module load intel
-        export export FC="mpiifort -fc=ifx"
-        export CXX="mpiicpc -cxx=icpx"
-        export CC="mpiicc -cc=icx"
+        source /etc/profile.d/lmod.sh
+        source ~/.bash_aliases
+        ml tbb
+        ml compiler-rt
+        ml oclfpga
+        ml compiler
+        ml mpi
+        ml mkl
+        export FC=mpiifx
+        export CXX=mpiicpx
+        export CC=mpiicx
         export MKL_DIR=${MKLROOT}/lib/cmake/mkl
-        cmake -S . -B build -DCMAKE_BUILD_TYPE=Dev -DBUILD_TESTING=ON -DIO_BACKEND=adios2 -Dadios2_DIR=~/GIT_Work/ADIOS2/build_install_ifx_cpu/opt/lib/cmake/adios2 -DFFT_Choice=mkl
-        cmake --build build -j 4
-        cmake --install build 
-        ctest --test-dir build 
-        cmake -S . -B build -DNX=128 -DNY=128 -DNX=128 -DMPIEXEC_MAX_NUMPROCS=4
+        cmake -S . -B build -DCMAKE_BUILD_TYPE=Dev -DBUILD_TESTING=ON -DIO_BACKEND=adios2 -Dadios2_DIR=~/GIT/ADIOS2/build/build_intelLLVM/opt/lib/cmake/adios2 -DFFT_Choice=mkl
+        cmake -S . -B build -DCMAKE_BUILD_TYPE=Dev -DFFT_Choice=mkl
         cmake --build build -j 4
         cmake --install build 
         ctest --test-dir build

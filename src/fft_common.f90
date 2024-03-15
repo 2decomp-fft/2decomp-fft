@@ -186,7 +186,6 @@ subroutine decomp_2d_fft_finalize
 
    if (nx_fft /= nx_global .or. ny_fft /= ny_global .or. nz_fft /= nz_global) then
       call decomp_info_finalize(ph)
-      deallocate (ph)
    end if
    nullify (ph)
    call decomp_info_finalize(sp)

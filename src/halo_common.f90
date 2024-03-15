@@ -140,7 +140,7 @@
           !$acc end kernels
        else if (ipencil == 3) then
           jst = decomp%zst(2); jen = decomp%zen(2)
-          ist = decomp%xst(1); ien = decomp%xen(1)
+          ist = decomp%zst(1); ien = decomp%zen(1)
           !$acc kernels default(present)
           do k = 1, s3  ! z all local
              do j = jst, jen

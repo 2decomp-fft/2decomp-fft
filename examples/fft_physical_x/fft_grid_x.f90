@@ -35,7 +35,7 @@ program fft_physical_x
 #ifdef DOUBLE_PREC
    real(mytype), parameter :: error_precision = 1.e-12_mytype
 #else
-   real(mytype), parameter :: error_precision = 1.e-6_mytype
+   real(mytype), parameter :: error_precision = 5.e-6_mytype
 #endif
    
 

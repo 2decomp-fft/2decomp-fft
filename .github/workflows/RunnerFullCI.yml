@@ -39,19 +39,18 @@ jobs:
         rm -rf build  
     
     # Run and Compile NHHPC for CPU with ADIOS2
-    # Need to fix issue with latest NVHPC and ADIOS
-    # Need to revert to 23.1
+    # Need to fix issue with DEV build and latest NVHPC
+    # Need to revert to 23.9
     - name: Compile NHVHPC CPU & ADIOS2
       run: |
         ls -ltr ~/.bashrc
         source /etc/profile.d/lmod.sh
         source ~/.bash_aliases
-        module load nvhpc
+        module load nvhpc/23.9
         export FC=mpif90
         export CC=mpicc
         export CXX=mpicxx
-        #cmake -S . -B build -DCMAKE_BUILD_TYPE=Dev -DBUILD_TESTING=ON -DIO_BACKEND=adios2 -Dadios2_DIR=~/GIT/ADIOS2/build/build_nvhpc241/opt/lib/cmake/adios2
-        cmake -S . -B build -DBUILD_TESTING=ON -DIO_BACKEND=adios2 -Dadios2_DIR=~/GIT/ADIOS2/build/build_nvhpc241/opt/lib/cmake/adios2
+        cmake -S . -B build -DCMAKE_BUILD_TYPE=Dev -DBUILD_TESTING=ON -DIO_BACKEND=adios2 -Dadios2_DIR=~/GIT/ADIOS2/build/build_nvhpc241/opt/lib/cmake/adios2
         cmake -S . -B build -DNX=128 -DNY=128 -DNX=128 -DMPIEXEC_MAX_NUMPROCS=4
         cmake --build build -j 4
         cmake --install build 

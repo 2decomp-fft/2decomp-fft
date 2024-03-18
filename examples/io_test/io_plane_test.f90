@@ -1,4 +1,7 @@
 !! SPDX-License-Identifier: BSD-3-Clause
+
+#define unused(x) associate(tmp => x); end associate
+
 !!
 !! FIXME The issue below is specific to GPU and should be discussed in a dedicated github issue
 !!
@@ -231,6 +234,11 @@ program io_plane_test
       end if
 
    end if
+#else
+   ! Avoid unused variables
+   unused(found)
+   unused(work)
+   unused(iol)
 #endif
 
    deallocate (u1, u2, u3)

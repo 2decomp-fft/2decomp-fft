@@ -45,6 +45,7 @@ module decomp_2d_fft
 
    ! Decomposition objects
    TYPE(DECOMP_INFO), pointer, save :: ph => null()  ! physical space
+   TYPE(DECOMP_INFO), target, save :: ph_target ! ph => ph_target or ph => decomp_main
    TYPE(DECOMP_INFO), target, save :: sp  ! spectral space
 
    ! Workspace to store the intermediate Y-pencil data
@@ -143,8 +144,8 @@ contains
       if (nx_fft == nx_global .and. ny_fft == ny_global .and. nz_fft == nz_global) then
          ph => decomp_main
       else
-         if (.not. associated(ph)) allocate (ph)
-         call decomp_info_init(nx, ny, nz, ph)
+         call decomp_info_init(nx, ny, nz, ph_target)
+         ph => ph_target
       end if
       if (format == PHYSICAL_IN_X) then
          call decomp_info_init(nx / 2 + 1, ny, nz, sp)
@@ -209,8 +210,7 @@ contains
 #endif
 
       if (nx_fft /= nx_global .or. ny_fft /= ny_global .or. nz_fft /= nz_global) then
-         call decomp_info_finalize(ph)
-         deallocate (ph)
+         call decomp_info_finalize(ph_target)
       end if
       nullify (ph)
       call decomp_info_finalize(sp)

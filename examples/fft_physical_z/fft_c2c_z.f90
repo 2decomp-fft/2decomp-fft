@@ -37,7 +37,6 @@ program fft_c2c_z
 #else
    real(mytype), parameter :: error_precision = 5.e-6_mytype
 #endif
-   
 
    call MPI_INIT(ierror)
    ! To resize the domain we need to know global number of ranks
@@ -190,10 +189,10 @@ program fft_c2c_z
    call MPI_ALLREDUCE(error, err_all, 1, real_type, MPI_SUM, MPI_COMM_WORLD, ierror)
    err_all = err_all / (real(nx, mytype) * real(ny, mytype) * real(nz, mytype))
 
-   if (err_all > error_precision ) then
-      if (nrank == 0 ) write (*, *) 'error / mesh point: ', err_all 
-      call decomp_2d_abort(1, "error for the FFT too large") 
-   endif 
+   if (err_all > error_precision) then
+      if (nrank == 0) write (*, *) 'error / mesh point: ', err_all
+      call decomp_2d_abort(1, "error for the FFT too large")
+   end if
 
    if (nrank == 0) then
       write (*, *) 'error / mesh point: ', err_all

@@ -500,7 +500,7 @@ contains
       !$acc end kernels
       divmag = mag(tmp)
 
-      if (error < real(2.0,mytype) * epsilon(divmag) * divmag) then
+      if (error < real(2.0, mytype) * epsilon(divmag) * divmag) then
          passing = .true.
       else
          passing = .false.

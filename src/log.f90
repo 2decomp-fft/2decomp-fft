@@ -129,7 +129,7 @@ contains
 #endif
 
       ! Output log if needed
-      if (.not.d2d_log_is_active()) return
+      if (.not. d2d_log_is_active()) return
 
       ! If no IO unit provided, use stdout
       if (present(given_io_unit)) then

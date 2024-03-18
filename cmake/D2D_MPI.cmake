@@ -58,6 +58,7 @@ if (MPI_FOUND)
     # Force the mpirun to be coherent with the mpifortran
     string(REGEX REPLACE "mpif90" "mpirun" PATH_TO_MPIRUN "${MPI_Fortran_COMPILER}")
     string(REPLACE "mpiifort" "mpirun" PATH_TO_MPIRUN "${PATH_TO_MPIRUN}")
+    string(REPLACE "mpiifx" "mpirun" PATH_TO_MPIRUN "${PATH_TO_MPIRUN}")
     message(STATUS "Path to mpirun ${PATH_TO_MPIRUN}")
     set(MPIEXEC_EXECUTABLE "${PATH_TO_MPIRUN}" CACHE STRING
         "Force MPIRUN to be consistent with MPI_Fortran_COMPILER" FORCE)

@@ -172,8 +172,8 @@ subroutine decomp_2d_fft_engine_init(engine, pencil, nx, ny, nz, opt_inplace, op
    if (nx == nx_global .and. ny == ny_global .and. nz == nz_global) then
       engine%ph => decomp_main
    else
-      if (.not. associated(engine%ph)) allocate (engine%ph)
-      call decomp_info_init(nx, ny, nz, engine%ph)
+      call decomp_info_init(nx, ny, nz, engine%ph_target)
+      engine%ph => engine%ph_target
    end if
    if (pencil == PHYSICAL_IN_X) then
       call decomp_info_init(nx / 2 + 1, ny, nz, engine%sp)
@@ -274,8 +274,7 @@ subroutine decomp_2d_fft_engine_fin(engine)
    if (engine%nx_fft /= nx_global .or. &
        engine%ny_fft /= ny_global .or. &
        engine%nz_fft /= nz_global) then
-      call decomp_info_finalize(engine%ph)
-      deallocate (engine%ph)
+      call decomp_info_finalize(engine%ph_target)
    end if
    nullify (engine%ph)
    call decomp_info_finalize(engine%sp)

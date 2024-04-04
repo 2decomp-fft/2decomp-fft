@@ -19,7 +19,7 @@ jobs:
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
     # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
       with: 
         clean: true
     
@@ -27,10 +27,15 @@ jobs:
     - name: Compile Intel MKL CPU
       run: |
         ls -ltr ~/.bashrc
-        source ~/.bashrc
-        source ~/.profile_github
-        module load intel
-        export FC=mpiifort
+        source /etc/profile.d/lmod.sh
+        source ~/.bash_aliases
+        ml tbb
+        ml compiler-rt
+        ml oclfpga
+        ml compiler
+        ml mpi
+        ml mkl
+        export FC=mpiifx
         export MKL_DIR=${MKLROOT}/lib/cmake/mkl
         cmake -S . -B build -DCMAKE_BUILD_TYPE=Dev -DBUILD_TESTING=ON -DFFT_Choice=mkl
         cmake -S . -B build -DNX=128 -DNY=128 -DNX=128 -DMPIEXEC_MAX_NUMPROCS=4
@@ -43,10 +48,15 @@ jobs:
     - name: Compile IntelLLVM MKL CPU
       run: |
         ls -ltr ~/.bashrc
-        source ~/.bashrc
-        source ~/.profile_github
-        module load intel
-        export export FC="mpiifort -fc=ifx"
+        source /etc/profile.d/lmod.sh
+        source ~/.bash_aliases
+        ml tbb
+        ml compiler-rt
+        ml oclfpga
+        ml compiler
+        ml mpi
+        ml mkl
+        export FC=mpiifx
         export MKL_DIR=${MKLROOT}/lib/cmake/mkl
         cmake -S . -B build -DCMAKE_BUILD_TYPE=Dev -DBUILD_TESTING=ON -DFFT_Choice=mkl
         cmake -S . -B build -DNX=128 -DNY=128 -DNX=128 -DMPIEXEC_MAX_NUMPROCS=4
@@ -59,14 +69,19 @@ jobs:
     - name: Compile IntelLLVM MKL ADIOS2 CPU
       run: |
         ls -ltr ~/.bashrc
-        source ~/.bashrc
-        source ~/.profile_github
-        module load intel
-        export export FC="mpiifort -fc=ifx"
-        export CXX="mpiicpc -cxx=icpx"
-        export CC="mpiicc -cc=icx"
+        source /etc/profile.d/lmod.sh
+        source ~/.bash_aliases
+        ml tbb
+        ml compiler-rt
+        ml oclfpga
+        ml compiler
+        ml mpi
+        ml mkl
+        export FC=mpiifx
+        export CC=mpiicc
+        export CXX=mpiicx
         export MKL_DIR=${MKLROOT}/lib/cmake/mkl
-        cmake -S . -B build -DCMAKE_BUILD_TYPE=Dev -DBUILD_TESTING=ON -DIO_BACKEND=adios2 -Dadios2_DIR=~/GIT_Work/ADIOS2/build_install_ifx_cpu/opt/lib/cmake/adios2 -DFFT_Choice=mkl
+        cmake -S . -B build -DCMAKE_BUILD_TYPE=Dev -DBUILD_TESTING=ON -DIO_BACKEND=adios2 -Dadios2_DIR=~/GIT/ADIOS2/build/build_intelLLVM/opt/lib/cmake/adios2 -DFFT_Choice=mkl
         cmake -S . -B build -DNX=128 -DNY=128 -DNX=128 -DMPIEXEC_MAX_NUMPROCS=4
         cmake --build build -j 4
         cmake --install build 

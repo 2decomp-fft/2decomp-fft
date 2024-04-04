@@ -19,7 +19,7 @@ jobs:
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
     # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
       with: 
         clean: true
 
@@ -27,8 +27,8 @@ jobs:
     - name: Compile GNU openMPI FFTW CPU
       run: |
         ls -ltr ~/.bashrc
-        source ~/.bashrc
-        source ~/.profile_github
+        source /etc/profile.d/lmod.sh
+        source ~/.bash_aliases
         module load foss
         export FC=mpif90
         cmake -S . -B build -DBUILD_TESTING=ON -DFFT_Choice=fftw
@@ -42,8 +42,8 @@ jobs:
     - name: Compile GNU openMPI FFTW_F03 CPU
       run: |
         ls -ltr ~/.bashrc
-        source ~/.bashrc
-        source ~/.profile_github
+        source /etc/profile.d/lmod.sh
+        source ~/.bash_aliases
         module load foss
         export FC=mpif90
         cmake -S . -B build -DBUILD_TESTING=ON -DFFT_Choice=fftw_f03
@@ -57,15 +57,15 @@ jobs:
     - name: Compile GNU openMPI FFTW_F03 Caliper CPU
       run: |
         ls -ltr ~/.bashrc
-        source ~/.bashrc
-        source ~/.profile_github
+        source /etc/profile.d/lmod.sh
+        source ~/.bash_aliases
         module load foss
         export FC=mpif90
         export CC=mpicc
         export CXX=mpicxx
-        export caliper_DIR=~/GIT_Work/caliper_github/build_gnu/opt/share/cmake/caliper/
+        export caliper_DIR=~/GIT/caliper_github/build_gnu/opt/share/cmake/caliper/
         cmake -S . -B build -DBUILD_TESTING=ON -DFFT_Choice=fftw_f03 -DENABLE_PROFILER=caliper
-        cmake -S . -B build -DNX=128 -DNY=128 -DNX=128 -DMPIEXEC_MAX_NUMPROCS=4
+        cmake -S . -B build -DMPIEXEC_MAX_NUMPROCS=4
         cmake --build build -j 4
         cmake --install build 
         ctest --test-dir build
@@ -75,13 +75,13 @@ jobs:
     - name: Compile GNU_Dev openMPI FFTW_F03 ADIOS2 CPU
       run: |
         ls -ltr ~/.bashrc
-        source ~/.bashrc
-        source ~/.profile_github
+        source /etc/profile.d/lmod.sh
+        source ~/.bash_aliases
         module load foss
         export FC=mpif90
         export CC=mpicc
         export CXX=mpicxx
-        cmake -S . -B build -DCMAKE_BUILD_TYPE=Dev -DBUILD_TESTING=ON -DIO_BACKEND=adios2 -Dadios2_DIR=~/GIT_Work/ADIOS2/build_install_gcc12_cpu/opt/lib/cmake/adios2 -DFFT_Choice=fftw_f03
+        cmake -S . -B build -DCMAKE_BUILD_TYPE=Dev -DBUILD_TESTING=ON -DIO_BACKEND=adios2 -Dadios2_DIR=~/GIT/ADIOS2/build/build_foss2023b/opt/lib/cmake/adios2 -DFFT_Choice=fftw_f03
         cmake -S . -B build -DNX=128 -DNY=128 -DNX=128 -DMPIEXEC_MAX_NUMPROCS=4
         cmake --build build -j 4
         cmake --install build 
@@ -92,8 +92,8 @@ jobs:
     - name: Compile GNU_Dev openMPI FFTW_F03 SINGLE_PRECISION_OUTPUT CPU
       run: |
         ls -ltr ~/.bashrc
-        source ~/.bashrc
-        source ~/.profile_github
+        source /etc/profile.d/lmod.sh
+        source ~/.bash_aliases
         module load foss
         export FC=mpif90
         export CC=mpicc

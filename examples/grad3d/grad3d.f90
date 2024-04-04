@@ -504,13 +504,13 @@ contains
       ! This subroutine is based on the xdmf writers in Xcompact3d.
       ! Copyright (c) 2012-2022, Xcompact3d
       ! SPDX-License-Identifier: BSD 3-Clause
+      use, intrinsic :: iso_fortran_env, only: real64
 
       integer :: ioxdmf
 
       character(len=:), allocatable :: fmt
 
       integer :: precision
-      integer, parameter :: output2D = 0 ! Which plane to write in 2D (0 for 3D)
 
       integer :: varctr
       character(len=16) :: filename
@@ -535,7 +535,7 @@ contains
          write (ioxdmf, *) '        </DataItem>'
          write (ioxdmf, *) '        <!-- DxDyDz -->'
          write (ioxdmf, *) '        <DataItem Format="XML" Dimensions="3">'
-         if (mytype == kind(0.0d0)) then
+         if (mytype == kind(0._real64)) then
             fmt = "(A, E24.17, A, E24.17, A, E24.17)"
          else
             fmt = "(A, E16.9, A, E16.9, A, E16.9)"
@@ -572,11 +572,7 @@ contains
 #ifdef DOUBLE_PREC
             print *, "Double precision build"
 #ifdef SAVE_SINGLE
-            if (output2D == 0) then
-               precision = 4
-            else
-               precision = 8
-            end if
+            precision = 4
 #else
             precision = 8
 #endif

@@ -372,7 +372,7 @@ subroutine decomp_2d_fft_set_ngrid(ngrd)
 
    integer, intent(in) :: ngrd
 
-   type(decomp_2d_fft_engine), allocatable :: tmp(:)
+   type(decomp_2d_fft_engine), allocatable, target :: tmp(:)
 
    ! Safety check
    if (ngrd < 1) then

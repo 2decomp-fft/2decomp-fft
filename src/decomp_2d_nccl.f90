@@ -248,7 +248,7 @@ contains
                                         dime)
       !$acc kernels default(present)
       do ii = 1, buf_size
-         dst_d(ii) = cmplx(dst_d(ii), work4_r_d(ii), mytype)
+         dst_d(ii) = cmplx(real(dst_d(ii), mytype), work4_r_d(ii), mytype)
       end do
       !$acc end kernels
    end subroutine decomp_2d_nccl_send_recv_cmplx_col
@@ -345,7 +345,7 @@ contains
                                         dime)
       !$acc kernels default(present)
       do ii = 1, buf_size
-         dst_d(ii) = cmplx(dst_d(ii), work4_r_d(ii), mytype)
+         dst_d(ii) = cmplx(real(dst_d(ii), mytype), work4_r_d(ii), mytype)
       end do
       !$acc end kernels
    end subroutine decomp_2d_nccl_send_recv_cmplx_row

@@ -63,7 +63,7 @@ jobs:
         export FC=mpif90
         export CC=mpicc
         export CXX=mpicxx
-        export caliper_DIR=~/GIT/caliper_github/build_gnu/opt/share/cmake/caliper/
+        export caliper_DIR=~/GIT/caliper_github/build_foss2023b/opt/share/cmake/caliper/
         cmake -S . -B build -DBUILD_TESTING=ON -DDOUBLE_PRECISION=OFF -DFFT_Choice=fftw_f03 -DENABLE_PROFILER=caliper
         cmake -S . -B build -DMPIEXEC_MAX_NUMPROCS=4
         cmake --build build -j 4

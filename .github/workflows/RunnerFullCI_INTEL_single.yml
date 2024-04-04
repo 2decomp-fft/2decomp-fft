@@ -78,8 +78,8 @@ jobs:
         ml mpi
         ml mkl
         export FC=mpiifx
-        export CC=mpiicc
-        export CXX=mpiicx
+        export CC=mpiicx
+        export CXX=mpiicpx
         export MKL_DIR=${MKLROOT}/lib/cmake/mkl
         cmake -S . -B build -DCMAKE_BUILD_TYPE=Dev -DDOUBLE_PRECISION=OFF -DBUILD_TESTING=ON -DIO_BACKEND=adios2 -Dadios2_DIR=~/GIT/ADIOS2/build/build_intelLLVM/opt/lib/cmake/adios2 -DFFT_Choice=mkl
         cmake -S . -B build -DNX=128 -DNY=128 -DNX=128 -DMPIEXEC_MAX_NUMPROCS=4

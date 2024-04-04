@@ -3,7 +3,7 @@ cmake_policy(SET CMP0074 NEW)
 
 project(decomp2d
   LANGUAGES Fortran)
-set(version 2.0.0)
+set(version 2.1.0)
 enable_testing()
 if (IO_BACKEND MATCHES "adios2")
   # Can be useful to also activate CXX, sometimes is needed by packages
@@ -95,21 +95,4 @@ endif (${BUILD_TESTING})
 # Add a prettify target
 add_custom_target(format sh ${CMAKE_SOURCE_DIR}/scripts/format.sh
   WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
-
-# # Create an example dir with all input.i3d example files
-# option(BUILD_TESTING "Build with tests" ON)
-# set(test_dir "${PROJECT_BINARY_DIR}/Test")
-# message(STATUS "Before test main ${test_dir}")
-# if (${BUILD_TESTING})
-#   file(MAKE_DIRECTORY ${test_dir})
-#   include(CTest)
-#   message(STATUS "MPI INCL ALSO FOUND: ${MPI_INCLUDE_PATH}")
-#   message(STATUS "MPI EXEC: ${MPIEXEC_EXECUTABLE}")
-#   file(MAKE_DIRECTORY ${test_dir}/App)
-#   add_test(NAME TestAPP COMMAND ${MPIEXEC_EXECUTABLE} -n ${MPIEXEC_MAX_NUMPROCS} ${CMAKE_INSTALL_PREFIX}/bin/xcompact3d WORKING_DIRECTORY ${test_dir}/App)
-#   #if (PFUNIT_FOUND)
-#   #  file(MAKE_DIRECTORY ${test_dir}/Verif_x_00)
-#   #  add_test(NAME Test_dx_00 COMMAND ${MPIEXEC_EXECUTABLE} -n ${MPIEXEC_MAX_NUMPROCS} ${CMAKE_INSTALL_PREFIX}/bin/verif_x_00 WORKING_DIRECTORY ${test_dir}/Verif_x_00)
-#   #endif (PFUNIT_FOUND)
-# endif()
 

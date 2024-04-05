@@ -211,7 +211,7 @@ contains
                                 trim(io_dir), &
                                 access_mode, ierror)
             else
-               call decomp_2d_abort(__FILE__, __LINE__, 0, "Engine "//writer%family%io%engine_type//" Dir "//trim(io_dir)//".")
+               call decomp_2d_abort(__FILE__, __LINE__, -1, "Engine "//writer%family%io%engine_type//" Dir "//trim(io_dir)//".")
             end if
             if (ierror /= 0) then
                call decomp_2d_abort(__FILE__, __LINE__, ierror, &

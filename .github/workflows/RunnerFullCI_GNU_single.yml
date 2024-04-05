@@ -40,6 +40,7 @@ jobs:
 
     # Configure-Build-Run-Run on 4 cores 
     - name: Compile GNU openMPI FFTW_F03 CPU
+name: FastCI4Push_double
       run: |
         ls -ltr ~/.bashrc
         source /etc/profile.d/lmod.sh
@@ -81,7 +82,7 @@ jobs:
         export FC=mpif90
         export CC=mpicc
         export CXX=mpicxx
-        cmake -S . -B build -DCMAKE_BUILD_TYPE=Dev -DDOUBLE_PRECISION=OFF -DBUILD_TESTING=ON -DIO_BACKEND=adios2 -Dadios2_DIR=~/GIT_Work/ADIOS2/build_install_gcc12_cpu/opt/lib/cmake/adios2 -DFFT_Choice=fftw_f03
+        cmake -S . -B build -DCMAKE_BUILD_TYPE=Dev -DDOUBLE_PRECISION=OFF -DBUILD_TESTING=ON -DIO_BACKEND=adios2 -Dadios2_DIR=~/GIT/ADIOS2/build/build_foss2023b/opt/lib/cmake/adios2 -DFFT_Choice=fftw_f03
         cmake -S . -B build -DNX=128 -DNY=128 -DNX=128 -DMPIEXEC_MAX_NUMPROCS=4
         cmake --build build -j 4
         cmake --install build 

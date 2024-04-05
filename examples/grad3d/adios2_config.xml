@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <adios-config>
-  <io name="grad-io">
+  <io name="default">
     <engine type="BP4">
     </engine>
     <transport type="File">

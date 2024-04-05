@@ -240,11 +240,11 @@ program io_test
    v1b = 0; v2b = 0; v3b = 0
    call io%open_start("checkpoint", decomp_2d_read_mode, opt_family=io_family_restart)
    call decomp_2d_read_one(1, u1b, 'u1.dat', opt_io=io)
-   call decomp_2d_read_one(1, v1b, 'u1.dat', opt_io=io)
+   call decomp_2d_read_one(1, v1b, 'v1.dat', opt_io=io)
    call decomp_2d_read_one(2, u2b, 'u2.dat', opt_io=io)
-   call decomp_2d_read_one(2, v2b, 'u2.dat', opt_io=io)
+   call decomp_2d_read_one(2, v2b, 'v2.dat', opt_io=io)
    call decomp_2d_read_one(3, u3b, 'u3.dat', opt_io=io)
-   call decomp_2d_read_one(3, v3b, 'u3.dat', opt_io=io)
+   call decomp_2d_read_one(3, v3b, 'v3.dat', opt_io=io)
    call io%end_close
 
    call MPI_Barrier(MPI_COMM_WORLD, ierr)

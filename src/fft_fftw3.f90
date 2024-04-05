@@ -47,6 +47,7 @@ module decomp_2d_fft
       logical, private :: initialised = .false.
       integer, private :: nx_fft, ny_fft, nz_fft
       type(decomp_info), pointer, public :: ph => null()
+      type(decomp_info), private :: ph_target ! ph => ph_target or ph => decomp_main
       type(decomp_info), public :: sp
       complex(mytype), allocatable, private :: wk2_c2c(:, :, :)
       complex(mytype), contiguous, pointer, private :: wk2_r2c(:, :, :) => null()

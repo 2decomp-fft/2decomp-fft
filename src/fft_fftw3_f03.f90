@@ -63,6 +63,7 @@ module decomp_2d_fft
       logical, private :: initialised = .false.
       integer, private :: nx_fft, ny_fft, nz_fft
       type(decomp_info), pointer, public :: ph => null()
+      type(decomp_info), private :: ph_target ! ph => ph_target or ph => decomp_main
       type(decomp_info), public :: sp
       complex(mytype), contiguous, pointer, private :: wk2_c2c(:, :, :) => null()
       complex(mytype), contiguous, pointer, private :: wk2_r2c(:, :, :) => null()
@@ -232,8 +233,8 @@ contains
           nz == nz_global) then
          engine%ph => decomp_main
       else
-         if (.not. associated(engine%ph)) allocate (engine%ph)
-         call decomp_info_init(nx, ny, nz, engine%ph)
+         call decomp_info_init(nx, ny, nz, engine%ph_target)
+         engine%ph => engine%ph_target
       end if
       if (pencil == PHYSICAL_IN_X) then
          call decomp_info_init(nx / 2 + 1, ny, nz, engine%sp)
@@ -343,8 +344,7 @@ contains
       if (engine%nx_fft /= nx_global .or. &
           engine%ny_fft /= ny_global .or. &
           engine%nz_fft /= nz_global) then
-         call decomp_info_finalize(engine%ph)
-         deallocate (engine%ph)
+         call decomp_info_finalize(engine%ph_target)
       end if
       nullify (engine%ph)
       call decomp_info_finalize(engine%sp)

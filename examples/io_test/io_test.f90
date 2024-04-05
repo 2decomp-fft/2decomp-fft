@@ -47,9 +47,9 @@ program io_test
    integer :: xst1, xst2, xst3
    integer :: xen1, xen2, xen3
 
-#ifndef ADIOS2
+!#ifndef ADIOS2
    logical :: dir_exists
-#endif
+!#endif
 
    call MPI_INIT(ierror)
    ! To resize the domain we need to know global number of ranks
@@ -68,14 +68,17 @@ program io_test
 
    call decomp_2d_io_init()
 
-   call decomp_2d_io_register_var3d("u1.dat", 1, real_type)
+   !call decomp_2d_io_register_var3d("u1.dat", 1, real_type)
+   write(*,*) 'decomp_2d_io_register_var3d'
    call io_family%init(io_name)
+   call io_family%register_var3d("u1.dat", 1, real_type)
    call io_family%register_var3d("u2.dat", 2, real_type)
    call io_family%register_var3d("u3.dat", 3, real_type)
    call io_family_restart%init(io_restart)
    call io_family_restart%register_var3d("u1.dat", 1, real_type)
    call io_family_restart%register_var3d("u2.dat", 2, real_type)
    call io_family_restart%register_var3d("u3.dat", 3, real_type)
+   write(*,*) 'io_family_restart%register_var3d'
 
    ! ***** global data *****
    allocate (data1(nx, ny, nz))
@@ -125,24 +128,27 @@ program io_test
    !$acc end data
 
    ! write to disk
-#ifndef ADIOS2
+!#ifndef ADIOS2
    if (nrank == 0) then
       inquire (file="out", exist=dir_exists)
       if (.not. dir_exists) then
          call execute_command_line("mkdir out 2> /dev/null")
       end if
    end if
-#endif
+!#endif
 
    ! Standard I/O pattern - 1 file per field
    !
    ! Using the default IO family
 #ifdef ADIOS2
+   write(*,*) 'ADIOS io%open_start before'
    call io%open_start("out", decomp_2d_write_mode)
+   write(*,*) 'ADIOS io%open_start after'
 #endif
    call decomp_2d_write_one(1, u1, 'u1.dat', opt_dirname='out', opt_io=io)
 #ifdef ADIOS2
    call io%end_close
+   write(*,*) 'ADIOS io%end_close'
 #endif
    !
    ! Using a dedicated IO family

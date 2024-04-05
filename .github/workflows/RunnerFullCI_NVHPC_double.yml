@@ -12,14 +12,14 @@ on: [pull_request, fork]
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
   # This workflow contains a job called "bld_gnu_ompi"
-  Full_CI_NVHPC:
+  Full_CI_NVHPC_double:
     # The type of runner that the job will run on
     runs-on: [self-hosted, linux, x64]
 
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
     # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
       with: 
         clean: true
 
@@ -27,8 +27,8 @@ jobs:
     - name: Compile NHVHPC CPU
       run: |
         ls -ltr ~/.bashrc
-        source ~/.bashrc
-        source ~/.profile_github
+        source /etc/profile.d/lmod.sh
+        source ~/.bash_aliases
         module load nvhpc
         export FC=mpif90
         cmake -S . -B build -DBUILD_TESTING=ON
@@ -44,13 +44,13 @@ jobs:
     - name: Compile NHVHPC CPU & ADIOS2
       run: |
         ls -ltr ~/.bashrc
-        source ~/.bashrc
-        source ~/.profile_github
-        module load nvhpc/23.1
+        source /etc/profile.d/lmod.sh
+        source ~/.bash_aliases
+        module load nvhpc
         export FC=mpif90
         export CC=mpicc
         export CXX=mpicxx
-        cmake -S . -B build -DBUILD_TESTING=ON -DIO_BACKEND=adios2 -Dadios2_DIR=~/GIT_Work/ADIOS2/build_install_nvhpc_cpu/opt/lib/cmake/adios2
+        cmake -S . -B build -DBUILD_TESTING=ON -DIO_BACKEND=adios2 -Dadios2_DIR=~/GIT/ADIOS2/build/build_nvhpc241/opt/lib/cmake/adios2
         cmake -S . -B build -DNX=128 -DNY=128 -DNX=128 -DMPIEXEC_MAX_NUMPROCS=4
         cmake --build build -j 4
         cmake --install build 
@@ -61,8 +61,8 @@ jobs:
     - name: Compile NHVHPC GPU cuMPI
       run: |
         ls -ltr ~/.bashrc
-        source ~/.bashrc
-        source ~/.profile_github
+        source /etc/profile.d/lmod.sh
+        source ~/.bash_aliases
         module load nvhpc
         export FC=mpif90
         cmake -S . -B build -DBUILD_TESTING=ON -DBUILD_TARGET=gpu -DENABLE_NCCL=no -DNX=128 -DNY=128 -DNX=128
@@ -75,8 +75,8 @@ jobs:
     - name: Compile NHVHPC GPU cuMPI inplace
       run: |
         ls -ltr ~/.bashrc
-        source ~/.bashrc
-        source ~/.profile_github
+        source /etc/profile.d/lmod.sh
+        source ~/.bash_aliases
         module load nvhpc
         export FC=mpif90
         cmake -S . -B build -DBUILD_TESTING=ON -DBUILD_TARGET=gpu -DENABLE_NCCL=no -DENABLE_INPLACE=ON -DNX=128 -DNY=128 -DNX=128
@@ -89,8 +89,8 @@ jobs:
     - name: Compile NHVHPC GPU NCCL
       run: |
         ls -ltr ~/.bashrc
-        source ~/.bashrc
-        source ~/.profile_github
+        source /etc/profile.d/lmod.sh
+        source ~/.bash_aliases
         module load nvhpc
         export FC=mpif90
         cmake -S . -B build -DBUILD_TESTING=ON -DBUILD_TARGET=gpu -DENABLE_NCCL=yes -DNX=128 -DNY=128 -DNX=128
@@ -103,8 +103,8 @@ jobs:
     - name: Compile NHVHPC GPU NCCL MemManag
       run: |
         ls -ltr ~/.bashrc
-        source ~/.bashrc
-        source ~/.profile_github
+        source /etc/profile.d/lmod.sh
+        source ~/.bash_aliases
         module load nvhpc
         export FC=mpif90
         cmake -S . -B build -DBUILD_TESTING=ON -DBUILD_TARGET=gpu -DENABLE_NCCL=yes -DENABLE_MANAGED=yes -DNX=128 -DNY=128 -DNX=128

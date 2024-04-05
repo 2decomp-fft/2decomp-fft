@@ -1188,7 +1188,7 @@ contains
          call decomp_2d_abort(__FILE__, __LINE__, ipencil, "Error invalid value of ipencil ")
       end if
       if ((.not. use_opt_io) .and. (.not. present(opt_dirname))) then
-         call decomp_2d_abort(__FILE__, __LINE__, 0, "Invalid arguments")
+         call decomp_2d_abort(__FILE__, __LINE__, -1, "Invalid arguments")
       end if
 
       ! Default write mode is deferred
@@ -1308,7 +1308,7 @@ contains
          call decomp_2d_abort(__FILE__, __LINE__, ipencil, "Error invalid value of ipencil ")
       end if
       if ((.not. use_opt_io) .and. (.not. present(opt_dirname))) then
-         call decomp_2d_abort(__FILE__, __LINE__, 0, "Invalid arguments")
+         call decomp_2d_abort(__FILE__, __LINE__, -1, "Invalid arguments")
       end if
 
       ! Default MPI IO for reading is blocking
@@ -1432,7 +1432,7 @@ contains
          call decomp_2d_abort(__FILE__, __LINE__, ipencil, "Error invalid value of ipencil ")
       end if
       if ((.not. use_opt_io) .and. (.not. present(opt_dirname))) then
-         call decomp_2d_abort(__FILE__, __LINE__, 0, "Invalid arguments")
+         call decomp_2d_abort(__FILE__, __LINE__, -1, "Invalid arguments")
       end if
 
       ! Default write mode is deferred
@@ -1614,7 +1614,7 @@ contains
 
       ! Safety check
       if (.not. io%is_open) then
-         call decomp_2d_abort(__FILE__, __LINE__, 0, &
+         call decomp_2d_abort(__FILE__, __LINE__, -1, &
                               "IO reader / writer was not opened "//io%label)
       end if
 
@@ -1626,7 +1626,7 @@ contains
       end if
       if (non_blocking) then
          if (.not. present(opt_nb_req)) then
-            call decomp_2d_abort(__FILE__, __LINE__, 0, "Missing argument")
+            call decomp_2d_abort(__FILE__, __LINE__, -1, "Missing argument")
          end if
       end if
 
@@ -1651,7 +1651,7 @@ contains
       else if (present(logs)) then
          data_type = MPI_LOGICAL
       else
-         call decomp_2d_abort(__FILE__, __LINE__, 0, "Invalid inputs for "//io%label)
+         call decomp_2d_abort(__FILE__, __LINE__, -1, "Invalid inputs for "//io%label)
       end if
 
       ! Get the corresponding record size
@@ -1768,12 +1768,12 @@ contains
 
       ! Safety checks
       if (.not. io%is_open) then
-         call decomp_2d_abort(__FILE__, __LINE__, 0, &
+         call decomp_2d_abort(__FILE__, __LINE__, -1, &
                               "IO reader / writer was not opened "//io%label)
       end if
 #ifdef ADIOS2
       if (.not. io%is_active) then
-         call decomp_2d_abort(__FILE__, __LINE__, 0, &
+         call decomp_2d_abort(__FILE__, __LINE__, -1, &
                               "IO reader / writer has not started "//io%label)
       end if
 #endif
@@ -1841,12 +1841,12 @@ contains
 
       ! Safety checks
       if (.not. io%is_open) then
-         call decomp_2d_abort(__FILE__, __LINE__, 0, &
+         call decomp_2d_abort(__FILE__, __LINE__, -1, &
                               "IO reader / writer was not opened "//io%label)
       end if
 #ifdef ADIOS2
       if (.not. io%is_active) then
-         call decomp_2d_abort(__FILE__, __LINE__, 0, &
+         call decomp_2d_abort(__FILE__, __LINE__, -1, &
                               "IO reader / writer has not started "//io%label)
       end if
 #endif

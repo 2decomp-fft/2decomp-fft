@@ -40,7 +40,6 @@ jobs:
 
     # Configure-Build-Run-Run on 4 cores 
     - name: Compile GNU openMPI FFTW_F03 CPU
-name: FastCI4Push_double
       run: |
         ls -ltr ~/.bashrc
         source /etc/profile.d/lmod.sh

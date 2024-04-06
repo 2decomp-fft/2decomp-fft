@@ -37,7 +37,7 @@ module decomp_2d_io_family
       integer, public, pointer :: mpi_file_open_info => null()
       integer, public, pointer :: mpi_file_set_view_info => null()
 #ifdef ADIOS2
-      type(adios2_adios), pointer :: adios                    ! adios2 only
+      type(adios2_adios), pointer :: adios => null()          ! adios2 only
       type(adios2_io) :: io                                   ! adios2 only
 #endif
    contains

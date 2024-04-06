@@ -89,6 +89,7 @@ module decomp_2d_io_object
       procedure :: end => d2d_io_end                ! End the IO
       procedure :: close => d2d_io_close            ! Close the IO
       procedure :: end_close => d2d_io_end_close    ! End and close the IO
+      procedure :: log => d2d_io_log                ! Print some information about the object
    end type d2d_io
 
    private
@@ -406,6 +407,56 @@ contains
       call writer%close()
 
    end subroutine d2d_io_end_close
+
+   !
+   ! Print some information about the object
+   !
+   subroutine d2d_io_log(writer, opt_iounit)
+
+      implicit none
+
+      class(d2d_io), intent(in) :: writer
+      integer, intent(in), optional :: opt_iounit
+
+      integer :: iounit
+
+      ! Exit if needed
+      if (.not. d2d_log_is_active()) return
+
+      ! Get the IO unit if needed
+      if (present(opt_iounit)) then
+         iounit = opt_iounit
+      else
+         iounit = d2d_log_get_unit()
+         write (iounit, *) ""
+      end if
+
+      ! Print tuff
+      if (allocated(writer%label)) then
+         write (iounit, *) "  d2d_io "//writer%label
+      else
+         write (iounit, *) "  d2d_io, label undefined"
+      end if
+      write (iounit, *) "  is_open ", writer%is_open
+      if (associated(writer%family)) then
+         if (writer%family%type == DECOMP_2D_IO_ADIOS2) then
+#ifdef ADIOS2
+            write (iounit, *) "  is_active ", writer%is_active
+            write (iounit, *) "  engine ", writer%engine%f2c, writer%engine%valid, trim(writer%engine%name) // ", " // trim(writer%engine%type), writer%engine%mode
+#endif
+         else if (writer%family%type == DECOMP_2D_IO_MPI) then
+            write (iounit, *) "  fh ", writer%fh
+            write (iounit, *) "  disp ", writer%disp
+         end if
+         call writer%family%log(iounit)
+      else
+         write (iounit, *) "  writer%family set to NULL"
+      end if
+
+      ! Close the IO unit if needed
+      if (.not. present(opt_iounit)) call d2d_log_close_unit(iounit)
+
+   end subroutine d2d_io_log
 
    !
    ! Open and start in write_one, read_one or write_plane

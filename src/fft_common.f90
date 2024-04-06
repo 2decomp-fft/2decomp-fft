@@ -442,10 +442,10 @@ subroutine decomp_2d_fft_engine_use_it(engine, opt_force)
    if (.not. engine%initialised) then
       if (present(opt_force)) then
          if (.not. opt_force) then
-            call decomp_2d_abort(__FILE__, __LINE__, 0, "FFT engine is not ready")
+            call decomp_2d_abort(__FILE__, __LINE__, -1, "FFT engine is not ready")
          end if
       else
-         call decomp_2d_abort(__FILE__, __LINE__, 0, "FFT engine is not ready")
+         call decomp_2d_abort(__FILE__, __LINE__, -1, "FFT engine is not ready")
       end if
    end if
 

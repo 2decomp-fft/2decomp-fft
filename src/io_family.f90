@@ -547,7 +547,7 @@ contains
                                  "Variable already registered "//varname)
          end if
       else
-         call decomp_2d_abort(__FILE__, __LINE__, 0, &
+         call decomp_2d_abort(__FILE__, __LINE__, -1, &
                               "Invalid adios2_io object for registering a variable")
       end if
 

@@ -1,4 +1,4 @@
-file(GLOB files_fft_multiple_grids_no_obj fft_multiple_grids_no_obj.f90 fft_multiple_grids_utilities.f90)
+file(GLOB files_fft_multiple_grids_no_obj fft_multiple_grids_no_obj.f90 fft_multiple_grids_utilities.f90 fft_multiple_grids_reference.f90)
 file(GLOB files_fft_multiple_grids fft_multiple_grids.f90 fft_multiple_grids_utilities.f90)
 if (FFT_Choice MATCHES "fftw_f03")
   file(GLOB files_fft_multiple_grids_inplace fft_multiple_grids_inplace.f90 fft_multiple_grids_utilities.f90)

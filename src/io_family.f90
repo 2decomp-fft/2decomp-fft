@@ -413,40 +413,66 @@ contains
    !
    ! Print some information about the object
    !
-   subroutine d2d_io_family_log(family)
+   subroutine d2d_io_family_log(family, opt_iounit)
 
       implicit none
 
       class(d2d_io_family), intent(in) :: family
+      integer, intent(in), optional :: opt_iounit
 
       integer :: iounit
 
       ! Exit if needed
       if (.not. d2d_log_is_active()) return
 
-      ! Get the IO unit
-      iounit = d2d_log_get_unit()
+      ! Get the IO unit if needed
+      if (present(opt_iounit)) then
+         iounit = opt_iounit
+      else
+         iounit = d2d_log_get_unit()
+         write (iounit, *) ""
+      end if
 
       ! Print stuff
-      write (iounit, *) ""
       if (allocated(family%label)) then
-         write (iounit, *) "  d2d_io_family "//family%label
+         write (iounit, *) "    d2d_io_family "//family%label
       else
-         write (iounit, *) "  d2d_io_family, label undefined"
+         write (iounit, *) "    d2d_io_family, label undefined"
       end if
       select case (family%type)
       case (DECOMP_2D_IO_NONE)
-         write (iounit, *) '    type : None'
+         write (iounit, *) '      type : None'
       case (DECOMP_2D_IO_MPI)
-         write (iounit, *) '    type : MPI'
+         write (iounit, *) '      type : MPI'
+         if (associated(family%mpi_file_open_info)) then
+            write (iounit, *) '      mpi_file_open_info : ', family%mpi_file_open_info
+         else
+            write (iounit, *) '      mpi_file_open_info set to NULL'
+         end if
+         if (associated(family%mpi_file_set_view_info)) then
+            write (iounit, *) '      mpi_file_set_view_info : ', family%mpi_file_set_view_info
+         else
+            write (iounit, *) '      mpi_file_set_view_info set to NULL'
+         end if
       case (DECOMP_2D_IO_ADIOS2)
-         write (iounit, *) '    type : ADIOS2'
+         write (iounit, *) '      type : ADIOS2'
+#ifdef ADIOS2
+         if (associated(family%adios)) then
+            write (iounit, *) '      adios2_adios valid ? ', family%adios%valid
+            write (iounit, *) '      adios2_adios f2c ', family%adios%f2c
+         else
+            write (iounit, *) '      adios2_adios pointer set to NULL'
+         end if
+         write (iounit, *) '      io is valid ? ', family%io%valid
+         write (iounit, *) '      io engine type ', trim(family%io%engine_type)
+         write (iounit, *) '      io f2c ', family%io%f2c
+#endif
       case default
-         write (iounit, *) '    type : ? ', family%type
+         write (iounit, *) '      type : ? ', family%type
       end select
 
-      ! Close the IO unit
-      call d2d_log_close_unit(iounit)
+      ! Close the IO unit if needed
+      if (.not. present(opt_iounit)) call d2d_log_close_unit(iounit)
 
    end subroutine d2d_io_family_log
 

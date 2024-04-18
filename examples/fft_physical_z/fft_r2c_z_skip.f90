@@ -52,7 +52,7 @@ program fft_r2c_z
    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
    ! Test the r2c/c2r interface
    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-   call decomp_2d_fft_init(PHYSICAL_IN_Z, opt_skip_XYZ_c2c=skip_c2c ) ! non-default Z-pencil input
+   call decomp_2d_fft_init(PHYSICAL_IN_Z, opt_skip_XYZ_c2c=skip_c2c) ! non-default Z-pencil input
 
    ph => decomp_2d_fft_get_ph()
    sp => decomp_2d_fft_get_sp()

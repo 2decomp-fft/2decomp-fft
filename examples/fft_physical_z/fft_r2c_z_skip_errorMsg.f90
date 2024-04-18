@@ -32,7 +32,7 @@ program fft_r2c_z
    integer :: zst1, zst2, zst3
    integer :: zen1, zen2, zen3
    double precision :: t1, t2, t3, t4
-   logical, dimension(3) :: skip_c2c = [.true., .false., .true. ]
+   logical, dimension(3) :: skip_c2c = [.true., .false., .true.]
 
    call MPI_INIT(ierror)
    ! To resize the domain we need to know global number of ranks
@@ -52,7 +52,7 @@ program fft_r2c_z
    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
    ! Test the r2c/c2r interface
    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-   call decomp_2d_fft_init(PHYSICAL_IN_Z, opt_skip_XYZ_c2c=skip_c2c ) ! non-default Z-pencil input
+   call decomp_2d_fft_init(PHYSICAL_IN_Z, opt_skip_XYZ_c2c=skip_c2c) ! non-default Z-pencil input
 
    ph => decomp_2d_fft_get_ph()
    sp => decomp_2d_fft_get_sp()

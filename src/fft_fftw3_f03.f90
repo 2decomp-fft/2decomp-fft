@@ -171,7 +171,6 @@ contains
                               opt_inplace_c2r, &
                               opt_skip_XYZ_c2c=opt_skip_XYZ_c2c)
 
-
    end subroutine fft_init_one_grid
 
    ! Initialise the provided FFT grid
@@ -1134,7 +1133,7 @@ contains
       complex(mytype), dimension(:, :, :), intent(INOUT) :: output
 
       if (skip_z_c2c) call decomp_2d_warning(__FILE__, __LINE__, 2, &
-                                            "r2c / c2r transform can not be skipped")
+                                             "r2c / c2r transform can not be skipped")
 
 #ifdef DOUBLE_PREC
       call fftw_execute_dft_r2c(plan(0, 3), input, output)
@@ -1176,7 +1175,7 @@ contains
       real(mytype), dimension(:, :, :), intent(INOUT) :: output
 
       if (skip_z_c2c) call decomp_2d_warning(__FILE__, __LINE__, 4, &
-                                            "r2c / c2r transform can not be skipped")
+                                             "r2c / c2r transform can not be skipped")
 
 #ifdef DOUBLE_PREC
       call fftw_execute_dft_c2r(plan(2, 3), input, output)
@@ -1362,10 +1361,10 @@ contains
          ! ===== Swap Z --> Y; 1D FFTs in Y =====
          if (dims(1) > 1) then
             call transpose_z_to_y(wk0, wk2_r2c, sp)
-            call c2c_1m_y(wk2_r2c, plan(0, 2)) 
+            call c2c_1m_y(wk2_r2c, plan(0, 2))
          else  ! out_c==wk2_r2c if 1D decomposition
             call transpose_z_to_y(wk0, out_c, sp)
-            call c2c_1m_y(out_c, plan(0, 2)) 
+            call c2c_1m_y(out_c, plan(0, 2))
          end if
 
          ! ===== Swap Y --> X; 1D FFTs in X =====
@@ -1373,7 +1372,6 @@ contains
             call transpose_y_to_x(wk2_r2c, out_c, sp)
          end if
          call c2c_1m_x(out_c, plan(0, 1))
-
 
       end if
 
@@ -1446,13 +1444,13 @@ contains
 
          ! ===== 1D FFTs in X =====
          if (inplace) then
-            call c2c_1m_x(in_c, plan(2, 1)) 
+            call c2c_1m_x(in_c, plan(2, 1))
          else
             sz = product(sp%xsz)
             wk1_p = fftw_alloc_complex(sz)
             call c_f_pointer(wk1_p, wk1, sp%xsz)
             wk1 = in_c
-            call c2c_1m_x(wk1, plan(2, 1)) 
+            call c2c_1m_x(wk1, plan(2, 1))
          end if
 
          ! ===== Swap X --> Y; 1D FFTs in Y =====

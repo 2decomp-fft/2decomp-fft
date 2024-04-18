@@ -98,9 +98,9 @@ program fft_c2c_z
    t2 = 0.d0
    t4 = 0.d0
    !$acc kernels
-   if (.not. skip_c2c(1)) in_r = in_r / real(nx, mytype)
-   if (.not. skip_c2c(2)) in_r = in_r / real(ny, mytype)
-   if (.not. skip_c2c(3)) in_r = in_r / real(nz, mytype)
+   if (.not. skip_c2c(1)) in = in / real(nx, mytype)
+   if (.not. skip_c2c(2)) in = in / real(ny, mytype)
+   if (.not. skip_c2c(3)) in = in / real(nz, mytype)
    !$acc end kernels
    do m = 1, ntest
 
@@ -116,9 +116,9 @@ program fft_c2c_z
 
       ! normalisation - note 2DECOMP&FFT doesn't normalise
       !$acc kernels
-      if (.not. skip_c2c(1)) in_r = in_r / real(nx, mytype)
-      if (.not. skip_c2c(2)) in_r = in_r / real(ny, mytype)
-      if (.not. skip_c2c(3)) in_r = in_r / real(nz, mytype)
+      if (.not. skip_c2c(1)) in = in / real(nx, mytype)
+      if (.not. skip_c2c(2)) in = in / real(ny, mytype)
+      if (.not. skip_c2c(3)) in = in / real(nz, mytype)
       !$acc end kernels
 
    end do

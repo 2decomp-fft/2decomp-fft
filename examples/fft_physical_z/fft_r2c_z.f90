@@ -32,7 +32,6 @@ program fft_r2c_z
    integer :: zst1, zst2, zst3
    integer :: zen1, zen2, zen3
    double precision :: t1, t2, t3, t4
-   logical, dimension(3) :: skip_c2c = [.true., .false., .false.]
 
    call MPI_INIT(ierror)
    ! To resize the domain we need to know global number of ranks
@@ -52,7 +51,7 @@ program fft_r2c_z
    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
    ! Test the r2c/c2r interface
    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-   call decomp_2d_fft_init(PHYSICAL_IN_Z, opt_skip_XYZ_c2c=skip_c2c ) ! non-default Z-pencil input
+   call decomp_2d_fft_init(PHYSICAL_IN_Z) ! non-default Z-pencil input
 
    ph => decomp_2d_fft_get_ph()
    sp => decomp_2d_fft_get_sp()
@@ -98,9 +97,7 @@ program fft_r2c_z
    t2 = 0.d0
    t4 = 0.d0
    !$acc kernels
-   if (.not. skip_c2c(1)) in_r = in_r / real(nx, mytype)
-   if (.not. skip_c2c(2)) in_r = in_r / real(ny, mytype)
-   if (.not. skip_c2c(3)) in_r = in_r / real(nz, mytype)
+   in_r = in_r / (real(nx, mytype) * real(ny, mytype) * real(nz, mytype))
    !$acc end kernels
    do m = 1, ntest
 
@@ -116,9 +113,7 @@ program fft_r2c_z
 
       ! normalisation - note 2DECOMP&FFT doesn't normalise
       !$acc kernels
-      if (.not. skip_c2c(1)) in_r = in_r / real(nx, mytype)
-      if (.not. skip_c2c(2)) in_r = in_r / real(ny, mytype)
-      if (.not. skip_c2c(3)) in_r = in_r / real(nz, mytype)
+      in_r = in_r / (real(nx, mytype) * real(ny, mytype) * real(nz, mytype))
       !$acc end kernels
 
    end do

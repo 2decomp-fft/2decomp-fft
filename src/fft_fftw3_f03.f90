@@ -1038,14 +1038,16 @@ contains
 
       complex(mytype), dimension(:, :, :), intent(INOUT) :: inout
       type(C_PTR) :: plan1
-
+      if (skip_x_c2c) then !bm_issue337
+         return !bm_issue337
+      else !bm_issue337
 #ifdef DOUBLE_PREC
-      call fftw_execute_dft(plan1, inout, inout)
+         call fftw_execute_dft(plan1, inout, inout)
 #else
-      call fftwf_execute_dft(plan1, inout, inout)
+         call fftwf_execute_dft(plan1, inout, inout)
 #endif
-
-      return
+         return
+      end if !bm_issue337
    end subroutine c2c_1m_x
 
    ! c2c transform, multiple 1D FFTs in y direction
@@ -1060,15 +1062,18 @@ contains
 
       s3 = size(inout, 3)
 
-      do k = 1, s3  ! transform on one Z-plane at a time
+      if (skip_y_c2c) then !bm_issue337
+         return !bm_issue337
+      else !bm_issue337
+         do k = 1, s3  ! transform on one Z-plane at a time
 #ifdef DOUBLE_PREC
-         call fftw_execute_dft(plan1, inout(:, :, k), inout(:, :, k))
+            call fftw_execute_dft(plan1, inout(:, :, k), inout(:, :, k))
 #else
-         call fftwf_execute_dft(plan1, inout(:, :, k), inout(:, :, k))
+            call fftwf_execute_dft(plan1, inout(:, :, k), inout(:, :, k))
 #endif
-      end do
-
-      return
+         end do
+         return
+      end if !bm_issue337
    end subroutine c2c_1m_y
 
    ! c2c transform, multiple 1D FFTs in z direction
@@ -1079,13 +1084,16 @@ contains
       complex(mytype), dimension(:, :, :), intent(INOUT) :: inout
       type(C_PTR) :: plan1
 
+      if (skip_z_c2c) then !bm_issue337
+         return !bm_issue337
+      else !bm_issue337
 #ifdef DOUBLE_PREC
-      call fftw_execute_dft(plan1, inout, inout)
+         call fftw_execute_dft(plan1, inout, inout)
 #else
-      call fftwf_execute_dft(plan1, inout, inout)
+         call fftwf_execute_dft(plan1, inout, inout)
 #endif
-
-      return
+         return
+      end if !bm_issue337
    end subroutine c2c_1m_z
 
    ! r2c transform, multiple 1D FFTs in x direction
@@ -1095,6 +1103,12 @@ contains
 
       real(mytype), dimension(:, :, :), intent(INOUT)  ::  input
       complex(mytype), dimension(:, :, :), intent(INOUT) :: output
+
+      if (skip_x_c2c) then !bm_issue337
+         if (nrank == 0) then
+            print *, 'Warning: Ignoring user''s request to skip the r2c/c2r transform along x'
+         end if
+      end if !bm_issue337
 
 #ifdef DOUBLE_PREC
       call fftw_execute_dft_r2c(plan(0, 1), input, output)
@@ -1114,6 +1128,12 @@ contains
       real(mytype), dimension(:, :, :), intent(INOUT)  ::  input
       complex(mytype), dimension(:, :, :), intent(INOUT) :: output
 
+      if (skip_z_c2c) then !bm_issue337
+         if (nrank == 0) then
+            print *, 'Warning: Ignoring user''s request to skip the r2c/c2r transform along z'
+         end if
+      end if !bm_issue337
+
 #ifdef DOUBLE_PREC
       call fftw_execute_dft_r2c(plan(0, 3), input, output)
 #else
@@ -1132,6 +1152,12 @@ contains
       complex(mytype), dimension(:, :, :), intent(INOUT)  ::  input
       real(mytype), dimension(:, :, :), intent(INOUT) :: output
 
+      if (skip_x_c2c) then !bm_issue337
+         if (nrank == 0) then
+            print *, 'Warning: Ignoring user''s request to skip the r2c/c2r transform along x'
+         end if
+      end if !bm_issue337
+
 #ifdef DOUBLE_PREC
       call fftw_execute_dft_c2r(plan(2, 1), input, output)
 #else
@@ -1149,6 +1175,12 @@ contains
 
       complex(mytype), dimension(:, :, :), intent(INOUT) :: input
       real(mytype), dimension(:, :, :), intent(INOUT) :: output
+
+      if (skip_z_c2c) then !bm_issue337
+         if (nrank == 0) then
+            print *, 'Warning: Ignoring user''s request to skip the r2c/c2r transform along z'
+         end if
+      end if !bm_issue337
 
 #ifdef DOUBLE_PREC
       call fftw_execute_dft_c2r(plan(2, 3), input, output)
@@ -1334,17 +1366,17 @@ contains
          ! ===== Swap Z --> Y; 1D FFTs in Y =====
          if (dims(1) > 1) then
             call transpose_z_to_y(wk0, wk2_r2c, sp)
-            if (.not.(skip_y_c2c)) call c2c_1m_y(wk2_r2c, plan(0, 2)) !bm_issue337
+            call c2c_1m_y(wk2_r2c, plan(0, 2)) 
          else  ! out_c==wk2_r2c if 1D decomposition
             call transpose_z_to_y(wk0, out_c, sp)
-            if (.not.(skip_y_c2c)) call c2c_1m_y(out_c, plan(0, 2)) !bm_issue337
+            call c2c_1m_y(out_c, plan(0, 2)) 
          end if
 
          ! ===== Swap Y --> X; 1D FFTs in X =====
          if (dims(1) > 1) then
             call transpose_y_to_x(wk2_r2c, out_c, sp)
          end if
-         if (.not.(skip_x_c2c)) call c2c_1m_x(out_c, plan(0, 1)) !bm_issue337
+         call c2c_1m_x(out_c, plan(0, 1))
 
 
       end if
@@ -1418,13 +1450,13 @@ contains
 
          ! ===== 1D FFTs in X =====
          if (inplace) then
-            if (.not.(skip_x_c2c)) call c2c_1m_x(in_c, plan(2, 1)) !bm_issue337
+            call c2c_1m_x(in_c, plan(2, 1)) 
          else
             sz = product(sp%xsz)
             wk1_p = fftw_alloc_complex(sz)
             call c_f_pointer(wk1_p, wk1, sp%xsz)
             wk1 = in_c
-            if (.not.(skip_x_c2c)) call c2c_1m_x(wk1, plan(2, 1)) !bm_issue337
+            call c2c_1m_x(wk1, plan(2, 1)) 
          end if
 
          ! ===== Swap X --> Y; 1D FFTs in Y =====
@@ -1434,15 +1466,13 @@ contains
             else
                call transpose_x_to_y(wk1, wk2_r2c, sp)
             end if
-            if (.not.(skip_y_c2c)) call c2c_1m_y(wk2_r2c, plan(2, 2)) !bm_issue337
+            call c2c_1m_y(wk2_r2c, plan(2, 2))
          else  ! in_c==wk2_r2c if 1D decomposition
-            if (.not.(skip_y_c2c)) then !bm_issue337
-               if (inplace) then
-                  call c2c_1m_y(in_c, plan(2, 2))
-               else
-                  call c2c_1m_y(wk1, plan(2, 2))
-               end if
-            end if !bm_issue337
+            if (inplace) then
+               call c2c_1m_y(in_c, plan(2, 2))
+            else
+               call c2c_1m_y(wk1, plan(2, 2))
+            end if
          end if
 
          ! ===== Swap Y --> Z; 1D FFTs in Z =====

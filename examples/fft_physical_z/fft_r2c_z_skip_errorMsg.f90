@@ -100,8 +100,9 @@ program fft_r2c_z
    !$acc kernels
    if (.not. skip_c2c(1)) in_r = in_r / real(nx, mytype)
    if (.not. skip_c2c(2)) in_r = in_r / real(ny, mytype)
-   if (.not. skip_c2c(3)) in_r = in_r / real(nz, mytype)
+   in_r = in_r / real(nz, mytype) ! r2c / c2r + physical_in_z
    !$acc end kernels
+
    do m = 1, ntest
 
       ! 3D r2c FFT
@@ -118,7 +119,7 @@ program fft_r2c_z
       !$acc kernels
       if (.not. skip_c2c(1)) in_r = in_r / real(nx, mytype)
       if (.not. skip_c2c(2)) in_r = in_r / real(ny, mytype)
-      if (.not. skip_c2c(3)) in_r = in_r / real(nz, mytype)
+      in_r = in_r / real(nz, mytype) ! r2c / c2r + physical_in_z
       !$acc end kernels
 
    end do

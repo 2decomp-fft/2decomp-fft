@@ -1038,16 +1038,14 @@ contains
 
       complex(mytype), dimension(:, :, :), intent(INOUT) :: inout
       type(C_PTR) :: plan1
-      if (skip_x_c2c) then !bm_issue337
-         return !bm_issue337
-      else !bm_issue337
+
+      if (skip_x_c2c) return !bm_issue337
+
 #ifdef DOUBLE_PREC
-         call fftw_execute_dft(plan1, inout, inout)
+      call fftw_execute_dft(plan1, inout, inout)
 #else
-         call fftwf_execute_dft(plan1, inout, inout)
+      call fftwf_execute_dft(plan1, inout, inout)
 #endif
-         return
-      end if !bm_issue337
    end subroutine c2c_1m_x
 
    ! c2c transform, multiple 1D FFTs in y direction
@@ -1062,18 +1060,14 @@ contains
 
       s3 = size(inout, 3)
 
-      if (skip_y_c2c) then !bm_issue337
-         return !bm_issue337
-      else !bm_issue337
-         do k = 1, s3  ! transform on one Z-plane at a time
+      if (skip_y_c2c) return !bm_issue337
+      do k = 1, s3  ! transform on one Z-plane at a time
 #ifdef DOUBLE_PREC
-            call fftw_execute_dft(plan1, inout(:, :, k), inout(:, :, k))
+         call fftw_execute_dft(plan1, inout(:, :, k), inout(:, :, k))
 #else
-            call fftwf_execute_dft(plan1, inout(:, :, k), inout(:, :, k))
+         call fftwf_execute_dft(plan1, inout(:, :, k), inout(:, :, k))
 #endif
-         end do
-         return
-      end if !bm_issue337
+      end do
    end subroutine c2c_1m_y
 
    ! c2c transform, multiple 1D FFTs in z direction
@@ -1084,16 +1078,12 @@ contains
       complex(mytype), dimension(:, :, :), intent(INOUT) :: inout
       type(C_PTR) :: plan1
 
-      if (skip_z_c2c) then !bm_issue337
-         return !bm_issue337
-      else !bm_issue337
+      if (skip_z_c2c) return !bm_issue337
 #ifdef DOUBLE_PREC
-         call fftw_execute_dft(plan1, inout, inout)
+      call fftw_execute_dft(plan1, inout, inout)
 #else
-         call fftwf_execute_dft(plan1, inout, inout)
+      call fftwf_execute_dft(plan1, inout, inout)
 #endif
-         return
-      end if !bm_issue337
    end subroutine c2c_1m_z
 
    ! r2c transform, multiple 1D FFTs in x direction

@@ -1,5 +1,5 @@
 !! SPDX-License-Identifier: BSD-3-Clause
-program fft_r2c_z_skip
+program fft_c2c_x_skip
 
    use decomp_2d
    use decomp_2d_fft
@@ -23,16 +23,15 @@ program fft_r2c_z_skip
 
    integer :: ntest = 10  ! repeat test this times
 
-   type(decomp_info), pointer :: ph => null(), sp => null()
-   complex(mytype), allocatable, dimension(:, :, :) :: out
-   real(mytype), allocatable, dimension(:, :, :) :: in_r
+   type(decomp_info), pointer :: ph => null()
+   complex(mytype), allocatable, dimension(:, :, :) :: in, out
 
-   real(mytype) :: dr, error
+   real(mytype) :: dr, di, error
    integer :: ierror, i, j, k, m
-   integer :: zst1, zst2, zst3
-   integer :: zen1, zen2, zen3
-   double precision :: t1, t2, t3, t4
-   logical, dimension(3) :: skip_c2c = [.true., .false., .false.]
+   integer :: xst1, xst2, xst3
+   integer :: xen1, xen2, xen3
+   double precision :: n1, flops, t1, t2, t3, t4
+   logical, dimension(3) :: skip_c2c = [.true., .false., .true.]
 
    call MPI_INIT(ierror)
    ! To resize the domain we need to know global number of ranks
@@ -50,37 +49,37 @@ program fft_r2c_z_skip
    call decomp_2d_testing_log()
 
    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-   ! Test the r2c/c2r interface
+   ! Test the c2c interface
    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-   call decomp_2d_fft_init(PHYSICAL_IN_Z, opt_skip_XYZ_c2c=skip_c2c) ! non-default Z-pencil input
+   call decomp_2d_fft_init(PHYSICAL_IN_X, opt_skip_XYZ_c2c=skip_c2c) ! force the default x pencil
 
    ph => decomp_2d_fft_get_ph()
-   sp => decomp_2d_fft_get_sp()
-   !  input is Z-pencil data
-   ! output is X-pencil data
-   call alloc_z(in_r, ph, .true.)
-   call alloc_x(out, sp, .true.)
-   zst1 = zstart(1); zen1 = zend(1)
-   zst2 = zstart(2); zen2 = zend(2)
-   zst3 = zstart(3); zen3 = zend(3)
-
+   !  input is X-pencil data
+   ! output is Z-pencil data
+   call alloc_x(in, ph, .true.)
+   call alloc_z(out, ph, .true.)
+   xst1 = xstart(1); xen1 = xend(1)
+   xst2 = xstart(2); xen2 = xend(2)
+   xst3 = xstart(3); xen3 = xend(3)
    ! initilise input
-   do k = zst3, zen3
-      do j = zst2, zen2
-         do i = zst1, zen1
-            in_r(i, j, k) = real(i, mytype) / real(nx, mytype) * real(j, mytype) &
-                            / real(ny, mytype) * real(k, mytype) / real(nz, mytype)
+   do k = xst3, xen3
+      do j = xst2, xen2
+         do i = xst1, xen1
+            dr = real(i, mytype) / real(nx, mytype) * real(j, mytype) &
+                 / real(ny, mytype) * real(k, mytype) / real(nz, mytype)
+            di = dr
+            in(i, j, k) = cmplx(dr, di, mytype)
          end do
       end do
    end do
 
-   !$acc data copyin(in_r) copy(out)
+   !$acc data copyin(in) copy(out)
    ! First iterations out of the counting loop
    t1 = MPI_WTIME()
-   call decomp_2d_fft_3d(in_r, out)
+   call decomp_2d_fft_3d(in, out, DECOMP_2D_FFT_FORWARD)
    t2 = MPI_WTIME() - t1
    t3 = MPI_WTIME()
-   call decomp_2d_fft_3d(out, in_r)
+   call decomp_2d_fft_3d(out, in, DECOMP_2D_FFT_BACKWARD)
    t4 = MPI_WTIME() - t3
    call MPI_ALLREDUCE(t2, t1, 1, MPI_DOUBLE_PRECISION, MPI_SUM, &
                       MPI_COMM_WORLD, ierror)
@@ -89,7 +88,7 @@ program fft_r2c_z_skip
                       MPI_COMM_WORLD, ierror)
    t3 = t3 / dble(nproc)
    if (nrank == 0) then
-      write (*, *) '===== r2c/c2r interface ====='
+      write (*, *) '===== c2c interface ====='
       write (*, *) 'First iteration with dedicated timer'
       write (*, *) '     time (sec): ', t1, t3
       write (*, *) ''
@@ -98,27 +97,27 @@ program fft_r2c_z_skip
    t2 = 0.d0
    t4 = 0.d0
    !$acc kernels
-   if (.not. skip_c2c(1)) in_r = in_r / real(nx, mytype)
-   if (.not. skip_c2c(2)) in_r = in_r / real(ny, mytype)
-   if (.not. skip_c2c(3)) in_r = in_r / real(nz, mytype)
+   if (.not. skip_c2c(1)) in = in / real(nx, mytype)
+   if (.not. skip_c2c(2)) in = in / real(ny, mytype)
+   if (.not. skip_c2c(3)) in = in / real(nz, mytype)
    !$acc end kernels
    do m = 1, ntest
 
-      ! 3D r2c FFT
+      ! forward FFT
       t1 = MPI_WTIME()
-      call decomp_2d_fft_3d(in_r, out)
+      call decomp_2d_fft_3d(in, out, DECOMP_2D_FFT_FORWARD)
       t2 = t2 + MPI_WTIME() - t1
 
-      ! 3D inverse FFT
+      ! inverse FFT
       t3 = MPI_WTIME()
-      call decomp_2d_fft_3d(out, in_r)
+      call decomp_2d_fft_3d(out, in, DECOMP_2D_FFT_BACKWARD)
       t4 = t4 + MPI_WTIME() - t3
 
       ! normalisation - note 2DECOMP&FFT doesn't normalise
       !$acc kernels
-      if (.not. skip_c2c(1)) in_r = in_r / real(nx, mytype)
-      if (.not. skip_c2c(2)) in_r = in_r / real(ny, mytype)
-      if (.not. skip_c2c(3)) in_r = in_r / real(nz, mytype)
+      if (.not. skip_c2c(1)) in = in / real(nx, mytype)
+      if (.not. skip_c2c(2)) in = in / real(ny, mytype)
+      if (.not. skip_c2c(3)) in = in / real(nz, mytype)
       !$acc end kernels
 
    end do
@@ -136,17 +135,19 @@ program fft_r2c_z_skip
    ! checking accuracy
    error = 0._mytype
    !$acc parallel loop default(present) reduction(+:error)
-   do k = zst3, zen3
-      do j = zst2, zen2
-         do i = zst1, zen1
+   do k = xst3, xen3
+      do j = xst2, xen2
+         do i = xst1, xen1
             dr = real(i, mytype) / real(nx, mytype) * real(j, mytype) &
                  / real(ny, mytype) * real(k, mytype) / real(nz, mytype)
-            error = error + abs(in_r(i, j, k) - dr)
+            di = dr
+            dr = dr - real(in(i, j, k), mytype)
+            di = di - aimag(in(i, j, k))
+            error = error + sqrt(dr * dr + di * di)
          end do
       end do
    end do
    !$acc end loop
-
    call MPI_ALLREDUCE(MPI_IN_PLACE, error, 1, real_type, MPI_SUM, MPI_COMM_WORLD, ierror)
    error = error / (real(nx, mytype) * real(ny, mytype) * real(nz, mytype))
 
@@ -154,24 +155,31 @@ program fft_r2c_z_skip
    ! A large enough value is needed for the generic backend
    if (error > epsilon(error) * 50 * ntest) then
       if (nrank == 0) write (*, *) 'error / mesh point: ', error
-      call decomp_2d_abort(__FILE__, __LINE__, int(log10(error)), "r2c X test")
+      call decomp_2d_abort(__FILE__, __LINE__, int(log10(error)), "c2c X test")
    end if
 
    if (nrank == 0) then
       write (*, *) 'error / mesh point: ', error
       write (*, *) 'Avg time (sec): ', t1, t3
+      n1 = real(nx) * real(ny) * real(nz)
+      n1 = n1**(1.d0 / 3.d0)
+      ! 5n*log(n) flops per 1D FFT of size n using Cooley-Tukey algorithm
+      flops = 5.d0 * n1 * log(n1) / log(2.d0)
+      ! 3 sets of 1D FFTs for 3 directions, each having n^2 1D FFTs
+      flops = flops * 3.d0 * n1**2
+      flops = 2.d0 * flops / (t1 + t3)
+      write (*, *) 'GFLOPS : ', flops / 1000.d0**3
       write (*, *) '   '
-      write (*, *) 'fft_r2c_z completed '
+      write (*, *) 'fft_c2c_x completed '
       write (*, *) '   '
    end if
    !$acc end data
 
-   deallocate (in_r)
-   deallocate (out)
+   deallocate (in, out)
    nullify (ph)
-   nullify (sp)
    call decomp_2d_fft_finalize
    call decomp_2d_finalize
    call MPI_FINALIZE(ierror)
 
-end program fft_r2c_z_skip
+end program fft_c2c_x_skip
+

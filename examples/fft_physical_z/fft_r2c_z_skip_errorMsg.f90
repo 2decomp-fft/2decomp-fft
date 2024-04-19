@@ -1,5 +1,5 @@
 !! SPDX-License-Identifier: BSD-3-Clause
-program fft_r2c_z
+program fft_r2c_z_errorMsg
 
    use decomp_2d
    use decomp_2d_fft
@@ -176,4 +176,4 @@ program fft_r2c_z
    call decomp_2d_finalize
    call MPI_FINALIZE(ierror)
 
-end program fft_r2c_z
+end program fft_r2c_z_errorMsg

@@ -1,5 +1,5 @@
 !! SPDX-License-Identifier: BSD-3-Clause
-program fft_r2c_z_skip
+program fft_r2c_x_skip_errorMsg
 
    use decomp_2d
    use decomp_2d_fft
@@ -29,10 +29,10 @@ program fft_r2c_z_skip
 
    real(mytype) :: dr, error
    integer :: ierror, i, j, k, m
-   integer :: zst1, zst2, zst3
-   integer :: zen1, zen2, zen3
+   integer :: xst1, xst2, xst3
+   integer :: xen1, xen2, xen3
    double precision :: t1, t2, t3, t4
-   logical, dimension(3) :: skip_c2c = [.true., .false., .false.]
+   logical, dimension(3) :: skip_c2c = [.true., .false., .true.]
 
    call MPI_INIT(ierror)
    ! To resize the domain we need to know global number of ranks
@@ -49,25 +49,24 @@ program fft_r2c_z_skip
 
    call decomp_2d_testing_log()
 
-   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
    ! Test the r2c/c2r interface
-   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-   call decomp_2d_fft_init(PHYSICAL_IN_Z, opt_skip_XYZ_c2c=skip_c2c) ! non-default Z-pencil input
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+   call decomp_2d_fft_init(PHYSICAL_IN_X, opt_skip_XYZ_c2c=skip_c2c)
 
    ph => decomp_2d_fft_get_ph()
    sp => decomp_2d_fft_get_sp()
-   !  input is Z-pencil data
-   ! output is X-pencil data
-   call alloc_z(in_r, ph, .true.)
-   call alloc_x(out, sp, .true.)
-   zst1 = zstart(1); zen1 = zend(1)
-   zst2 = zstart(2); zen2 = zend(2)
-   zst3 = zstart(3); zen3 = zend(3)
-
+   !  input is X-pencil data
+   ! output is Z-pencil data
+   call alloc_x(in_r, ph, .true.)
+   call alloc_z(out, sp, .true.)
+   xst1 = xstart(1); xen1 = xend(1)
+   xst2 = xstart(2); xen2 = xend(2)
+   xst3 = xstart(3); xen3 = xend(3)
    ! initilise input
-   do k = zst3, zen3
-      do j = zst2, zen2
-         do i = zst1, zen1
+   do k = xst3, xen3
+      do j = xst2, xen2
+         do i = xst1, xen1
             in_r(i, j, k) = real(i, mytype) / real(nx, mytype) * real(j, mytype) &
                             / real(ny, mytype) * real(k, mytype) / real(nz, mytype)
          end do
@@ -136,9 +135,9 @@ program fft_r2c_z_skip
    ! checking accuracy
    error = 0._mytype
    !$acc parallel loop default(present) reduction(+:error)
-   do k = zst3, zen3
-      do j = zst2, zen2
-         do i = zst1, zen1
+   do k = xst3, xen3
+      do j = xst2, xen2
+         do i = xst1, xen1
             dr = real(i, mytype) / real(nx, mytype) * real(j, mytype) &
                  / real(ny, mytype) * real(k, mytype) / real(nz, mytype)
             error = error + abs(in_r(i, j, k) - dr)
@@ -154,6 +153,8 @@ program fft_r2c_z_skip
    ! A large enough value is needed for the generic backend
    if (error > epsilon(error) * 50 * ntest) then
       if (nrank == 0) write (*, *) 'error / mesh point: ', error
+      if (nrank == 0) write (*, *) 'Incorrect normalization due to ignored request to skip the r2c/c2r transform'
+      if (nrank == 0) write (*, *) 'error / mesh point: ', error
       call decomp_2d_abort(__FILE__, __LINE__, int(log10(error)), "r2c X test")
    end if
 
@@ -161,17 +162,17 @@ program fft_r2c_z_skip
       write (*, *) 'error / mesh point: ', error
       write (*, *) 'Avg time (sec): ', t1, t3
       write (*, *) '   '
-      write (*, *) 'fft_r2c_z completed '
+      write (*, *) 'fft_r2c_x completed '
       write (*, *) '   '
    end if
    !$acc end data
 
-   deallocate (in_r)
-   deallocate (out)
+   deallocate (in_r, out)
    nullify (ph)
    nullify (sp)
    call decomp_2d_fft_finalize
    call decomp_2d_finalize
    call MPI_FINALIZE(ierror)
 
-end program fft_r2c_z_skip
+end program fft_r2c_x_skip_errorMsg
+

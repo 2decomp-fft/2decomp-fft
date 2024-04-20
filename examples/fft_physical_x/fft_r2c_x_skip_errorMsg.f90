@@ -97,7 +97,7 @@ program fft_r2c_x_skip_errorMsg
    t2 = 0.d0
    t4 = 0.d0
    !$acc kernels
-   if (.not. skip_c2c(1)) in_r = in_r / real(nx, mytype)
+   in_r = in_r / real(nx, mytype) ! r2C / c2r + physical_in_x
    if (.not. skip_c2c(2)) in_r = in_r / real(ny, mytype)
    if (.not. skip_c2c(3)) in_r = in_r / real(nz, mytype)
    !$acc end kernels
@@ -115,7 +115,7 @@ program fft_r2c_x_skip_errorMsg
 
       ! normalisation - note 2DECOMP&FFT doesn't normalise
       !$acc kernels
-      if (.not. skip_c2c(1)) in_r = in_r / real(nx, mytype)
+      in_r = in_r / real(nx, mytype) ! r2c / c2r + physical_in_x
       if (.not. skip_c2c(2)) in_r = in_r / real(ny, mytype)
       if (.not. skip_c2c(3)) in_r = in_r / real(nz, mytype)
       !$acc end kernels
@@ -152,8 +152,6 @@ program fft_r2c_x_skip_errorMsg
    ! Abort if the error is too high
    ! A large enough value is needed for the generic backend
    if (error > epsilon(error) * 50 * ntest) then
-      if (nrank == 0) write (*, *) 'error / mesh point: ', error
-      if (nrank == 0) write (*, *) 'Incorrect normalization due to ignored request to skip the r2c/c2r transform'
       if (nrank == 0) write (*, *) 'error / mesh point: ', error
       call decomp_2d_abort(__FILE__, __LINE__, int(log10(error)), "r2c X test")
    end if

@@ -155,7 +155,6 @@ program fft_r2c_z_errorMsg
    ! A large enough value is needed for the generic backend
    if (error > epsilon(error) * 50 * ntest) then
       if (nrank == 0) write (*, *) 'error / mesh point: ', error
-      if (nrank == 0) write (*, *) 'Incorrect normalization due to ignored request to skip the r2c/c2r transform'
       call decomp_2d_abort(__FILE__, __LINE__, int(log10(error)), "r2c X test")
    end if
 

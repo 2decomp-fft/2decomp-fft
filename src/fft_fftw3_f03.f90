@@ -56,6 +56,11 @@ module decomp_2d_fft
                              inplace_r2c => null(), &
                              inplace_c2r => null()
 
+   ! Skip some c2c transforms
+   logical, pointer, save :: skip_x_c2c => null()
+   logical, pointer, save :: skip_y_c2c => null()
+   logical, pointer, save :: skip_z_c2c => null()
+
    ! Derived type with all the quantities needed to perform FFT
    type decomp_2d_fft_engine
       type(c_ptr), private :: plan(-1:2, 3), wk2_c2c_p, wk13_p
@@ -69,6 +74,7 @@ module decomp_2d_fft
       complex(mytype), contiguous, pointer, private :: wk2_r2c(:, :, :) => null()
       complex(mytype), contiguous, pointer, private :: wk13(:, :, :) => null()
       logical, private :: inplace, inplace_r2c, inplace_c2r
+      logical, private :: skip_x_c2c, skip_y_c2c, skip_z_c2c
    contains
       procedure, public :: init => decomp_2d_fft_engine_init
       procedure, public :: fin => decomp_2d_fft_engine_fin
@@ -130,39 +136,55 @@ contains
 
    end subroutine fft_init_noarg
 
-   subroutine fft_init_arg(pencil)     ! allow to handle Z-pencil input
+   subroutine fft_init_arg(pencil, opt_skip_XYZ_c2c)     ! allow to handle Z-pencil input
 
       implicit none
 
       integer, intent(IN) :: pencil
+      logical, dimension(3), intent(in), optional :: opt_skip_XYZ_c2c
 
-      call fft_init_one_grid(pencil, nx_global, ny_global, nz_global)
+      call fft_init_one_grid(pencil, nx_global, ny_global, nz_global, &
+                             opt_skip_XYZ_c2c=opt_skip_XYZ_c2c)
 
    end subroutine fft_init_arg
 
    ! Initialise one FFT library to perform arbitrary size transforms
-   subroutine fft_init_one_grid(pencil, nx, ny, nz, opt_inplace, opt_inplace_r2c, opt_inplace_c2r)
+   subroutine fft_init_one_grid(pencil, nx, ny, nz, &
+                                opt_inplace, &
+                                opt_inplace_r2c, &
+                                opt_inplace_c2r, &
+                                opt_skip_XYZ_c2c)
 
       implicit none
 
       integer, intent(IN) :: pencil, nx, ny, nz
       logical, intent(in), optional :: opt_inplace, opt_inplace_r2c, opt_inplace_c2r
+      logical, dimension(3), intent(in), optional :: opt_skip_XYZ_c2c
 
       ! Only one FFT engine will be used
       call decomp_2d_fft_set_ngrid(1)
 
       ! Initialise the FFT engine
-      call decomp_2d_fft_init(pencil, nx, ny, nz, 1, opt_inplace, opt_inplace_r2c, opt_inplace_c2r)
+      call decomp_2d_fft_init(pencil, nx, ny, nz, 1, &
+                              opt_inplace, &
+                              opt_inplace_r2c, &
+                              opt_inplace_c2r, &
+                              opt_skip_XYZ_c2c=opt_skip_XYZ_c2c)
 
    end subroutine fft_init_one_grid
 
    ! Initialise the provided FFT grid
-   subroutine fft_init_multiple_grids(pencil, nx, ny, nz, igrid, opt_inplace, opt_inplace_r2c, opt_inplace_c2r)
+   subroutine fft_init_multiple_grids(pencil, nx, ny, nz, igrid, &
+                                      opt_inplace, &
+                                      opt_inplace_r2c, &
+                                      opt_inplace_c2r, &
+                                      opt_skip_XYZ_c2c)
 
       implicit none
 
       integer, intent(in) :: pencil, nx, ny, nz, igrid
       logical, intent(in), optional :: opt_inplace, opt_inplace_r2c, opt_inplace_c2r
+      logical, dimension(3), intent(in), optional :: opt_skip_XYZ_c2c
 
       ! Safety check
       if (igrid < 1 .or. igrid > n_grid) then
@@ -170,18 +192,27 @@ contains
       end if
 
       ! Initialise the engine
-      call fft_engines(igrid)%init(pencil, nx, ny, nz, opt_inplace, opt_inplace_r2c, opt_inplace_c2r)
+      call fft_engines(igrid)%init(pencil, nx, ny, nz, &
+                                   opt_inplace, &
+                                   opt_inplace_r2c, &
+                                   opt_inplace_c2r, &
+                                   opt_skip_XYZ_c2c)
 
    end subroutine fft_init_multiple_grids
 
    ! Initialise the given FFT engine
-   subroutine decomp_2d_fft_engine_init(engine, pencil, nx, ny, nz, opt_inplace, opt_inplace_r2c, opt_inplace_c2r)
+   subroutine decomp_2d_fft_engine_init(engine, pencil, nx, ny, nz, &
+                                        opt_inplace, &
+                                        opt_inplace_r2c, &
+                                        opt_inplace_c2r, &
+                                        opt_skip_XYZ_c2c)
 
       implicit none
 
       class(decomp_2d_fft_engine), intent(inout), target :: engine
       integer, intent(in) :: pencil, nx, ny, nz
       logical, intent(in), optional :: opt_inplace, opt_inplace_r2c, opt_inplace_c2r
+      logical, dimension(3), intent(in), optional :: opt_skip_XYZ_c2c
 
       integer(C_SIZE_T) :: sz
 
@@ -218,6 +249,17 @@ contains
       else
          engine%inplace_c2r = .false.!DECOMP_2D_FFT_INPLACE ! this is experimental
       end if
+
+      ! some c2c transforms can be skipped
+      if (present(opt_skip_XYZ_c2c)) then
+         engine%skip_x_c2c = opt_skip_XYZ_c2c(1)
+         engine%skip_y_c2c = opt_skip_XYZ_c2c(2)
+         engine%skip_z_c2c = opt_skip_XYZ_c2c(3)
+      else !bm_issue337
+         engine%skip_x_c2c = .false.
+         engine%skip_y_c2c = .false.
+         engine%skip_z_c2c = .false.
+      end if  !bm_issue337
 
       ! determine the processor grid in use
       dims = get_decomp_dims()
@@ -326,6 +368,9 @@ contains
       nullify (inplace)
       nullify (inplace_r2c)
       nullify (inplace_c2r)
+      nullify (skip_x_c2c)
+      nullify (skip_y_c2c)
+      nullify (skip_z_c2c)
 
       ! Clean the FFTW library
       call fftw_cleanup()
@@ -537,6 +582,9 @@ contains
       inplace => engine%inplace
       inplace_r2c => engine%inplace_r2c
       inplace_c2r => engine%inplace_c2r
+      skip_x_c2c => engine%skip_x_c2c
+      skip_y_c2c => engine%skip_y_c2c
+      skip_z_c2c => engine%skip_z_c2c
 
    end subroutine decomp_2d_fft_engine_use_it
 
@@ -1006,13 +1054,13 @@ contains
       complex(mytype), dimension(:, :, :), intent(INOUT) :: inout
       type(C_PTR) :: plan1
 
+      if (skip_x_c2c) return
+
 #ifdef DOUBLE_PREC
       call fftw_execute_dft(plan1, inout, inout)
 #else
       call fftwf_execute_dft(plan1, inout, inout)
 #endif
-
-      return
    end subroutine c2c_1m_x
 
    ! c2c transform, multiple 1D FFTs in y direction
@@ -1025,6 +1073,8 @@ contains
 
       integer :: k, s3
 
+      if (skip_y_c2c) return
+
       s3 = size(inout, 3)
 
       do k = 1, s3  ! transform on one Z-plane at a time
@@ -1034,8 +1084,6 @@ contains
          call fftwf_execute_dft(plan1, inout(:, :, k), inout(:, :, k))
 #endif
       end do
-
-      return
    end subroutine c2c_1m_y
 
    ! c2c transform, multiple 1D FFTs in z direction
@@ -1046,13 +1094,13 @@ contains
       complex(mytype), dimension(:, :, :), intent(INOUT) :: inout
       type(C_PTR) :: plan1
 
+      if (skip_z_c2c) return
+
 #ifdef DOUBLE_PREC
       call fftw_execute_dft(plan1, inout, inout)
 #else
       call fftwf_execute_dft(plan1, inout, inout)
 #endif
-
-      return
    end subroutine c2c_1m_z
 
    ! r2c transform, multiple 1D FFTs in x direction
@@ -1062,6 +1110,9 @@ contains
 
       real(mytype), dimension(:, :, :), intent(INOUT)  ::  input
       complex(mytype), dimension(:, :, :), intent(INOUT) :: output
+
+      if (skip_x_c2c) call decomp_2d_warning(__FILE__, __LINE__, 1, &
+                                             "r2c / c2r transform can not be skipped")
 
 #ifdef DOUBLE_PREC
       call fftw_execute_dft_r2c(plan(0, 1), input, output)
@@ -1081,6 +1132,9 @@ contains
       real(mytype), dimension(:, :, :), intent(INOUT)  ::  input
       complex(mytype), dimension(:, :, :), intent(INOUT) :: output
 
+      if (skip_z_c2c) call decomp_2d_warning(__FILE__, __LINE__, 2, &
+                                             "r2c / c2r transform can not be skipped")
+
 #ifdef DOUBLE_PREC
       call fftw_execute_dft_r2c(plan(0, 3), input, output)
 #else
@@ -1099,6 +1153,9 @@ contains
       complex(mytype), dimension(:, :, :), intent(INOUT)  ::  input
       real(mytype), dimension(:, :, :), intent(INOUT) :: output
 
+      if (skip_x_c2c) call decomp_2d_warning(__FILE__, __LINE__, 3, &
+                                             "r2c / c2r transform can not be skipped")
+
 #ifdef DOUBLE_PREC
       call fftw_execute_dft_c2r(plan(2, 1), input, output)
 #else
@@ -1116,6 +1173,9 @@ contains
 
       complex(mytype), dimension(:, :, :), intent(INOUT) :: input
       real(mytype), dimension(:, :, :), intent(INOUT) :: output
+
+      if (skip_z_c2c) call decomp_2d_warning(__FILE__, __LINE__, 4, &
+                                             "r2c / c2r transform can not be skipped")
 
 #ifdef DOUBLE_PREC
       call fftw_execute_dft_c2r(plan(2, 3), input, output)

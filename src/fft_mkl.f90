@@ -823,7 +823,7 @@ module decomp_2d_fft
 
       type(DFTI_DESCRIPTOR), pointer :: desc
       complex(mytype), dimension(*) :: in, out
-      integer :: isign, status, len
+      integer :: isign, status
 
       if ((associated(desc, c2c_x) .and. skip_x_c2c) .or. &
           (associated(desc, c2c_x2) .and. skip_x_c2c) .or. &
@@ -831,13 +831,13 @@ module decomp_2d_fft
           (associated(desc, c2c_y2) .and. skip_y_c2c) .or. &
           (associated(desc, c2c_z) .and. skip_z_c2c) .or. &
           (associated(desc, c2c_z2) .and. skip_z_c2c)) then
-         if (associated(desc, c2c_x)) len = product(ph%xsz)
-         if (associated(desc, c2c_x2)) len = product(sp%xsz)
-         if (associated(desc, c2c_y)) len = product(ph%ysz)
-         if (associated(desc, c2c_y2)) len = product(sp%ysz)
-         if (associated(desc, c2c_z)) len = product(ph%zsz)
-         if (associated(desc, c2c_z2)) len = product(sp%zsz)
-         out(1:len) = in(1:len)
+         if (associated(desc, c2c_x)) out(1:product(ph%xsz)) = in(1:product(ph%xsz))
+         if (associated(desc, c2c_y)) out(1:product(ph%ysz)) = in(1:product(ph%ysz))
+         if (associated(desc, c2c_z)) out(1:product(ph%zsz)) = in(1:product(ph%zsz))
+         if (associated(desc, c2c_x2)) out(1:product(sp%xsz)) = in(1:product(sp%xsz))
+         if (associated(desc, c2c_y2)) out(1:product(sp%ysz)) = in(1:product(sp%ysz))
+         if (associated(desc, c2c_z2)) out(1:product(sp%zsz)) = in(1:product(sp%zsz))
+         wrapper_c2c = 0
          return
       end if
 
@@ -859,12 +859,15 @@ module decomp_2d_fft
       complex(mytype), dimension(*) :: inout
       integer :: isign, status
 
-      if (associated(desc, c2c_x) .and. skip_x_c2c) return
-      if (associated(desc, c2c_x2) .and. skip_x_c2c) return
-      if (associated(desc, c2c_y) .and. skip_y_c2c) return
-      if (associated(desc, c2c_y2) .and. skip_y_c2c) return
-      if (associated(desc, c2c_z) .and. skip_z_c2c) return
-      if (associated(desc, c2c_z2) .and. skip_z_c2c) return
+      if ((associated(desc, c2c_x) .and. skip_x_c2c) .or. &
+          (associated(desc, c2c_x2) .and. skip_x_c2c) .or.&
+          (associated(desc, c2c_y) .and. skip_y_c2c) .or. &
+          (associated(desc, c2c_y2) .and. skip_y_c2c) .or. &
+          (associated(desc, c2c_z) .and. skip_z_c2c) .or. &
+          (associated(desc, c2c_z2) .and. skip_z_c2c)) then
+         wrapper_c2c_inplace = 0
+         return
+      endif
 
       if (isign == DECOMP_2D_FFT_FORWARD) then
          status = DftiComputeForward(desc, inout)

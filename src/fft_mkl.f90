@@ -823,7 +823,7 @@ module decomp_2d_fft
 
       type(DFTI_DESCRIPTOR), pointer :: desc
       complex(mytype), dimension(*) :: in, out
-      integer :: isign, status
+      integer :: isign, status, len
 
       if ((associated(desc, c2c_x) .and. skip_x_c2c) .or. &
           (associated(desc, c2c_x2) .and. skip_x_c2c) .or. &
@@ -831,7 +831,13 @@ module decomp_2d_fft
           (associated(desc, c2c_y2) .and. skip_y_c2c) .or. &
           (associated(desc, c2c_z) .and. skip_z_c2c) .or. &
           (associated(desc, c2c_z2) .and. skip_z_c2c)) then
-         out(1:min(size(in),size(out))) = in(1:min(size(in),size(out)))
+         if (associated(desc, c2c_x)) len = product(ph%xsz)
+         if (associated(desc, c2c_x2)) len = product(sp%xsz)
+         if (associated(desc, c2c_y)) len = product(ph%ysz)
+         if (associated(desc, c2c_y2)) len = product(sp%ysz)
+         if (associated(desc, c2c_z)) len = product(ph%zsz)
+         if (associated(desc, c2c_z2)) len = product(sp%zsz)
+         out(1:len) = in(1:len)
          return
       end if
 

@@ -48,6 +48,7 @@ module decomp_2d_fft
       complex(mytype), contiguous, pointer, private :: wk2_r2c(:, :, :) => null()
       complex(mytype), allocatable, private :: wk13(:, :, :)
       logical, private :: inplace
+      logical, private :: skip_x_c2c, skip_y_c2c, skip_z_c2c
    contains
       procedure, public :: init => decomp_2d_fft_engine_init
       procedure, public :: fin => decomp_2d_fft_engine_fin
@@ -454,6 +455,8 @@ module decomp_2d_fft
 
       integer :: istat
 
+      if (skip_x_c2c) return
+
 #ifdef DOUBLE_PREC
       !$acc host_data use_device(inout)
       istat = cufftExecZ2Z(plan1, inout, inout, isign)
@@ -477,6 +480,8 @@ module decomp_2d_fft
       integer*4, intent(IN) :: plan1
 
       integer :: s3, k, istat
+
+      if (skip_y_c2c) return
 
       ! transform on one Z-plane at a time
       s3 = size(inout, 3)
@@ -506,6 +511,8 @@ module decomp_2d_fft
 
       integer :: istat
 
+      if (skip_z_c2c) return
+
 #ifdef DOUBLE_PREC
       !$acc host_data use_device(inout)
       istat = cufftExecZ2Z(plan1, inout, inout, isign)
@@ -527,6 +534,9 @@ module decomp_2d_fft
       real(mytype), dimension(:, :, :), intent(IN)  ::  input
       complex(mytype), dimension(:, :, :), intent(OUT) :: output
       integer :: istat
+
+      if (skip_x_c2c) call decomp_2d_warning(__FILE__, __LINE__, 1, &
+                                             "r2c / c2r transform can not be skipped")
 
 #ifdef DOUBLE_PREC
       !$acc host_data use_device(input,output)
@@ -551,6 +561,9 @@ module decomp_2d_fft
 
       integer :: istat
 
+      if (skip_z_c2c) call decomp_2d_warning(__FILE__, __LINE__, 2, &
+                                             "r2c / c2r transform can not be skipped")
+
 #ifdef DOUBLE_PREC
       !$acc host_data use_device(input,output)
       istat = cufftExecD2Z(plan(0, 3), input, output)
@@ -574,6 +587,9 @@ module decomp_2d_fft
 
       integer :: istat
 
+      if (skip_x_c2c) call decomp_2d_warning(__FILE__, __LINE__, 3, &
+                                             "r2c / c2r transform can not be skipped")
+
 #ifdef DOUBLE_PREC
       !$acc host_data use_device(input,output)
       istat = cufftExecZ2D(plan(2, 1), input, output)
@@ -596,6 +612,9 @@ module decomp_2d_fft
       real(mytype), dimension(:, :, :), intent(OUT) :: output
 
       integer :: istat
+
+      if (skip_z_c2c) call decomp_2d_warning(__FILE__, __LINE__, 4, &
+                                             "r2c / c2r transform can not be skipped")
 
 #ifdef DOUBLE_PREC
       !$acc host_data use_device(input,output)

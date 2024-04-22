@@ -55,6 +55,7 @@ module decomp_2d_fft
       complex(mytype), contiguous, pointer, private :: wk2_r2c(:, :, :) => null()
       complex(mytype), allocatable, private :: wk13(:, :, :)
       logical, private :: inplace
+      logical, private :: skip_x_c2c, skip_y_c2c, skip_z_c2c
    contains
       procedure, public :: init => decomp_2d_fft_engine_init
       procedure, public :: fin => decomp_2d_fft_engine_fin
@@ -824,6 +825,16 @@ module decomp_2d_fft
       complex(mytype), dimension(*) :: in, out
       integer :: isign, status
 
+      if ((associated(desc, c2c_x) .and. skip_x_c2c) .or. &
+          (associated(desc, c2c_x2) .and. skip_x_c2c) .or. &
+          (associated(desc, c2c_y) .and. skip_y_c2c) .or. &
+          (associated(desc, c2c_y2) .and. skip_y_c2c) .or. &
+          (associated(desc, c2c_z) .and. skip_z_c2c) .or. &
+          (associated(desc, c2c_z2) .and. skip_z_c2c)) then
+         out = in
+         return
+      end if
+
       if (isign == DECOMP_2D_FFT_FORWARD) then
          status = DftiComputeForward(desc, in, out)
       else if (isign == DECOMP_2D_FFT_BACKWARD) then
@@ -841,6 +852,13 @@ module decomp_2d_fft
       type(DFTI_DESCRIPTOR), pointer :: desc
       complex(mytype), dimension(*) :: inout
       integer :: isign, status
+
+      if (associated(desc, c2c_x) .and. skip_x_c2c) return
+      if (associated(desc, c2c_x2) .and. skip_x_c2c) return
+      if (associated(desc, c2c_y) .and. skip_y_c2c) return
+      if (associated(desc, c2c_y2) .and. skip_y_c2c) return
+      if (associated(desc, c2c_z) .and. skip_z_c2c) return
+      if (associated(desc, c2c_z2) .and. skip_z_c2c) return
 
       if (isign == DECOMP_2D_FFT_FORWARD) then
          status = DftiComputeForward(desc, inout)
@@ -860,6 +878,11 @@ module decomp_2d_fft
       real(mytype), dimension(*) :: in
       complex(mytype), dimension(*) :: out
 
+      if ((associated(desc, r2c_x) .and. skip_x_c2c) .or. &
+          (associated(desc, r2c_z) .and. skip_z_c2c)) &
+         call decomp_2d_warning(__FILE__, __LINE__, 1, &
+                                "r2c / c2r transform can not be skipped")
+
       wrapper_r2c = DftiComputeForward(desc, in, out)
 
    end function wrapper_r2c
@@ -871,6 +894,11 @@ module decomp_2d_fft
       type(DFTI_DESCRIPTOR), pointer :: desc
       complex(mytype), dimension(*) :: in
       real(mytype), dimension(*) :: out
+
+      if ((associated(desc, c2r_x) .and. skip_x_c2c) .or. &
+          (associated(desc, c2r_z) .and. skip_z_c2c)) &
+         call decomp_2d_warning(__FILE__, __LINE__, 2, &
+                                "r2c / c2r transform can not be skipped")
 
       wrapper_c2r = DftiComputeBackward(desc, in, out)
 

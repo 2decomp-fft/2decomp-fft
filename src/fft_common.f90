@@ -25,6 +25,11 @@ logical, pointer, save :: inplace => null(), &
                           inplace_r2c => null(), &
                           inplace_c2r => null()
 
+! Skip some c2c transforms
+logical, pointer, save :: skip_x_c2c => null()
+logical, pointer, save :: skip_y_c2c => null()
+logical, pointer, save :: skip_z_c2c => null()
+
 !
 ! Multiple grid options
 !
@@ -76,40 +81,56 @@ subroutine fft_init_noarg
    return
 end subroutine fft_init_noarg
 
-subroutine fft_init_arg(pencil)     ! allow to handle Z-pencil input
+subroutine fft_init_arg(pencil, opt_skip_XYZ_c2c)     ! allow to handle Z-pencil input
 
    implicit none
 
    integer, intent(IN) :: pencil
+   logical, dimension(3), intent(in), optional :: opt_skip_XYZ_c2c
 
-   call fft_init_one_grid(pencil, nx_global, ny_global, nz_global)
+   call fft_init_one_grid(pencil, nx_global, ny_global, nz_global, &
+                          opt_skip_XYZ_c2c=opt_skip_XYZ_c2c)
 
    return
 end subroutine fft_init_arg
 
 ! Initialise the FFT library to perform arbitrary size transforms
-subroutine fft_init_one_grid(pencil, nx, ny, nz, opt_inplace, opt_inplace_r2c, opt_inplace_c2r)
+subroutine fft_init_one_grid(pencil, nx, ny, nz, &
+                             opt_inplace, &
+                             opt_inplace_r2c, &
+                             opt_inplace_c2r, &
+                             opt_skip_XYZ_c2c)
 
    implicit none
 
    integer, intent(IN) :: pencil, nx, ny, nz
    logical, intent(in), optional :: opt_inplace, opt_inplace_r2c, opt_inplace_c2r
+   logical, dimension(3), intent(in), optional :: opt_skip_XYZ_c2c
 
    ! Only one FFT engine will be used
    call decomp_2d_fft_set_ngrid(1)
 
    ! Initialise the FFT engine
-   call decomp_2d_fft_init(pencil, nx, ny, nz, 1, opt_inplace, opt_inplace_r2c, opt_inplace_c2r)
+   call decomp_2d_fft_init(pencil, nx, ny, nz, 1, &
+                           opt_inplace, &
+                           opt_inplace_r2c, &
+                           opt_inplace_c2r, &
+                           opt_skip_XYZ_c2c=opt_skip_XYZ_c2c)
 
 end subroutine fft_init_one_grid
 
 ! Initialise the provided FFT grid
-subroutine fft_init_multiple_grids(pencil, nx, ny, nz, igrid, opt_inplace, opt_inplace_r2c, opt_inplace_c2r)
+subroutine fft_init_multiple_grids(pencil, nx, ny, nz, igrid, &
+                                   opt_inplace, &
+                                   opt_inplace_r2c, &
+                                   opt_inplace_c2r, &
+                                   opt_skip_XYZ_c2c)
 
    implicit none
 
    integer, intent(in) :: pencil, nx, ny, nz, igrid
    logical, intent(in), optional :: opt_inplace, opt_inplace_r2c, opt_inplace_c2r
+   logical, dimension(3), intent(in), optional :: opt_skip_XYZ_c2c
 
    ! Safety check
    if (igrid < 1 .or. igrid > n_grid) then
@@ -117,18 +138,27 @@ subroutine fft_init_multiple_grids(pencil, nx, ny, nz, igrid, opt_inplace, opt_i
    end if
 
    ! Initialise the engine
-   call fft_engines(igrid)%init(pencil, nx, ny, nz, opt_inplace, opt_inplace_r2c, opt_inplace_c2r)
+   call fft_engines(igrid)%init(pencil, nx, ny, nz, &
+                                opt_inplace, &
+                                opt_inplace_r2c, &
+                                opt_inplace_c2r, &
+                                opt_skip_XYZ_c2c)
 
 end subroutine fft_init_multiple_grids
 
 ! Initialise the given FFT engine
-subroutine decomp_2d_fft_engine_init(engine, pencil, nx, ny, nz, opt_inplace, opt_inplace_r2c, opt_inplace_c2r)
+subroutine decomp_2d_fft_engine_init(engine, pencil, nx, ny, nz, &
+                                     opt_inplace, &
+                                     opt_inplace_r2c, &
+                                     opt_inplace_c2r, &
+                                     opt_skip_XYZ_c2c)
 
    implicit none
 
    class(decomp_2d_fft_engine), target, intent(inout) :: engine
    integer, intent(in) :: pencil, nx, ny, nz
    logical, intent(in), optional :: opt_inplace, opt_inplace_r2c, opt_inplace_c2r
+   logical, dimension(3), intent(in), optional :: opt_skip_XYZ_c2c
 
    if (decomp_profiler_fft) call decomp_profiler_start("fft_init")
 
@@ -158,6 +188,17 @@ subroutine decomp_2d_fft_engine_init(engine, pencil, nx, ny, nz, opt_inplace, op
    end if
    if (present(opt_inplace_c2r)) then
       call decomp_2d_abort(__FILE__, __LINE__, -1, 'In-place c2r transform is not yet available')
+   end if
+
+   ! some c2c transforms can be skipped
+   if (present(opt_skip_XYZ_c2c)) then
+      engine%skip_x_c2c = opt_skip_XYZ_c2c(1)
+      engine%skip_y_c2c = opt_skip_XYZ_c2c(2)
+      engine%skip_z_c2c = opt_skip_XYZ_c2c(3)
+   else
+      engine%skip_x_c2c = .false.
+      engine%skip_y_c2c = .false.
+      engine%skip_z_c2c = .false.
    end if
 
    ! determine the processor grid in use
@@ -256,6 +297,9 @@ subroutine decomp_2d_fft_finalize
    nullify (inplace)
    nullify (inplace_r2c)
    nullify (inplace_c2r)
+   nullify (skip_x_c2c)
+   nullify (skip_y_c2c)
+   nullify (skip_z_c2c)
 
    ! Clean engine-specific stuff located in the module
    call finalize_fft_engine()
@@ -460,6 +504,9 @@ subroutine decomp_2d_fft_engine_use_it(engine, opt_force)
    wk2_r2c => engine%wk2_r2c
    wk13 => engine%wk13
    inplace => engine%inplace
+   skip_x_c2c => engine%skip_x_c2c
+   skip_y_c2c => engine%skip_y_c2c
+   skip_z_c2c => engine%skip_z_c2c
 
    ! Engine-specific stuff
    call use_fft_engine(engine)

@@ -255,11 +255,11 @@ contains
          engine%skip_x_c2c = opt_skip_XYZ_c2c(1)
          engine%skip_y_c2c = opt_skip_XYZ_c2c(2)
          engine%skip_z_c2c = opt_skip_XYZ_c2c(3)
-      else !bm_issue337
+      else
          engine%skip_x_c2c = .false.
          engine%skip_y_c2c = .false.
          engine%skip_z_c2c = .false.
-      end if  !bm_issue337
+      end if
 
       ! determine the processor grid in use
       dims = get_decomp_dims()

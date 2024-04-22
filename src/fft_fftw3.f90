@@ -53,6 +53,7 @@ module decomp_2d_fft
       complex(mytype), contiguous, pointer, private :: wk2_r2c(:, :, :) => null()
       complex(mytype), allocatable, private :: wk13(:, :, :)
       logical, private :: inplace
+      logical, private :: skip_x_c2c, skip_y_c2c, skip_z_c2c
    contains
       procedure, public :: init => decomp_2d_fft_engine_init
       procedure, public :: fin => decomp_2d_fft_engine_fin
@@ -387,6 +388,8 @@ module decomp_2d_fft
       complex(mytype), dimension(:, :, :), intent(INOUT) :: inout
       type(C_PTR), intent(IN) :: plan1
 
+      if (skip_x_c2c) return
+
 #ifdef DOUBLE_PREC
       call dfftw_execute_dft(plan1, inout, inout)
 #else
@@ -405,6 +408,8 @@ module decomp_2d_fft
       type(C_PTR), intent(IN) :: plan1
 
       integer :: k, s3
+
+      if (skip_y_c2c) return
 
       ! transform on one Z-plane at a time
       s3 = size(inout, 3)
@@ -427,6 +432,8 @@ module decomp_2d_fft
       complex(mytype), dimension(:, :, :), intent(INOUT) :: inout
       type(C_PTR), intent(IN) :: plan1
 
+      if (skip_z_c2c) return
+
 #ifdef DOUBLE_PREC
       call dfftw_execute_dft(plan1, inout, inout)
 #else
@@ -443,6 +450,9 @@ module decomp_2d_fft
 
       real(mytype), dimension(:, :, :), intent(INOUT)  ::  input
       complex(mytype), dimension(:, :, :), intent(OUT) :: output
+
+      if (skip_x_c2c) call decomp_2d_warning(__FILE__, __LINE__, 1, &
+                                             "r2c / c2r transform can not be skipped")
 
 #ifdef DOUBLE_PREC
       call dfftw_execute_dft_r2c(plan(0, 1), input, output)
@@ -462,6 +472,9 @@ module decomp_2d_fft
       real(mytype), dimension(:, :, :), intent(INOUT)  ::  input
       complex(mytype), dimension(:, :, :), intent(OUT) :: output
 
+      if (skip_z_c2c) call decomp_2d_warning(__FILE__, __LINE__, 2, &
+                                             "r2c / c2r transform can not be skipped")
+
 #ifdef DOUBLE_PREC
       call dfftw_execute_dft_r2c(plan(0, 3), input, output)
 #else
@@ -480,6 +493,9 @@ module decomp_2d_fft
       complex(mytype), dimension(:, :, :), intent(INOUT)  ::  input
       real(mytype), dimension(:, :, :), intent(OUT) :: output
 
+      if (skip_x_c2c) call decomp_2d_warning(__FILE__, __LINE__, 3, &
+                                             "r2c / c2r transform can not be skipped")
+
 #ifdef DOUBLE_PREC
       call dfftw_execute_dft_c2r(plan(2, 1), input, output)
 #else
@@ -497,6 +513,9 @@ module decomp_2d_fft
 
       complex(mytype), dimension(:, :, :), intent(INOUT) :: input
       real(mytype), dimension(:, :, :), intent(OUT) :: output
+
+      if (skip_z_c2c) call decomp_2d_warning(__FILE__, __LINE__, 4, &
+                                             "r2c / c2r transform can not be skipped")
 
 #ifdef DOUBLE_PREC
       call dfftw_execute_dft_c2r(plan(2, 3), input, output)

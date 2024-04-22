@@ -831,7 +831,7 @@ module decomp_2d_fft
           (associated(desc, c2c_y2) .and. skip_y_c2c) .or. &
           (associated(desc, c2c_z) .and. skip_z_c2c) .or. &
           (associated(desc, c2c_z2) .and. skip_z_c2c)) then
-         out = in
+         out(:) = in(:)
          return
       end if
 

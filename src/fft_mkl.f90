@@ -832,10 +832,10 @@ module decomp_2d_fft
           (associated(desc, c2c_z) .and. skip_z_c2c) .or. &
           (associated(desc, c2c_z2) .and. skip_z_c2c)) then
          if (associated(desc, c2c_x)) out(1:product(ph%xsz)) = in(1:product(ph%xsz))
-         if (associated(desc, c2c_y)) out(1:product(ph%ysz)) = in(1:product(ph%ysz))
+         if (associated(desc, c2c_y)) out(1:ph%ysz(1)*ph%ysz(2)) = in(1:ph%ysz(1)*ph%ysz(2))
          if (associated(desc, c2c_z)) out(1:product(ph%zsz)) = in(1:product(ph%zsz))
          if (associated(desc, c2c_x2)) out(1:product(sp%xsz)) = in(1:product(sp%xsz))
-         if (associated(desc, c2c_y2)) out(1:product(sp%ysz)) = in(1:product(sp%ysz))
+         if (associated(desc, c2c_y2)) out(1:sp%ysz(1)*sp%ysz(2)) = in(1:sp%ysz(1)*sp%ysz(2))
          if (associated(desc, c2c_z2)) out(1:product(sp%zsz)) = in(1:product(sp%zsz))
          wrapper_c2c = 0
          return

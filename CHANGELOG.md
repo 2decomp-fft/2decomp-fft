@@ -11,7 +11,7 @@ _e.g._ vX.Y - YYYY-MM-DD and a new "Unreleased" section started above.
 
 ### Added
 
-- Add the possibility to skip c2c transforms along one or several dimensions when using the fftw_f03 backend [PR #339](https://github.com/2decomp-fft/2decomp-fft/pull/339)
+- Add the possibility to skip c2c transforms along one or several dimensions [PR #339](https://github.com/2decomp-fft/2decomp-fft/pull/339), [PR #340](https://github.com/2decomp-fft/2decomp-fft/pull/340)
 - Add profiling to transpose subroutines when `p_row` or `p_col` is equal to one. See [PR #251](https://github.com/2decomp-fft/2decomp-fft/pull/251)
 - The FFT can be performed on various grids for all backends. In addition, the fftw_f03 FFT backend also supports in-place r2c and in-place c2r transforms (experimental support currently). Based on the work of [Lionel Gelebart](https://github.com/LionelGelebart) and coworkers, see [AMITEX_FFTP](https://amitexfftp.github.io/AMITEX/index.html) and [2decomp15_mg](https://github.com/LionelGelebart/2decomp15_mg). See [PR 302](https://github.com/2decomp-fft/2decomp-fft/pull/302).
 - The external code can now provide [hints for MPI IO](https://www.mpi-forum.org/docs/mpi-3.1/mpi31-report/node315.htm#Node316). Non-blocking MPI IO is also added. See [PR #269](https://github.com/2decomp-fft/2decomp-fft/pull/269)

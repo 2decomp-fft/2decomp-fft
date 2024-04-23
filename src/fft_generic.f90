@@ -35,6 +35,7 @@ module decomp_2d_fft
       complex(mytype), contiguous, pointer, private :: wk2_r2c(:, :, :) => null()
       complex(mytype), allocatable, private :: wk13(:, :, :)
       logical, private :: inplace
+      logical, private :: skip_x_c2c, skip_y_c2c, skip_z_c2c
    contains
       procedure, public :: init => decomp_2d_fft_engine_init
       procedure, public :: fin => decomp_2d_fft_engine_fin
@@ -122,6 +123,8 @@ module decomp_2d_fft
 
       integer :: i, j, k
 
+      if (skip_x_c2c) return
+
       !$acc parallel loop gang vector collapse(2) private(buf, scratch)
       do k = 1, decomp%xsz(3)
          do j = 1, decomp%xsz(2)
@@ -152,6 +155,8 @@ module decomp_2d_fft
       TYPE(DECOMP_INFO), intent(IN) :: decomp
 
       integer :: i, j, k
+
+      if (skip_y_c2c) return
 
       !$acc parallel loop gang vector collapse(2) private(buf, scratch)
       do k = 1, decomp%ysz(3)
@@ -184,6 +189,8 @@ module decomp_2d_fft
 
       integer :: i, j, k
 
+      if (skip_z_c2c) return
+
       !$acc parallel loop gang vector collapse(2) private(buf, scratch)
       do j = 1, decomp%zsz(2)
          do i = 1, decomp%zsz(1)
@@ -213,6 +220,9 @@ module decomp_2d_fft
       complex(mytype), dimension(:, :, :), intent(OUT) :: output
 
       integer :: i, j, k, s1, s2, s3, d1
+
+      if (skip_x_c2c) call decomp_2d_warning(__FILE__, __LINE__, 1, &
+                                             "r2c / c2r transform can not be skipped")
 
       s1 = size(input, 1)
       s2 = size(input, 2)
@@ -254,6 +264,9 @@ module decomp_2d_fft
 
       integer :: i, j, k, s1, s2, s3, d3
 
+      if (skip_z_c2c) call decomp_2d_warning(__FILE__, __LINE__, 2, &
+                                             "r2c / c2r transform can not be skipped")
+
       s1 = size(input, 1)
       s2 = size(input, 2)
       s3 = size(input, 3)
@@ -293,6 +306,9 @@ module decomp_2d_fft
       real(mytype), dimension(:, :, :), intent(OUT) :: output
 
       integer :: i, j, k, d1, d2, d3
+
+      if (skip_x_c2c) call decomp_2d_warning(__FILE__, __LINE__, 3, &
+                                             "r2c / c2r transform can not be skipped")
 
       d1 = size(output, 1)
       d2 = size(output, 2)
@@ -340,6 +356,9 @@ module decomp_2d_fft
       real(mytype), dimension(:, :, :), intent(OUT) :: output
 
       integer :: i, j, k, d1, d2, d3
+
+      if (skip_z_c2c) call decomp_2d_warning(__FILE__, __LINE__, 4, &
+                                             "r2c / c2r transform can not be skipped")
 
       d1 = size(output, 1)
       d2 = size(output, 2)

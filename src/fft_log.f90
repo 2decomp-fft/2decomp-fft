@@ -57,6 +57,9 @@ contains
                write (io_unit, *) ''
             end if
          end if
+         if (skip_x_c2c) write (io_unit, *) 'Skip X c2c transforms'
+         if (skip_y_c2c) write (io_unit, *) 'Skip Y c2c transforms'
+         if (skip_z_c2c) write (io_unit, *) 'Skip Z c2c transforms'
          call d2d_log_close_unit(io_unit)
       end if
 

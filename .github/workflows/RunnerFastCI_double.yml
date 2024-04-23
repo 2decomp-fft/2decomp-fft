@@ -63,7 +63,7 @@ jobs:
         export CC=mpicc
         export CXX=mpicxx
         cmake -S . -B build -DCMAKE_BUILD_TYPE=Dev -DBUILD_TESTING=ON -DIO_BACKEND=adios2 -Dadios2_DIR=~/GIT/ADIOS2/build/build_foss2023b/opt/lib/cmake/adios2 -DFFT_Choice=fftw_f03
-        cmake -S . -B build -DMPIEXEC_MAX_NUMPROCS=4
+        cmake -S . -B build -DMPIEXEC_MAX_NUMPROCS=1
         cmake --build build -j 4
         cmake --install build
         ctest --test-dir build --output-on-failure

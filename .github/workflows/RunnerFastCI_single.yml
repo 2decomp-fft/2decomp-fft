@@ -66,7 +66,7 @@ jobs:
         cmake -S . -B build -DMPIEXEC_MAX_NUMPROCS=4
         cmake --build build -j 4
         cmake --install build
-        ctest --test-dir build 
+        ctest --test-dir build --output-on-failure
         rm -rf build  
     
     # Configure-Build-Run-Run on 4 cores 

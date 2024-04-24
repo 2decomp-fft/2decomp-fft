@@ -66,6 +66,10 @@ jobs:
         cmake -S . -B build -DMPIEXEC_MAX_NUMPROCS=1
         cmake --build build -j 4
         cmake --install build
+        cd build/bin
+        cp ../../examples/io_test/adios2_config.xml .
+        gdb -ex run ./io_test
+        cd ../../
         ctest --test-dir build --output-on-failure
         rm -rf build  
     

@@ -69,6 +69,9 @@ jobs:
         cd build/bin
         cp ../../examples/io_test/adios2_config.xml .
         gdb -ex run ./io_test
+        rm -rf *.bp4 decomp_2d_setup_0.log
+        valgrind -s --leak-check=full --show-leak-kinds=all ./io_test
+        rm -rf *.bp4 decomp_2d_setup_0.log
         cd ../../
         ctest --test-dir build --output-on-failure
         rm -rf build  

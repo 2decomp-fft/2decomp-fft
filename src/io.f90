@@ -21,8 +21,11 @@ module decomp_2d_io
    implicit none
 
    ! Default IO family of readers / writers
-   type(d2d_io_family), target, save :: default_io_family, default_mpi_io_family_target
+   type(d2d_io_family), target, save :: default_io_family
    type(d2d_io_family), pointer, save :: default_mpi_io_family => null()
+#ifdef ADIOS2
+   type(d2d_io_family), target, save :: default_mpi_io_family_target
+#endif
 
    integer, parameter :: MAX_IOH = 10 ! How many live IO things should we handle?
    character(len=*), parameter :: io_sep = "::"

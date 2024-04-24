@@ -506,7 +506,7 @@ contains
       ! SPDX-License-Identifier: BSD 3-Clause
       use, intrinsic :: iso_fortran_env, only: real64
 
-      integer :: ioxdmf
+      integer :: ioxdmf, code
 
       character(len=:), allocatable :: fmt
 
@@ -515,8 +515,10 @@ contains
       integer :: varctr
       character(len=16) :: filename
       character(len=5) :: varname
+
       if (nrank == 0) then
-         OPEN (newunit=ioxdmf, file="./out.xdmf")
+         OPEN (newunit=ioxdmf, file="./out.xdmf", iostat=code)
+         if (code /= 0) call decomp_2d_abort(code, "Grad3D : error when opening the file ./out.xdmf")
 
          write (ioxdmf, '(A22)') '<?xml version="1.0" ?>'
          write (ioxdmf, *) '<!DOCTYPE Xdmf SYSTEM "Xdmf.dtd" []>'

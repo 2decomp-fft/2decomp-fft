@@ -35,7 +35,7 @@ jobs:
         cmake -S . -B build -DMPIEXEC_MAX_NUMPROCS=4
         cmake --build build -j 4
         cmake --install build 
-        ctest --test-dir build 
+        ctest --test-dir build --output-on-failure
         rm -rf build  
     
     # Configure-Build-Run 
@@ -49,7 +49,7 @@ jobs:
         cmake -S . -B build -DBUILD_TESTING=ON -DBUILD_TARGET=gpu -DENABLE_NCCL=yes
         cmake --build build -j 4
         cmake --install build 
-        ctest --test-dir build 
+        ctest --test-dir build --output-on-failure
         rm -rf build  
     
     # Configure-Build-Run-Run on 4 cores 
@@ -63,14 +63,9 @@ jobs:
         export CC=mpicc
         export CXX=mpicxx
         cmake -S . -B build -DCMAKE_BUILD_TYPE=Dev -DBUILD_TESTING=ON -DIO_BACKEND=adios2 -Dadios2_DIR=~/GIT/ADIOS2/build/build_foss2023b/opt/lib/cmake/adios2 -DFFT_Choice=fftw_f03
-        cmake -S . -B build -DMPIEXEC_MAX_NUMPROCS=1
+        cmake -S . -B build -DMPIEXEC_MAX_NUMPROCS=4
         cmake --build build -j 4
         cmake --install build
-        cd build/bin
-        cp ../../examples/io_test/adios2_config.xml .
-        gdb -ex run ./io_test
-        rm -rf *.bp4 decomp_2d_setup_0.log
-        cd ../../
         ctest --test-dir build --output-on-failure
         rm -rf build  
     
@@ -92,6 +87,6 @@ jobs:
         cmake -S . -B build -DMPIEXEC_MAX_NUMPROCS=4
         cmake --build build -j 4
         cmake --install build 
-        ctest --test-dir build 
+        ctest --test-dir build --output-on-failure
         rm -rf build 
 

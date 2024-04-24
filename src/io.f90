@@ -233,14 +233,6 @@ contains
 
       if (decomp_profiler_io) call decomp_profiler_start("io_fin")
 
-#ifdef ADIOS2
-      call adios2_finalize(adios, ierror)
-      if (ierror /= 0) then
-         call decomp_2d_abort(__FILE__, __LINE__, ierror, "adios2_finalize")
-      end if
-      call decomp_2d_io_family_set_default_adios()
-#endif
-
       ! Finalize the default IO families
       call decomp_2d_io_object_set_default_family()
       call default_io_family%fin()
@@ -255,6 +247,14 @@ contains
 
       ! Finalize the IO family module
       call decomp_2d_io_family_fin()
+
+#ifdef ADIOS2
+      ! Last step : finalize the root adios2 object
+      call adios2_finalize(adios, ierror)
+      if (ierror /= 0) then
+         call decomp_2d_abort(__FILE__, __LINE__, ierror, "adios2_finalize")
+      end if
+#endif
 
       if (decomp_profiler_io) call decomp_profiler_end("io_fin")
 

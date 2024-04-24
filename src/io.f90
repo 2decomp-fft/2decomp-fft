@@ -21,7 +21,7 @@ module decomp_2d_io
    implicit none
 
    ! Default IO family of readers / writers
-   type(d2d_io_family), target, save :: default_io_family
+   type(d2d_io_family), target, save :: default_io_family, default_mpi_io_family_target
    type(d2d_io_family), pointer, save :: default_mpi_io_family => null()
 
    integer, parameter :: MAX_IOH = 10 ! How many live IO things should we handle?
@@ -203,7 +203,7 @@ contains
       call default_io_family%init("default")
 #ifdef ADIOS2
       ! ADIOS2 does not support all IO operations currently
-      allocate (default_mpi_io_family)
+      default_mpi_io_family => default_mpi_io_family_target
       call default_mpi_io_family%mpi_init("default_mpi")
 #else
       default_mpi_io_family => default_io_family
@@ -238,7 +238,7 @@ contains
       call default_io_family%fin()
 #ifdef ADIOS2
       call default_mpi_io_family%fin()
-      deallocate (default_mpi_io_family)
+      nullify (default_mpi_io_family)
 #endif
       nullify (default_mpi_io_family)
 

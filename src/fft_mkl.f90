@@ -454,13 +454,13 @@ module decomp_2d_fft
 
          ! ===== 1D FFTs in Y =====
          if (inplace) then
-            do k = 1, ph%xsz(3)
+            do k = 1, ph%ysz(3)
                status = wrapper_c2c_inplace(c2c_y, wk2_c2c(:, :, k), isign)
                if (status /= 0) call decomp_2d_abort(__FILE__, __LINE__, status, "wrapper_c2c")
             end do
          else
             call alloc_y(wk2b, ph)
-            do k = 1, ph%xsz(3) ! one Z-plane at a time
+            do k = 1, ph%ysz(3) ! one Z-plane at a time
                !          if (isign==DECOMP_2D_FFT_FORWARD) then
                !             status = DftiComputeForward(c2c_y, wk2(:,1,k), wk2b(:,1,k))
                !          else if (isign==DECOMP_2D_FFT_BACKWARD) then
@@ -519,13 +519,13 @@ module decomp_2d_fft
 
          ! ===== 1D FFTs in Y =====
          if (inplace) then
-            do k = 1, ph%xsz(3)
+            do k = 1, ph%ysz(3)
                status = wrapper_c2c_inplace(c2c_y, wk2_c2c(:, :, k), isign)
                if (status /= 0) call decomp_2d_abort(__FILE__, __LINE__, status, "wrapper_c2c")
             end do
          else
             call alloc_y(wk2b, ph)
-            do k = 1, ph%xsz(3) ! one Z-plane at a time
+            do k = 1, ph%ysz(3) ! one Z-plane at a time
                !          if (isign==DECOMP_2D_FFT_FORWARD) then
                !             status = DftiComputeForward(c2c_y, wk2(:,1,k), wk2b(:,1,k))
                !          else if (isign==DECOMP_2D_FFT_BACKWARD) then

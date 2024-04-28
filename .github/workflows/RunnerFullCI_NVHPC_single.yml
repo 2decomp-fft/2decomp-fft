@@ -35,7 +35,7 @@ jobs:
         cmake -S . -B build -DNX=128 -DNY=128 -DNX=128 -DMPIEXEC_MAX_NUMPROCS=4
         cmake --build build -j 4
         cmake --install build 
-        ctest --test-dir build
+        ctest --test-dir build --output-on-failure
         rm -rf build  
     
     # Run and Compile NHHPC for CPU with ADIOS2
@@ -53,7 +53,8 @@ jobs:
         cmake -S . -B build -DDOUBLE_PRECISION=OFF -DBUILD_TESTING=ON -DIO_BACKEND=adios2 -Dadios2_DIR=~/GIT/ADIOS2/build/build_nvhpc241/opt/lib/cmake/adios2
         cmake -S . -B build -DNX=128 -DNY=128 -DNX=128 -DMPIEXEC_MAX_NUMPROCS=4
         cmake --build build -j 4
-        cmake --install build #ctest --test-dir build
+        cmake --install build
+        ctest --test-dir build --output-on-failure
         rm -rf build  
     
     # Configure-Build-Run-Run on 4 cores 
@@ -67,7 +68,7 @@ jobs:
         cmake -S . -B build -DDOUBLE_PRECISION=OFF -DBUILD_TESTING=ON -DBUILD_TARGET=gpu -DENABLE_NCCL=no -DNX=128 -DNY=128 -DNX=128
         cmake --build build -j 4
         cmake --install build 
-        ctest --test-dir build
+        ctest --test-dir build --output-on-failure
         rm -rf build  
 
     # Configure-Build-Run-Run
@@ -81,7 +82,7 @@ jobs:
         cmake -S . -B build -DDOUBLE_PRECISION=OFF -DBUILD_TESTING=ON -DBUILD_TARGET=gpu -DENABLE_NCCL=no -DENABLE_INPLACE=ON -DNX=128 -DNY=128 -DNX=128
         cmake --build build -j 4
         cmake --install build 
-        ctest --test-dir build
+        ctest --test-dir build --output-on-failure
         rm -rf build
 
     # Configure-Build-Run 
@@ -95,7 +96,7 @@ jobs:
         cmake -S . -B build -DDOUBLE_PRECISION=OFF -DBUILD_TESTING=ON -DBUILD_TARGET=gpu -DENABLE_NCCL=yes -DNX=128 -DNY=128 -DNX=128
         cmake --build build -j 4
         cmake --install build 
-        ctest --test-dir build
+        ctest --test-dir build --output-on-failure
         rm -rf build  
     
     # Configure-Build-Run 
@@ -109,5 +110,5 @@ jobs:
         cmake -S . -B build -DDOUBLE_PRECISION=OFF -DBUILD_TESTING=ON -DBUILD_TARGET=gpu -DENABLE_NCCL=yes -DENABLE_MANAGED=yes -DNX=128 -DNY=128 -DNX=128
         cmake --build build -j 4
         cmake --install build 
-        ctest --test-dir build
+        ctest --test-dir build --output-on-failure
         rm -rf build

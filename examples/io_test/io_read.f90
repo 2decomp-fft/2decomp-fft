@@ -33,6 +33,8 @@ program io_read
 
    real(mytype), parameter :: eps = 1.0E-7_mytype
 
+   character(len=*), parameter :: io_name = "test-io"
+   type(d2d_io_family), save :: io_family
    type(d2d_io), save :: io
 #ifndef ADIOS2
    logical ::file_exists1, file_exists2, file_exists3
@@ -68,8 +70,9 @@ program io_read
 
    call decomp_2d_io_init()
    call decomp_2d_io_register_var3d("u1.dat", 1, real_type)
-   call decomp_2d_io_register_var3d("u2.dat", 2, real_type)
-   call decomp_2d_io_register_var3d("u3.dat", 3, real_type)
+   call io_family%init(io_name)
+   call io_family%register_var3d("u2.dat", 2, real_type)
+   call io_family%register_var3d("u3.dat", 3, real_type)
 
    ! ***** global data *****
    allocate (data1(nx, ny, nz))
@@ -96,6 +99,12 @@ program io_read
    call io%open_start("out", decomp_2d_read_mode)
 #endif
    call decomp_2d_read_one(1, u1b, 'u1.dat', opt_dirname='out', opt_io=io)
+#ifdef ADIOS2
+   call io%end_close
+#endif
+#ifdef ADIOS2
+   call io%open_start("out", decomp_2d_read_mode, opt_family=io_family)
+#endif
    call decomp_2d_read_one(2, u2b, 'u2.dat', opt_dirname='out', opt_io=io)
    call decomp_2d_read_one(3, u3b, 'u3.dat', opt_dirname='out', opt_io=io)
 #ifdef ADIOS2
@@ -129,6 +138,7 @@ program io_read
 
    deallocate (u1b, u2b, u3b)
    deallocate (data1)
+   call io_family%fin
    call decomp_2d_io_fin
    call decomp_2d_finalize
    call MPI_FINALIZE(ierror)

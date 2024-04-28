@@ -23,6 +23,9 @@ module decomp_2d_io
    ! Default IO family of readers / writers
    type(d2d_io_family), target, save :: default_io_family
    type(d2d_io_family), pointer, save :: default_mpi_io_family => null()
+#ifdef ADIOS2
+   type(d2d_io_family), target, save :: default_mpi_io_family_target
+#endif
 
    integer, parameter :: MAX_IOH = 10 ! How many live IO things should we handle?
    character(len=*), parameter :: io_sep = "::"
@@ -203,7 +206,7 @@ contains
       call default_io_family%init("default")
 #ifdef ADIOS2
       ! ADIOS2 does not support all IO operations currently
-      allocate (default_mpi_io_family)
+      default_mpi_io_family => default_mpi_io_family_target
       call default_mpi_io_family%mpi_init("default_mpi")
 #else
       default_mpi_io_family => default_io_family
@@ -233,20 +236,12 @@ contains
 
       if (decomp_profiler_io) call decomp_profiler_start("io_fin")
 
-#ifdef ADIOS2
-      call adios2_finalize(adios, ierror)
-      if (ierror /= 0) then
-         call decomp_2d_abort(__FILE__, __LINE__, ierror, "adios2_finalize")
-      end if
-      call decomp_2d_io_family_set_default_adios()
-#endif
-
       ! Finalize the default IO families
       call decomp_2d_io_object_set_default_family()
       call default_io_family%fin()
 #ifdef ADIOS2
       call default_mpi_io_family%fin()
-      deallocate (default_mpi_io_family)
+      nullify (default_mpi_io_family)
 #endif
       nullify (default_mpi_io_family)
 
@@ -255,6 +250,14 @@ contains
 
       ! Finalize the IO family module
       call decomp_2d_io_family_fin()
+
+#ifdef ADIOS2
+      ! Last step : finalize the root adios2 object
+      call adios2_finalize(adios, ierror)
+      if (ierror /= 0) then
+         call decomp_2d_abort(__FILE__, __LINE__, ierror, "adios2_finalize")
+      end if
+#endif
 
       if (decomp_profiler_io) call decomp_profiler_end("io_fin")
 

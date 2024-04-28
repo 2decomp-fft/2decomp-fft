@@ -201,15 +201,15 @@ contains
          if (family%io%valid) then
             if (writer%family%io%engine_type == "BP4") then
                call adios2_open(writer%engine, family%io, &
-                                trim(io_dir)//".bp4", &
+                                trim(writer%family%label)//".bp4", &
                                 access_mode, ierror)
             else if (writer%family%io%engine_type == "HDF5") then
                call adios2_open(writer%engine, family%io, &
-                                trim(io_dir)//".hdf5", &
+                                trim(writer%family%label)//".hdf5", &
                                 access_mode, ierror)
             else if (writer%family%io%engine_type == "SST") then
                call adios2_open(writer%engine, family%io, &
-                                trim(io_dir), &
+                                trim(writer%family%label), &
                                 access_mode, ierror)
             else
                call decomp_2d_abort(__FILE__, __LINE__, -1, "Engine "//writer%family%io%engine_type//" Dir "//trim(io_dir)//".")

@@ -11,6 +11,13 @@ add_executable(fft_multiple_grids ${files_fft_multiple_grids})
 if (FFT_Choice MATCHES "fftw_f03")
   add_executable(fft_multiple_grids_inplace ${files_fft_multiple_grids_inplace})
 endif()
+# Fix race condition
+# Fatal Error: Cannot delete temporary module file ‘../../include/reference_data.mod0’: No such file or directory
+add_dependencies(fft_multiple_grids fft_multiple_grids_no_obj)
+if (FFT_Choice MATCHES "fftw_f03")
+  add_dependencies(fft_multiple_grids_inplace fft_multiple_grids)
+endif()
+
 
 target_link_libraries(fft_multiple_grids_no_obj PRIVATE decomp2d examples_utils)
 target_link_libraries(fft_multiple_grids PRIVATE decomp2d examples_utils)

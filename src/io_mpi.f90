@@ -1305,13 +1305,13 @@ contains
    end subroutine write_one_dcplx
    !
    subroutine write_one_ints(ipencil, var, varname, &
-                              opt_dirname, &
-                              opt_mpi_file_open_info, &
-                              opt_mpi_file_set_view_info, &
-                              opt_reduce_prec, &
-                              opt_decomp, &
-                              opt_nb_req, &
-                              opt_io)
+                             opt_dirname, &
+                             opt_mpi_file_open_info, &
+                             opt_mpi_file_set_view_info, &
+                             opt_reduce_prec, &
+                             opt_decomp, &
+                             opt_nb_req, &
+                             opt_io)
 
       implicit none
 
@@ -1356,13 +1356,13 @@ contains
    end subroutine write_one_ints
    !
    subroutine write_one_logs(ipencil, var, varname, &
-                              opt_dirname, &
-                              opt_mpi_file_open_info, &
-                              opt_mpi_file_set_view_info, &
-                              opt_reduce_prec, &
-                              opt_decomp, &
-                              opt_nb_req, &
-                              opt_io)
+                             opt_dirname, &
+                             opt_mpi_file_open_info, &
+                             opt_mpi_file_set_view_info, &
+                             opt_reduce_prec, &
+                             opt_decomp, &
+                             opt_nb_req, &
+                             opt_io)
 
       implicit none
 
@@ -1673,13 +1673,13 @@ contains
    end subroutine read_one_dcplx
    !
    subroutine read_one_ints(ipencil, var, varname, &
-                             opt_dirname, &
-                             opt_mpi_file_open_info, &
-                             opt_mpi_file_set_view_info, &
-                             opt_reduce_prec, &
-                             opt_decomp, &
-                             opt_nb_req, &
-                             opt_io)
+                            opt_dirname, &
+                            opt_mpi_file_open_info, &
+                            opt_mpi_file_set_view_info, &
+                            opt_reduce_prec, &
+                            opt_decomp, &
+                            opt_nb_req, &
+                            opt_io)
 
       implicit none
 
@@ -1724,13 +1724,13 @@ contains
    end subroutine read_one_ints
    !
    subroutine read_one_logs(ipencil, var, varname, &
-                             opt_dirname, &
-                             opt_mpi_file_open_info, &
-                             opt_mpi_file_set_view_info, &
-                             opt_reduce_prec, &
-                             opt_decomp, &
-                             opt_nb_req, &
-                             opt_io)
+                            opt_dirname, &
+                            opt_mpi_file_open_info, &
+                            opt_mpi_file_set_view_info, &
+                            opt_reduce_prec, &
+                            opt_decomp, &
+                            opt_nb_req, &
+                            opt_io)
 
       implicit none
 
@@ -1963,9 +1963,9 @@ contains
    end subroutine write_var_dcplx
    !
    subroutine write_var_ints(io, ipencil, var, &
-                              opt_reduce_prec, &
-                              opt_decomp, &
-                              opt_nb_req)
+                             opt_reduce_prec, &
+                             opt_decomp, &
+                             opt_nb_req)
 
       implicit none
 
@@ -2003,9 +2003,9 @@ contains
    end subroutine write_var_ints
    !
    subroutine write_var_logs(io, ipencil, var, &
-                              opt_reduce_prec, &
-                              opt_decomp, &
-                              opt_nb_req)
+                             opt_reduce_prec, &
+                             opt_decomp, &
+                             opt_nb_req)
 
       implicit none
 
@@ -2176,13 +2176,13 @@ contains
          end if
          call read_var(io, ipencil, decomp, &
                        opt_nb_req=opt_nb_req, &
-                      freal=tmp)
+                       freal=tmp)
          var = tmp
-         deallocate(tmp)
+         deallocate (tmp)
       else
          call read_var(io, ipencil, decomp, &
                        opt_nb_req=opt_nb_req, &
-                           dreal=var)
+                       dreal=var)
       end if
 
       nullify (decomp)
@@ -2237,13 +2237,13 @@ contains
          end if
          call read_var(io, ipencil, decomp, &
                        opt_nb_req=opt_nb_req, &
-                      fcplx=tmp)
+                       fcplx=tmp)
          var = tmp
-         deallocate(tmp)
+         deallocate (tmp)
       else
          call read_var(io, ipencil, decomp, &
                        opt_nb_req=opt_nb_req, &
-                           dcplx=var)
+                       dcplx=var)
       end if
 
       nullify (decomp)
@@ -2253,9 +2253,9 @@ contains
    end subroutine read_var_dcplx
    !
    subroutine read_var_ints(io, ipencil, var, &
-                             opt_reduce_prec, &
-                             opt_decomp, &
-                             opt_nb_req)
+                            opt_reduce_prec, &
+                            opt_decomp, &
+                            opt_nb_req)
 
       implicit none
 
@@ -2293,9 +2293,9 @@ contains
    end subroutine read_var_ints
    !
    subroutine read_var_logs(io, ipencil, var, &
-                             opt_reduce_prec, &
-                             opt_decomp, &
-                             opt_nb_req)
+                            opt_reduce_prec, &
+                            opt_decomp, &
+                            opt_nb_req)
 
       implicit none
 
@@ -2751,15 +2751,15 @@ contains
    end subroutine write_plane_dcplx
    !
    subroutine write_plane_ints(ipencil, var, varname, &
-                                opt_nplanes, &
-                                opt_iplane, &
-                                opt_dirname, &
-                                opt_mpi_file_open_info, &
-                                opt_mpi_file_set_view_info, &
-                                opt_reduce_prec, &
-                                opt_decomp, &
-                                opt_nb_req, &
-                                opt_io)
+                               opt_nplanes, &
+                               opt_iplane, &
+                               opt_dirname, &
+                               opt_mpi_file_open_info, &
+                               opt_mpi_file_set_view_info, &
+                               opt_reduce_prec, &
+                               opt_decomp, &
+                               opt_nb_req, &
+                               opt_io)
 
       implicit none
 
@@ -2843,15 +2843,15 @@ contains
    end subroutine write_plane_ints
    !
    subroutine write_plane_logs(ipencil, var, varname, &
-                                opt_nplanes, &
-                                opt_iplane, &
-                                opt_dirname, &
-                                opt_mpi_file_open_info, &
-                                opt_mpi_file_set_view_info, &
-                                opt_reduce_prec, &
-                                opt_decomp, &
-                                opt_nb_req, &
-                                opt_io)
+                               opt_nplanes, &
+                               opt_iplane, &
+                               opt_dirname, &
+                               opt_mpi_file_open_info, &
+                               opt_mpi_file_set_view_info, &
+                               opt_reduce_prec, &
+                               opt_decomp, &
+                               opt_nb_req, &
+                               opt_io)
 
       implicit none
 
@@ -3199,13 +3199,13 @@ contains
    end subroutine read_plane_dcplx
    !
    subroutine read_plane_ints(ipencil, var, varname, nplanes, &
-                               opt_dirname, &
-                               opt_mpi_file_open_info, &
-                               opt_mpi_file_set_view_info, &
-                               opt_reduce_prec, &
-                               opt_decomp, &
-                               opt_nb_req, &
-                               opt_io)
+                              opt_dirname, &
+                              opt_mpi_file_open_info, &
+                              opt_mpi_file_set_view_info, &
+                              opt_reduce_prec, &
+                              opt_decomp, &
+                              opt_nb_req, &
+                              opt_io)
 
       implicit none
 
@@ -3251,13 +3251,13 @@ contains
    end subroutine read_plane_ints
    !
    subroutine read_plane_logs(ipencil, var, varname, nplanes, &
-                               opt_dirname, &
-                               opt_mpi_file_open_info, &
-                               opt_mpi_file_set_view_info, &
-                               opt_reduce_prec, &
-                               opt_decomp, &
-                               opt_nb_req, &
-                               opt_io)
+                              opt_dirname, &
+                              opt_mpi_file_open_info, &
+                              opt_mpi_file_set_view_info, &
+                              opt_reduce_prec, &
+                              opt_decomp, &
+                              opt_nb_req, &
+                              opt_io)
 
       implicit none
 

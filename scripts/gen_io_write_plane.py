@@ -4,9 +4,9 @@
 outfile = "write_plane.f90"
 
 # Number of variables
-nformat = 4
+nformat = 6
 # Suffix for the subroutine name
-ext = ["freal", "fcplx", "dreal", "dcplx"]
+ext = ["freal", "fcplx", "dreal", "dcplx", "ints", "logs"]
 
 
 #
@@ -18,11 +18,11 @@ f = open(outfile, "w")
 # Write the interface
 #
 f.write("\n")
-f.write("   interface decomp_2d_write_plane\n")
+f.write("   interface decomp_2d_write_planes\n")
 for i in range(nformat):
     f.write("      module procedure write_plane_"+ext[i]+"\n")
 
-f.write("   end interface decomp_2d_write_plane\n")
+f.write("   end interface decomp_2d_write_planes\n")
 f.write("\n")
 
 for i in range(nformat):
@@ -30,8 +30,15 @@ for i in range(nformat):
     # Header
     #
     f.write("   subroutine write_plane_"+ext[i]+"(ipencil, var, varname, &\n")
-    f.write("                                opt_nplanes, opt_iplane, opt_mode, opt_family, &\n")
-    f.write("                                opt_io, opt_dirname, opt_reduce_prec, opt_decomp, opt_nb_req)\n")
+    f.write("                                opt_nplanes, &\n")
+    f.write("                                opt_iplane, &\n")
+    f.write("                                opt_dirname, &\n")
+    f.write("                                opt_mpi_file_open_info, &\n")
+    f.write("                                opt_mpi_file_set_view_info, &\n")
+    f.write("                                opt_reduce_prec, &\n")
+    f.write("                                opt_decomp, &\n")
+    f.write("                                opt_nb_req, &\n")
+    f.write("                                opt_io)\n")
     f.write("\n")
     f.write("      implicit none\n")
     f.write("\n")
@@ -48,15 +55,20 @@ for i in range(nformat):
         f.write("      complex(real32), contiguous, dimension(:, :, :), intent(IN) :: var\n")
     elif (i==3):
         f.write("      complex(real64), contiguous, dimension(:, :, :), intent(IN) :: var\n")
+    elif (i==4):
+        f.write("      integer, contiguous, dimension(:, :, :), intent(IN) :: var\n")
+    elif (i==5):
+        f.write("      logical, contiguous, dimension(:, :, :), intent(IN) :: var\n")
     f.write("      character(len=*), intent(in) :: varname\n")
-    f.write("      integer, intent(in), optional :: opt_nplanes, opt_iplane\n")
-    f.write("      integer, intent(in), optional :: opt_mode\n")
-    f.write("      type(d2d_io_family), target, intent(in), optional :: opt_family\n")
-    f.write("      type(d2d_io), intent(inout), optional :: opt_io\n")
+    f.write("      integer, intent(in), optional :: opt_nplanes\n")
+    f.write("      integer, intent(in), optional :: opt_iplane\n")
     f.write("      character(len=*), intent(in), optional :: opt_dirname\n")
+    f.write("      integer, intent(in), optional :: opt_mpi_file_open_info\n")
+    f.write("      integer, intent(in), optional :: opt_mpi_file_set_view_info\n")
     f.write("      logical, intent(in), optional :: opt_reduce_prec\n")
     f.write("      TYPE(DECOMP_INFO), target, intent(IN), optional :: opt_decomp\n")
-    f.write("      integer, intent(out), optional :: opt_nb_req\n")
+    f.write("      integer, intent(inout), optional :: opt_nb_req\n")
+    f.write("      type(d2d_io_mpi), intent(inout), optional :: opt_io")
     f.write("\n")
     #
     # Local variables
@@ -72,6 +84,10 @@ for i in range(nformat):
         f.write("      real(real64), allocatable, dimension(:, :, :) :: var2d\n")
     elif (i==3):
         f.write("      complex(real64), allocatable, dimension(:, :, :) :: var2d\n")
+    elif (i==4):
+        f.write("      integer, allocatable, dimension(:, :, :) :: var2d\n")
+    elif (i==5):
+        f.write("      logical, allocatable, dimension(:, :, :) :: var2d\n")
     f.write("      TYPE(DECOMP_INFO), pointer :: decomp\n")
     f.write("      integer :: nplanes, iplane\n")
     f.write("\n")
@@ -117,18 +133,22 @@ for i in range(nformat):
     #
     # Call the lower level IO subroutine
     #
-    if (i==0 or i==1):
-        f.write("      if (nplanes > 1) then\n")
+    if (i==0 or i==1 or i==4 or i==5):
+        f.write("      if (present(opt_nplanes)) then\n")
         f.write("         call write_plane(ipencil, varname, decomp, nplanes, &\n")
-        f.write("                          opt_mode=opt_mode, &\n")
-        f.write("                          opt_family=opt_family, &\n")
-        f.write("                          opt_io=opt_io, &\n")
         f.write("                          opt_dirname=opt_dirname, &\n")
+        f.write("                          opt_mpi_file_open_info=opt_mpi_file_open_info, &\n")
+        f.write("                          opt_mpi_file_set_view_info=opt_mpi_file_set_view_info, &\n")
         f.write("                          opt_nb_req=opt_nb_req, &\n")
+        f.write("                          opt_io=opt_io, &\n")
         if (i==0):
             f.write("                          freal=var)\n")
         elif (i==1):
             f.write("                          fcplx=var)\n")
+        elif (i==4):
+            f.write("                          ints=var)\n")
+        elif (i==5):
+            f.write("                          logs=var)\n")
         f.write("      else\n")
         f.write("         if (ipencil == 1) then\n")
         f.write("            allocate (var2d(1, decomp%xsz(2), decomp%xsz(3)))\n")
@@ -141,38 +161,38 @@ for i in range(nformat):
         f.write("            var2d(:, :, 1) = var(:, :, iplane)\n")
         f.write("         end if\n")
         f.write("         call write_plane(ipencil, varname, decomp, nplanes, &\n")
-        f.write("                          opt_mode=decomp_2d_io_sync, &\n")
-        f.write("                          opt_family=opt_family, &\n")
-        f.write("                          opt_io=opt_io, &\n")
         f.write("                          opt_dirname=opt_dirname, &\n")
-        f.write("                          opt_nb_req=opt_nb_req, &\n")
+        f.write("                          opt_mpi_file_open_info=opt_mpi_file_open_info, &\n")
+        f.write("                          opt_mpi_file_set_view_info=opt_mpi_file_set_view_info, &\n")
         if (i==0):
             f.write("                          freal=var2d)\n")
         elif (i==1):
             f.write("                          fcplx=var2d)\n")
+        elif (i==4):
+            f.write("                          ints=var2d)\n")
+        elif (i==5):
+            f.write("                          logs=var2d)\n")
         f.write("         deallocate (var2d)\n")
         f.write("      end if\n")
     #
     if (i==2 or i==3):
-        f.write("      if (nplanes > 1) then\n")
+        f.write("      if (present(opt_nplanes)) then\n")
         f.write("         if (reduce) then\n")
         f.write("            call write_plane(ipencil, varname, decomp, nplanes, &\n")
-        f.write("                             opt_mode=decomp_2d_io_sync, &\n")
-        f.write("                             opt_family=opt_family, &\n")
-        f.write("                             opt_io=opt_io, &\n")
         f.write("                             opt_dirname=opt_dirname, &\n")
-        f.write("                             opt_nb_req=opt_nb_req, &\n")
+        f.write("                             opt_mpi_file_open_info=opt_mpi_file_open_info, &\n")
+        f.write("                             opt_mpi_file_set_view_info=opt_mpi_file_set_view_info, &\n")
         if (i==2):
             f.write("                             freal=real(var, kind=real32)) ! Warning, implicit memory allocation\n")
         elif (i==3):
             f.write("                             fcplx=cmplx(var, kind=real32)) ! Warning, implicit memory allocation\n")
         f.write("         else\n")
         f.write("            call write_plane(ipencil, varname, decomp, nplanes, &\n")
-        f.write("                             opt_mode=opt_mode, &\n")
-        f.write("                             opt_family=opt_family, &\n")
-        f.write("                             opt_io=opt_io, &\n")
         f.write("                             opt_dirname=opt_dirname, &\n")
+        f.write("                             opt_mpi_file_open_info=opt_mpi_file_open_info, &\n")
+        f.write("                             opt_mpi_file_set_view_info=opt_mpi_file_set_view_info, &\n")
         f.write("                             opt_nb_req=opt_nb_req, &\n")
+        f.write("                             opt_io=opt_io, &\n")
         if (i==2):
             f.write("                             dreal=var)\n")
         elif (i==3):
@@ -191,22 +211,18 @@ for i in range(nformat):
         f.write("         end if\n")
         f.write("         if (reduce) then\n")
         f.write("            call write_plane(ipencil, varname, decomp, nplanes, &\n")
-        f.write("                             opt_mode=decomp_2d_io_sync, &\n")
-        f.write("                             opt_family=opt_family, &\n")
-        f.write("                             opt_io=opt_io, &\n")
         f.write("                             opt_dirname=opt_dirname, &\n")
-        f.write("                             opt_nb_req=opt_nb_req, &\n")
+        f.write("                             opt_mpi_file_open_info=opt_mpi_file_open_info, &\n")
+        f.write("                             opt_mpi_file_set_view_info=opt_mpi_file_set_view_info, &\n")
         if (i==2):
             f.write("                             freal=real(var2d, kind=real32)) ! Warning, implicit memory allocation\n")
         elif (i==3):
             f.write("                             fcplx=cmplx(var2d, kind=real32)) ! Warning, implicit memory allocation\n")
         f.write("         else\n")
         f.write("            call write_plane(ipencil, varname, decomp, nplanes, &\n")
-        f.write("                             opt_mode=decomp_2d_io_sync, &\n")
-        f.write("                             opt_family=opt_family, &\n")
-        f.write("                             opt_io=opt_io, &\n")
         f.write("                             opt_dirname=opt_dirname, &\n")
-        f.write("                             opt_nb_req=opt_nb_req, &\n")
+        f.write("                             opt_mpi_file_open_info=opt_mpi_file_open_info, &\n")
+        f.write("                             opt_mpi_file_set_view_info=opt_mpi_file_set_view_info, &\n")
         if (i==2):
             f.write("                             dreal=var2d)\n")
         elif (i==3):
@@ -220,7 +236,7 @@ for i in range(nformat):
     f.write("\n")
     f.write("      nullify (decomp)\n")
     f.write("\n")
-    if (i==0 or i==1):
+    if (i==0 or i==1 or i==4 or i==5):
         f.write("      associate (p => opt_reduce_prec)\n")
         f.write("      end associate\n")
         f.write("\n")

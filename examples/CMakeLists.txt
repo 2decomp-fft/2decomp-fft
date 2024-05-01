@@ -18,7 +18,7 @@ add_subdirectory(fft_physical_x)
 add_subdirectory(fft_physical_z)
 add_subdirectory(fft_multiple_grids)
 add_subdirectory(halo_test)
-add_subdirectory(io_test)
+add_subdirectory(io_mpi)
 add_subdirectory(grad3d)
 
 # Set real/complex tests

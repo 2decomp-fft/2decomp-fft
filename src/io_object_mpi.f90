@@ -1,7 +1,9 @@
 !! SPDX-License-Identifier: BSD-3-Clause
 
+!
 ! This is the MPI-IO module for readers / writers
 !    => Open / close a reader / writer
+!
 
 !
 ! The external code can open a file for MPI IO with the

@@ -18,11 +18,11 @@ f = open(outfile, "w")
 # Write the interface
 #
 f.write("\n")
-f.write("   interface decomp_2d_read_planes\n")
+f.write("   interface decomp_2d_read_plane\n")
 for i in range(nformat):
     f.write("      module procedure read_plane_"+ext[i]+"\n")
 
-f.write("   end interface decomp_2d_read_planes\n")
+f.write("   end interface decomp_2d_read_plane\n")
 f.write("\n")
 
 for i in range(nformat):

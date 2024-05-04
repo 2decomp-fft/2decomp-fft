@@ -453,49 +453,26 @@ contains
 
       implicit none
 
-#ifndef ADIOS2
       logical :: dir_exists
-#else
-      type(d2d_io) :: io
-#endif
 
       !$acc update self (phi1)
       !$acc update self (dphiX)
       !$acc update self (dphiY)
       !$acc update self (dphiZ)
-#ifndef ADIOS2
       if (nrank == 0) then
          inquire (file="out", exist=dir_exists)
          if (.not. dir_exists) then
             call execute_command_line("mkdir out 2> /dev/null")
          end if
       end if
-#endif
 
       call decomp_2d_io_init()
 
-#ifdef ADIOS2
-      call decomp_2d_io_register_var3d("phi1.dat", 1, real_type)
-      call decomp_2d_io_register_var3d("dphiX.dat", 1, real_type)
-      call decomp_2d_io_register_var3d("dphiY.dat", 1, real_type)
-      call decomp_2d_io_register_var3d("dphiZ.dat", 1, real_type)
-#endif
-
-      ! Standard I/O pattern - 1 file per field
-      ! Using the default IO family
-#ifdef ADIOS2
-      call io%open_start("out", decomp_2d_write_mode)
-      call decomp_2d_write_one(1, phi1, 'phi1.dat', opt_dirname='out', opt_io=io)
-      call decomp_2d_write_one(1, dphiX, 'dphiX.dat', opt_dirname='out', opt_io=io)
-      call decomp_2d_write_one(1, dphiY, 'dphiY.dat', opt_dirname='out', opt_io=io)
-      call decomp_2d_write_one(1, dphiZ, 'dphiZ.dat', opt_dirname='out', opt_io=io)
-      call io%end_close
-#else
+      ! Standard MPI I/O pattern - 1 file per field
       call decomp_2d_write_one(1, phi1, 'phi1.dat', opt_dirname='out')
       call decomp_2d_write_one(1, dphiX, 'dphiX.dat', opt_dirname='out')
       call decomp_2d_write_one(1, dphiY, 'dphiY.dat', opt_dirname='out')
       call decomp_2d_write_one(1, dphiZ, 'dphiZ.dat', opt_dirname='out')
-#endif
 
       call decomp_2d_io_fin
 
@@ -570,11 +547,7 @@ contains
                write (filename, '(A)') "./out/dphiZ.dat"
             end select
             write (ioxdmf, *) '       <Attribute Name="'//trim(varname)//'" Center="Node">'
-#ifndef ADIOS2
             write (ioxdmf, *) '          <DataItem Format="Binary"'
-#else
-            write (ioxdmf, *) '          <DataItem Format="HDF"'
-#endif
 
 #ifdef DOUBLE_PREC
             print *, "Double precision build"

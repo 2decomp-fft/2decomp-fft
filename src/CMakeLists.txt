@@ -47,7 +47,13 @@ else (ENABLE_PROFILER)
   file(GLOB prof_files profiler_none.f90)
 endif()
 
-set(SRCFILES ${files_decomp} ${files_fft} ${prof_files})
+if (IO_BACKEND MATCHES "adios2")
+  file(GLOB files_adios io_adios.f90 io_object_adios.f90)
+else (IO_BACKEND MATCHES "adios2")
+  file(GLOB files_adios io_adios_none.f90)
+endif (IO_BACKEND MATCHES "adios2")
+
+set(SRCFILES ${files_decomp} ${files_fft} ${prof_files} ${files_adios})
 
 add_library(decomp2d ${SRCFILES})
 target_include_directories(decomp2d PUBLIC

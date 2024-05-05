@@ -80,6 +80,11 @@ program io_test
       end do
    end do
 
+   ! Make sure the initial value of the MPI request is valid
+   req1 = MPI_REQUEST_NULL
+   req2 = MPI_REQUEST_NULL
+   req3 = MPI_REQUEST_NULL
+
    call alloc_x(u1, .true.)
    call alloc_y(u2, .true.)
    call alloc_z(u3, .true.)

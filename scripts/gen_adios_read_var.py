@@ -29,12 +29,11 @@ for i in range(nformat):
     #
     # Header
     #
-    f.write("   subroutine read_var_"+ext[i]+"(var, varname, &\n")
+    f.write("   subroutine read_var_"+ext[i]+"(io, var, varname, &\n")
+    f.write("                             opt_family, &\n")
     f.write("                             opt_reduce_prec, &\n")
     f.write("                             opt_ipencil, &\n")
-    f.write("                             opt_decomp, &\n")
-    f.write("                             opt_family, &\n")
-    f.write("                             opt_io)\n")
+    f.write("                             opt_decomp)\n")
     f.write("\n")
     f.write("      implicit none\n")
     f.write("\n")
@@ -42,6 +41,7 @@ for i in range(nformat):
     # Arguments
     #
     f.write("      ! Arguments\n")
+    f.write("      type(d2d_io_adios), intent(inout) :: io\n")
     if (i==0):
         f.write("      real(real32), contiguous, dimension(:, :, :), intent(OUT) :: var\n")
     elif (i==2):
@@ -52,11 +52,10 @@ for i in range(nformat):
         f.write("      complex(real64), contiguous, dimension(:, :, :), intent(OUT) :: var\n")
     #
     f.write("      character(len=*), intent(in) :: varname\n")
+    f.write("      type(d2d_io_family), intent(inout), optional :: opt_family\n")
     f.write("      logical, intent(in), optional :: opt_reduce_prec\n")
     f.write("      integer, intent(in), optional :: opt_ipencil\n")
     f.write("      type(decomp_info), target, intent(in), optional :: opt_decomp\n")
-    f.write("      type(d2d_io_family), target, intent(in), optional :: opt_family\n")
-    f.write("      type(d2d_io_adios), intent(inout), optional :: opt_io")
     f.write("\n")
     #
     # Local variables
@@ -112,9 +111,8 @@ for i in range(nformat):
     # Call the lower level IO subroutine
     #
     if (i==0 or i==1):
-        f.write("      call adios_read(varname, &\n")
+        f.write("      call adios_read(io, varname, &\n")
         f.write("                      opt_family=opt_family, &\n")
-        f.write("                      opt_io=opt_io, &\n")
         if (i==0):
             f.write("                      freal=var)\n")
         elif (i==1):
@@ -122,9 +120,8 @@ for i in range(nformat):
     #
     if (i==2 or i==3):
         f.write("      if (reduce) then\n")
-        f.write("         call adios_read(varname, &\n")
+        f.write("         call adios_read(io, varname, &\n")
         f.write("                         opt_family=opt_family, &\n")
-        f.write("                         opt_io=opt_io, &\n")
         if (i==2):
             f.write("                         freal=tmp)\n")
         elif (i==3):
@@ -132,9 +129,8 @@ for i in range(nformat):
         f.write("         var = tmp\n")
         f.write("         deallocate(tmp)\n")
         f.write("      else\n")
-        f.write("         call adios_read(varname, &\n")
+        f.write("         call adios_read(io, varname, &\n")
         f.write("                         opt_family=opt_family, &\n")
-        f.write("                         opt_io=opt_io, &\n")
         if (i==2):
             f.write("                         dreal=var)\n")
         elif (i==3):

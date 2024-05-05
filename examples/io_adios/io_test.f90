@@ -5,8 +5,8 @@ program io_test
    use decomp_2d
    use decomp_2d_constants
    use decomp_2d_io
-   use decomp_2d_io_family
-   use decomp_2d_io_object
+   use decomp_2d_io_adios
+   use decomp_2d_io_object_adios
    use decomp_2d_mpi
    use decomp_2d_testing
 #if defined(_GPU)
@@ -28,12 +28,12 @@ program io_test
    complex(mytype), allocatable, dimension(:, :, :) :: data1
 
    complex(mytype), allocatable, dimension(:, :, :) :: u1, u2, u3
-   complex(mytype), allocatable, dimension(:, :, :) :: u1b, u2b, u3b
+   complex(mytype), allocatable, dimension(:, :, :) :: u1b, u2b, u2c, u3b
 #else
    real(mytype), allocatable, dimension(:, :, :) :: data1
 
    real(mytype), allocatable, dimension(:, :, :) :: u1, u2, u3
-   real(mytype), allocatable, dimension(:, :, :) :: u1b, u2b, u3b
+   real(mytype), allocatable, dimension(:, :, :) :: u1b, u2b, u2c, u3b
 #endif
 
    real(mytype), parameter :: eps = 1.0E-7_mytype
@@ -41,15 +41,11 @@ program io_test
    character(len=*), parameter :: io_name = "test-io"
    character(len=*), parameter :: io_restart = "restart-io"
    type(d2d_io_family), save :: io_family, io_family_restart
-   type(d2d_io), save :: io
+   type(d2d_io_adios), save :: io
 
    integer :: i, j, k, m, ierror
    integer :: xst1, xst2, xst3
    integer :: xen1, xen2, xen3
-
-#ifndef ADIOS2
-   logical :: dir_exists
-#endif
 
    call MPI_INIT(ierror)
    ! To resize the domain we need to know global number of ranks
@@ -68,14 +64,31 @@ program io_test
 
    call decomp_2d_io_init()
 
-   call decomp_2d_io_register_var3d("u1.dat", 1, real_type)
+#ifdef COMPLEX_TEST
+   call decomp_2d_register_var("u1.dat", 1, complex_type)
+   call decomp_2d_register_var("u2.dat", 2, complex_type)
+#else
+   call decomp_2d_register_var("u1.dat", 1, real_type)
+   call decomp_2d_register_var("u2.dat", 2, real_type)
+#endif
    call io_family%init(io_name)
-   call io_family%register_var3d("u2.dat", 2, real_type)
-   call io_family%register_var3d("u3.dat", 3, real_type)
+#ifdef COMPLEX_TEST
+   call io_family%register_var("u2.dat", 2, complex_type)
+   call io_family%register_var("u3.dat", 3, complex_type)
+#else
+   call io_family%register_var("u2.dat", 2, real_type)
+   call io_family%register_var("u3.dat", 3, real_type)
+#endif
    call io_family_restart%init(io_restart)
-   call io_family_restart%register_var3d("u1.dat", 1, real_type)
-   call io_family_restart%register_var3d("u2.dat", 2, real_type)
-   call io_family_restart%register_var3d("u3.dat", 3, real_type)
+#ifdef COMPLEX_TEST
+   call io_family_restart%register_var("u1.dat", 1, complex_type)
+   call io_family_restart%register_var("u2.dat", 2, complex_type)
+   call io_family_restart%register_var("u3.dat", 3, complex_type)
+#else
+   call io_family_restart%register_var("u1.dat", 1, real_type)
+   call io_family_restart%register_var("u2.dat", 2, real_type)
+   call io_family_restart%register_var("u3.dat", 3, real_type)
+#endif
 
    ! ***** global data *****
    allocate (data1(nx, ny, nz))
@@ -99,6 +112,7 @@ program io_test
 
    call alloc_x(u1b, .true.)
    call alloc_y(u2b, .true.)
+   call alloc_y(u2c, .true.)
    call alloc_z(u3b, .true.)
 
    xst1 = xstart(1); xen1 = xend(1)
@@ -124,76 +138,50 @@ program io_test
    !$acc update self(u3)
    !$acc end data
 
-   ! write to disk
-#ifndef ADIOS2
-   if (nrank == 0) then
-      inquire (file="out", exist=dir_exists)
-      if (.not. dir_exists) then
-         call execute_command_line("mkdir out 2> /dev/null")
-      end if
-   end if
-#endif
-
    ! Standard I/O pattern - 1 file per field
    !
    ! Using the default IO family
-#ifdef ADIOS2
-   call io%open_start("out", decomp_2d_write_mode)
-#endif
-   call decomp_2d_write_one(1, u1, 'u1.dat', opt_dirname='out', opt_io=io)
-#ifdef ADIOS2
+   call decomp_2d_adios_write_var(io, u1, 'u1.dat')
+   call decomp_2d_adios_write_var(io, u2, 'u2.dat')
    call io%end_close
-#endif
    !
    ! Using a dedicated IO family
-#ifdef ADIOS2
-   call io%open_start("out", decomp_2d_write_mode, opt_family=io_family)
-#endif
-   call decomp_2d_write_one(2, u2, 'u2.dat', opt_dirname='out', opt_io=io)
-   call decomp_2d_write_one(3, u3, 'u3.dat', opt_dirname='out', opt_io=io)
-#ifdef ADIOS2
+   call io%open_start(decomp_2d_write_mode, opt_family=io_family)
+   call decomp_2d_adios_write_var(io, u2, 'u2.dat')
+   call decomp_2d_adios_write_var(io, u3, 'u3.dat')
    call io%end_close
-#endif
 
    ! read back to different arrays
    !
-   ! Using the default IO family
-#ifdef ADIOS2
-   call io%open_start("out", decomp_2d_read_mode)
-#endif
-   call decomp_2d_read_one(1, u1b, 'u1.dat', opt_dirname='out', opt_io=io)
-#ifdef ADIOS2
+   ! Using the default IO family without providing any object
+   call decomp_2d_adios_read_var(io, u1b, 'u1.dat')
+   call decomp_2d_adios_read_var(io, u2b, 'u2.dat')
    call io%end_close
-#endif
    !
    ! Using a dedicated IO family
-#ifdef ADIOS2
-   call io%open_start("out", decomp_2d_read_mode, opt_family=io_family)
-#endif
-   call decomp_2d_read_one(2, u2b, 'u2.dat', opt_dirname='out', opt_io=io)
-   call decomp_2d_read_one(3, u3b, 'u3.dat', opt_dirname='out', opt_io=io)
-#ifdef ADIOS2
+   call io%open_start(decomp_2d_read_mode, opt_family=io_family)
+   call decomp_2d_adios_read_var(io, u2c, 'u2.dat')
+   call decomp_2d_adios_read_var(io, u3b, 'u3.dat')
    call io%end_close
-#endif
 
    ! compare
    call check("file per field")
-
-   ! Checkpoint I/O pattern - multiple fields per file
-   call io%open_start("checkpoint", decomp_2d_write_mode, opt_family=io_family_restart)
-   call decomp_2d_write_one(1, u1, 'u1.dat', opt_io=io)
-   call decomp_2d_write_one(2, u2, 'u2.dat', opt_io=io)
-   call decomp_2d_write_one(3, u3, 'u3.dat', opt_io=io)
+   !
+   ! Using adios2 objects
+   call io%open_start(decomp_2d_write_mode, opt_family=io_family_restart)
+   call decomp_2d_adios_write_var(io, u1, 'u1.dat')
+   call decomp_2d_adios_write_var(io, u2, 'u2.dat')
+   call decomp_2d_adios_write_var(io, u3, 'u3.dat')
    call io%end_close()
 
    call MPI_Barrier(MPI_COMM_WORLD, ierr)
 
    ! read back to different arrays
    u1b = 0; u2b = 0; u3b = 0
-   call io%open_start("checkpoint", decomp_2d_read_mode, opt_family=io_family_restart)
-   call decomp_2d_read_one(1, u1b, 'u1.dat', opt_io=io)
-   call decomp_2d_read_one(2, u2b, 'u2.dat', opt_io=io)
-   call decomp_2d_read_one(3, u3b, 'u3.dat', opt_io=io)
+   call io%open_start(decomp_2d_read_mode, opt_family=io_family_restart)
+   call decomp_2d_adios_read_var(io, u1b, 'u1.dat')
+   call decomp_2d_adios_read_var(io, u2b, 'u2.dat')
+   call decomp_2d_adios_read_var(io, u3b, 'u3.dat')
    call io%end_close
 
    call MPI_Barrier(MPI_COMM_WORLD, ierr)
@@ -202,7 +190,7 @@ program io_test
    call check("one file, multiple fields")
 
    deallocate (u1, u2, u3)
-   deallocate (u1b, u2b, u3b)
+   deallocate (u1b, u2b, u2c, u3b)
    deallocate (data1)
 
    call io_family_restart%fin
@@ -243,6 +231,14 @@ contains
          end do
       end do
 
+      do k = ystart(3), yend(3)
+         do j = ystart(2), yend(2)
+            do i = ystart(1), yend(1)
+               if (abs((u2(i, j, k) - u2c(i, j, k))) > eps) stop 2
+            end do
+         end do
+      end do
+
       do k = zstart(3), zend(3)
          do j = zstart(2), zend(2)
             do i = zstart(1), zend(1)
@@ -264,6 +260,14 @@ contains
          do j = ystart(2), yend(2)
             do i = ystart(1), yend(1)
                if (abs((data1(i, j, k) - u2b(i, j, k))) > eps) stop 5
+            end do
+         end do
+      end do
+
+      do k = ystart(3), yend(3)
+         do j = ystart(2), yend(2)
+            do i = ystart(1), yend(1)
+               if (abs((data1(i, j, k) - u2c(i, j, k))) > eps) stop 5
             end do
          end do
       end do

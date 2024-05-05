@@ -4,8 +4,8 @@ program io_read
    use decomp_2d
    use decomp_2d_constants
    use decomp_2d_io
-   use decomp_2d_io_family
-   use decomp_2d_io_object
+   use decomp_2d_io_adios
+   use decomp_2d_io_object_adios
    use decomp_2d_mpi
    use decomp_2d_testing
 #if defined(_GPU)
@@ -24,18 +24,18 @@ program io_read
 #ifdef COMPLEX_TEST
    complex(mytype), allocatable, dimension(:, :, :) :: data1
 
-   complex(mytype), allocatable, dimension(:, :, :) :: u1b, u2b, u3b
+   complex(mytype), allocatable, dimension(:, :, :) :: u1b, u2b, u2c, u3b
 #else
    real(mytype), allocatable, dimension(:, :, :) :: data1
 
-   real(mytype), allocatable, dimension(:, :, :) :: u1b, u2b, u3b
+   real(mytype), allocatable, dimension(:, :, :) :: u1b, u2b, u2c, u3b
 #endif
 
    real(mytype), parameter :: eps = 1.0E-7_mytype
 
    character(len=*), parameter :: io_name = "test-io"
    type(d2d_io_family), save :: io_family
-   type(d2d_io), save :: io
+   type(d2d_io_adios), save :: io
 #ifndef ADIOS2
    logical ::file_exists1, file_exists2, file_exists3
 #endif
@@ -57,22 +57,22 @@ program io_read
 
    call decomp_2d_testing_log()
 
-#ifndef ADIOS2
-   if (nrank == 0) then
-      inquire (file="out/u1.dat", exist=file_exists1)
-      inquire (file="out/u2.dat", exist=file_exists2)
-      inquire (file="out/u3.dat", exist=file_exists3)
-      if (.not. (file_exists1 .and. file_exists2 .and. file_exists3)) then
-         call decomp_2d_abort(1, "Error, data 'out/u<1,2,3>.dat' must exist before running io_read test case!")
-      end if
-   end if
-#endif
-
    call decomp_2d_io_init()
-   call decomp_2d_io_register_var3d("u1.dat", 1, real_type)
+#ifdef COMPLEX_TEST
+   call decomp_2d_register_var("u1.dat", 1, complex_type)
+   call decomp_2d_register_var("u2.dat", 2, complex_type)
+#else
+   call decomp_2d_register_var("u1.dat", 1, real_type)
+   call decomp_2d_register_var("u2.dat", 2, real_type)
+#endif
    call io_family%init(io_name)
-   call io_family%register_var3d("u2.dat", 2, real_type)
-   call io_family%register_var3d("u3.dat", 3, real_type)
+#ifdef COMPLEX_TEST
+   call io_family%register_var("u2.dat", 2, complex_type)
+   call io_family%register_var("u3.dat", 3, complex_type)
+#else
+   call io_family%register_var("u2.dat", 2, real_type)
+   call io_family%register_var("u3.dat", 3, real_type)
+#endif
 
    ! ***** global data *****
    allocate (data1(nx, ny, nz))
@@ -92,24 +92,17 @@ program io_read
 
    call alloc_x(u1b, .true.)
    call alloc_y(u2b, .true.)
+   call alloc_y(u2c, .true.)
    call alloc_z(u3b, .true.)
 
    ! read back to different arrays
-#ifdef ADIOS2
-   call io%open_start("out", decomp_2d_read_mode)
-#endif
-   call decomp_2d_read_one(1, u1b, 'u1.dat', opt_dirname='out', opt_io=io)
-#ifdef ADIOS2
+   call decomp_2d_adios_read_var(io, u1b, 'u1.dat')
+   call decomp_2d_adios_read_var(io, u2b, 'u2.dat')
    call io%end_close
-#endif
-#ifdef ADIOS2
-   call io%open_start("out", decomp_2d_read_mode, opt_family=io_family)
-#endif
-   call decomp_2d_read_one(2, u2b, 'u2.dat', opt_dirname='out', opt_io=io)
-   call decomp_2d_read_one(3, u3b, 'u3.dat', opt_dirname='out', opt_io=io)
-#ifdef ADIOS2
+   call io%open_start(decomp_2d_read_mode, opt_family=io_family)
+   call decomp_2d_adios_read_var(io, u2c, 'u2.dat')
+   call decomp_2d_adios_read_var(io, u3b, 'u3.dat')
    call io%end_close
-#endif
 
    ! Check against the global data array
    do k = xstart(3), xend(3)
@@ -128,6 +121,14 @@ program io_read
       end do
    end do
 
+   do k = ystart(3), yend(3)
+      do j = ystart(2), yend(2)
+         do i = ystart(1), yend(1)
+            if (abs((data1(i, j, k) - u2c(i, j, k))) > eps) stop 5
+         end do
+      end do
+   end do
+
    do k = zstart(3), zend(3)
       do j = zstart(2), zend(2)
          do i = zstart(1), zend(1)
@@ -136,7 +137,7 @@ program io_read
       end do
    end do
 
-   deallocate (u1b, u2b, u3b)
+   deallocate (u1b, u2b, u2c, u3b)
    deallocate (data1)
    call io_family%fin
    call decomp_2d_io_fin

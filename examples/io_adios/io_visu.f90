@@ -9,7 +9,8 @@ program visu
    use decomp_2d
    use decomp_2d_constants
    use decomp_2d_io
-   use decomp_2d_io_object
+   use decomp_2d_io_adios
+   use decomp_2d_io_object_adios
    use decomp_2d_mpi
    use decomp_2d_testing
 
@@ -20,10 +21,6 @@ program visu
    integer :: p_row = 0, p_col = 0
 
    real(mytype), allocatable, dimension(:, :, :) :: u1, u2, u3
-
-#ifndef ADIOS2
-   logical :: dir_exists
-#endif
 
    integer :: i, j, k
    integer :: ierr
@@ -59,9 +56,9 @@ contains
       call decomp_2d_testing_log()
 
       call decomp_2d_io_init()
-      call decomp_2d_io_register_var3d("u1.dat", 1, real_type)
-      call decomp_2d_io_register_var3d("u2.dat", 2, real_type)
-      call decomp_2d_io_register_var3d("u3.dat", 3, real_type)
+      call decomp_2d_register_var("u1.dat", 1, real_type)
+      call decomp_2d_register_var("u2.dat", 2, real_type)
+      call decomp_2d_register_var("u3.dat", 3, real_type)
 
    end subroutine init_example
 
@@ -123,28 +120,14 @@ contains
 
    subroutine write_data()
 
-      type(d2d_io) :: io
-
-    !! Write arrays + visu data from orientations 1, 2 and 3
-#ifndef ADIOS2
-      if (nrank == 0) then
-         inquire (file="out", exist=dir_exists)
-         if (.not. dir_exists) then
-            call execute_command_line("mkdir out 2> /dev/null")
-         end if
-      end if
-#endif
+      type(d2d_io_adios) :: io
 
       ! Standard I/O pattern - file per field
-#ifdef ADIOS2
-      call io%open_start("out", decomp_2d_write_mode)
-#endif
-      call decomp_2d_write_one(1, u1, 'u1.dat', opt_dirname='out', opt_io=io)
-      call decomp_2d_write_one(2, u2, 'u2.dat', opt_dirname='out', opt_io=io)
-      call decomp_2d_write_one(3, u3, 'u3.dat', opt_dirname='out', opt_io=io)
-#ifdef ADIOS2
+      call io%open_start(decomp_2d_write_mode)
+      call decomp_2d_adios_write_var(io, u1, 'u1.dat')
+      call decomp_2d_adios_write_var(io, u2, 'u2.dat')
+      call decomp_2d_adios_write_var(io, u3, 'u3.dat')
       call io%end_close
-#endif
 
    end subroutine write_data
 
@@ -201,11 +184,7 @@ contains
             write (varname, "(A, I0)") "u", varctr
             write (filename, '(A, I0, A)') "./out/u", varctr, ".dat"
             write (ioxdmf, *) '       <Attribute Name="'//trim(varname)//'" Center="Node">'
-#ifndef ADIOS2
-            write (ioxdmf, *) '          <DataItem Format="Binary"'
-#else
             write (ioxdmf, *) '          <DataItem Format="HDF"'
-#endif
 
 #ifdef DOUBLE_PREC
             print *, "Double precision build"

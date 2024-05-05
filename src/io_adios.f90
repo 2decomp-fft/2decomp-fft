@@ -158,42 +158,39 @@ contains
    ! Low-level. Using ADIOS2 to write the provided array to a file
    !
    ! Inputs
+   !   - io : IO reader / writer
    !   - varname : name of the variable
    !   - opt_mode : writing mode
-   !   - opt_family : IO family can be provided to avoid the default one
-   !   - opt_io : IO reader / writer can be provided
+   !   - opt_family : family of IO readers / writers
    !   - freal / dreal / fcplx / dcplx : array
    !
-   subroutine adios_write(varname, &
+   subroutine adios_write(io, varname, &
                           opt_mode, &
                           opt_family, &
-                          opt_io, &
                           freal, dreal, fcplx, dcplx)
 
       implicit none
 
+      type(d2d_io_adios), intent(inout) :: io
       character(len=*), intent(in) :: varname
       integer, intent(in), optional :: opt_mode
-      type(d2d_io_family), target, intent(in), optional :: opt_family
-      type(d2d_io_adios), intent(inout), optional :: opt_io
+      type(d2d_io_family), target, intent(inout), optional :: opt_family
       real(real32), contiguous, dimension(:, :, :), intent(IN), optional :: freal
       real(real64), contiguous, dimension(:, :, :), intent(IN), optional :: dreal
       complex(real32), contiguous, dimension(:, :, :), intent(IN), optional :: fcplx
       complex(real64), contiguous, dimension(:, :, :), intent(IN), optional :: dcplx
 
-      logical :: use_opt_io
       integer :: mode
-      type(d2d_io_adios) :: io
 
-      ! Use opt_io only if present and open
-      if (present(opt_io)) then
-         if (opt_io%is_open) then
-            use_opt_io = .true.
+      if (.not. io%is_open) then
+         if (present(opt_family)) then
+            call io%open(decomp_2d_write_mode, opt_family)
          else
-            use_opt_io = .false.
+            call io%open(decomp_2d_write_mode, default_family)
          end if
-      else
-         use_opt_io = .false.
+      end if
+      if (.not. io%is_active) then
+         call io%start()
       end if
 
       ! Default write mode is deferred
@@ -204,13 +201,7 @@ contains
       end if
 
       ! Perform IO with ADIOS2
-      if (use_opt_io) then
-         call opt_io%write(varname, mode, freal, dreal, fcplx, dcplx)
-      else
-         call io%open_start(decomp_2d_write_mode, opt_family=opt_family)
-         call io%write(varname, mode, freal, dreal, fcplx, dcplx)
-         call io%end_close()
-      end if
+      call io%write(varname, mode, freal, dreal, fcplx, dcplx)
 
    end subroutine adios_write
 
@@ -218,48 +209,38 @@ contains
    ! Low-level. Using ADIOS2 to read the provided array from a file
    !
    ! Inputs
+   !   - io : IO reader / writer
    !   - varname : name of the variable
-   !   - opt_family : IO family can be provided to avoid the default one
-   !   - opt_io : IO reader / writer can be provided
+   !   - opt_family : family of IO readers / writers
    !   - freal / dreal / fcplx / dcplx : array
    !
-   subroutine adios_read(varname, &
+   subroutine adios_read(io, varname, &
                          opt_family, &
-                         opt_io, &
                          freal, dreal, fcplx, dcplx)
 
       implicit none
 
+      type(d2d_io_adios), intent(inout) :: io
       character(len=*), intent(in) :: varname
-      type(d2d_io_family), target, intent(in), optional :: opt_family
-      type(d2d_io_adios), intent(inout), optional :: opt_io
+      type(d2d_io_family), target, intent(inout), optional :: opt_family
       real(real32), contiguous, dimension(:, :, :), intent(out), optional :: freal
       real(real64), contiguous, dimension(:, :, :), intent(out), optional :: dreal
       complex(real32), contiguous, dimension(:, :, :), intent(out), optional :: fcplx
       complex(real64), contiguous, dimension(:, :, :), intent(out), optional :: dcplx
 
-      logical :: use_opt_io
-      type(d2d_io_adios) :: io
-
-      ! Use opt_io only if present and open
-      if (present(opt_io)) then
-         if (opt_io%is_open) then
-            use_opt_io = .true.
+      if (.not. io%is_open) then
+         if (present(opt_family)) then
+            call io%open(decomp_2d_read_mode, opt_family)
          else
-            use_opt_io = .false.
+            call io%open(decomp_2d_read_mode, default_family)
          end if
-      else
-         use_opt_io = .false.
+      end if
+      if (.not. io%is_active) then
+         call io%start()
       end if
 
       ! Perform IO with ADIOS2
-      if (use_opt_io) then
-         call opt_io%read(varname, freal, dreal, fcplx, dcplx)
-      else
-         call io%open_start(decomp_2d_read_mode, opt_family=opt_family)
-         call io%read(varname, freal, dreal, fcplx, dcplx)
-         call io%end_close()
-      end if
+      call io%read(varname, freal, dreal, fcplx, dcplx)
 
    end subroutine adios_read
 
@@ -270,28 +251,26 @@ contains
    !
    !
    !
-   subroutine write_var_freal(var, varname, &
+   subroutine write_var_freal(io, var, varname, &
                               opt_mode, &
-                              opt_reduce_prec, &
                               opt_family, &
-                              opt_io)
+                              opt_reduce_prec)
 
       implicit none
 
       ! Arguments
+      type(d2d_io_adios), intent(inout) :: io
       real(real32), contiguous, dimension(:, :, :), intent(IN) :: var
       character(len=*), intent(in) :: varname
       integer, intent(in), optional :: opt_mode
+      type(d2d_io_family), intent(inout), optional :: opt_family
       logical, intent(in), optional :: opt_reduce_prec
-      type(d2d_io_family), target, intent(in), optional :: opt_family
-      type(d2d_io_adios), intent(inout), optional :: opt_io
 
       if (decomp_profiler_io) call decomp_profiler_start("adios_write_var")
 
-      call adios_write(varname, &
+      call adios_write(io, varname, &
                        opt_mode=opt_mode, &
                        opt_family=opt_family, &
-                       opt_io=opt_io, &
                        freal=var)
 
       associate (p => opt_reduce_prec)
@@ -301,28 +280,26 @@ contains
 
    end subroutine write_var_freal
    !
-   subroutine write_var_fcplx(var, varname, &
+   subroutine write_var_fcplx(io, var, varname, &
                               opt_mode, &
-                              opt_reduce_prec, &
                               opt_family, &
-                              opt_io)
+                              opt_reduce_prec)
 
       implicit none
 
       ! Arguments
+      type(d2d_io_adios), intent(inout) :: io
       complex(real32), contiguous, dimension(:, :, :), intent(IN) :: var
       character(len=*), intent(in) :: varname
       integer, intent(in), optional :: opt_mode
+      type(d2d_io_family), intent(inout), optional :: opt_family
       logical, intent(in), optional :: opt_reduce_prec
-      type(d2d_io_family), target, intent(in), optional :: opt_family
-      type(d2d_io_adios), intent(inout), optional :: opt_io
 
       if (decomp_profiler_io) call decomp_profiler_start("adios_write_var")
 
-      call adios_write(varname, &
+      call adios_write(io, varname, &
                        opt_mode=opt_mode, &
                        opt_family=opt_family, &
-                       opt_io=opt_io, &
                        fcplx=var)
 
       associate (p => opt_reduce_prec)
@@ -332,21 +309,21 @@ contains
 
    end subroutine write_var_fcplx
    !
-   subroutine write_var_dreal(var, varname, &
+   subroutine write_var_dreal(io, var, varname, &
                               opt_mode, &
-                              opt_reduce_prec, &
                               opt_family, &
-                              opt_io)
+                              opt_reduce_prec)
 
       implicit none
 
       ! Arguments
+      type(d2d_io_adios), intent(inout) :: io
       real(real64), contiguous, dimension(:, :, :), intent(IN) :: var
       character(len=*), intent(in) :: varname
       integer, intent(in), optional :: opt_mode
+      type(d2d_io_family), intent(inout), optional :: opt_family
       logical, intent(in), optional :: opt_reduce_prec
-      type(d2d_io_family), target, intent(in), optional :: opt_family
-      type(d2d_io_adios), intent(inout), optional :: opt_io
+
       ! Local variable(s)
       logical :: reduce
 
@@ -360,16 +337,14 @@ contains
       end if
 
       if (reduce) then
-         call adios_write(varname, &
+         call adios_write(io, varname, &
                           opt_mode=decomp_2d_io_sync, &
                           opt_family=opt_family, &
-                          opt_io=opt_io, &
                           freal=real(var, kind=real32)) ! Warning, implicit memory allocation
       else
-         call adios_write(varname, &
+         call adios_write(io, varname, &
                           opt_mode=opt_mode, &
                           opt_family=opt_family, &
-                          opt_io=opt_io, &
                           dreal=var)
       end if
 
@@ -377,21 +352,21 @@ contains
 
    end subroutine write_var_dreal
    !
-   subroutine write_var_dcplx(var, varname, &
+   subroutine write_var_dcplx(io, var, varname, &
                               opt_mode, &
-                              opt_reduce_prec, &
                               opt_family, &
-                              opt_io)
+                              opt_reduce_prec)
 
       implicit none
 
       ! Arguments
+      type(d2d_io_adios), intent(inout) :: io
       complex(real64), contiguous, dimension(:, :, :), intent(IN) :: var
       character(len=*), intent(in) :: varname
       integer, intent(in), optional :: opt_mode
+      type(d2d_io_family), intent(inout), optional :: opt_family
       logical, intent(in), optional :: opt_reduce_prec
-      type(d2d_io_family), target, intent(in), optional :: opt_family
-      type(d2d_io_adios), intent(inout), optional :: opt_io
+
       ! Local variable(s)
       logical :: reduce
 
@@ -405,16 +380,14 @@ contains
       end if
 
       if (reduce) then
-         call adios_write(varname, &
+         call adios_write(io, varname, &
                           opt_mode=decomp_2d_io_sync, &
                           opt_family=opt_family, &
-                          opt_io=opt_io, &
                           fcplx=cmplx(var, kind=real32)) ! Warning, implicit memory allocation
       else
-         call adios_write(varname, &
+         call adios_write(io, varname, &
                           opt_mode=opt_mode, &
                           opt_family=opt_family, &
-                          opt_io=opt_io, &
                           dcplx=var)
       end if
 
@@ -430,29 +403,27 @@ contains
    !
    !
    !
-   subroutine read_var_freal(var, varname, &
+   subroutine read_var_freal(io, var, varname, &
+                             opt_family, &
                              opt_reduce_prec, &
                              opt_ipencil, &
-                             opt_decomp, &
-                             opt_family, &
-                             opt_io)
+                             opt_decomp)
 
       implicit none
 
       ! Arguments
+      type(d2d_io_adios), intent(inout) :: io
       real(real32), contiguous, dimension(:, :, :), intent(OUT) :: var
       character(len=*), intent(in) :: varname
+      type(d2d_io_family), intent(inout), optional :: opt_family
       logical, intent(in), optional :: opt_reduce_prec
       integer, intent(in), optional :: opt_ipencil
       type(decomp_info), target, intent(in), optional :: opt_decomp
-      type(d2d_io_family), target, intent(in), optional :: opt_family
-      type(d2d_io_adios), intent(inout), optional :: opt_io
 
       if (decomp_profiler_io) call decomp_profiler_start("adios_read_var")
 
-      call adios_read(varname, &
+      call adios_read(io, varname, &
                       opt_family=opt_family, &
-                      opt_io=opt_io, &
                       freal=var)
 
       associate (p => opt_reduce_prec); end associate
@@ -463,29 +434,27 @@ contains
 
    end subroutine read_var_freal
    !
-   subroutine read_var_fcplx(var, varname, &
+   subroutine read_var_fcplx(io, var, varname, &
+                             opt_family, &
                              opt_reduce_prec, &
                              opt_ipencil, &
-                             opt_decomp, &
-                             opt_family, &
-                             opt_io)
+                             opt_decomp)
 
       implicit none
 
       ! Arguments
+      type(d2d_io_adios), intent(inout) :: io
       complex(real32), contiguous, dimension(:, :, :), intent(OUT) :: var
       character(len=*), intent(in) :: varname
+      type(d2d_io_family), intent(inout), optional :: opt_family
       logical, intent(in), optional :: opt_reduce_prec
       integer, intent(in), optional :: opt_ipencil
       type(decomp_info), target, intent(in), optional :: opt_decomp
-      type(d2d_io_family), target, intent(in), optional :: opt_family
-      type(d2d_io_adios), intent(inout), optional :: opt_io
 
       if (decomp_profiler_io) call decomp_profiler_start("adios_read_var")
 
-      call adios_read(varname, &
+      call adios_read(io, varname, &
                       opt_family=opt_family, &
-                      opt_io=opt_io, &
                       fcplx=var)
 
       associate (p => opt_reduce_prec); end associate
@@ -496,23 +465,23 @@ contains
 
    end subroutine read_var_fcplx
    !
-   subroutine read_var_dreal(var, varname, &
+   subroutine read_var_dreal(io, var, varname, &
+                             opt_family, &
                              opt_reduce_prec, &
                              opt_ipencil, &
-                             opt_decomp, &
-                             opt_family, &
-                             opt_io)
+                             opt_decomp)
 
       implicit none
 
       ! Arguments
+      type(d2d_io_adios), intent(inout) :: io
       real(real64), contiguous, dimension(:, :, :), intent(OUT) :: var
       character(len=*), intent(in) :: varname
+      type(d2d_io_family), intent(inout), optional :: opt_family
       logical, intent(in), optional :: opt_reduce_prec
       integer, intent(in), optional :: opt_ipencil
       type(decomp_info), target, intent(in), optional :: opt_decomp
-      type(d2d_io_family), target, intent(in), optional :: opt_family
-      type(d2d_io_adios), intent(inout), optional :: opt_io
+
       ! Local variable(s)
       logical :: reduce
       type(decomp_info), pointer :: decomp
@@ -550,16 +519,14 @@ contains
          end if
       end if
       if (reduce) then
-         call adios_read(varname, &
+         call adios_read(io, varname, &
                          opt_family=opt_family, &
-                         opt_io=opt_io, &
                          freal=tmp)
          var = tmp
          deallocate (tmp)
       else
-         call adios_read(varname, &
+         call adios_read(io, varname, &
                          opt_family=opt_family, &
-                         opt_io=opt_io, &
                          dreal=var)
       end if
 
@@ -567,23 +534,23 @@ contains
 
    end subroutine read_var_dreal
    !
-   subroutine read_var_dcplx(var, varname, &
+   subroutine read_var_dcplx(io, var, varname, &
+                             opt_family, &
                              opt_reduce_prec, &
                              opt_ipencil, &
-                             opt_decomp, &
-                             opt_family, &
-                             opt_io)
+                             opt_decomp)
 
       implicit none
 
       ! Arguments
+      type(d2d_io_adios), intent(inout) :: io
       complex(real64), contiguous, dimension(:, :, :), intent(OUT) :: var
       character(len=*), intent(in) :: varname
+      type(d2d_io_family), intent(inout), optional :: opt_family
       logical, intent(in), optional :: opt_reduce_prec
       integer, intent(in), optional :: opt_ipencil
       type(decomp_info), target, intent(in), optional :: opt_decomp
-      type(d2d_io_family), target, intent(in), optional :: opt_family
-      type(d2d_io_adios), intent(inout), optional :: opt_io
+
       ! Local variable(s)
       logical :: reduce
       type(decomp_info), pointer :: decomp
@@ -621,16 +588,14 @@ contains
          end if
       end if
       if (reduce) then
-         call adios_read(varname, &
+         call adios_read(io, varname, &
                          opt_family=opt_family, &
-                         opt_io=opt_io, &
                          fcplx=tmp)
          var = tmp
          deallocate (tmp)
       else
-         call adios_read(varname, &
+         call adios_read(io, varname, &
                          opt_family=opt_family, &
-                         opt_io=opt_io, &
                          dcplx=var)
       end if
 
@@ -646,29 +611,29 @@ contains
    !
    !
    !
-   subroutine write_plane_freal(var, varname, &
+   subroutine write_plane_freal(io, var, varname, &
                                 opt_mode, &
+                                opt_family, &
                                 opt_nplanes, &
                                 opt_iplane, &
                                 opt_reduce_prec, &
                                 opt_decomp, &
-                                opt_ipencil, &
-                                opt_family, &
-                                opt_io)
+                                opt_ipencil)
 
       implicit none
 
       ! Arguments
+      type(d2d_io_adios), intent(inout) :: io
       real(real32), contiguous, dimension(:, :, :), intent(IN) :: var
       character(len=*), intent(in) :: varname
       integer, intent(in), optional :: opt_mode
+      type(d2d_io_family), intent(inout), optional :: opt_family
       integer, intent(in), optional :: opt_nplanes
       integer, intent(in), optional :: opt_iplane
       logical, intent(in), optional :: opt_reduce_prec
       TYPE(DECOMP_INFO), target, intent(IN), optional :: opt_decomp
       integer, intent(in), optional :: opt_ipencil
-      type(d2d_io_family), intent(inout), optional :: opt_family
-      type(d2d_io_adios), intent(inout), optional :: opt_io
+
       ! Local variables
       real(real32), allocatable, dimension(:, :, :) :: var2d
       TYPE(DECOMP_INFO), pointer :: decomp
@@ -698,10 +663,9 @@ contains
       end if
 
       if (present(opt_nplanes)) then
-         call adios_write(varname, &
+         call adios_write(io, varname, &
                           opt_mode=opt_mode, &
                           opt_family=opt_family, &
-                          opt_io=opt_io, &
                           freal=var)
       else
          if (opt_ipencil == 1) then
@@ -714,10 +678,9 @@ contains
             allocate (var2d(decomp%zsz(1), decomp%zsz(2), 1))
             var2d(:, :, 1) = var(:, :, iplane)
          end if
-         call adios_write(varname, &
+         call adios_write(io, varname, &
                           opt_mode=decomp_2d_io_sync, &
                           opt_family=opt_family, &
-                          opt_io=opt_io, &
                           freal=var2d)
          deallocate (var2d)
       end if
@@ -730,29 +693,29 @@ contains
 
    end subroutine write_plane_freal
    !
-   subroutine write_plane_fcplx(var, varname, &
+   subroutine write_plane_fcplx(io, var, varname, &
                                 opt_mode, &
+                                opt_family, &
                                 opt_nplanes, &
                                 opt_iplane, &
                                 opt_reduce_prec, &
                                 opt_decomp, &
-                                opt_ipencil, &
-                                opt_family, &
-                                opt_io)
+                                opt_ipencil)
 
       implicit none
 
       ! Arguments
+      type(d2d_io_adios), intent(inout) :: io
       complex(real32), contiguous, dimension(:, :, :), intent(IN) :: var
       character(len=*), intent(in) :: varname
       integer, intent(in), optional :: opt_mode
+      type(d2d_io_family), intent(inout), optional :: opt_family
       integer, intent(in), optional :: opt_nplanes
       integer, intent(in), optional :: opt_iplane
       logical, intent(in), optional :: opt_reduce_prec
       TYPE(DECOMP_INFO), target, intent(IN), optional :: opt_decomp
       integer, intent(in), optional :: opt_ipencil
-      type(d2d_io_family), intent(inout), optional :: opt_family
-      type(d2d_io_adios), intent(inout), optional :: opt_io
+
       ! Local variables
       complex(real32), allocatable, dimension(:, :, :) :: var2d
       TYPE(DECOMP_INFO), pointer :: decomp
@@ -782,10 +745,9 @@ contains
       end if
 
       if (present(opt_nplanes)) then
-         call adios_write(varname, &
+         call adios_write(io, varname, &
                           opt_mode=opt_mode, &
                           opt_family=opt_family, &
-                          opt_io=opt_io, &
                           fcplx=var)
       else
          if (opt_ipencil == 1) then
@@ -798,10 +760,9 @@ contains
             allocate (var2d(decomp%zsz(1), decomp%zsz(2), 1))
             var2d(:, :, 1) = var(:, :, iplane)
          end if
-         call adios_write(varname, &
+         call adios_write(io, varname, &
                           opt_mode=decomp_2d_io_sync, &
                           opt_family=opt_family, &
-                          opt_io=opt_io, &
                           fcplx=var2d)
          deallocate (var2d)
       end if
@@ -814,29 +775,29 @@ contains
 
    end subroutine write_plane_fcplx
    !
-   subroutine write_plane_dreal(var, varname, &
+   subroutine write_plane_dreal(io, var, varname, &
                                 opt_mode, &
+                                opt_family, &
                                 opt_nplanes, &
                                 opt_iplane, &
                                 opt_reduce_prec, &
                                 opt_decomp, &
-                                opt_ipencil, &
-                                opt_family, &
-                                opt_io)
+                                opt_ipencil)
 
       implicit none
 
       ! Arguments
+      type(d2d_io_adios), intent(inout) :: io
       real(real64), contiguous, dimension(:, :, :), intent(IN) :: var
       character(len=*), intent(in) :: varname
       integer, intent(in), optional :: opt_mode
+      type(d2d_io_family), intent(inout), optional :: opt_family
       integer, intent(in), optional :: opt_nplanes
       integer, intent(in), optional :: opt_iplane
       logical, intent(in), optional :: opt_reduce_prec
       TYPE(DECOMP_INFO), target, intent(IN), optional :: opt_decomp
       integer, intent(in), optional :: opt_ipencil
-      type(d2d_io_family), intent(inout), optional :: opt_family
-      type(d2d_io_adios), intent(inout), optional :: opt_io
+
       ! Local variables
       logical :: reduce
       real(real64), allocatable, dimension(:, :, :) :: var2d
@@ -876,16 +837,14 @@ contains
 
       if (present(opt_nplanes)) then
          if (reduce) then
-            call adios_write(varname, &
+            call adios_write(io, varname, &
                              opt_mode=decomp_2d_io_sync, &
                              opt_family=opt_family, &
-                             opt_io=opt_io, &
                              freal=real(var, kind=real32)) ! Warning, implicit memory allocation
          else
-            call adios_write(varname, &
+            call adios_write(io, varname, &
                              opt_mode=opt_mode, &
                              opt_family=opt_family, &
-                             opt_io=opt_io, &
                              dreal=var)
          end if
       else
@@ -909,16 +868,14 @@ contains
             var2d(:, :, 1) = var(:, :, iplane)
          end if
          if (reduce) then
-            call adios_write(varname, &
+            call adios_write(io, varname, &
                              opt_mode=decomp_2d_io_sync, &
                              opt_family=opt_family, &
-                             opt_io=opt_io, &
                              freal=var2dbis)
          else
-            call adios_write(varname, &
+            call adios_write(io, varname, &
                              opt_mode=decomp_2d_io_sync, &
                              opt_family=opt_family, &
-                             opt_io=opt_io, &
                              dreal=var2d)
          end if
          if (allocated(var2d)) deallocate (var2d)
@@ -931,29 +888,29 @@ contains
 
    end subroutine write_plane_dreal
    !
-   subroutine write_plane_dcplx(var, varname, &
+   subroutine write_plane_dcplx(io, var, varname, &
                                 opt_mode, &
+                                opt_family, &
                                 opt_nplanes, &
                                 opt_iplane, &
                                 opt_reduce_prec, &
                                 opt_decomp, &
-                                opt_ipencil, &
-                                opt_family, &
-                                opt_io)
+                                opt_ipencil)
 
       implicit none
 
       ! Arguments
+      type(d2d_io_adios), intent(inout) :: io
       complex(real64), contiguous, dimension(:, :, :), intent(IN) :: var
       character(len=*), intent(in) :: varname
       integer, intent(in), optional :: opt_mode
+      type(d2d_io_family), intent(inout), optional :: opt_family
       integer, intent(in), optional :: opt_nplanes
       integer, intent(in), optional :: opt_iplane
       logical, intent(in), optional :: opt_reduce_prec
       TYPE(DECOMP_INFO), target, intent(IN), optional :: opt_decomp
       integer, intent(in), optional :: opt_ipencil
-      type(d2d_io_family), intent(inout), optional :: opt_family
-      type(d2d_io_adios), intent(inout), optional :: opt_io
+
       ! Local variables
       logical :: reduce
       complex(real64), allocatable, dimension(:, :, :) :: var2d
@@ -993,16 +950,14 @@ contains
 
       if (present(opt_nplanes)) then
          if (reduce) then
-            call adios_write(varname, &
+            call adios_write(io, varname, &
                              opt_mode=decomp_2d_io_sync, &
                              opt_family=opt_family, &
-                             opt_io=opt_io, &
                              fcplx=cmplx(var, kind=real32)) ! Warning, implicit memory allocation
          else
-            call adios_write(varname, &
+            call adios_write(io, varname, &
                              opt_mode=opt_mode, &
                              opt_family=opt_family, &
-                             opt_io=opt_io, &
                              dcplx=var)
          end if
       else
@@ -1026,16 +981,14 @@ contains
             var2d(:, :, 1) = var(:, :, iplane)
          end if
          if (reduce) then
-            call adios_write(varname, &
+            call adios_write(io, varname, &
                              opt_mode=decomp_2d_io_sync, &
                              opt_family=opt_family, &
-                             opt_io=opt_io, &
                              fcplx=var2dbis)
          else
-            call adios_write(varname, &
+            call adios_write(io, varname, &
                              opt_mode=decomp_2d_io_sync, &
                              opt_family=opt_family, &
-                             opt_io=opt_io, &
                              dcplx=var2d)
          end if
          if (allocated(var2d)) deallocate (var2d)
@@ -1056,24 +1009,23 @@ contains
    !
    !
    !
-   subroutine read_plane_freal(var, varname, &
-                               opt_reduce_prec, &
+   subroutine read_plane_freal(io, var, varname, &
                                opt_family, &
-                               opt_io)
+                               opt_reduce_prec)
 
       implicit none
 
       ! Arguments
+      type(d2d_io_adios), intent(inout) :: io
       real(real32), contiguous, dimension(:, :, :), intent(OUT) :: var
       character(len=*), intent(in) :: varname
-      logical, intent(in), optional :: opt_reduce_prec
       type(d2d_io_family), intent(inout), optional :: opt_family
-      type(d2d_io_adios), intent(inout), optional :: opt_io
+      logical, intent(in), optional :: opt_reduce_prec
+
       if (decomp_profiler_io) call decomp_profiler_start("adios_read_plane")
 
-      call adios_read(varname, &
+      call adios_read(io, varname, &
                       opt_family=opt_family, &
-                      opt_io=opt_io, &
                       freal=var)
       associate (p => opt_reduce_prec)
       end associate
@@ -1082,24 +1034,23 @@ contains
 
    end subroutine read_plane_freal
    !
-   subroutine read_plane_fcplx(var, varname, &
-                               opt_reduce_prec, &
+   subroutine read_plane_fcplx(io, var, varname, &
                                opt_family, &
-                               opt_io)
+                               opt_reduce_prec)
 
       implicit none
 
       ! Arguments
+      type(d2d_io_adios), intent(inout) :: io
       complex(real32), contiguous, dimension(:, :, :), intent(OUT) :: var
       character(len=*), intent(in) :: varname
-      logical, intent(in), optional :: opt_reduce_prec
       type(d2d_io_family), intent(inout), optional :: opt_family
-      type(d2d_io_adios), intent(inout), optional :: opt_io
+      logical, intent(in), optional :: opt_reduce_prec
+
       if (decomp_profiler_io) call decomp_profiler_start("adios_read_plane")
 
-      call adios_read(varname, &
+      call adios_read(io, varname, &
                       opt_family=opt_family, &
-                      opt_io=opt_io, &
                       fcplx=var)
       associate (p => opt_reduce_prec)
       end associate
@@ -1108,19 +1059,19 @@ contains
 
    end subroutine read_plane_fcplx
    !
-   subroutine read_plane_dreal(var, varname, &
-                               opt_reduce_prec, &
+   subroutine read_plane_dreal(io, var, varname, &
                                opt_family, &
-                               opt_io)
+                               opt_reduce_prec)
 
       implicit none
 
       ! Arguments
+      type(d2d_io_adios), intent(inout) :: io
       real(real64), contiguous, dimension(:, :, :), intent(OUT) :: var
       character(len=*), intent(in) :: varname
-      logical, intent(in), optional :: opt_reduce_prec
       type(d2d_io_family), intent(inout), optional :: opt_family
-      type(d2d_io_adios), intent(inout), optional :: opt_io
+      logical, intent(in), optional :: opt_reduce_prec
+
       ! Local variables
       logical :: reduce
       real(real32), allocatable, dimension(:, :, :) :: tmp
@@ -1139,35 +1090,33 @@ contains
          allocate (tmp(size(var, 1), &
                        size(var, 2), &
                        size(var, 3)))
-         call adios_read(varname, &
+         call adios_read(io, varname, &
                          opt_family=opt_family, &
-                         opt_io=opt_io, &
                          freal=tmp)
          var = real(tmp, kind=real64)
          deallocate (tmp)
       else
-         call adios_read(varname, &
+         call adios_read(io, varname, &
                          opt_family=opt_family, &
-                         opt_io=opt_io, &
                          dreal=var)
       end if
       if (decomp_profiler_io) call decomp_profiler_end("adios_read_plane")
 
    end subroutine read_plane_dreal
    !
-   subroutine read_plane_dcplx(var, varname, &
-                               opt_reduce_prec, &
+   subroutine read_plane_dcplx(io, var, varname, &
                                opt_family, &
-                               opt_io)
+                               opt_reduce_prec)
 
       implicit none
 
       ! Arguments
+      type(d2d_io_adios), intent(inout) :: io
       complex(real64), contiguous, dimension(:, :, :), intent(OUT) :: var
       character(len=*), intent(in) :: varname
-      logical, intent(in), optional :: opt_reduce_prec
       type(d2d_io_family), intent(inout), optional :: opt_family
-      type(d2d_io_adios), intent(inout), optional :: opt_io
+      logical, intent(in), optional :: opt_reduce_prec
+
       ! Local variables
       logical :: reduce
       complex(real32), allocatable, dimension(:, :, :) :: tmp
@@ -1186,16 +1135,14 @@ contains
          allocate (tmp(size(var, 1), &
                        size(var, 2), &
                        size(var, 3)))
-         call adios_read(varname, &
+         call adios_read(io, varname, &
                          opt_family=opt_family, &
-                         opt_io=opt_io, &
                          fcplx=tmp)
          var = cmplx(tmp, kind=real64)
          deallocate (tmp)
       else
-         call adios_read(varname, &
+         call adios_read(io, varname, &
                          opt_family=opt_family, &
-                         opt_io=opt_io, &
                          dcplx=var)
       end if
       if (decomp_profiler_io) call decomp_profiler_end("adios_read_plane")

@@ -29,11 +29,10 @@ for i in range(nformat):
     #
     # Header
     #
-    f.write("   subroutine write_var_"+ext[i]+"(var, varname, &\n")
+    f.write("   subroutine write_var_"+ext[i]+"(io, var, varname, &\n")
     f.write("                              opt_mode, &\n")
-    f.write("                              opt_reduce_prec, &\n")
     f.write("                              opt_family, &\n")
-    f.write("                              opt_io)\n")
+    f.write("                              opt_reduce_prec)\n")
     f.write("\n")
     f.write("      implicit none\n")
     f.write("\n")
@@ -41,6 +40,7 @@ for i in range(nformat):
     # Arguments
     #
     f.write("      ! Arguments\n")
+    f.write("      type(d2d_io_adios), intent(inout) :: io\n")
     if (i==0):
         f.write("      real(real32), contiguous, dimension(:, :, :), intent(IN) :: var\n")
     elif (i==2):
@@ -52,9 +52,8 @@ for i in range(nformat):
     #
     f.write("      character(len=*), intent(in) :: varname\n")
     f.write("      integer, intent(in), optional :: opt_mode\n")
+    f.write("      type(d2d_io_family), intent(inout), optional :: opt_family\n")
     f.write("      logical, intent(in), optional :: opt_reduce_prec\n")
-    f.write("      type(d2d_io_family), target, intent(in), optional :: opt_family\n")
-    f.write("      type(d2d_io_adios), intent(inout), optional :: opt_io")
     f.write("\n")
     #
     # Local variables
@@ -62,7 +61,7 @@ for i in range(nformat):
     if (i==2 or i==3):
         f.write("      ! Local variable(s)\n")
         f.write("      logical :: reduce\n")
-    f.write("\n")
+        f.write("\n")
     #
     # Start profiling
     #
@@ -83,10 +82,9 @@ for i in range(nformat):
     # Call the lower level IO subroutine
     #
     if (i==0 or i==1):
-        f.write("      call adios_write(varname, &\n")
+        f.write("      call adios_write(io, varname, &\n")
         f.write("                       opt_mode=opt_mode, &\n")
         f.write("                       opt_family=opt_family, &\n")
-        f.write("                       opt_io=opt_io, &\n")
         if (i==0):
             f.write("                       freal=var)\n")
         elif (i==1):
@@ -94,19 +92,17 @@ for i in range(nformat):
     #
     if (i==2 or i==3):
         f.write("      if (reduce) then\n")
-        f.write("         call adios_write(varname, &\n")
+        f.write("         call adios_write(io, varname, &\n")
         f.write("                          opt_mode=decomp_2d_io_sync, &\n")
         f.write("                          opt_family=opt_family, &\n")
-        f.write("                          opt_io=opt_io, &\n")
         if (i==2):
             f.write("                          freal=real(var, kind=real32)) ! Warning, implicit memory allocation\n")
         elif (i==3):
             f.write("                          fcplx=cmplx(var, kind=real32)) ! Warning, implicit memory allocation\n")
         f.write("      else\n")
-        f.write("         call adios_write(varname, &\n")
+        f.write("         call adios_write(io, varname, &\n")
         f.write("                          opt_mode=opt_mode, &\n")
         f.write("                          opt_family=opt_family, &\n")
-        f.write("                          opt_io=opt_io, &\n")
         if (i==2):
             f.write("                          dreal=var)\n")
         elif (i==3):

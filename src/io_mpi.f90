@@ -97,6 +97,7 @@ module decomp_2d_io
 
    use decomp_2d
    use decomp_2d_constants
+   use decomp_2d_io_adios
    use decomp_2d_io_object_mpi
    use decomp_2d_io_utilities
    use decomp_2d_mpi
@@ -201,16 +202,20 @@ contains
    !    The external code can specify default MPI_INFO values for
    !    calls to MPI_FILE_OPEN and MPI_FILE_SET_VIEW
    !
-   subroutine decomp_2d_io_init(file_open_info, file_set_view_info)
+   subroutine decomp_2d_io_init(file_open_info, file_set_view_info, adios_xml)
 
       implicit none
 
       integer, intent(in), optional :: file_open_info, file_set_view_info
+      character(len=*), intent(in), optional :: adios_xml
 
       if (decomp_profiler_io) call decomp_profiler_start("io_mpi_init")
 
       ! Initialize the MPI IO object module
       call decomp_2d_io_object_mpi_init(file_open_info, file_set_view_info)
+
+      ! Initialize the ADIOS2 IO module if needed
+      call decomp_2d_io_adios_init(adios_xml)
 
       if (decomp_profiler_io) call decomp_profiler_end("io_mpi_init")
 
@@ -224,6 +229,9 @@ contains
       implicit none
 
       if (decomp_profiler_io) call decomp_profiler_start("io_mpi_fin")
+
+      ! Finalize the ADIOS2 IO module if needed
+      call decomp_2d_io_adios_fin()
 
       ! Finalize the MPI IO object module
       call decomp_2d_io_object_mpi_fin()

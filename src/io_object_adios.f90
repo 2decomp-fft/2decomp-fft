@@ -29,8 +29,8 @@ module decomp_2d_io_object_adios
    !
    type, public :: d2d_io_family
       character(:), allocatable :: label                      ! Label of the family writer
-      type(adios2_adios), pointer :: adios => null()          ! adios2 only
-      type(adios2_io) :: io                                   ! adios2 only
+      type(adios2_adios), pointer :: adios => null()
+      type(adios2_io) :: io
    contains
       procedure :: init => d2d_io_family_init                     ! Init the family of readers / writers
       procedure :: fin => d2d_io_family_fin                       ! Clear the family of readers / writers
@@ -47,8 +47,8 @@ module decomp_2d_io_object_adios
       type(d2d_io_family), pointer :: family        ! Associated family
       character(:), allocatable :: label            ! Label of the writer
       logical :: is_open = .false.                  ! True if the writer is open
-      logical :: is_active = .false.                ! True if the writer is active (adios2 only)
-      type(adios2_engine) :: engine                 ! adios2 only (only one engine / writer currently)
+      logical :: is_active = .false.                ! True if the writer is active
+      type(adios2_engine) :: engine                 ! Only one engine / writer currently
    contains
       procedure :: open => d2d_io_adios_open              ! Open the IO
       procedure :: start => d2d_io_adios_start            ! Start the IO
@@ -176,7 +176,7 @@ contains
 
       implicit none
 
-      class(d2d_io_family), intent(in) :: family
+      class(d2d_io_family), intent(inout) :: family
       character(len=*), intent(in) :: varname
       integer, intent(in) :: ipencil ! (x-pencil=1; y-pencil=2; z-pencil=3)
       integer, intent(in) :: type
@@ -222,7 +222,7 @@ contains
 
       implicit none
 
-      class(d2d_io_family), intent(in) :: family
+      class(d2d_io_family), intent(inout) :: family
       character(len=*), intent(in) :: varname
       integer, intent(in) :: ipencil ! (x-pencil=1; y-pencil=2; z-pencil=3)
       integer, intent(in) :: type
@@ -264,7 +264,7 @@ contains
 
       implicit none
 
-      type(d2d_io_family), intent(in) :: family
+      type(d2d_io_family), intent(inout) :: family
       character(len=*), intent(in) :: varname
       integer, intent(in) :: ipencil
       integer, intent(in) :: typex
@@ -435,7 +435,7 @@ contains
 
       class(d2d_io_adios), intent(inout) :: writer
       integer, intent(in) :: mode
-      type(d2d_io_family), target, intent(in) :: family
+      type(d2d_io_family), target, intent(inout) :: family
 
       integer :: access_mode, ierror
 
@@ -548,7 +548,7 @@ contains
 
       class(d2d_io_adios), intent(inout) :: writer
       integer, intent(in) :: mode
-      type(d2d_io_family), target, intent(in), optional :: opt_family
+      type(d2d_io_family), target, intent(inout), optional :: opt_family
 
       if (present(opt_family)) then
          call writer%open(mode, opt_family)
@@ -727,7 +727,6 @@ contains
 
       integer, parameter :: read_mode = adios2_mode_deferred
       integer :: ierror
-      integer(kind=8) :: nsteps, curstep
       type(adios2_variable) :: var_handle
 
       ! Safety checks
@@ -748,9 +747,6 @@ contains
                               "ERROR: trying to read variable without registering first! "//trim(varname))
       end if
 
-      call adios2_variable_steps(nsteps, var_handle, ierror)
-      if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "adios2_variable_steps")
-
       if (present(freal)) then
          call adios2_get(writer%engine, var_handle, freal, read_mode, ierror)
       else if (present(dreal)) then
@@ -761,16 +757,6 @@ contains
          call adios2_get(writer%engine, var_handle, dcplx, read_mode, ierror)
       end if
       if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "adios2_get")
-
-      call adios2_current_step(curstep, writer%engine, ierror)
-      if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "adios2_current_step")
-
-      call adios2_inquire_variable(var_handle, writer%family%io, varname, ierror)
-      if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "adios2_inquire_variable "//trim(varname))
-      if (.not. var_handle%valid) then
-         call decomp_2d_abort(__FILE__, __LINE__, -1, &
-                              "ERROR: trying to read variable before registering! "//trim(varname))
-      end if
 
    end subroutine d2d_io_adios_read
 

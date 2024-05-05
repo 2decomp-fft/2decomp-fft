@@ -72,7 +72,7 @@
 !   - opt_dirname : optional, name of the folder containing the file
 !   - opt_mpi_file_open_info : optional, MPI hints provided to MPI_FILE_OPEN
 !   - opt_mpi_file_set_view_info : optional, MPI hints provided to MPI_FILE_SET_VIEW
-!   - opt_reduce_prec : optional, write double precision real / complex arrays in single precision
+!   - opt_reduce_prec : optional, read the file in single precision
 !   - opt_decomp : optional, decomp_info object describing the array. decomp_main is used when this is not provided
 !   - opt_nb_req : optional, MPI_REQUEST associated with the non-blocking MPI-IO operation
 !   - opt_io : optional, use it to close the file when the request is completed (non-blocking MPI-IO)

@@ -123,9 +123,10 @@ for i in range(nformat):
         f.write("                       opt_nb_req=opt_nb_req, &\n")
         if (i==2):
             f.write("                      freal=tmp)\n")
+            f.write("         var = real(tmp, kind=real32)\n")
         elif (i==3):
             f.write("                      fcplx=tmp)\n")
-        f.write("         var = tmp\n")
+            f.write("         var = cmplx(tmp, kind=real64)\n")
         f.write("         deallocate(tmp)\n")
         f.write("      else\n")
         f.write("         call read_var(io, ipencil, decomp, &\n")
@@ -142,8 +143,7 @@ for i in range(nformat):
     f.write("      nullify (decomp)\n")
     f.write("\n")
     if (i==0 or i==1 or i==4 or i==5):
-        f.write("      associate (p => opt_reduce_prec)\n")
-        f.write("      end associate\n")
+        f.write("      associate (p => opt_reduce_prec); end associate\n")
         f.write("\n")
     #
     # End profiling

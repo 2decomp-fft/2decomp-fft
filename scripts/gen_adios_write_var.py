@@ -113,8 +113,7 @@ for i in range(nformat):
     #
     f.write("\n")
     if (i==0 or i==1):
-        f.write("      associate (p => opt_reduce_prec)\n")
-        f.write("      end associate\n")
+        f.write("      associate (p => opt_reduce_prec); end associate\n")
         f.write("\n")
     #
     # End profiling

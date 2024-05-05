@@ -73,6 +73,10 @@ for i in range(nformat):
     f.write("      ! Local variable(s)\n")
     if (i==2 or i==3):
         f.write("      logical :: reduce\n")
+    if (i==2):
+        f.write("      real(real32), allocatable, dimension(:, :, :) :: tmp\n")
+    if (i==3):
+        f.write("      complex(real32), allocatable, dimension(:, :, :) :: tmp\n")
     #
     f.write("      TYPE(DECOMP_INFO), pointer :: decomp\n")
     f.write("\n")
@@ -120,14 +124,20 @@ for i in range(nformat):
     #
     if (i==2 or i==3):
         f.write("      if (reduce) then\n")
+        f.write("         allocate(tmp(size(var, 1), size(var, 2), size(var, 3)))\n")
+        if (i==2):
+            f.write("         tmp = real(var, kind=real32)\n")
+        if (i==3):
+            f.write("         tmp = cmplx(var, kind=real32)\n")
         f.write("         call write_one(ipencil, varname, decomp, &\n")
         f.write("                        opt_dirname=opt_dirname, &\n")
         f.write("                        opt_mpi_file_open_info=opt_mpi_file_open_info, &\n")
         f.write("                        opt_mpi_file_set_view_info=opt_mpi_file_set_view_info, &\n")
         if (i==2):
-            f.write("                        freal=real(var, kind=real32)) ! Warning, implicit memory allocation\n")
+            f.write("                        freal=tmp)\n")
         elif (i==3):
-            f.write("                        fcplx=cmplx(var, kind=real32)) ! Warning, implicit memory allocation\n")
+            f.write("                        fcplx=tmp)\n")
+        f.write("         deallocate(tmp)\n")
         f.write("      else\n")
         f.write("         call write_one(ipencil, varname, decomp, &\n")
         f.write("                        opt_dirname=opt_dirname, &\n")
@@ -147,8 +157,7 @@ for i in range(nformat):
     f.write("      nullify (decomp)\n")
     f.write("\n")
     if (i==0 or i==1 or i==4 or i==5):
-        f.write("      associate (p => opt_reduce_prec)\n")
-        f.write("      end associate\n")
+        f.write("      associate (p => opt_reduce_prec); end associate\n")
         f.write("\n")
     #
     # End profiling

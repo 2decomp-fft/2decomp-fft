@@ -1078,7 +1078,7 @@ contains
    !
    !
    !
-   ! The code below was generated with the script "write_one.f90" located in the folder scripts
+   ! The code below was generated with the script io_write_one located in the folder scripts
    !
    !
    !
@@ -1126,8 +1126,7 @@ contains
 
       nullify (decomp)
 
-      associate (p => opt_reduce_prec)
-      end associate
+      associate (p => opt_reduce_prec); end associate
 
       if (decomp_profiler_io) call decomp_profiler_end("io_write_one")
 
@@ -1177,8 +1176,7 @@ contains
 
       nullify (decomp)
 
-      associate (p => opt_reduce_prec)
-      end associate
+      associate (p => opt_reduce_prec); end associate
 
       if (decomp_profiler_io) call decomp_profiler_end("io_write_one")
 
@@ -1208,6 +1206,7 @@ contains
       type(d2d_io_mpi), intent(inout), optional :: opt_io
       ! Local variable(s)
       logical :: reduce
+      real(real32), allocatable, dimension(:, :, :) :: tmp
       TYPE(DECOMP_INFO), pointer :: decomp
 
       if (decomp_profiler_io) call decomp_profiler_start("io_write_one")
@@ -1227,11 +1226,14 @@ contains
       end if
 
       if (reduce) then
+         allocate (tmp(size(var, 1), size(var, 2), size(var, 3)))
+         tmp = real(var, kind=real32)
          call write_one(ipencil, varname, decomp, &
                         opt_dirname=opt_dirname, &
                         opt_mpi_file_open_info=opt_mpi_file_open_info, &
                         opt_mpi_file_set_view_info=opt_mpi_file_set_view_info, &
-                        freal=real(var, kind=real32)) ! Warning, implicit memory allocation
+                        freal=tmp)
+         deallocate (tmp)
       else
          call write_one(ipencil, varname, decomp, &
                         opt_dirname=opt_dirname, &
@@ -1272,6 +1274,7 @@ contains
       type(d2d_io_mpi), intent(inout), optional :: opt_io
       ! Local variable(s)
       logical :: reduce
+      complex(real32), allocatable, dimension(:, :, :) :: tmp
       TYPE(DECOMP_INFO), pointer :: decomp
 
       if (decomp_profiler_io) call decomp_profiler_start("io_write_one")
@@ -1291,11 +1294,14 @@ contains
       end if
 
       if (reduce) then
+         allocate (tmp(size(var, 1), size(var, 2), size(var, 3)))
+         tmp = cmplx(var, kind=real32)
          call write_one(ipencil, varname, decomp, &
                         opt_dirname=opt_dirname, &
                         opt_mpi_file_open_info=opt_mpi_file_open_info, &
                         opt_mpi_file_set_view_info=opt_mpi_file_set_view_info, &
-                        fcplx=cmplx(var, kind=real32)) ! Warning, implicit memory allocation
+                        fcplx=tmp)
+         deallocate (tmp)
       else
          call write_one(ipencil, varname, decomp, &
                         opt_dirname=opt_dirname, &
@@ -1356,8 +1362,7 @@ contains
 
       nullify (decomp)
 
-      associate (p => opt_reduce_prec)
-      end associate
+      associate (p => opt_reduce_prec); end associate
 
       if (decomp_profiler_io) call decomp_profiler_end("io_write_one")
 
@@ -1407,8 +1412,7 @@ contains
 
       nullify (decomp)
 
-      associate (p => opt_reduce_prec)
-      end associate
+      associate (p => opt_reduce_prec); end associate
 
       if (decomp_profiler_io) call decomp_profiler_end("io_write_one")
 
@@ -1418,7 +1422,7 @@ contains
    !
    !
    !
-   ! The code below was generated with the script "read_one.f90" located in the folder scripts
+   ! The code below was generated with the script io_read_one located in the folder scripts
    !
    !
    !
@@ -1466,8 +1470,7 @@ contains
 
       nullify (decomp)
 
-      associate (p => opt_reduce_prec)
-      end associate
+      associate (p => opt_reduce_prec); end associate
 
       if (decomp_profiler_io) call decomp_profiler_end("io_read_one")
 
@@ -1517,8 +1520,7 @@ contains
 
       nullify (decomp)
 
-      associate (p => opt_reduce_prec)
-      end associate
+      associate (p => opt_reduce_prec); end associate
 
       if (decomp_profiler_io) call decomp_profiler_end("io_read_one")
 
@@ -1581,7 +1583,7 @@ contains
                        opt_mpi_file_open_info=opt_mpi_file_open_info, &
                        opt_mpi_file_set_view_info=opt_mpi_file_set_view_info, &
                        freal=tmp)
-         var = tmp
+         var = real(tmp, kind=real64)
          deallocate (tmp)
 
       else
@@ -1659,7 +1661,7 @@ contains
                        opt_mpi_file_open_info=opt_mpi_file_open_info, &
                        opt_mpi_file_set_view_info=opt_mpi_file_set_view_info, &
                        fcplx=tmp)
-         var = tmp
+         var = cmplx(tmp, kind=real64)
          deallocate (tmp)
 
       else
@@ -1724,8 +1726,7 @@ contains
 
       nullify (decomp)
 
-      associate (p => opt_reduce_prec)
-      end associate
+      associate (p => opt_reduce_prec); end associate
 
       if (decomp_profiler_io) call decomp_profiler_end("io_read_one")
 
@@ -1775,8 +1776,7 @@ contains
 
       nullify (decomp)
 
-      associate (p => opt_reduce_prec)
-      end associate
+      associate (p => opt_reduce_prec); end associate
 
       if (decomp_profiler_io) call decomp_profiler_end("io_read_one")
 
@@ -1786,7 +1786,7 @@ contains
    !
    !
    !
-   ! The code below was generated with the script "write_var.f90" located in the folder scripts
+   ! The code below was generated with the script io_write_var located in the folder scripts
    !
    !
    !
@@ -1823,8 +1823,7 @@ contains
 
       nullify (decomp)
 
-      associate (p => opt_reduce_prec)
-      end associate
+      associate (p => opt_reduce_prec); end associate
 
       if (decomp_profiler_io) call decomp_profiler_end("io_write_var")
 
@@ -1863,8 +1862,7 @@ contains
 
       nullify (decomp)
 
-      associate (p => opt_reduce_prec)
-      end associate
+      associate (p => opt_reduce_prec); end associate
 
       if (decomp_profiler_io) call decomp_profiler_end("io_write_var")
 
@@ -1887,6 +1885,7 @@ contains
 
       ! Local variable(s)
       logical :: reduce
+      real(real32), allocatable, dimension(:, :, :) :: tmp
       TYPE(DECOMP_INFO), pointer :: decomp
 
       if (decomp_profiler_io) call decomp_profiler_start("io_write_var")
@@ -1906,8 +1905,11 @@ contains
       end if
 
       if (reduce) then
+         allocate (tmp(size(var, 1), size(var, 2), size(var, 3)))
+         tmp = real(var, kind=real32)
          call write_var(io, ipencil, decomp, &
-                        freal=real(var, kind=real32)) ! Warning, implicit memory allocation
+                        freal=tmp)
+         deallocate (tmp)
       else
          call write_var(io, ipencil, decomp, &
                         opt_nb_req=opt_nb_req, &
@@ -1937,6 +1939,7 @@ contains
 
       ! Local variable(s)
       logical :: reduce
+      complex(real32), allocatable, dimension(:, :, :) :: tmp
       TYPE(DECOMP_INFO), pointer :: decomp
 
       if (decomp_profiler_io) call decomp_profiler_start("io_write_var")
@@ -1956,8 +1959,11 @@ contains
       end if
 
       if (reduce) then
+         allocate (tmp(size(var, 1), size(var, 2), size(var, 3)))
+         tmp = cmplx(var, kind=real32)
          call write_var(io, ipencil, decomp, &
-                        fcplx=cmplx(var, kind=real32)) ! Warning, implicit memory allocation
+                        fcplx=tmp)
+         deallocate (tmp)
       else
          call write_var(io, ipencil, decomp, &
                         opt_nb_req=opt_nb_req, &
@@ -2003,8 +2009,7 @@ contains
 
       nullify (decomp)
 
-      associate (p => opt_reduce_prec)
-      end associate
+      associate (p => opt_reduce_prec); end associate
 
       if (decomp_profiler_io) call decomp_profiler_end("io_write_var")
 
@@ -2043,8 +2048,7 @@ contains
 
       nullify (decomp)
 
-      associate (p => opt_reduce_prec)
-      end associate
+      associate (p => opt_reduce_prec); end associate
 
       if (decomp_profiler_io) call decomp_profiler_end("io_write_var")
 
@@ -2054,7 +2058,7 @@ contains
    !
    !
    !
-   ! The code below was generated with the script "read_var.f90" located in the folder scripts
+   ! The code below was generated with the script io_read_var located in the folder scripts
    !
    !
    !
@@ -2091,8 +2095,7 @@ contains
 
       nullify (decomp)
 
-      associate (p => opt_reduce_prec)
-      end associate
+      associate (p => opt_reduce_prec); end associate
 
       if (decomp_profiler_io) call decomp_profiler_end("io_read_var")
 
@@ -2131,8 +2134,7 @@ contains
 
       nullify (decomp)
 
-      associate (p => opt_reduce_prec)
-      end associate
+      associate (p => opt_reduce_prec); end associate
 
       if (decomp_profiler_io) call decomp_profiler_end("io_read_var")
 
@@ -2185,7 +2187,7 @@ contains
          call read_var(io, ipencil, decomp, &
                        opt_nb_req=opt_nb_req, &
                        freal=tmp)
-         var = tmp
+         var = real(tmp, kind=real32)
          deallocate (tmp)
       else
          call read_var(io, ipencil, decomp, &
@@ -2246,7 +2248,7 @@ contains
          call read_var(io, ipencil, decomp, &
                        opt_nb_req=opt_nb_req, &
                        fcplx=tmp)
-         var = tmp
+         var = cmplx(tmp, kind=real64)
          deallocate (tmp)
       else
          call read_var(io, ipencil, decomp, &
@@ -2293,8 +2295,7 @@ contains
 
       nullify (decomp)
 
-      associate (p => opt_reduce_prec)
-      end associate
+      associate (p => opt_reduce_prec); end associate
 
       if (decomp_profiler_io) call decomp_profiler_end("io_read_var")
 
@@ -2333,8 +2334,7 @@ contains
 
       nullify (decomp)
 
-      associate (p => opt_reduce_prec)
-      end associate
+      associate (p => opt_reduce_prec); end associate
 
       if (decomp_profiler_io) call decomp_profiler_end("io_read_var")
 
@@ -2344,7 +2344,7 @@ contains
    !
    !
    !
-   ! The code below was generated with the script "write_plane.f90" located in the folder scripts
+   ! The code below was generated with the script io_write_plane located in the folder scripts
    !
    !
    !
@@ -2414,13 +2414,13 @@ contains
                           freal=var)
       else
          if (ipencil == 1) then
-            allocate (var2d(1, decomp%xsz(2), decomp%xsz(3)))
+            allocate (var2d(1, size(var, 2), size(var, 3)))
             var2d(1, :, :) = var(iplane, :, :)
          else if (ipencil == 2) then
-            allocate (var2d(decomp%ysz(1), 1, decomp%ysz(3)))
+            allocate (var2d(size(var, 1), 1, size(var, 3)))
             var2d(:, 1, :) = var(:, iplane, :)
          else if (ipencil == 3) then
-            allocate (var2d(decomp%zsz(1), decomp%zsz(2), 1))
+            allocate (var2d(size(var, 1), size(var, 2), 1))
             var2d(:, :, 1) = var(:, :, iplane)
          end if
          call write_plane(ipencil, varname, decomp, nplanes, &
@@ -2506,13 +2506,13 @@ contains
                           fcplx=var)
       else
          if (ipencil == 1) then
-            allocate (var2d(1, decomp%xsz(2), decomp%xsz(3)))
+            allocate (var2d(1, size(var, 2), size(var, 3)))
             var2d(1, :, :) = var(iplane, :, :)
          else if (ipencil == 2) then
-            allocate (var2d(decomp%ysz(1), 1, decomp%ysz(3)))
+            allocate (var2d(size(var, 1), 1, size(var, 3)))
             var2d(:, 1, :) = var(:, iplane, :)
          else if (ipencil == 3) then
-            allocate (var2d(decomp%zsz(1), decomp%zsz(2), 1))
+            allocate (var2d(size(var, 1), size(var, 2), 1))
             var2d(:, :, 1) = var(:, :, iplane)
          end if
          call write_plane(ipencil, varname, decomp, nplanes, &
@@ -2561,6 +2561,7 @@ contains
       ! Local variables
       logical :: reduce
       real(real64), allocatable, dimension(:, :, :) :: var2d
+      real(real32), allocatable, dimension(:, :, :) :: var2dbis
       TYPE(DECOMP_INFO), pointer :: decomp
       integer :: nplanes, iplane
 
@@ -2598,11 +2599,15 @@ contains
 
       if (present(opt_nplanes)) then
          if (reduce) then
+            allocate (var2dbis(size(var, 1), &
+                               size(var, 2), &
+                               size(var, 3)))
+            var2dbis = real(var, kind=real32)
             call write_plane(ipencil, varname, decomp, nplanes, &
                              opt_dirname=opt_dirname, &
                              opt_mpi_file_open_info=opt_mpi_file_open_info, &
                              opt_mpi_file_set_view_info=opt_mpi_file_set_view_info, &
-                             freal=real(var, kind=real32)) ! Warning, implicit memory allocation
+                             freal=var2dbis)
          else
             call write_plane(ipencil, varname, decomp, nplanes, &
                              opt_dirname=opt_dirname, &
@@ -2613,14 +2618,23 @@ contains
                              dreal=var)
          end if
       else
-         if (ipencil == 1) then
-            allocate (var2d(1, decomp%xsz(2), decomp%xsz(3)))
+         if (reduce .and. ipencil == 1) then
+            allocate (var2dbis(1, size(var, 2), size(var, 3)))
+            var2dbis(1, :, :) = real(var(iplane, :, :), kind=real32)
+         else if (reduce .and. ipencil == 2) then
+            allocate (var2dbis(size(var, 1), 1, size(var, 3)))
+            var2dbis(:, 1, :) = real(var(:, iplane, :), kind=real32)
+         else if (reduce .and. ipencil == 3) then
+            allocate (var2dbis(size(var, 1), size(var, 2), 1))
+            var2dbis(:, :, 1) = real(var(:, :, iplane), kind=real32)
+         else if (ipencil == 1) then
+            allocate (var2d(1, size(var, 2), size(var, 3)))
             var2d(1, :, :) = var(iplane, :, :)
          else if (ipencil == 2) then
-            allocate (var2d(decomp%ysz(1), 1, decomp%ysz(3)))
+            allocate (var2d(size(var, 1), 1, size(var, 3)))
             var2d(:, 1, :) = var(:, iplane, :)
          else if (ipencil == 3) then
-            allocate (var2d(decomp%zsz(1), decomp%zsz(2), 1))
+            allocate (var2d(size(var, 1), size(var, 2), 1))
             var2d(:, :, 1) = var(:, :, iplane)
          end if
          if (reduce) then
@@ -2628,7 +2642,7 @@ contains
                              opt_dirname=opt_dirname, &
                              opt_mpi_file_open_info=opt_mpi_file_open_info, &
                              opt_mpi_file_set_view_info=opt_mpi_file_set_view_info, &
-                             freal=real(var2d, kind=real32)) ! Warning, implicit memory allocation
+                             freal=var2dbis)
          else
             call write_plane(ipencil, varname, decomp, nplanes, &
                              opt_dirname=opt_dirname, &
@@ -2636,8 +2650,9 @@ contains
                              opt_mpi_file_set_view_info=opt_mpi_file_set_view_info, &
                              dreal=var2d)
          end if
-         deallocate (var2d)
       end if
+      if (allocated(var2d)) deallocate (var2d)
+      if (allocated(var2dbis)) deallocate (var2dbis)
 
       nullify (decomp)
 
@@ -2674,6 +2689,7 @@ contains
       ! Local variables
       logical :: reduce
       complex(real64), allocatable, dimension(:, :, :) :: var2d
+      complex(real32), allocatable, dimension(:, :, :) :: var2dbis
       TYPE(DECOMP_INFO), pointer :: decomp
       integer :: nplanes, iplane
 
@@ -2711,11 +2727,15 @@ contains
 
       if (present(opt_nplanes)) then
          if (reduce) then
+            allocate (var2dbis(size(var, 1), &
+                               size(var, 2), &
+                               size(var, 3)))
+            var2dbis = cmplx(var, kind=real32)
             call write_plane(ipencil, varname, decomp, nplanes, &
                              opt_dirname=opt_dirname, &
                              opt_mpi_file_open_info=opt_mpi_file_open_info, &
                              opt_mpi_file_set_view_info=opt_mpi_file_set_view_info, &
-                             fcplx=cmplx(var, kind=real32)) ! Warning, implicit memory allocation
+                             fcplx=var2dbis)
          else
             call write_plane(ipencil, varname, decomp, nplanes, &
                              opt_dirname=opt_dirname, &
@@ -2726,14 +2746,23 @@ contains
                              dcplx=var)
          end if
       else
-         if (ipencil == 1) then
-            allocate (var2d(1, decomp%xsz(2), decomp%xsz(3)))
+         if (reduce .and. ipencil == 1) then
+            allocate (var2dbis(1, size(var, 2), size(var, 3)))
+            var2dbis(1, :, :) = cmplx(var(iplane, :, :), kind=real32)
+         else if (reduce .and. ipencil == 2) then
+            allocate (var2dbis(size(var, 1), 1, size(var, 3)))
+            var2dbis(:, 1, :) = cmplx(var(:, iplane, :), kind=real32)
+         else if (reduce .and. ipencil == 3) then
+            allocate (var2dbis(size(var, 1), size(var, 2), 1))
+            var2dbis(:, :, 1) = cmplx(var(:, :, iplane), kind=real32)
+         else if (ipencil == 1) then
+            allocate (var2d(1, size(var, 2), size(var, 3)))
             var2d(1, :, :) = var(iplane, :, :)
          else if (ipencil == 2) then
-            allocate (var2d(decomp%ysz(1), 1, decomp%ysz(3)))
+            allocate (var2d(size(var, 1), 1, size(var, 3)))
             var2d(:, 1, :) = var(:, iplane, :)
          else if (ipencil == 3) then
-            allocate (var2d(decomp%zsz(1), decomp%zsz(2), 1))
+            allocate (var2d(size(var, 1), size(var, 2), 1))
             var2d(:, :, 1) = var(:, :, iplane)
          end if
          if (reduce) then
@@ -2741,7 +2770,7 @@ contains
                              opt_dirname=opt_dirname, &
                              opt_mpi_file_open_info=opt_mpi_file_open_info, &
                              opt_mpi_file_set_view_info=opt_mpi_file_set_view_info, &
-                             fcplx=cmplx(var2d, kind=real32)) ! Warning, implicit memory allocation
+                             fcplx=var2dbis)
          else
             call write_plane(ipencil, varname, decomp, nplanes, &
                              opt_dirname=opt_dirname, &
@@ -2749,8 +2778,9 @@ contains
                              opt_mpi_file_set_view_info=opt_mpi_file_set_view_info, &
                              dcplx=var2d)
          end if
-         deallocate (var2d)
       end if
+      if (allocated(var2d)) deallocate (var2d)
+      if (allocated(var2dbis)) deallocate (var2dbis)
 
       nullify (decomp)
 
@@ -2824,13 +2854,13 @@ contains
                           ints=var)
       else
          if (ipencil == 1) then
-            allocate (var2d(1, decomp%xsz(2), decomp%xsz(3)))
+            allocate (var2d(1, size(var, 2), size(var, 3)))
             var2d(1, :, :) = var(iplane, :, :)
          else if (ipencil == 2) then
-            allocate (var2d(decomp%ysz(1), 1, decomp%ysz(3)))
+            allocate (var2d(size(var, 1), 1, size(var, 3)))
             var2d(:, 1, :) = var(:, iplane, :)
          else if (ipencil == 3) then
-            allocate (var2d(decomp%zsz(1), decomp%zsz(2), 1))
+            allocate (var2d(size(var, 1), size(var, 2), 1))
             var2d(:, :, 1) = var(:, :, iplane)
          end if
          call write_plane(ipencil, varname, decomp, nplanes, &
@@ -2916,13 +2946,13 @@ contains
                           logs=var)
       else
          if (ipencil == 1) then
-            allocate (var2d(1, decomp%xsz(2), decomp%xsz(3)))
+            allocate (var2d(1, size(var, 2), size(var, 3)))
             var2d(1, :, :) = var(iplane, :, :)
          else if (ipencil == 2) then
-            allocate (var2d(decomp%ysz(1), 1, decomp%ysz(3)))
+            allocate (var2d(size(var, 1), 1, size(var, 3)))
             var2d(:, 1, :) = var(:, iplane, :)
          else if (ipencil == 3) then
-            allocate (var2d(decomp%zsz(1), decomp%zsz(2), 1))
+            allocate (var2d(size(var, 1), size(var, 2), 1))
             var2d(:, :, 1) = var(:, :, iplane)
          end if
          call write_plane(ipencil, varname, decomp, nplanes, &
@@ -2946,7 +2976,7 @@ contains
    !
    !
    !
-   ! The code below was generated with the script "read_plane.f90" located in the folder scripts
+   ! The code below was generated with the script io_read_plane located in the folder scripts
    !
    !
    !
@@ -3100,19 +3130,15 @@ contains
 
       if (reduce) then
 
-         if (ipencil == 1) then
-            allocate (tmp(nplanes, decomp%xsz(2), decomp%xsz(3)))
-         else if (ipencil == 2) then
-            allocate (tmp(decomp%ysz(1), nplanes, decomp%ysz(3)))
-         else if (ipencil == 3) then
-            allocate (tmp(decomp%zsz(1), decomp%zsz(2), nplanes))
-         end if
+         allocate (tmp(size(var, 1), &
+                       size(var, 2), &
+                       size(var, 3)))
          call read_plane(ipencil, varname, decomp, nplanes, &
                          opt_dirname=opt_dirname, &
                          opt_mpi_file_open_info=opt_mpi_file_open_info, &
                          opt_mpi_file_set_view_info=opt_mpi_file_set_view_info, &
                          freal=tmp)
-         var = tmp
+         var = real(tmp, kind=real64)
          deallocate (tmp)
       else
          call read_plane(ipencil, varname, decomp, nplanes, &
@@ -3176,19 +3202,15 @@ contains
 
       if (reduce) then
 
-         if (ipencil == 1) then
-            allocate (tmp(nplanes, decomp%xsz(2), decomp%xsz(3)))
-         else if (ipencil == 2) then
-            allocate (tmp(decomp%ysz(1), nplanes, decomp%ysz(3)))
-         else if (ipencil == 3) then
-            allocate (tmp(decomp%zsz(1), decomp%zsz(2), nplanes))
-         end if
+         allocate (tmp(size(var, 1), &
+                       size(var, 2), &
+                       size(var, 3)))
          call read_plane(ipencil, varname, decomp, nplanes, &
                          opt_dirname=opt_dirname, &
                          opt_mpi_file_open_info=opt_mpi_file_open_info, &
                          opt_mpi_file_set_view_info=opt_mpi_file_set_view_info, &
                          fcplx=tmp)
-         var = tmp
+         var = cmplx(tmp, kind=real64)
          deallocate (tmp)
       else
          call read_plane(ipencil, varname, decomp, nplanes, &
@@ -3314,7 +3336,7 @@ contains
    !
    !
    !
-   ! The code below was generated with the script "write_scalar.f90" located in the folder scripts
+   ! The code below was generated with the script io_write_scalar located in the folder scripts
    !
    !
    !
@@ -3424,7 +3446,7 @@ contains
    !
    !
    !
-   ! The code below was generated with the script "read_scalar.f90" located in the folder scripts
+   ! The code below was generated with the script io_read_scalar located in the folder scripts
    !
    !
    !

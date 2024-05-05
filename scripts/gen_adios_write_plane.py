@@ -35,7 +35,6 @@ for i in range(nformat):
     f.write("                                opt_nplanes, &\n")
     f.write("                                opt_iplane, &\n")
     f.write("                                opt_reduce_prec, &\n")
-    f.write("                                opt_decomp, &\n")
     f.write("                                opt_ipencil)\n")
     f.write("\n")
     f.write("      implicit none\n")
@@ -59,7 +58,6 @@ for i in range(nformat):
     f.write("      integer, intent(in), optional :: opt_nplanes\n")
     f.write("      integer, intent(in), optional :: opt_iplane\n")
     f.write("      logical, intent(in), optional :: opt_reduce_prec\n")
-    f.write("      TYPE(DECOMP_INFO), target, intent(IN), optional :: opt_decomp\n")
     f.write("      integer, intent(in), optional :: opt_ipencil\n")
     f.write("\n")
     #
@@ -78,7 +76,6 @@ for i in range(nformat):
     elif (i==3):
         f.write("      complex(real64), allocatable, dimension(:, :, :) :: var2d\n")
         f.write("      complex(real32), allocatable, dimension(:, :, :) :: var2dbis\n")
-    f.write("      TYPE(DECOMP_INFO), pointer :: decomp\n")
     f.write("      integer :: iplane\n")
     f.write("\n")
     #
@@ -103,13 +100,6 @@ for i in range(nformat):
     f.write("         call decomp_2d_abort(__FILE__, __LINE__, -1, \"Invalid arguments\")\n")
     f.write("      end if\n")
     f.write("\n")
-    f.write("      ! Use the provided decomp_info or the default one\n")
-    f.write("      if (present(opt_decomp)) then\n")
-    f.write("         decomp => opt_decomp\n")
-    f.write("      else\n")
-    f.write("         decomp => decomp_main\n")
-    f.write("      end if\n")
-    f.write("\n")
     if (i==2 or i==3):
         f.write("      ! One can write to single precision using opt_reduce_prec\n")
         f.write("      if (present(opt_reduce_prec)) then\n")
@@ -132,13 +122,13 @@ for i in range(nformat):
             f.write("                          fcplx=var)\n")
         f.write("      else\n")
         f.write("         if (opt_ipencil == 1) then\n")
-        f.write("            allocate (var2d(1, decomp%xsz(2), decomp%xsz(3)))\n")
+        f.write("            allocate (var2d(1, size(var, 2), size(var, 3)))\n")
         f.write("            var2d(1, :, :) = var(iplane, :, :)\n")
         f.write("         else if (opt_ipencil == 2) then\n")
-        f.write("            allocate (var2d(decomp%ysz(1), 1, decomp%ysz(3)))\n")
+        f.write("            allocate (var2d(size(var, 1), 1, size(var, 3)))\n")
         f.write("            var2d(:, 1, :) = var(:, iplane, :)\n")
         f.write("         else if (opt_ipencil == 3) then\n")
-        f.write("            allocate (var2d(decomp%zsz(1), decomp%zsz(2), 1))\n")
+        f.write("            allocate (var2d(size(var, 1), size(var, 2), 1))\n")
         f.write("            var2d(:, :, 1) = var(:, :, iplane)\n")
         f.write("         end if\n")
         f.write("         call adios_write(io, varname, &\n")
@@ -154,13 +144,20 @@ for i in range(nformat):
     if (i==2 or i==3):
         f.write("      if (present(opt_nplanes)) then\n")
         f.write("         if (reduce) then\n")
+        f.write("            allocate(var2dbis(size(var, 1), &\n")
+        f.write("                              size(var, 2), &\n")
+        f.write("                              size(var, 3)))\n")
+        if (i==2):
+            f.write("            var2dbis = real(var, kind=real32)\n")
+        if (i==3):
+            f.write("            var2dbis = cmplx(var, kind=real32)\n")
         f.write("            call adios_write(io, varname, &\n")
         f.write("                             opt_mode=decomp_2d_io_sync, &\n")
         f.write("                             opt_family=opt_family, &\n")
         if (i==2):
-            f.write("                             freal=real(var, kind=real32)) ! Warning, implicit memory allocation\n")
+            f.write("                             freal=var2dbis)\n")
         elif (i==3):
-            f.write("                             fcplx=cmplx(var, kind=real32)) ! Warning, implicit memory allocation\n")
+            f.write("                             fcplx=var2dbis)\n")
         f.write("         else\n")
         f.write("            call adios_write(io, varname, &\n")
         f.write("                             opt_mode=opt_mode, &\n")
@@ -172,31 +169,31 @@ for i in range(nformat):
         f.write("         end if\n")
         f.write("      else\n")
         f.write("         if (reduce .and. opt_ipencil == 1) then\n")
-        f.write("            allocate (var2dbis(1, decomp%xsz(2), decomp%xsz(3)))\n")
+        f.write("            allocate (var2dbis(1, size(var, 2), size(var, 3)))\n")
         if (i==2):
             f.write("            var2dbis(1, :, :) = real(var(iplane, :, :), kind=real32)\n")
         else:
             f.write("            var2dbis(1, :, :) = cmplx(var(iplane, :, :), kind=real32)\n")
         f.write("         else if (reduce .and. opt_ipencil == 2) then\n")
-        f.write("            allocate (var2dbis(decomp%ysz(1), 1, decomp%ysz(3)))\n")
+        f.write("            allocate (var2dbis(size(var, 1), 1, size(var, 3)))\n")
         if (i==2):
             f.write("            var2dbis(:, 1, :) = real(var(:, iplane, :), kind=real32)\n")
         else:
             f.write("            var2dbis(:, 1, :) = cmplx(var(:, iplane, :), kind=real32)\n")
         f.write("         else if (reduce .and. opt_ipencil == 3) then\n")
-        f.write("            allocate (var2dbis(decomp%zsz(1), decomp%zsz(2), 1))\n")
+        f.write("            allocate (var2dbis(size(var, 1), size(var, 2), 1))\n")
         if (i==2):
             f.write("            var2dbis(:, :, 1) = real(var(:, :, iplane), kind=real32)\n")
         else:
             f.write("            var2dbis(:, :, 1) = cmplx(var(:, :, iplane), kind=real32)\n")
         f.write("         else if (opt_ipencil == 1) then\n")
-        f.write("            allocate (var2d(1, decomp%xsz(2), decomp%xsz(3)))\n")
+        f.write("            allocate (var2d(1, size(var, 2), size(var, 3)))\n")
         f.write("            var2d(1, :, :) = var(iplane, :, :)\n")
         f.write("         else if (opt_ipencil == 2) then\n")
-        f.write("            allocate (var2d(decomp%ysz(1), 1, decomp%ysz(3)))\n")
+        f.write("            allocate (var2d(size(var, 1), 1, size(var, 3)))\n")
         f.write("            var2d(:, 1, :) = var(:, iplane, :)\n")
         f.write("         else if (opt_ipencil == 3) then\n")
-        f.write("            allocate (var2d(decomp%zsz(1), decomp%zsz(2), 1))\n")
+        f.write("            allocate (var2d(size(var, 1), size(var, 2), 1))\n")
         f.write("            var2d(:, :, 1) = var(:, :, iplane)\n")
         f.write("         end if\n")
         f.write("         if (reduce) then\n")
@@ -216,14 +213,12 @@ for i in range(nformat):
         elif (i==3):
             f.write("                             dcplx=var2d)\n")
         f.write("         end if\n")
-        f.write("         if (allocated(var2d)) deallocate (var2d)\n")
-        f.write("         if (allocated(var2dbis)) deallocate (var2dbis)\n")
         f.write("      end if\n")
+        f.write("      if (allocated(var2d)) deallocate (var2d)\n")
+        f.write("      if (allocated(var2dbis)) deallocate (var2dbis)\n")
     #
     # Cleaning + unused variables
     #
-    f.write("\n")
-    f.write("      nullify (decomp)\n")
     f.write("\n")
     if (i==0 or i==1):
         f.write("      associate (p => opt_reduce_prec); end associate\n")

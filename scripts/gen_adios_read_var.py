@@ -31,9 +31,7 @@ for i in range(nformat):
     #
     f.write("   subroutine read_var_"+ext[i]+"(io, var, varname, &\n")
     f.write("                             opt_family, &\n")
-    f.write("                             opt_reduce_prec, &\n")
-    f.write("                             opt_ipencil, &\n")
-    f.write("                             opt_decomp)\n")
+    f.write("                             opt_reduce_prec)\n")
     f.write("\n")
     f.write("      implicit none\n")
     f.write("\n")
@@ -54,8 +52,6 @@ for i in range(nformat):
     f.write("      character(len=*), intent(in) :: varname\n")
     f.write("      type(d2d_io_family), intent(inout), optional :: opt_family\n")
     f.write("      logical, intent(in), optional :: opt_reduce_prec\n")
-    f.write("      integer, intent(in), optional :: opt_ipencil\n")
-    f.write("      type(decomp_info), target, intent(in), optional :: opt_decomp\n")
     f.write("\n")
     #
     # Local variables
@@ -63,7 +59,6 @@ for i in range(nformat):
     if (i==2 or i==3):
         f.write("      ! Local variable(s)\n")
         f.write("      logical :: reduce\n")
-        f.write("      type(decomp_info), pointer :: decomp\n")
         if (i==2):
             f.write("      real(real32), dimension(:, :, :), allocatable :: tmp\n")
         elif (i==3):
@@ -85,28 +80,6 @@ for i in range(nformat):
         f.write("         reduce = default_opt_reduce_prec\n")
         f.write("      end if\n")
         f.write("\n")
-        f.write("      if (reduce) then\n")
-        f.write("         if (present(opt_decomp)) then\n")
-        f.write("            decomp => opt_decomp\n")
-        f.write("         else\n")
-        f.write("            decomp => decomp_main\n")
-        f.write("         end if\n")
-        f.write("         ! Safety check\n")
-        f.write("         if (.not.present(opt_ipencil)) then\n")
-        f.write("            call decomp_2d_abort(__FILE__, __LINE__, 1, \"Invalid arguments\")\n")
-        f.write("         else\n")
-        f.write("            if (opt_ipencil==1) then\n")
-        f.write("               call alloc_x(tmp, decomp)\n")
-        f.write("            elseif (opt_ipencil==2) then\n")
-        f.write("               call alloc_y(tmp, decomp)\n")
-        f.write("            elseif (opt_ipencil==3) then\n")
-        f.write("               call alloc_z(tmp, decomp)\n")
-        f.write("            else\n")
-        f.write("               call decomp_2d_abort(__FILE__, __LINE__, opt_ipencil, \"Invalid arguments\")\n")
-        f.write("            end if\n")
-        f.write("            nullify(decomp)\n")
-        f.write("         end if\n")
-        f.write("      end if\n")
     #
     # Call the lower level IO subroutine
     #
@@ -120,13 +93,15 @@ for i in range(nformat):
     #
     if (i==2 or i==3):
         f.write("      if (reduce) then\n")
+        f.write("         allocate(tmp(size(var, 1), size(var, 2), size(var, 3)))\n")
         f.write("         call adios_read(io, varname, &\n")
         f.write("                         opt_family=opt_family, &\n")
         if (i==2):
             f.write("                         freal=tmp)\n")
+            f.write("         var = real(tmp, kind=real64)\n")
         elif (i==3):
             f.write("                         fcplx=tmp)\n")
-        f.write("         var = tmp\n")
+            f.write("         var = cmplx(tmp, kind=real64)\n")
         f.write("         deallocate(tmp)\n")
         f.write("      else\n")
         f.write("         call adios_read(io, varname, &\n")
@@ -142,8 +117,6 @@ for i in range(nformat):
     f.write("\n")
     if (i==0 or i==1):
         f.write("      associate (p => opt_reduce_prec); end associate\n")
-        f.write("      associate (p => opt_ipencil); end associate\n")
-        f.write("      associate (p => opt_decomp); end associate\n")
         f.write("\n")
     #
     # End profiling

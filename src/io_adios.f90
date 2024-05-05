@@ -273,8 +273,7 @@ contains
                        opt_family=opt_family, &
                        freal=var)
 
-      associate (p => opt_reduce_prec)
-      end associate
+      associate (p => opt_reduce_prec); end associate
 
       if (decomp_profiler_io) call decomp_profiler_end("adios_write_var")
 
@@ -302,8 +301,7 @@ contains
                        opt_family=opt_family, &
                        fcplx=var)
 
-      associate (p => opt_reduce_prec)
-      end associate
+      associate (p => opt_reduce_prec); end associate
 
       if (decomp_profiler_io) call decomp_profiler_end("adios_write_var")
 
@@ -405,9 +403,7 @@ contains
    !
    subroutine read_var_freal(io, var, varname, &
                              opt_family, &
-                             opt_reduce_prec, &
-                             opt_ipencil, &
-                             opt_decomp)
+                             opt_reduce_prec)
 
       implicit none
 
@@ -417,8 +413,6 @@ contains
       character(len=*), intent(in) :: varname
       type(d2d_io_family), intent(inout), optional :: opt_family
       logical, intent(in), optional :: opt_reduce_prec
-      integer, intent(in), optional :: opt_ipencil
-      type(decomp_info), target, intent(in), optional :: opt_decomp
 
       if (decomp_profiler_io) call decomp_profiler_start("adios_read_var")
 
@@ -427,8 +421,6 @@ contains
                       freal=var)
 
       associate (p => opt_reduce_prec); end associate
-      associate (p => opt_ipencil); end associate
-      associate (p => opt_decomp); end associate
 
       if (decomp_profiler_io) call decomp_profiler_end("adios_read_var")
 
@@ -436,9 +428,7 @@ contains
    !
    subroutine read_var_fcplx(io, var, varname, &
                              opt_family, &
-                             opt_reduce_prec, &
-                             opt_ipencil, &
-                             opt_decomp)
+                             opt_reduce_prec)
 
       implicit none
 
@@ -448,8 +438,6 @@ contains
       character(len=*), intent(in) :: varname
       type(d2d_io_family), intent(inout), optional :: opt_family
       logical, intent(in), optional :: opt_reduce_prec
-      integer, intent(in), optional :: opt_ipencil
-      type(decomp_info), target, intent(in), optional :: opt_decomp
 
       if (decomp_profiler_io) call decomp_profiler_start("adios_read_var")
 
@@ -458,8 +446,6 @@ contains
                       fcplx=var)
 
       associate (p => opt_reduce_prec); end associate
-      associate (p => opt_ipencil); end associate
-      associate (p => opt_decomp); end associate
 
       if (decomp_profiler_io) call decomp_profiler_end("adios_read_var")
 
@@ -467,9 +453,7 @@ contains
    !
    subroutine read_var_dreal(io, var, varname, &
                              opt_family, &
-                             opt_reduce_prec, &
-                             opt_ipencil, &
-                             opt_decomp)
+                             opt_reduce_prec)
 
       implicit none
 
@@ -479,12 +463,9 @@ contains
       character(len=*), intent(in) :: varname
       type(d2d_io_family), intent(inout), optional :: opt_family
       logical, intent(in), optional :: opt_reduce_prec
-      integer, intent(in), optional :: opt_ipencil
-      type(decomp_info), target, intent(in), optional :: opt_decomp
 
       ! Local variable(s)
       logical :: reduce
-      type(decomp_info), pointer :: decomp
       real(real32), dimension(:, :, :), allocatable :: tmp
 
       if (decomp_profiler_io) call decomp_profiler_start("adios_read_var")
@@ -497,32 +478,11 @@ contains
       end if
 
       if (reduce) then
-         if (present(opt_decomp)) then
-            decomp => opt_decomp
-         else
-            decomp => decomp_main
-         end if
-         ! Safety check
-         if (.not. present(opt_ipencil)) then
-            call decomp_2d_abort(__FILE__, __LINE__, 1, "Invalid arguments")
-         else
-            if (opt_ipencil == 1) then
-               call alloc_x(tmp, decomp)
-            elseif (opt_ipencil == 2) then
-               call alloc_y(tmp, decomp)
-            elseif (opt_ipencil == 3) then
-               call alloc_z(tmp, decomp)
-            else
-               call decomp_2d_abort(__FILE__, __LINE__, opt_ipencil, "Invalid arguments")
-            end if
-            nullify (decomp)
-         end if
-      end if
-      if (reduce) then
+         allocate (tmp(size(var, 1), size(var, 2), size(var, 3)))
          call adios_read(io, varname, &
                          opt_family=opt_family, &
                          freal=tmp)
-         var = tmp
+         var = real(tmp, kind=real64)
          deallocate (tmp)
       else
          call adios_read(io, varname, &
@@ -536,9 +496,7 @@ contains
    !
    subroutine read_var_dcplx(io, var, varname, &
                              opt_family, &
-                             opt_reduce_prec, &
-                             opt_ipencil, &
-                             opt_decomp)
+                             opt_reduce_prec)
 
       implicit none
 
@@ -548,12 +506,9 @@ contains
       character(len=*), intent(in) :: varname
       type(d2d_io_family), intent(inout), optional :: opt_family
       logical, intent(in), optional :: opt_reduce_prec
-      integer, intent(in), optional :: opt_ipencil
-      type(decomp_info), target, intent(in), optional :: opt_decomp
 
       ! Local variable(s)
       logical :: reduce
-      type(decomp_info), pointer :: decomp
       complex(real32), dimension(:, :, :), allocatable :: tmp
 
       if (decomp_profiler_io) call decomp_profiler_start("adios_read_var")
@@ -566,32 +521,11 @@ contains
       end if
 
       if (reduce) then
-         if (present(opt_decomp)) then
-            decomp => opt_decomp
-         else
-            decomp => decomp_main
-         end if
-         ! Safety check
-         if (.not. present(opt_ipencil)) then
-            call decomp_2d_abort(__FILE__, __LINE__, 1, "Invalid arguments")
-         else
-            if (opt_ipencil == 1) then
-               call alloc_x(tmp, decomp)
-            elseif (opt_ipencil == 2) then
-               call alloc_y(tmp, decomp)
-            elseif (opt_ipencil == 3) then
-               call alloc_z(tmp, decomp)
-            else
-               call decomp_2d_abort(__FILE__, __LINE__, opt_ipencil, "Invalid arguments")
-            end if
-            nullify (decomp)
-         end if
-      end if
-      if (reduce) then
+         allocate (tmp(size(var, 1), size(var, 2), size(var, 3)))
          call adios_read(io, varname, &
                          opt_family=opt_family, &
                          fcplx=tmp)
-         var = tmp
+         var = cmplx(tmp, kind=real64)
          deallocate (tmp)
       else
          call adios_read(io, varname, &
@@ -617,7 +551,6 @@ contains
                                 opt_nplanes, &
                                 opt_iplane, &
                                 opt_reduce_prec, &
-                                opt_decomp, &
                                 opt_ipencil)
 
       implicit none
@@ -631,12 +564,10 @@ contains
       integer, intent(in), optional :: opt_nplanes
       integer, intent(in), optional :: opt_iplane
       logical, intent(in), optional :: opt_reduce_prec
-      TYPE(DECOMP_INFO), target, intent(IN), optional :: opt_decomp
       integer, intent(in), optional :: opt_ipencil
 
       ! Local variables
       real(real32), allocatable, dimension(:, :, :) :: var2d
-      TYPE(DECOMP_INFO), pointer :: decomp
       integer :: iplane
 
       if (decomp_profiler_io) call decomp_profiler_start("adios_write_plane")
@@ -655,13 +586,6 @@ contains
          call decomp_2d_abort(__FILE__, __LINE__, -1, "Invalid arguments")
       end if
 
-      ! Use the provided decomp_info or the default one
-      if (present(opt_decomp)) then
-         decomp => opt_decomp
-      else
-         decomp => decomp_main
-      end if
-
       if (present(opt_nplanes)) then
          call adios_write(io, varname, &
                           opt_mode=opt_mode, &
@@ -669,13 +593,13 @@ contains
                           freal=var)
       else
          if (opt_ipencil == 1) then
-            allocate (var2d(1, decomp%xsz(2), decomp%xsz(3)))
+            allocate (var2d(1, size(var, 2), size(var, 3)))
             var2d(1, :, :) = var(iplane, :, :)
          else if (opt_ipencil == 2) then
-            allocate (var2d(decomp%ysz(1), 1, decomp%ysz(3)))
+            allocate (var2d(size(var, 1), 1, size(var, 3)))
             var2d(:, 1, :) = var(:, iplane, :)
          else if (opt_ipencil == 3) then
-            allocate (var2d(decomp%zsz(1), decomp%zsz(2), 1))
+            allocate (var2d(size(var, 1), size(var, 2), 1))
             var2d(:, :, 1) = var(:, :, iplane)
          end if
          call adios_write(io, varname, &
@@ -684,8 +608,6 @@ contains
                           freal=var2d)
          deallocate (var2d)
       end if
-
-      nullify (decomp)
 
       associate (p => opt_reduce_prec); end associate
 
@@ -699,7 +621,6 @@ contains
                                 opt_nplanes, &
                                 opt_iplane, &
                                 opt_reduce_prec, &
-                                opt_decomp, &
                                 opt_ipencil)
 
       implicit none
@@ -713,12 +634,10 @@ contains
       integer, intent(in), optional :: opt_nplanes
       integer, intent(in), optional :: opt_iplane
       logical, intent(in), optional :: opt_reduce_prec
-      TYPE(DECOMP_INFO), target, intent(IN), optional :: opt_decomp
       integer, intent(in), optional :: opt_ipencil
 
       ! Local variables
       complex(real32), allocatable, dimension(:, :, :) :: var2d
-      TYPE(DECOMP_INFO), pointer :: decomp
       integer :: iplane
 
       if (decomp_profiler_io) call decomp_profiler_start("adios_write_plane")
@@ -737,13 +656,6 @@ contains
          call decomp_2d_abort(__FILE__, __LINE__, -1, "Invalid arguments")
       end if
 
-      ! Use the provided decomp_info or the default one
-      if (present(opt_decomp)) then
-         decomp => opt_decomp
-      else
-         decomp => decomp_main
-      end if
-
       if (present(opt_nplanes)) then
          call adios_write(io, varname, &
                           opt_mode=opt_mode, &
@@ -751,13 +663,13 @@ contains
                           fcplx=var)
       else
          if (opt_ipencil == 1) then
-            allocate (var2d(1, decomp%xsz(2), decomp%xsz(3)))
+            allocate (var2d(1, size(var, 2), size(var, 3)))
             var2d(1, :, :) = var(iplane, :, :)
          else if (opt_ipencil == 2) then
-            allocate (var2d(decomp%ysz(1), 1, decomp%ysz(3)))
+            allocate (var2d(size(var, 1), 1, size(var, 3)))
             var2d(:, 1, :) = var(:, iplane, :)
          else if (opt_ipencil == 3) then
-            allocate (var2d(decomp%zsz(1), decomp%zsz(2), 1))
+            allocate (var2d(size(var, 1), size(var, 2), 1))
             var2d(:, :, 1) = var(:, :, iplane)
          end if
          call adios_write(io, varname, &
@@ -766,8 +678,6 @@ contains
                           fcplx=var2d)
          deallocate (var2d)
       end if
-
-      nullify (decomp)
 
       associate (p => opt_reduce_prec); end associate
 
@@ -781,7 +691,6 @@ contains
                                 opt_nplanes, &
                                 opt_iplane, &
                                 opt_reduce_prec, &
-                                opt_decomp, &
                                 opt_ipencil)
 
       implicit none
@@ -795,14 +704,12 @@ contains
       integer, intent(in), optional :: opt_nplanes
       integer, intent(in), optional :: opt_iplane
       logical, intent(in), optional :: opt_reduce_prec
-      TYPE(DECOMP_INFO), target, intent(IN), optional :: opt_decomp
       integer, intent(in), optional :: opt_ipencil
 
       ! Local variables
       logical :: reduce
       real(real64), allocatable, dimension(:, :, :) :: var2d
       real(real32), allocatable, dimension(:, :, :) :: var2dbis
-      TYPE(DECOMP_INFO), pointer :: decomp
       integer :: iplane
 
       if (decomp_profiler_io) call decomp_profiler_start("adios_write_plane")
@@ -821,13 +728,6 @@ contains
          call decomp_2d_abort(__FILE__, __LINE__, -1, "Invalid arguments")
       end if
 
-      ! Use the provided decomp_info or the default one
-      if (present(opt_decomp)) then
-         decomp => opt_decomp
-      else
-         decomp => decomp_main
-      end if
-
       ! One can write to single precision using opt_reduce_prec
       if (present(opt_reduce_prec)) then
          reduce = opt_reduce_prec
@@ -837,10 +737,14 @@ contains
 
       if (present(opt_nplanes)) then
          if (reduce) then
+            allocate (var2dbis(size(var, 1), &
+                               size(var, 2), &
+                               size(var, 3)))
+            var2dbis = real(var, kind=real32)
             call adios_write(io, varname, &
                              opt_mode=decomp_2d_io_sync, &
                              opt_family=opt_family, &
-                             freal=real(var, kind=real32)) ! Warning, implicit memory allocation
+                             freal=var2dbis)
          else
             call adios_write(io, varname, &
                              opt_mode=opt_mode, &
@@ -849,22 +753,22 @@ contains
          end if
       else
          if (reduce .and. opt_ipencil == 1) then
-            allocate (var2dbis(1, decomp%xsz(2), decomp%xsz(3)))
+            allocate (var2dbis(1, size(var, 2), size(var, 3)))
             var2dbis(1, :, :) = real(var(iplane, :, :), kind=real32)
          else if (reduce .and. opt_ipencil == 2) then
-            allocate (var2dbis(decomp%ysz(1), 1, decomp%ysz(3)))
+            allocate (var2dbis(size(var, 1), 1, size(var, 3)))
             var2dbis(:, 1, :) = real(var(:, iplane, :), kind=real32)
          else if (reduce .and. opt_ipencil == 3) then
-            allocate (var2dbis(decomp%zsz(1), decomp%zsz(2), 1))
+            allocate (var2dbis(size(var, 1), size(var, 2), 1))
             var2dbis(:, :, 1) = real(var(:, :, iplane), kind=real32)
          else if (opt_ipencil == 1) then
-            allocate (var2d(1, decomp%xsz(2), decomp%xsz(3)))
+            allocate (var2d(1, size(var, 2), size(var, 3)))
             var2d(1, :, :) = var(iplane, :, :)
          else if (opt_ipencil == 2) then
-            allocate (var2d(decomp%ysz(1), 1, decomp%ysz(3)))
+            allocate (var2d(size(var, 1), 1, size(var, 3)))
             var2d(:, 1, :) = var(:, iplane, :)
          else if (opt_ipencil == 3) then
-            allocate (var2d(decomp%zsz(1), decomp%zsz(2), 1))
+            allocate (var2d(size(var, 1), size(var, 2), 1))
             var2d(:, :, 1) = var(:, :, iplane)
          end if
          if (reduce) then
@@ -878,11 +782,9 @@ contains
                              opt_family=opt_family, &
                              dreal=var2d)
          end if
-         if (allocated(var2d)) deallocate (var2d)
-         if (allocated(var2dbis)) deallocate (var2dbis)
       end if
-
-      nullify (decomp)
+      if (allocated(var2d)) deallocate (var2d)
+      if (allocated(var2dbis)) deallocate (var2dbis)
 
       if (decomp_profiler_io) call decomp_profiler_end("adios_write_plane")
 
@@ -894,7 +796,6 @@ contains
                                 opt_nplanes, &
                                 opt_iplane, &
                                 opt_reduce_prec, &
-                                opt_decomp, &
                                 opt_ipencil)
 
       implicit none
@@ -908,14 +809,12 @@ contains
       integer, intent(in), optional :: opt_nplanes
       integer, intent(in), optional :: opt_iplane
       logical, intent(in), optional :: opt_reduce_prec
-      TYPE(DECOMP_INFO), target, intent(IN), optional :: opt_decomp
       integer, intent(in), optional :: opt_ipencil
 
       ! Local variables
       logical :: reduce
       complex(real64), allocatable, dimension(:, :, :) :: var2d
       complex(real32), allocatable, dimension(:, :, :) :: var2dbis
-      TYPE(DECOMP_INFO), pointer :: decomp
       integer :: iplane
 
       if (decomp_profiler_io) call decomp_profiler_start("adios_write_plane")
@@ -934,13 +833,6 @@ contains
          call decomp_2d_abort(__FILE__, __LINE__, -1, "Invalid arguments")
       end if
 
-      ! Use the provided decomp_info or the default one
-      if (present(opt_decomp)) then
-         decomp => opt_decomp
-      else
-         decomp => decomp_main
-      end if
-
       ! One can write to single precision using opt_reduce_prec
       if (present(opt_reduce_prec)) then
          reduce = opt_reduce_prec
@@ -950,10 +842,14 @@ contains
 
       if (present(opt_nplanes)) then
          if (reduce) then
+            allocate (var2dbis(size(var, 1), &
+                               size(var, 2), &
+                               size(var, 3)))
+            var2dbis = cmplx(var, kind=real32)
             call adios_write(io, varname, &
                              opt_mode=decomp_2d_io_sync, &
                              opt_family=opt_family, &
-                             fcplx=cmplx(var, kind=real32)) ! Warning, implicit memory allocation
+                             fcplx=var2dbis)
          else
             call adios_write(io, varname, &
                              opt_mode=opt_mode, &
@@ -962,22 +858,22 @@ contains
          end if
       else
          if (reduce .and. opt_ipencil == 1) then
-            allocate (var2dbis(1, decomp%xsz(2), decomp%xsz(3)))
+            allocate (var2dbis(1, size(var, 2), size(var, 3)))
             var2dbis(1, :, :) = cmplx(var(iplane, :, :), kind=real32)
          else if (reduce .and. opt_ipencil == 2) then
-            allocate (var2dbis(decomp%ysz(1), 1, decomp%ysz(3)))
+            allocate (var2dbis(size(var, 1), 1, size(var, 3)))
             var2dbis(:, 1, :) = cmplx(var(:, iplane, :), kind=real32)
          else if (reduce .and. opt_ipencil == 3) then
-            allocate (var2dbis(decomp%zsz(1), decomp%zsz(2), 1))
+            allocate (var2dbis(size(var, 1), size(var, 2), 1))
             var2dbis(:, :, 1) = cmplx(var(:, :, iplane), kind=real32)
          else if (opt_ipencil == 1) then
-            allocate (var2d(1, decomp%xsz(2), decomp%xsz(3)))
+            allocate (var2d(1, size(var, 2), size(var, 3)))
             var2d(1, :, :) = var(iplane, :, :)
          else if (opt_ipencil == 2) then
-            allocate (var2d(decomp%ysz(1), 1, decomp%ysz(3)))
+            allocate (var2d(size(var, 1), 1, size(var, 3)))
             var2d(:, 1, :) = var(:, iplane, :)
          else if (opt_ipencil == 3) then
-            allocate (var2d(decomp%zsz(1), decomp%zsz(2), 1))
+            allocate (var2d(size(var, 1), size(var, 2), 1))
             var2d(:, :, 1) = var(:, :, iplane)
          end if
          if (reduce) then
@@ -991,11 +887,9 @@ contains
                              opt_family=opt_family, &
                              dcplx=var2d)
          end if
-         if (allocated(var2d)) deallocate (var2d)
-         if (allocated(var2dbis)) deallocate (var2dbis)
       end if
-
-      nullify (decomp)
+      if (allocated(var2d)) deallocate (var2d)
+      if (allocated(var2dbis)) deallocate (var2dbis)
 
       if (decomp_profiler_io) call decomp_profiler_end("adios_write_plane")
 

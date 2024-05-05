@@ -1,7 +1,48 @@
 !! SPDX-License-Identifier: BSD-3-Clause
 
-! This module provides parallel IO facilities for applications based on
+! This module provides ADIOS2 IO facilities for applications based on
 ! 2D decomposition.
+
+!
+! The external code writing a 3D array to a file will call decomp_2d_adios_write_var
+!
+! Arguments :
+!    - io : d2d_io_adios object. It will be opened / started if it was not open / active.
+!                                The external code should call io%end_close when the IO is complete
+!    - var : 3D array
+!    - varname : name provided when the array was registered
+!    - opt_mode : optional, decomp_2d_io_deferred or decomp_2d_io_sync
+!    - opt_family : optional, family of IO readers / writers. Used only if io needs to be opened.
+!    - opt_reduce_prec : optional, file in single precision. default_opt_reduce_prec is used if not provided
+!
+
+!
+! The external code reading a 3D array will call decomp_2d_adios_read_var
+!
+! Same arguments (except opt_mode, not available)
+!
+
+!
+! The external code writing planes will call decomp_2d_write_plane
+!
+! Arguments :
+!    - io : d2d_io_adios object. It will be opened / started if it was not open / active.            
+!                                The external code should call io%end_close when the IO is complete
+!    - var : stacked planes or 3D array
+!    - varname : name provided when the array was registered
+!    - opt_mode : optional, decomp_2d_io_deferred or decomp_2d_io_sync
+!    - opt_family : optional, family of IO readers / writers. Used only if io needs to be opened.
+!    - opt_nplanes : optional, number of planes. Mandatory if the provided array contains planes stacked together
+!    - opt_iplane : optional, location of the plane in the 3D array. One is use if not provided
+!    - opt_reduce_prec : optiona, file in single precision. default_opt_reduce_prec is used if not provided
+!    - opt_ipencil : optional, pencil orientation of the plane. Mandatory if the provided array is a 3D array
+!
+
+!
+! The external code reading planes will call decomp_2d_read_planes
+!
+! Same arguments (except opt_mode, opt_nplanes, opt_iplane, opt_ipencil, not available)
+!
 
 module decomp_2d_io_adios
 

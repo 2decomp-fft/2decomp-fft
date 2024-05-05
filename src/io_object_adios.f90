@@ -8,6 +8,42 @@
 !    => Start / end a reader / writer
 !
 
+!
+! One can create a family a readers / writers using
+!
+!    call family%init(label)
+!
+! Arguments :
+!    - label : name of the IO family. This name must be present in the ADIOS2 XML file
+!
+! Remark : the external code can associate the pointer family%adios to a specific adios2_adios object before calling init
+!
+! One can then register variables and planes in the family using
+!
+!    call family%register_var(varname, ipencil, type, opt_reduce_prec, opt_decomp)
+!    call family%register_plane(varname, ipencil, type, opt_reduce_prec, opt_decomp, opt_nplanes)
+!
+! Arguments :
+!    - varname : name of the variable
+!    - ipencil : pencil orientation of the variable
+!    - type : mpi_real / mpi_double_precision / mpi_complex / mpi_double_complex
+!    - opt_reduce_prec : flag to convert double precision variables to single precision. default_opt_reduce_prec is used if not provided
+!    - opt_decomp : decomp_info of the object. decomp_main is used if not provided
+!    - opt_nplanes : number of planes stacked together. One is used if not provided
+!
+
+!
+! One can open and start a ADIOS2 reader / writer using
+!
+!    call io%open_start(mode, opt_family)
+!
+! Arguments :
+!    - mode : decomp_2d_write_mode, decomp_2d_read_mode, decomp_2d_append_mode
+!    - opt_family : Family of readers / writers. default_family is used if not provided.
+!
+! To perform IO with the ADIOS2 reader / writer, the external code should use the subroutines defined in the module decomp_2d_io_adios
+!
+
 module decomp_2d_io_object_adios
 
    use adios2

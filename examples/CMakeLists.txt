@@ -25,4 +25,4 @@ if (IO_BACKEND MATCHES "adios2")
 endif (IO_BACKEND MATCHES "adios2")
 
 # Set real/complex tests
-#set(COMPLEX_TESTS "OFF" CACHE STRING "Enables complex numbers for tests that support it")
+set(COMPLEX_TESTS "OFF" CACHE STRING "Enables complex numbers for tests that support it")

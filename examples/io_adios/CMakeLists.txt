@@ -7,6 +7,10 @@ file(GLOB files_adios_visu io_visu.f90)
 
 include_directories(${CMAKE_SOURCE_DIR}/src)
 
+if (COMPLEX_TESTS)
+  add_compile_definitions(COMPLEX_TESTS)
+endif (COMPLEX_TESTS)
+
 add_executable(io_adios_test ${files_adios_test})
 add_executable(io_adios_tmp_test ${files_adios_tmp_test})
 add_executable(io_adios_read ${files_adios_read})

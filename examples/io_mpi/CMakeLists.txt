@@ -8,6 +8,10 @@ file(GLOB files_mpi_non_blocking io_mpi_non_blocking.f90)
 
 include_directories(${CMAKE_SOURCE_DIR}/src)
 
+if (COMPLEX_TESTS)
+  add_compile_definitions(COMPLEX_TESTS)
+endif (COMPLEX_TESTS)
+
 add_executable(io_test ${files_test})
 add_executable(io_read ${files_read})
 add_executable(io_var_test ${files_var_test})

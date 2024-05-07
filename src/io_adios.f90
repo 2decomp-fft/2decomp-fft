@@ -26,7 +26,7 @@
 ! The external code writing planes will call decomp_2d_write_plane
 !
 ! Arguments :
-!    - io : d2d_io_adios object. It will be opened / started if it was not open / active.            
+!    - io : d2d_io_adios object. It will be opened / started if it was not open / active.
 !                                The external code should call io%end_close when the IO is complete
 !    - var : stacked planes or 3D array
 !    - varname : name provided when the array was registered

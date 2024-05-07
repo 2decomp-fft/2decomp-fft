@@ -54,9 +54,7 @@ module decomp_2d_io_adios
    use decomp_2d_profiler
    use MPI
    use, intrinsic :: iso_fortran_env, only: real32, real64
-#ifdef ADIOS2
    use adios2
-#endif
 
    implicit none
 

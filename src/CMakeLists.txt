@@ -95,7 +95,6 @@ if (HALO_DEBUG)
 endif()
 
 if (IO_BACKEND MATCHES "adios2")
-  target_compile_definitions(decomp2d PUBLIC -DADIOS2)
   target_link_libraries(decomp2d PUBLIC adios2::fortran_mpi adios2::fortran)
 endif (IO_BACKEND MATCHES "adios2")
 

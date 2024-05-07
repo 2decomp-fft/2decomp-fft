@@ -36,9 +36,6 @@ program io_read
    character(len=*), parameter :: io_name = "test-io"
    type(d2d_io_family), save :: io_family
    type(d2d_io_adios), save :: io
-#ifndef ADIOS2
-   logical ::file_exists1, file_exists2, file_exists3
-#endif
 
    integer :: i, j, k, m, ierror
 

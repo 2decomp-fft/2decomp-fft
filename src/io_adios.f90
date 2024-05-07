@@ -58,6 +58,9 @@ module decomp_2d_io_adios
 
    implicit none
 
+   ! The external code can use this variable to check if adios2 is available
+   logical, parameter, public :: decomp_2d_with_adios2 = .true.
+
    ! Default family for ADIOS2 IO
    type(d2d_io_family), save, pointer :: default_family => null()
 

@@ -2186,7 +2186,6 @@ contains
             call alloc_z(tmp, decomp)
          end if
          call read_var(io, ipencil, decomp, &
-                       opt_nb_req=opt_nb_req, &
                        freal=tmp)
          var = real(tmp, kind=real32)
          deallocate (tmp)
@@ -2247,7 +2246,6 @@ contains
             call alloc_z(tmp, decomp)
          end if
          call read_var(io, ipencil, decomp, &
-                       opt_nb_req=opt_nb_req, &
                        fcplx=tmp)
          var = cmplx(tmp, kind=real64)
          deallocate (tmp)

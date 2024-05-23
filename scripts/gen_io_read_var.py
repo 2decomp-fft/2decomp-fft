@@ -120,7 +120,6 @@ for i in range(nformat):
         f.write("            call alloc_z(tmp, decomp)\n")
         f.write("         end if\n")
         f.write("         call read_var(io, ipencil, decomp, &\n")
-        f.write("                       opt_nb_req=opt_nb_req, &\n")
         if (i==2):
             f.write("                      freal=tmp)\n")
             f.write("         var = real(tmp, kind=real32)\n")

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 # Name of the output file
-outfile = "write_one.f90"
+outfile = "write_var.f90"
 
 # Number of variables
 nformat = 6
@@ -18,25 +18,21 @@ f = open(outfile, "w")
 # Write the interface
 #
 f.write("\n")
-f.write("   interface decomp_2d_write_one\n")
+f.write("   interface decomp_2d_write_var\n")
 for i in range(nformat):
-    f.write("      module procedure write_one_"+ext[i]+"\n")
+    f.write("      module procedure write_var_"+ext[i]+"\n")
 
-f.write("   end interface decomp_2d_write_one\n")
+f.write("   end interface decomp_2d_write_var\n")
 f.write("\n")
 
 for i in range(nformat):
     #
     # Header
     #
-    f.write("   subroutine write_one_"+ext[i]+"(ipencil, var, varname, &\n")
-    f.write("                              opt_dirname, &\n")
-    f.write("                              opt_mpi_file_open_info, &\n")
-    f.write("                              opt_mpi_file_set_view_info, &\n")
+    f.write("   subroutine write_var_"+ext[i]+"(io, ipencil, var, &\n")
     f.write("                              opt_reduce_prec, &\n")
     f.write("                              opt_decomp, &\n")
-    f.write("                              opt_nb_req, &\n")
-    f.write("                              opt_io)\n")
+    f.write("                              opt_nb_req)\n")
     f.write("\n")
     f.write("      implicit none\n")
     f.write("\n")
@@ -44,6 +40,7 @@ for i in range(nformat):
     # Arguments
     #
     f.write("      ! Arguments\n")
+    f.write("      type(d2d_io_mpi), intent(INOUT) :: io\n")
     f.write("      integer, intent(IN) :: ipencil\n")
     if (i==0):
         f.write("      real(real32), contiguous, dimension(:, :, :), intent(IN) :: var\n")
@@ -58,14 +55,9 @@ for i in range(nformat):
     elif (i==5):
         f.write("      logical, contiguous, dimension(:, :, :), intent(IN) :: var\n")
     #
-    f.write("      character(len=*), intent(in) :: varname\n")
-    f.write("      character(len=*), intent(in), optional :: opt_dirname\n")
-    f.write("      integer, intent(in), optional :: opt_mpi_file_open_info\n")
-    f.write("      integer, intent(in), optional :: opt_mpi_file_set_view_info\n")
     f.write("      logical, intent(in), optional :: opt_reduce_prec\n")
     f.write("      TYPE(DECOMP_INFO), target, intent(IN), optional :: opt_decomp\n")
     f.write("      integer, intent(inout), optional :: opt_nb_req\n")
-    f.write("      type(d2d_io_mpi), intent(inout), optional :: opt_io")
     f.write("\n")
     #
     # Local variables
@@ -83,7 +75,7 @@ for i in range(nformat):
     #
     # Start profiling
     #
-    f.write("      if (decomp_profiler_io) call decomp_profiler_start(\"io_write_one\")\n")
+    f.write("      if (decomp_profiler_io) call decomp_profiler_start(\"io_write_var\")\n")
     f.write("\n")
     #
     # Deal with optional arguments
@@ -107,12 +99,8 @@ for i in range(nformat):
     # Call the lower level IO subroutine
     #
     if (i==0 or i==1 or i==4 or i==5):
-        f.write("      call write_one(ipencil, varname, decomp, &\n")
-        f.write("                     opt_dirname=opt_dirname, &\n")
-        f.write("                     opt_mpi_file_open_info=opt_mpi_file_open_info, &\n")
-        f.write("                     opt_mpi_file_set_view_info=opt_mpi_file_set_view_info, &\n")
+        f.write("      call write_var(io, ipencil, decomp, &\n")
         f.write("                     opt_nb_req=opt_nb_req, &\n")
-        f.write("                     opt_io=opt_io, &\n")
         if (i==0):
             f.write("                     freal=var)\n")
         elif (i==1):
@@ -129,22 +117,15 @@ for i in range(nformat):
             f.write("         tmp = real(var, kind=real32)\n")
         if (i==3):
             f.write("         tmp = cmplx(var, kind=real32)\n")
-        f.write("         call write_one(ipencil, varname, decomp, &\n")
-        f.write("                        opt_dirname=opt_dirname, &\n")
-        f.write("                        opt_mpi_file_open_info=opt_mpi_file_open_info, &\n")
-        f.write("                        opt_mpi_file_set_view_info=opt_mpi_file_set_view_info, &\n")
+        f.write("         call write_var(io, ipencil, decomp, &\n")
         if (i==2):
             f.write("                        freal=tmp)\n")
         elif (i==3):
             f.write("                        fcplx=tmp)\n")
         f.write("         deallocate(tmp)\n")
         f.write("      else\n")
-        f.write("         call write_one(ipencil, varname, decomp, &\n")
-        f.write("                        opt_dirname=opt_dirname, &\n")
-        f.write("                        opt_mpi_file_open_info=opt_mpi_file_open_info, &\n")
-        f.write("                        opt_mpi_file_set_view_info=opt_mpi_file_set_view_info, &\n")
+        f.write("         call write_var(io, ipencil, decomp, &\n")
         f.write("                        opt_nb_req=opt_nb_req, &\n")
-        f.write("                        opt_io=opt_io, &\n")
         if (i==2):
             f.write("                        dreal=var)\n")
         elif (i==3):
@@ -162,12 +143,12 @@ for i in range(nformat):
     #
     # End profiling
     #
-    f.write("      if (decomp_profiler_io) call decomp_profiler_end(\"io_write_one\")\n")
+    f.write("      if (decomp_profiler_io) call decomp_profiler_end(\"io_write_var\")\n")
     f.write("\n")
     #
     # Footer
     #
-    f.write("   end subroutine write_one_"+ext[i]+"\n")
+    f.write("   end subroutine write_var_"+ext[i]+"\n")
     f.write("   !\n")
 
 #

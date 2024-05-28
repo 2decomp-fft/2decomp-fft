@@ -11,7 +11,6 @@ program io_plane_test
    use decomp_2d
    use decomp_2d_constants
    use decomp_2d_io
-   use decomp_2d_io_object
    use decomp_2d_mpi
    use decomp_2d_testing
 #if defined(_GPU)
@@ -37,8 +36,6 @@ program io_plane_test
    integer :: xen1, xen2, xen3
    logical :: found
 
-   type(d2d_io) :: io
-
    call MPI_INIT(ierror)
    ! To resize the domain we need to know global number of ranks
    ! This operation is also done as part of decomp_2d_init
@@ -55,10 +52,6 @@ program io_plane_test
    call decomp_2d_testing_log()
 
    call decomp_2d_io_init()
-
-   call decomp_2d_io_register_var2d("x_pencil-x_plane.dat", 1, real_type, opt_reduce_prec=.false.)
-   call decomp_2d_io_register_var2d("y_pencil-y_plane.dat", 2, real_type, opt_reduce_prec=.false.)
-   call decomp_2d_io_register_var2d("z_pencil-z_plane.dat", 3, real_type, opt_reduce_prec=.false.)
 
    ! ***** global data *****
    allocate (data1(nx, ny, nz))
@@ -101,32 +94,23 @@ program io_plane_test
    !$acc end data
 
    ! write to disk
-#ifndef ADIOS2
    if (nrank == 0) then
       inquire (file="out", exist=found)
       if (.not. found) then
          call execute_command_line("mkdir out 2> /dev/null")
       end if
    end if
-#endif
 
    ! X-pencil data
-#ifdef ADIOS2
-   call io%open_start("out", decomp_2d_write_mode)
-#endif
    call decomp_2d_write_plane(1, u1, 'x_pencil-x_plane.dat', &
-                              opt_iplane=nx / 2, opt_dirname='out', opt_io=io, opt_reduce_prec=.false.)
+                              opt_iplane=nx / 2, opt_dirname='out', opt_reduce_prec=.false.)
    ! Y-pencil data
    call decomp_2d_write_plane(2, u2, 'y_pencil-y_plane.dat', &
-                              opt_iplane=ny / 2, opt_dirname='out', opt_io=io, opt_reduce_prec=.false.)
+                              opt_iplane=ny / 2, opt_dirname='out', opt_reduce_prec=.false.)
    ! Z-pencil data
    call decomp_2d_write_plane(3, u3, 'z_pencil-z_plane.dat', &
-                              opt_iplane=nz / 2, opt_dirname='out', opt_io=io, opt_reduce_prec=.false.)
-#ifdef ADIOS2
-   call io%end_close
-#endif
+                              opt_iplane=nz / 2, opt_dirname='out', opt_reduce_prec=.false.)
 
-#ifndef ADIOS2
    ! Attemp to read the files
    if (nrank == 0) then
       inquire (iolength=iol) data1(1, 1, 1)
@@ -198,10 +182,6 @@ program io_plane_test
       end if
 
    end if
-#else
-   associate (fnd => found, io => iol, wk => work)
-   end associate
-#endif
 
    deallocate (u1, u2, u3)
    deallocate (data1)

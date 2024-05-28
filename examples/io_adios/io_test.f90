@@ -5,10 +5,9 @@ program io_test
    use decomp_2d
    use decomp_2d_constants
    use decomp_2d_io
-   use decomp_2d_io_family
-   use decomp_2d_io_object
+   use decomp_2d_io_adios
+   use decomp_2d_io_object_adios
    use decomp_2d_mpi
-   use decomp_2d_profiler
    use decomp_2d_testing
 #if defined(_GPU)
    use cudafor
@@ -29,26 +28,24 @@ program io_test
    complex(mytype), allocatable, dimension(:, :, :) :: data1
 
    complex(mytype), allocatable, dimension(:, :, :) :: u1, u2, u3
-   complex(mytype), allocatable, dimension(:, :, :) :: u1b, u2b, u3b
+   complex(mytype), allocatable, dimension(:, :, :) :: u1b, u2b, u2c, u3b
 #else
    real(mytype), allocatable, dimension(:, :, :) :: data1
 
    real(mytype), allocatable, dimension(:, :, :) :: u1, u2, u3
-   real(mytype), allocatable, dimension(:, :, :) :: u1b, u2b, u3b
+   real(mytype), allocatable, dimension(:, :, :) :: u1b, u2b, u2c, u3b
 #endif
 
    real(mytype), parameter :: eps = 1.0E-7_mytype
 
-   character(len=*), parameter :: io_name = "mpi-io"
-   type(d2d_io_family), save :: io_family
-   type(d2d_io), save :: io1, io2, io3
-   integer, save :: req1, req2, req3
+   character(len=*), parameter :: io_name = "test-io"
+   character(len=*), parameter :: io_restart = "restart-io"
+   type(d2d_io_family), save :: io_family, io_family_restart
+   type(d2d_io_adios), save :: io
 
    integer :: i, j, k, m, ierror
    integer :: xst1, xst2, xst3
    integer :: xen1, xen2, xen3
-
-   logical :: dir_exists
 
    call MPI_INIT(ierror)
    ! To resize the domain we need to know global number of ranks
@@ -67,10 +64,31 @@ program io_test
 
    call decomp_2d_io_init()
 
-   call io_family%mpi_init(io_name)
-   call io_family%register_var3d("u1.dat", 1, real_type, opt_reduce_prec=.false.)
-   call io_family%register_var3d("u2.dat", 2, real_type, opt_reduce_prec=.false.)
-   call io_family%register_var3d("u3.dat", 3, real_type, opt_reduce_prec=.false.)
+#ifdef COMPLEX_TEST
+   call decomp_2d_register_var("u1.dat", 1, complex_type)
+   call decomp_2d_register_var("u2.dat", 2, complex_type)
+#else
+   call decomp_2d_register_var("u1.dat", 1, real_type)
+   call decomp_2d_register_var("u2.dat", 2, real_type)
+#endif
+   call io_family%init(io_name)
+#ifdef COMPLEX_TEST
+   call io_family%register_var("u2.dat", 2, complex_type)
+   call io_family%register_var("u3.dat", 3, complex_type)
+#else
+   call io_family%register_var("u2.dat", 2, real_type)
+   call io_family%register_var("u3.dat", 3, real_type)
+#endif
+   call io_family_restart%init(io_restart)
+#ifdef COMPLEX_TEST
+   call io_family_restart%register_var("u1.dat", 1, complex_type)
+   call io_family_restart%register_var("u2.dat", 2, complex_type)
+   call io_family_restart%register_var("u3.dat", 3, complex_type)
+#else
+   call io_family_restart%register_var("u1.dat", 1, real_type)
+   call io_family_restart%register_var("u2.dat", 2, real_type)
+   call io_family_restart%register_var("u3.dat", 3, real_type)
+#endif
 
    ! ***** global data *****
    allocate (data1(nx, ny, nz))
@@ -94,6 +112,7 @@ program io_test
 
    call alloc_x(u1b, .true.)
    call alloc_y(u2b, .true.)
+   call alloc_y(u2c, .true.)
    call alloc_z(u3b, .true.)
 
    xst1 = xstart(1); xen1 = xend(1)
@@ -119,49 +138,51 @@ program io_test
    !$acc update self(u3)
    !$acc end data
 
-   ! write to disk
-   if (nrank == 0) then
-      inquire (file="out", exist=dir_exists)
-      if (.not. dir_exists) then
-         call execute_command_line("mkdir out 2> /dev/null")
-      end if
-   end if
-
+   ! Standard I/O pattern - 1 file per field
+   !
+   ! Using the default IO family
+   call decomp_2d_adios_write_var(io, u1, 'u1.dat')
+   call decomp_2d_adios_write_var(io, u2, 'u2.dat')
+   call io%end_close
    !
    ! Using a dedicated IO family
-   !
-   call io1%open_start("out/u1.dat", decomp_2d_write_mode, opt_family=io_family)
-   call decomp_2d_write_one(1, u1, 'u1.dat', opt_reduce_prec=.false., opt_io=io1, opt_nb_req=req1)
-   !
-   call io2%open_start("out/u2.dat", decomp_2d_write_mode, opt_family=io_family)
-   call decomp_2d_write_one(2, u2, 'u2.dat', opt_reduce_prec=.false., opt_io=io2, opt_nb_req=req2)
-   !
-   call io3%open_start("out/u3.dat", decomp_2d_write_mode, opt_family=io_family)
-   call decomp_2d_write_one(3, u3, 'u3.dat', opt_reduce_prec=.false., opt_io=io3, opt_nb_req=req3)
+   call io%open_start(decomp_2d_write_mode, opt_family=io_family)
+   call decomp_2d_adios_write_var(io, u2, 'u2.dat')
+   call decomp_2d_adios_write_var(io, u3, 'u3.dat')
+   call io%end_close
 
+   ! read back to different arrays
    !
-   ! Some computation can happen here as long as u1, u2 and u3 are not modified
+   ! Using the default IO family without providing any object
+   call decomp_2d_adios_read_var(io, u1b, 'u1.dat')
+   call decomp_2d_adios_read_var(io, u2b, 'u2.dat')
+   call io%end_close
    !
+   ! Using a dedicated IO family
+   call io%open_start(decomp_2d_read_mode, opt_family=io_family)
+   call decomp_2d_adios_read_var(io, u2c, 'u2.dat')
+   call decomp_2d_adios_read_var(io, u3b, 'u3.dat')
+   call io%end_close
+
+   ! compare
+   call check("file per field")
+   !
+   ! Using adios2 objects
+   call io%open_start(decomp_2d_write_mode, opt_family=io_family_restart)
+   call decomp_2d_adios_write_var(io, u1, 'u1.dat')
+   call decomp_2d_adios_write_var(io, u2, 'u2.dat')
+   call decomp_2d_adios_write_var(io, u3, 'u3.dat')
+   call io%end_close()
 
    call MPI_Barrier(MPI_COMM_WORLD, ierr)
-   if (decomp_profiler_io) call decomp_profiler_start("io_wait")
-   call decomp_2d_mpi_wait(req1)
-   if (decomp_profiler_io) call decomp_profiler_end("io_wait")
-   call io1%end_close
-   if (decomp_profiler_io) call decomp_profiler_start("io_wait")
-   call decomp_2d_mpi_wait(req2)
-   if (decomp_profiler_io) call decomp_profiler_end("io_wait")
-   call io2%end_close
-   if (decomp_profiler_io) call decomp_profiler_start("io_wait")
-   call decomp_2d_mpi_wait(req3)
-   if (decomp_profiler_io) call decomp_profiler_end("io_wait")
-   call io3%end_close
 
    ! read back to different arrays
    u1b = 0; u2b = 0; u3b = 0
-   call decomp_2d_read_one(1, u1b, 'u1.dat', opt_reduce_prec=.false., opt_dirname='out', opt_family=io_family)
-   call decomp_2d_read_one(2, u2b, 'u2.dat', opt_reduce_prec=.false., opt_dirname='out', opt_family=io_family)
-   call decomp_2d_read_one(3, u3b, 'u3.dat', opt_reduce_prec=.false., opt_dirname='out', opt_family=io_family)
+   call io%open_start(decomp_2d_read_mode, opt_family=io_family_restart)
+   call decomp_2d_adios_read_var(io, u1b, 'u1.dat')
+   call decomp_2d_adios_read_var(io, u2b, 'u2.dat')
+   call decomp_2d_adios_read_var(io, u3b, 'u3.dat')
+   call io%end_close
 
    call MPI_Barrier(MPI_COMM_WORLD, ierr)
 
@@ -169,9 +190,10 @@ program io_test
    call check("one file, multiple fields")
 
    deallocate (u1, u2, u3)
-   deallocate (u1b, u2b, u3b)
+   deallocate (u1b, u2b, u2c, u3b)
    deallocate (data1)
 
+   call io_family_restart%fin
    call io_family%fin
    call decomp_2d_io_fin
    call decomp_2d_finalize
@@ -194,8 +216,8 @@ contains
          do j = xstart(2), xend(2)
             do i = xstart(1), xend(1)
                if (abs((u1(i, j, k) - u1b(i, j, k))) > eps) then
-                  print *, i, j, k, u1(i, j, k), u1b(i, j, k)
-                  call decomp_2d_abort(1, "x_plane")
+                  print *, u1(i, j, k), u1b(i, j, k)
+                  stop 1
                end if
             end do
          end do
@@ -204,10 +226,15 @@ contains
       do k = ystart(3), yend(3)
          do j = ystart(2), yend(2)
             do i = ystart(1), yend(1)
-               if (abs((u2(i, j, k) - u2b(i, j, k))) > eps) then
-                  print *, i, j, k, u2(i, j, k), u2b(i, j, k)
-                  call decomp_2d_abort(2, "y_plane")
-               end if
+               if (abs((u2(i, j, k) - u2b(i, j, k))) > eps) stop 2
+            end do
+         end do
+      end do
+
+      do k = ystart(3), yend(3)
+         do j = ystart(2), yend(2)
+            do i = ystart(1), yend(1)
+               if (abs((u2(i, j, k) - u2c(i, j, k))) > eps) stop 2
             end do
          end do
       end do
@@ -215,10 +242,7 @@ contains
       do k = zstart(3), zend(3)
          do j = zstart(2), zend(2)
             do i = zstart(1), zend(1)
-               if (abs((u3(i, j, k) - u3b(i, j, k))) > eps) then
-                  print *, i, j, k, u3(i, j, k), u3b(i, j, k)
-                  call decomp_2d_abort(3, "z_plane")
-               end if
+               if (abs((u3(i, j, k) - u3b(i, j, k))) > eps) stop 3
             end do
          end do
       end do
@@ -227,10 +251,7 @@ contains
       do k = xstart(3), xend(3)
          do j = xstart(2), xend(2)
             do i = xstart(1), xend(1)
-               if (abs(data1(i, j, k) - u1b(i, j, k)) > eps) then
-                  print *, i, j, k, data1(i, j, k), u1b(i, j, k)
-                  call decomp_2d_abort(4, "x_plane")
-               end if
+               if (abs(data1(i, j, k) - u1b(i, j, k)) > eps) stop 4
             end do
          end do
       end do
@@ -238,10 +259,15 @@ contains
       do k = ystart(3), yend(3)
          do j = ystart(2), yend(2)
             do i = ystart(1), yend(1)
-               if (abs(data1(i, j, k) - u2b(i, j, k)) > eps) then
-                  print *, i, j, k, data1(i, j, k), u2b(i, j, k)
-                  call decomp_2d_abort(5, "y_plane")
-               end if
+               if (abs((data1(i, j, k) - u2b(i, j, k))) > eps) stop 5
+            end do
+         end do
+      end do
+
+      do k = ystart(3), yend(3)
+         do j = ystart(2), yend(2)
+            do i = ystart(1), yend(1)
+               if (abs((data1(i, j, k) - u2c(i, j, k))) > eps) stop 5
             end do
          end do
       end do
@@ -249,10 +275,7 @@ contains
       do k = zstart(3), zend(3)
          do j = zstart(2), zend(2)
             do i = zstart(1), zend(1)
-               if (abs(data1(i, j, k) - u3b(i, j, k)) > eps) then
-                  print *, i, j, k, data1(i, j, k), u3b(i, j, k)
-                  call decomp_2d_abort(6, "z_plane")
-               end if
+               if (abs((data1(i, j, k) - u3b(i, j, k))) > eps) stop 6
             end do
          end do
       end do

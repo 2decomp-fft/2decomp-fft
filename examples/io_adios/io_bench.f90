@@ -4,7 +4,8 @@ program io_bench
    use decomp_2d
    use decomp_2d_constants
    use decomp_2d_io
-   use decomp_2d_io_object
+   use decomp_2d_io_adios
+   use decomp_2d_io_object_adios
    use decomp_2d_mpi
    use decomp_2d_testing
    use MPI
@@ -22,6 +23,7 @@ program io_bench
    integer :: nranks_tot
 
    real(mytype), allocatable, dimension(:, :, :) :: u1
+   type(d2d_io_adios), save :: io
 
    double precision :: t1, t2
    integer :: ierror
@@ -42,13 +44,14 @@ program io_bench
    call decomp_2d_testing_log()
 
    call decomp_2d_io_init()
-   call decomp_2d_io_register_var3d("io.dat", 1, real_type)
+   call decomp_2d_register_var("io.dat", 1, real_type)
 
    call alloc_x(u1, .true.)
    call random_number(u1)
 
    t1 = MPI_WTIME()
-   call decomp_2d_write_one(1, u1, 'io.dat', opt_dirname="./")
+   call decomp_2d_adios_write_var(io, u1, 'io.dat')
+   call io%end_close
    t2 = MPI_WTIME()
 
    if (nrank == 0) then

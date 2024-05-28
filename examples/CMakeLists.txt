@@ -18,8 +18,11 @@ add_subdirectory(fft_physical_x)
 add_subdirectory(fft_physical_z)
 add_subdirectory(fft_multiple_grids)
 add_subdirectory(halo_test)
-add_subdirectory(io_test)
+add_subdirectory(io_mpi)
 add_subdirectory(grad3d)
+if (IO_BACKEND MATCHES "adios2")
+  add_subdirectory(io_adios)
+endif (IO_BACKEND MATCHES "adios2")
 
 # Set real/complex tests
-#set(COMPLEX_TESTS "OFF" CACHE STRING "Enables complex numbers for tests that support it")
+set(COMPLEX_TESTS "OFF" CACHE STRING "Enables complex numbers for tests that support it")

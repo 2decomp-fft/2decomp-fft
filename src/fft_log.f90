@@ -57,6 +57,9 @@ contains
                write (io_unit, *) ''
             end if
          end if
+         if (D2D_FFT_BACKEND == D2D_FFT_BACKEND_FFTW3) then
+            call decomp_2d_warning(D2D_FFT_BACKEND, "FFTW3 backend will be removed")
+         end if
          if (skip_x_c2c) write (io_unit, *) 'Skip X c2c transforms'
          if (skip_y_c2c) write (io_unit, *) 'Skip Y c2c transforms'
          if (skip_z_c2c) write (io_unit, *) 'Skip Z c2c transforms'

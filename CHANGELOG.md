@@ -30,6 +30,7 @@ _e.g._ vX.Y - YYYY-MM-DD and a new "Unreleased" section started above.
 ### Deprecated
 
 - Subroutines `init_coarser_mesh_stat*` and `fine_to_coarse*` will be removed. See [PR #316](https://github.com/2decomp-fft/2decomp-fft/pull/316).
+- FFT backend fftw3 will be removed. See [PR #346](https://github.com/2decomp-fft/2decomp-fft/pull/346)
 
 ### Removed
 

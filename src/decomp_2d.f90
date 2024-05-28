@@ -277,6 +277,10 @@ module decomp_2d
       module procedure alloc_x_fcplx_short
       module procedure alloc_x_dcplx
       module procedure alloc_x_dcplx_short
+      module procedure alloc_x_ints
+      module procedure alloc_x_ints_short
+      module procedure alloc_x_logs
+      module procedure alloc_x_logs_short
    end interface alloc_x
 
    interface alloc_y
@@ -288,6 +292,10 @@ module decomp_2d
       module procedure alloc_y_fcplx_short
       module procedure alloc_y_dcplx
       module procedure alloc_y_dcplx_short
+      module procedure alloc_y_ints
+      module procedure alloc_y_ints_short
+      module procedure alloc_y_logs
+      module procedure alloc_y_logs_short
    end interface alloc_y
 
    interface alloc_z
@@ -299,6 +307,10 @@ module decomp_2d
       module procedure alloc_z_fcplx_short
       module procedure alloc_z_dcplx
       module procedure alloc_z_dcplx_short
+      module procedure alloc_z_ints
+      module procedure alloc_z_ints_short
+      module procedure alloc_z_logs
+      module procedure alloc_z_logs_short
    end interface alloc_z
 
    interface

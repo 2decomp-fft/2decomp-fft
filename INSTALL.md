@@ -95,6 +95,7 @@ By default CUDA aware MPI will be used together with `cuFFT` for the FFT library
 
  - `-DENABLE_NCCL=yes` to activate the NCCL collectives
  - `-DENABLE_MANAGED=yes` to activate the automatic memory management form the NVHPC compiler
+
 If you are getting the following error
 ```
 -- The CUDA compiler identification is unknown  
@@ -192,7 +193,7 @@ and select the MKL backend by setting `FFT_Choice=mkl`.
 
 To use the new IntelLLVM compiler, up until the 2023 version, specify it as the Fortran compiler using
 ```
-export export FC="mpiifort -fc=ifx"
+export FC="mpiifort -fc=ifx"
 ```
 and when building with ADIOS2 support you must also specify the `C` and `CXX` compilers
 ```
@@ -311,9 +312,9 @@ $ cmake -S . -B build -DFFT_Choice=<fftw|fftw_f03> -DFFTW_ROOT=/path/to/fftw3/in
 ```
 or modify the build configuration using `ccmake`.
 
-Note the legacy `fftw` interface lacks interface definitions 
-and will fail when stricter compilation flags are used (e.g. when `-DCMAKE_BUILD_TYPE=Dev`) 
-for this it is recommended to use `fftw_f03` which provides proper interfaces.
+Note the legacy `fftw` interface is deprecated, lacks interface definitions 
+and will fail when stricter compilation flags are used (e.g. when `-DCMAKE_BUILD_TYPE=Dev`).
+It is recommended to use `fftw_f03`.
 
 #### Vendor FFTW
 

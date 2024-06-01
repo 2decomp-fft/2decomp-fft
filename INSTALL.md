@@ -204,10 +204,6 @@ From the 2024 version new MPI wrapper are available as `mpiifx`, `mpiicx` and `m
 
 ### List of preprocessor variables
 
-#### ADIOS2
-
-This variable is automatically added in builds with the adios2 IO backend.
-
 #### DEBUG
 
 This variable is automatically added in debug and dev builds. Extra information is printed when it is present.

@@ -94,7 +94,7 @@ Note, further configuration can be performed using `ccmake`, however the initial
 By default CUDA aware MPI will be used together with `cuFFT` for the FFT library. The configure will automatically look for the GPU architecture available on the system. If you are building on a HPC system please use a computing node for the installation. Useful variables to be added are 
 
  - `-DENABLE_NCCL=yes` to activate the NCCL collectives
- - `-DENABLE_MANAGED=yes` to activate the automatic memory management form the NVHPC compiler
+ - `-DENABLE_MANAGED=yes` to activate the automatic memory management from the NVHPC compiler
 
 If you are getting the following error
 ```

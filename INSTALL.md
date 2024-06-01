@@ -272,7 +272,7 @@ Then either specify on the command line when configuring the build
 ```
 $ cmake -S . -B ./build -DIO_BACKEND=adios2 -Dadios2_DIR=/path/to/adios2/install/lib/cmake/adios2
 ```
-or modify the build configuration using `ccmake`. Please note that the support for ADIOS2 is not complete. Currently, for a given IO operation, when the ADIOS2 backend is not supported, the MPI backend is used.
+or modify the build configuration using `ccmake`.
 
 ### FFTW
 

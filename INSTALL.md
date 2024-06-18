@@ -94,7 +94,8 @@ Note, further configuration can be performed using `ccmake`, however the initial
 By default CUDA aware MPI will be used together with `cuFFT` for the FFT library. The configure will automatically look for the GPU architecture available on the system. If you are building on a HPC system please use a computing node for the installation. Useful variables to be added are 
 
  - `-DENABLE_NCCL=yes` to activate the NCCL collectives
- - `-DENABLE_MANAGED=yes` to activate the automatic memory management form the NVHPC compiler
+ - `-DENABLE_MANAGED=yes` to activate the automatic memory management from the NVHPC compiler
+
 If you are getting the following error
 ```
 -- The CUDA compiler identification is unknown  
@@ -192,7 +193,7 @@ and select the MKL backend by setting `FFT_Choice=mkl`.
 
 To use the new IntelLLVM compiler, up until the 2023 version, specify it as the Fortran compiler using
 ```
-export export FC="mpiifort -fc=ifx"
+export FC="mpiifort -fc=ifx"
 ```
 and when building with ADIOS2 support you must also specify the `C` and `CXX` compilers
 ```
@@ -202,10 +203,6 @@ export CC="mpiicc -cc=icx"
 From the 2024 version new MPI wrapper are available as `mpiifx`, `mpiicx` and `mpiicpx`. 
 
 ### List of preprocessor variables
-
-#### ADIOS2
-
-This variable is automatically added in builds with the adios2 IO backend.
 
 #### DEBUG
 
@@ -229,7 +226,7 @@ This preprocessor variable is not valid for GPU builds. It leads to padded allto
 
 #### OVERWRITE
 
-This variable leads to overwrite the input array when computing FFT. The support of this flag does not always correspond to in-place transforms, depending on the FFT backend selected, as described above. This preprocessor variable is driven by the CMake on/off variable `ENABLE_INPLACE`.
+This variable leads to overwrite the input array when computing FFT. The support of this flag does not always correspond to in-place transforms, depending on the FFT backend selected. This preprocessor variable is driven by the CMake on/off variable `ENABLE_INPLACE`.
 
 #### HALO_DEBUG
 
@@ -271,7 +268,7 @@ Then either specify on the command line when configuring the build
 ```
 $ cmake -S . -B ./build -DIO_BACKEND=adios2 -Dadios2_DIR=/path/to/adios2/install/lib/cmake/adios2
 ```
-or modify the build configuration using `ccmake`. Please note that the support for ADIOS2 is not complete. Currently, for a given IO operation, when the ADIOS2 backend is not supported, the MPI backend is used.
+or modify the build configuration using `ccmake`.
 
 ### FFTW
 
@@ -311,9 +308,9 @@ $ cmake -S . -B build -DFFT_Choice=<fftw|fftw_f03> -DFFTW_ROOT=/path/to/fftw3/in
 ```
 or modify the build configuration using `ccmake`.
 
-Note the legacy `fftw` interface lacks interface definitions 
-and will fail when stricter compilation flags are used (e.g. when `-DCMAKE_BUILD_TYPE=Dev`) 
-for this it is recommended to use `fftw_f03` which provides proper interfaces.
+Note the legacy `fftw` interface is deprecated, lacks interface definitions 
+and will fail when stricter compilation flags are used (e.g. when `-DCMAKE_BUILD_TYPE=Dev`).
+It is recommended to use `fftw_f03`.
 
 #### Vendor FFTW
 

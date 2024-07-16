@@ -17,6 +17,7 @@ module decomp_2d_testing
       module procedure decomp_2d_testing_init_2int
       module procedure decomp_2d_testing_init_5int
       module procedure decomp_2d_testing_init_6int
+      module procedure decomp_2d_testing_init_8int
    end interface decomp_2d_testing_init
 
 contains
@@ -130,6 +131,50 @@ contains
       end if
 
    end subroutine decomp_2d_testing_init_6int
+
+   !
+   ! Process command-line arguments, 8 integers
+   !
+   subroutine decomp_2d_testing_init_8int(p_row, p_col, nx, ny, nz, dttx, dtty, dttz)
+
+      implicit none
+
+      integer, intent(inout) :: p_row, p_col, nx, ny, nz, dttx, dtty, dttz
+
+      integer :: arg, nargin, DecInd, status, FNLength
+      character(len=80) :: InputFN
+
+      nargin = command_argument_count()
+
+      if (nargin == 0) return
+
+      if (nargin == 2 .or. nargin == 5 .or. nargin == 8) then
+         do arg = 1, nargin
+            call get_command_argument(arg, InputFN, FNLength, status)
+            read (InputFN, *, iostat=status) DecInd
+            if (arg == 1) then
+               p_row = DecInd
+            elseif (arg == 2) then
+               p_col = DecInd
+            elseif (arg == 3) then
+               nx = DecInd
+            elseif (arg == 4) then
+               ny = DecInd
+            elseif (arg == 5) then
+               nz = DecInd
+            elseif (arg == 6) then
+               dttx = DecInd
+            elseif (arg == 7) then
+               dtty = DecInd
+            elseif (arg == 8) then
+               dttz = DecInd
+            end if
+         end do
+      else
+         use_default = .true.
+      end if
+
+   end subroutine decomp_2d_testing_init_8int
 
    !
    ! Print some warning if the input was incorrect

@@ -21,11 +21,11 @@ program dtt_x
    ! Decomp_info objects in the phuysical and spectral space
    type(decomp_info), pointer :: ph => null() , sp => null()
    ! Output in case of periodicity
-   complex(mytype), allocatable, dimension(:, :, :) :: out_c
+   complex(mytype), target, allocatable, dimension(:, :, :) :: out_c
    ! Ouput when there is no periodicity
-   real(mytype), allocatable, dimension(:, :, :) :: out_r
+   real(mytype), target, allocatable, dimension(:, :, :) :: out_r
    ! Input
-   real(mytype), allocatable, dimension(:, :, :) :: in_r
+   real(mytype), target, allocatable, dimension(:, :, :) :: in_r
    ! Objects 
    type(decomp_2d_fft_engine), target, save :: dtt_engine
  

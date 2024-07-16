@@ -2415,8 +2415,8 @@ contains
 
       implicit none
 
-      real(mytype), dimension(:, :, :), intent(inout) :: inr, ini
-      real(mytype), dimension(:, :, :), intent(out) :: outr, outi
+      real(mytype), dimension(:, :, :), contiguous, target, intent(inout) :: inr, ini
+      real(mytype), dimension(:, :, :), contiguous, target, intent(out) :: outr, outi
       integer, intent(in) :: isign
 
       ! Local variables
@@ -2463,8 +2463,8 @@ contains
 
       implicit none
 
-      real(mytype), dimension(:, :, :), intent(inout) :: inr, ini
-      real(mytype), dimension(:, :, :), intent(out) :: outr, outi
+      real(mytype), dimension(:, :, :), contiguous, target, intent(inout) :: inr, ini
+      real(mytype), dimension(:, :, :), contiguous, target, intent(out) :: outr, outi
       integer, intent(in) :: isign
 
       ! Local variables
@@ -2507,8 +2507,8 @@ contains
 
       implicit none
 
-      real(mytype), dimension(:, :, :), intent(inout) :: inr
-      real(mytype), dimension(:, :, :), intent(out) :: outr
+      real(mytype), dimension(:, :, :), contiguous, target, intent(inout) :: inr
+      real(mytype), dimension(:, :, :), contiguous, target, intent(out) :: outr
       integer, intent(in) :: isign
 
       ! Local variables
@@ -2544,8 +2544,8 @@ contains
 
       implicit none
 
-      real(mytype), dimension(:, :, :), intent(inout) :: inr
-      real(mytype), dimension(:, :, :), intent(out) :: outr
+      real(mytype), dimension(:, :, :), contiguous, target, intent(inout) :: inr
+      real(mytype), dimension(:, :, :), contiguous, target, intent(out) :: outr
       integer, intent(in) :: isign
 
       ! Local variables
@@ -2583,8 +2583,8 @@ contains
 
       implicit none
 
-      real(mytype), dimension(:, :, :), intent(inout) :: inr
-      real(mytype), dimension(:, :, :), intent(out) :: outr
+      real(mytype), dimension(:, :, :), contiguous, target, intent(inout) :: inr
+      real(mytype), dimension(:, :, :), contiguous, target, intent(out) :: outr
       integer, intent(in) :: isign
 
       ! Local variables
@@ -2620,8 +2620,8 @@ contains
 
       implicit none
 
-      real(mytype), dimension(:, :, :), intent(inout) :: inr, ini
-      real(mytype), dimension(:, :, :), intent(out) :: outr
+      real(mytype), dimension(:, :, :), contiguous, target, intent(inout) :: inr, ini
+      real(mytype), dimension(:, :, :), contiguous, target, intent(out) :: outr
 
       ! Perform the DFT
       call wrapper_rr2r(dtt_plan(4), &
@@ -2635,8 +2635,8 @@ contains
 
       implicit none
 
-      real(mytype), dimension(:, :, :), intent(inout) :: inr, ini
-      real(mytype), dimension(:, :, :), intent(out) :: outr
+      real(mytype), dimension(:, :, :), contiguous, target, intent(inout) :: inr, ini
+      real(mytype), dimension(:, :, :), contiguous, target, intent(out) :: outr
 
       integer :: k
 
@@ -2654,8 +2654,8 @@ contains
 
       implicit none
 
-      real(mytype), dimension(:, :, :), intent(inout) :: inr, ini
-      real(mytype), dimension(:, :, :), intent(out) :: outr
+      real(mytype), dimension(:, :, :), contiguous, target, intent(inout) :: inr, ini
+      real(mytype), dimension(:, :, :), contiguous, target, intent(out) :: outr
 
       ! Perform the DFT
       call wrapper_rr2r(dtt_plan(6), &
@@ -2669,8 +2669,8 @@ contains
 
       implicit none
 
-      real(mytype), dimension(:, :, :), intent(inout) :: inr
-      real(mytype), dimension(:, :, :), intent(out) :: outr, outi
+      real(mytype), dimension(:, :, :), contiguous, target, intent(inout) :: inr
+      real(mytype), dimension(:, :, :), contiguous, target, intent(out) :: outr, outi
 
       ! Perform the DFT
       call wrapper_r2rr(dtt_plan(1), &
@@ -2684,8 +2684,8 @@ contains
 
       implicit none
 
-      real(mytype), dimension(:, :, :), intent(inout) :: inr
-      real(mytype), dimension(:, :, :), intent(out) :: outr, outi
+      real(mytype), dimension(:, :, :), contiguous, target, intent(inout) :: inr
+      real(mytype), dimension(:, :, :), contiguous, target, intent(out) :: outr, outi
 
       integer :: k
 
@@ -2703,8 +2703,8 @@ contains
 
       implicit none
 
-      real(mytype), dimension(:, :, :), intent(inout) :: inr
-      real(mytype), dimension(:, :, :), intent(out) :: outr, outi
+      real(mytype), dimension(:, :, :), contiguous, target, intent(inout) :: inr
+      real(mytype), dimension(:, :, :), contiguous, target, intent(out) :: outr, outi
 
       ! Perform the DFT
       call wrapper_r2rr(dtt_plan(3), &
@@ -3033,9 +3033,9 @@ contains
       implicit none
 
       ! Arguments
-      real(mytype), dimension(:, :, :), intent(inout) :: in
-      real(mytype), dimension(:, :, :), intent(out), optional :: out_real
-      complex(mytype), dimension(:, :, :), intent(out), optional :: out_cplx
+      real(mytype), dimension(:, :, :), contiguous, target, intent(inout) :: in
+      real(mytype), dimension(:, :, :), contiguous, target, intent(out), optional :: out_real
+      complex(mytype), dimension(:, :, :), contiguous, target, intent(out), optional :: out_cplx
 
       ! Local variables
       logical :: cplx
@@ -3200,9 +3200,9 @@ contains
       implicit none
 
       ! Arguments
-      real(mytype), dimension(:, :, :), intent(inout), optional :: in_real
-      complex(mytype), dimension(:, :, :), intent(inout), optional :: in_cplx
-      real(mytype), dimension(:, :, :), intent(out), optional :: out
+      real(mytype), dimension(:, :, :), contiguous, target, intent(inout), optional :: in_real
+      complex(mytype), dimension(:, :, :), contiguous, target, intent(inout), optional :: in_cplx
+      real(mytype), dimension(:, :, :), contiguous, target, intent(out), optional :: out
 
       ! Local variables
       logical :: cplx

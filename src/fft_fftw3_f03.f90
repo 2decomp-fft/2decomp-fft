@@ -1539,7 +1539,11 @@ contains
 #endif
       type(C_PTR) :: a1_p, a2_p, a3_p, a4_p
       integer(C_SIZE_T) :: sz
+#ifdef DOUBLE_PREC
       type(fftw_iodim) :: dims(1), howmany(1)
+#else
+      type(fftwf_iodim) :: dims(1), howmany(1)
+#endif
 
       sz = product(decomp%xsz) - ndismiss
       a1_p = fftw_alloc_real(sz)
@@ -1597,7 +1601,11 @@ contains
 #endif
       type(C_PTR) :: a1_p, a2_p, a3_p, a4_p
       integer(C_SIZE_T) :: sz
+#ifdef DOUBLE_PREC
       type(fftw_iodim) :: dims(1), howmany(1)
+#else
+      type(fftwf_iodim) :: dims(1), howmany(1)
+#endif
 
       sz = decomp%ysz(1) * (decomp%ysz(2) - ndismiss)
       a1_p = fftw_alloc_real(sz)
@@ -1655,7 +1663,11 @@ contains
 #endif
       type(C_PTR) :: a1_p, a2_p, a3_p, a4_p
       integer(C_SIZE_T) :: sz
+#ifdef DOUBLE_PREC
       type(fftw_iodim) :: dims(1), howmany(1)
+#else
+      type(fftwf_iodim) :: dims(1), howmany(1)
+#endif
 
       sz = product(decomp%zsz)
       a1_p = fftw_alloc_real(sz)
@@ -1711,7 +1723,11 @@ contains
 #endif
       type(C_PTR) :: a1_p, a2_p, a3_p
       integer(C_SIZE_T) :: sz
+#ifdef DOUBLE_PREC
       type(fftw_iodim) :: dims(1), howmany(1)
+#else
+      type(fftwf_iodim) :: dims(1), howmany(1)
+#endif
 
       sz = product(decomp%xsz)
       a1_p = fftw_alloc_real(sz)
@@ -1764,7 +1780,11 @@ contains
 #endif
       type(C_PTR) :: a1_p, a2_p, a3_p
       integer(C_SIZE_T) :: sz
+#ifdef DOUBLE_PREC
       type(fftw_iodim) :: dims(1), howmany(1)
+#else
+      type(fftwf_iodim) :: dims(1), howmany(1)
+#endif
 
       sz = decomp%ysz(1) * decomp%ysz(2)
       a1_p = fftw_alloc_real(sz)
@@ -1817,7 +1837,11 @@ contains
 #endif
       type(C_PTR) :: a1_p, a2_p, a3_p
       integer(C_SIZE_T) :: sz
+#ifdef DOUBLE_PREC
       type(fftw_iodim) :: dims(1), howmany(1)
+#else
+      type(fftwf_iodim) :: dims(1), howmany(1)
+#endif
 
       sz = product(decomp%zsz)
       a1_p = fftw_alloc_real(sz)
@@ -1870,7 +1894,11 @@ contains
 #endif
       type(C_PTR) :: a1_p, a2_p, a3_p
       integer(C_SIZE_T) :: sz
+#ifdef DOUBLE_PREC
       type(fftw_iodim) :: dims(1), howmany(1)
+#else
+      type(fftwf_iodim) :: dims(1), howmany(1)
+#endif
 
       sz = product(decomp%xsz)
       a1_p = fftw_alloc_real(sz)
@@ -1923,7 +1951,11 @@ contains
 #endif
       type(C_PTR) :: a1_p, a2_p, a3_p
       integer(C_SIZE_T) :: sz
+#ifdef DOUBLE_PREC
       type(fftw_iodim) :: dims(1), howmany(1)
+#else
+      type(fftwf_iodim) :: dims(1), howmany(1)
+#endif
 
       sz = decomp%ysz(1) * decomp%ysz(2)
       a1_p = fftw_alloc_real(sz)
@@ -1976,7 +2008,11 @@ contains
 #endif
       type(C_PTR) :: a1_p, a2_p, a3_p
       integer(C_SIZE_T) :: sz
+#ifdef DOUBLE_PREC
       type(fftw_iodim) :: dims(1), howmany(1)
+#else
+      type(fftwf_iodim) :: dims(1), howmany(1)
+#endif
 
       sz = product(decomp%zsz)
       a1_p = fftw_alloc_real(sz)

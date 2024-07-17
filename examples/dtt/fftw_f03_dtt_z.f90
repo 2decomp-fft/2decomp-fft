@@ -37,7 +37,7 @@ program dtt_z
    integer :: ierror, j, k, l, ii, jj, kk
    integer :: st1, st2, st3
    integer :: en1, en2, en3
-   real(mytype) :: error
+   real(mytype) :: error, errl2, errli
 
    call MPI_INIT(ierror)
    ! To resize the domain we need to know global number of ranks
@@ -164,7 +164,8 @@ program dtt_z
             end if
 
             ! Check the error
-            error = 0._mytype
+            errl2 = 0._mytype
+            errli = 0._mytype
             ! Local size
             st1 = ph%zst(1) + dtt_engine%dtt(4); en1 = ph%zen(1) - dtt_engine%dtt(7)
             if (ph%zst(2) == 1) then
@@ -190,18 +191,20 @@ program dtt_z
             do kk = st3, en3
                do jj = st2, en2
                   do ii = st1, en1
-                     error = error &
-                           + abs(in_r(ii, jj, kk) - real(ii, mytype) / real(nx, mytype) &
+                     error = abs(in_r(ii, jj, kk) - real(ii, mytype) / real(nx, mytype) &
                                                   * real(jj, mytype) / real(ny, mytype) &
                                                   * real(kk, mytype) / real(nz, mytype))
+                     errl2 = errl2 + error**2
+                     errli = max(errli, error)
                   end do
                end do
             end do
-            call MPI_ALLREDUCE(MPI_IN_PLACE, error, 1, real_type, MPI_SUM, MPI_COMM_WORLD, ierror)
-            error = error / (real(nx, mytype) * real(ny, mytype) * real(nz, mytype))
-            if (nrank.eq.0) write (*, *) 'L2 error / mesh point: ', error, j, k, l
+            call MPI_ALLREDUCE(MPI_IN_PLACE, errl2, 1, real_type, MPI_SUM, MPI_COMM_WORLD, ierror)
+            errl2 = errl2 / (real(nx, mytype) * real(ny, mytype) * real(nz, mytype))
+            call MPI_ALLREDUCE(MPI_IN_PLACE, errli, 1, real_type, MPI_MAX, MPI_COMM_WORLD, ierror)
+            if (nrank.eq.0) write (*, *) 'L2 and Linf error: ', errl2, errli
 
-            if (error > 100*epsilon(error)) then
+            if (errl2 > 100*epsilon(errl2)) then
                if (nrank.eq.0) then
                   write (*, *) "check case ", j, k, l, DTT(:, j, k, l)
                   write (*, *) dtt_engine%dtt

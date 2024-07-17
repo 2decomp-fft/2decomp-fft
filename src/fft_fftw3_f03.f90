@@ -422,6 +422,7 @@ contains
       class(decomp_2d_fft_engine), intent(inout), target :: engine
       integer, dimension(:), intent(in) :: in_DTT
 
+      integer :: i
       integer(C_SIZE_T) :: sz
 
       ! Safety check
@@ -573,6 +574,7 @@ contains
       engine%wk3ib = 0._mytype
 
       ! Prepare the fftw plans
+      engine%dtt_plan = c_null_ptr
       if (engine%format == PHYSICAL_IN_X) then
          ! in x
          if (engine%dtt(1) == FFTW_FORWARD) then
@@ -644,6 +646,9 @@ contains
             call r2r_1m_x_plan(engine%dtt_plan(4), engine%dtt_decomp_sp, engine%dtt(13), engine%dtt(7))
          end if
       end if
+      do i = 1, 6
+         if (.not.c_associated(engine%dtt_plan(i))) call decomp_2d_abort(__FILE__, __LINE__, i, "DTT plan creation failed")
+      end do
 
    end subroutine decomp_2d_fft_engine_dtt_init
 
@@ -890,6 +895,7 @@ contains
          call fftwf_destroy_plan(engine%dtt_plan(i))
 #endif
       end do
+      engine%dtt_plan = c_null_ptr
 
    end subroutine decomp_2d_fft_engine_dtt_fin
 

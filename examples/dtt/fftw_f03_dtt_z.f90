@@ -104,7 +104,7 @@ program dtt_z
 
             ! Get the decomp_info objects
             ph => decomp_2d_fft_get_ph()
-            sp => dtt_engine%dtt_decomp_sp
+            sp => decomp_2d_fft_get_dtt_sp()
 
             ! Allocate memory and set to zero
             call alloc_z(in_r, ph, .true.)
@@ -131,8 +131,10 @@ program dtt_z
             end do
 
             ! Perform forward and backward transform once
-            call decomp_2d_dtt_3d_r2x(in_r, out_r, out_c)
-            call decomp_2d_dtt_3d_x2r(out_r, out_c, in_r)
+            ! Forward, real input, real or complex output
+            call decomp_2d_dtt_3d_r2x(in=in_r, out_real=out_r, out_cplx=out_c)
+            ! Backward, real or complex input, real output
+            call decomp_2d_dtt_3d_x2r(in_real=out_r, in_cplx=out_c, out=in_r)
 
             ! Rescale
             if (DTT(1, j, k, l) == 0) then
@@ -167,27 +169,28 @@ program dtt_z
             errl2 = 0._mytype
             errli = 0._mytype
             ! Local size
-            st1 = ph%zst(1) + dtt_engine%dtt(4); en1 = ph%zen(1) - dtt_engine%dtt(7)
+            if (ph%zst(1) == 1) then
+               st1 = dtt_engine%dtt(4)
+            else
+               st1 = ph%zst(1)
+            end if
+            if (ph%zen(1) == nx) then
+               en1 = ph%zen(1) - dtt_engine%dtt(7) + dtt_engine%dtt(4) - 1
+            else
+               en1 = ph%zen(1)
+            end if
             if (ph%zst(2) == 1) then
-               st2 = 1 + dtt_engine%dtt(5)
+               st2 = dtt_engine%dtt(5)
             else
                st2 = ph%zst(2)
             endif
             if (ph%zen(2) == ny) then
-               en2 = ph%zen(2) - dtt_engine%dtt(8)
+               en2 = ph%zen(2) - dtt_engine%dtt(8) + dtt_engine%dtt(5) - 1
             else
                en2 = ph%zen(2)
             endif
-            if (ph%zst(3) == 1) then
-               st3 = 1 + dtt_engine%dtt(6)
-            else
-               st3 = ph%zst(3)
-            end if
-            if (ph%zen(3) == nz) then
-               en3 = ph%zen(3) - dtt_engine%dtt(9)
-            else
-               en3 = ph%zen(3)
-            end if
+            st3 = dtt_engine%dtt(6)
+            en3 = ph%zen(3) - dtt_engine%dtt(9) + dtt_engine%dtt(6) - 1
             do kk = st3, en3
                do jj = st2, en2
                   do ii = st1, en1

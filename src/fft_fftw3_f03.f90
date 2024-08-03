@@ -2085,7 +2085,7 @@ contains
 #ifdef DOUBLE_PREC
       plan = fftw_plan_many_r2r(1, ntmp(1), decomp%xsz(2) * decomp%xsz(3), &
 #else
-      plan = fftwf_plan_many_r2r(1, ntmp(1), decomp%xsz(2) * decomp%xsz(3), &
+      plan = fftwf_plan_many_r2r(1, ntmp(1), decomp%xsz(2) * decomp%xsz(3), & !&
 #endif
                                  a1, decomp%xsz(1), 1, decomp%xsz(1), &
                                  a2, decomp%xsz(1), 1, decomp%xsz(1), &

@@ -442,7 +442,7 @@ contains
       if (size(in_DTT) == 12) then
          engine%dtt(1:12) = in_DTT
       elseif (size(in_DTT) == 3) then
-         engine%dtt(1:3) = in_DTT(:)
+         engine%dtt(1:3) = in_DTT
          call dtt_assign_default(engine%dtt)
       else
          call decomp_2d_abort(__FILE__, __LINE__, size(in_DTT), "Invalid argument")

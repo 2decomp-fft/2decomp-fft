@@ -19,16 +19,16 @@ program dtt_z
    integer :: dttxi, dttxf, dttyi, dttyf, dttzi, dttzf
 
    ! Decomp_info objects in the phuysical and spectral space
-   type(decomp_info), pointer :: ph => null() , sp => null()
+   type(decomp_info), pointer :: ph => null(), sp => null()
    ! Output in case of periodicity
    complex(mytype), target, allocatable, dimension(:, :, :) :: out_c
    ! Ouput when there is no periodicity
    real(mytype), target, allocatable, dimension(:, :, :) :: out_r
    ! Input
    real(mytype), target, allocatable, dimension(:, :, :) :: in_r
-   ! Objects 
+   ! Objects
    type(decomp_2d_fft_engine), target, save :: dtt_engine
- 
+
    ! 3 directions
    ! 9 transforms (periodicity, 4 DCT, 4 DST)
    ! Default values for ifirst, ofirst and ndismiss
@@ -75,17 +75,16 @@ program dtt_z
 
    call decomp_2d_testing_log()
 
-  
    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
    !! Define all combinations
    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
    do j = 1, 9
-       do k = 1, 9
-          do l =1, 9
-             DTT(:, j, k, l) = (/j-1, k-1, l-1/)
-          end do
-       end do
+      do k = 1, 9
+         do l = 1, 9
+            DTT(:, j, k, l) = (/j - 1, k - 1, l - 1/)
+         end do
+      end do
    end do
 
    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -97,9 +96,9 @@ program dtt_z
          do l = dttzi, dttzf
 
             ! Init the FFT engine
-            call dtt_engine%init(pencil = PHYSICAL_IN_Z, &
-                                 nx = nx, ny = ny, nz = nz, &
-                                 opt_DTT = DTT(:, j, k, l))
+            call dtt_engine%init(pencil=PHYSICAL_IN_Z, &
+                                 nx=nx, ny=ny, nz=nz, &
+                                 opt_DTT=DTT(:, j, k, l))
             call dtt_engine%use_it()
 
             ! Get the decomp_info objects
@@ -124,8 +123,8 @@ program dtt_z
                do jj = st2, en2
                   do ii = st1, en1
                      in_r(ii, jj, kk) = real(ii, mytype) / real(nx, mytype) &
-                                      * real(jj, mytype) / real(ny, mytype) &
-                                      * real(kk, mytype) / real(nz, mytype)
+                                        * real(jj, mytype) / real(ny, mytype) &
+                                        * real(kk, mytype) / real(nz, mytype)
                   end do
                end do
             end do
@@ -140,29 +139,29 @@ program dtt_z
             if (DTT(1, j, k, l) == 0) then
                in_r = in_r / real(nx, mytype)
             else if (DTT(1, j, k, l) == 1 .or. DTT(1, j, k, l) == 4) then
-               in_r = in_r / real(2*nx-2, mytype)
+               in_r = in_r / real(2 * nx - 2, mytype)
             else if (DTT(1, j, k, l) == 5) then
-               in_r = in_r / real(2*nx+2-2*dtt_engine%dtt(7), mytype)
+               in_r = in_r / real(2 * nx + 2 - 2 * dtt_engine%dtt(7), mytype)
             else
-               in_r = in_r / real(2*nx-2*dtt_engine%dtt(7), mytype)
+               in_r = in_r / real(2 * nx - 2 * dtt_engine%dtt(7), mytype)
             end if
             if (DTT(2, j, k, l) == 0) then
                in_r = in_r / real(ny, mytype)
             else if (DTT(2, j, k, l) == 1 .or. DTT(2, j, k, l) == 4) then
-               in_r = in_r / real(2*ny-2, mytype)
+               in_r = in_r / real(2 * ny - 2, mytype)
             else if (DTT(2, j, k, l) == 5) then
-               in_r = in_r / real(2*ny+2-2*dtt_engine%dtt(8), mytype)
+               in_r = in_r / real(2 * ny + 2 - 2 * dtt_engine%dtt(8), mytype)
             else
-               in_r = in_r / real(2*ny-2*dtt_engine%dtt(8), mytype)
+               in_r = in_r / real(2 * ny - 2 * dtt_engine%dtt(8), mytype)
             end if
             if (DTT(3, j, k, l) == 0) then
                in_r = in_r / real(nz, mytype)
             else if (DTT(3, j, k, l) == 1 .or. DTT(3, j, k, l) == 4) then
-               in_r = in_r / real(2*nz-2, mytype)
+               in_r = in_r / real(2 * nz - 2, mytype)
             else if (DTT(3, j, k, l) == 5) then
-               in_r = in_r / real(2*nz+2-2*dtt_engine%dtt(9), mytype)
+               in_r = in_r / real(2 * nz + 2 - 2 * dtt_engine%dtt(9), mytype)
             else
-               in_r = in_r / real(2*nz-2*dtt_engine%dtt(9), mytype)
+               in_r = in_r / real(2 * nz - 2 * dtt_engine%dtt(9), mytype)
             end if
 
             ! Check the error
@@ -183,20 +182,20 @@ program dtt_z
                st2 = dtt_engine%dtt(5)
             else
                st2 = ph%zst(2)
-            endif
+            end if
             if (ph%zen(2) == ny) then
                en2 = ph%zen(2) - dtt_engine%dtt(8) + dtt_engine%dtt(5) - 1
             else
                en2 = ph%zen(2)
-            endif
+            end if
             st3 = dtt_engine%dtt(6)
             en3 = ph%zen(3) - dtt_engine%dtt(9) + dtt_engine%dtt(6) - 1
             do kk = st3, en3
                do jj = st2, en2
                   do ii = st1, en1
                      error = abs(in_r(ii, jj, kk) - real(ii, mytype) / real(nx, mytype) &
-                                                  * real(jj, mytype) / real(ny, mytype) &
-                                                  * real(kk, mytype) / real(nz, mytype))
+                                 * real(jj, mytype) / real(ny, mytype) &
+                                 * real(kk, mytype) / real(nz, mytype))
                      errl2 = errl2 + error**2
                      errli = max(errli, error)
                   end do
@@ -205,10 +204,10 @@ program dtt_z
             call MPI_ALLREDUCE(MPI_IN_PLACE, errl2, 1, real_type, MPI_SUM, MPI_COMM_WORLD, ierror)
             errl2 = errl2 / (real(nx, mytype) * real(ny, mytype) * real(nz, mytype))
             call MPI_ALLREDUCE(MPI_IN_PLACE, errli, 1, real_type, MPI_MAX, MPI_COMM_WORLD, ierror)
-            if (nrank.eq.0) write (*, *) 'L2 and Linf error: ', sqrt(errl2), errli
+            if (nrank == 0) write (*, *) 'L2 and Linf error: ', sqrt(errl2), errli
 
-            if (errli > 100*epsilon(errli)) then
-               if (nrank.eq.0) then
+            if (errli > 100 * epsilon(errli)) then
+               if (nrank == 0) then
                   write (*, *) "check case ", j, k, l, DTT(:, j, k, l)
                   write (*, *) dtt_engine%dtt
                   write (*, *) real(in_r(:, st2, st3) * nx * ny * nz, kind=real32)
@@ -217,8 +216,8 @@ program dtt_z
             end if
 
             ! Free memory and objects
-            if (allocated(out_r)) deallocate(out_r)
-            if (allocated(out_c)) deallocate(out_c)
+            if (allocated(out_r)) deallocate (out_r)
+            if (allocated(out_c)) deallocate (out_c)
             deallocate (in_r)
             nullify (sp)
             nullify (ph)

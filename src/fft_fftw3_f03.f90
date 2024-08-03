@@ -648,7 +648,7 @@ contains
          end if
       end if
       do i = 1, 6
-         if (.not.c_associated(engine%dtt_plan(i))) call decomp_2d_abort(__FILE__, __LINE__, i, "DTT plan creation failed")
+         if (.not. c_associated(engine%dtt_plan(i))) call decomp_2d_abort(__FILE__, __LINE__, i, "DTT plan creation failed")
       end do
 
    end subroutine decomp_2d_fft_engine_dtt_init

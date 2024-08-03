@@ -931,7 +931,7 @@ contains
 
       ! Update displacement for the next write operation
       io%disp = io%disp + product(int(sizes, kind=MPI_OFFSET_KIND)) &
-             * int(type_bytes, kind=MPI_OFFSET_KIND)
+                * int(type_bytes, kind=MPI_OFFSET_KIND)
 
    end subroutine read_or_write
 

@@ -18,7 +18,8 @@ module decomp_2d_fft
    private        ! Make everything private unless declared public
 
    ! engine-specific global variables
-   integer, save :: plan_type = FFTW_MEASURE
+   integer, parameter :: plan_type = FFTW_MEASURE
+   integer, parameter :: plan_type_dtt = FFTW_MEASURE + FFTW_UNALIGNED
 
    ! FFTW plans
    ! j=1,2,3 corresponds to the 1D FFTs in X,Y,Z direction, respectively
@@ -1568,9 +1569,9 @@ contains
       howmany(1)%is = decomp%xsz(1)
       howmany(1)%os = decomp%xsz(1)
 #ifdef DOUBLE_PREC
-      plan = fftw_plan_guru_split_dft(1, dims(1), 1, howmany(1), a1, a2, a3, a4, plan_type)
+      plan = fftw_plan_guru_split_dft(1, dims(1), 1, howmany(1), a1, a2, a3, a4, plan_type_dtt)
 #else
-      plan = fftwf_plan_guru_split_dft(1, dims(1), 1, howmany(1), a1, a2, a3, a4, plan_type)
+      plan = fftwf_plan_guru_split_dft(1, dims(1), 1, howmany(1), a1, a2, a3, a4, plan_type_dtt)
 #endif
 
       call fftw_free(a1_p)
@@ -1630,9 +1631,9 @@ contains
       howmany(1)%is = 1
       howmany(1)%os = 1
 #ifdef DOUBLE_PREC
-      plan = fftw_plan_guru_split_dft(1, dims(1), 1, howmany(1), a1, a2, a3, a4, plan_type)
+      plan = fftw_plan_guru_split_dft(1, dims(1), 1, howmany(1), a1, a2, a3, a4, plan_type_dtt)
 #else
-      plan = fftwf_plan_guru_split_dft(1, dims(1), 1, howmany(1), a1, a2, a3, a4, plan_type)
+      plan = fftwf_plan_guru_split_dft(1, dims(1), 1, howmany(1), a1, a2, a3, a4, plan_type_dtt)
 #endif
 
       call fftw_free(a1_p)
@@ -1692,9 +1693,9 @@ contains
       howmany(1)%is = 1
       howmany(1)%os = 1
 #ifdef DOUBLE_PREC
-      plan = fftw_plan_guru_split_dft(1, dims(1), 1, howmany(1), a1, a2, a3, a4, plan_type)
+      plan = fftw_plan_guru_split_dft(1, dims(1), 1, howmany(1), a1, a2, a3, a4, plan_type_dtt)
 #else
-      plan = fftwf_plan_guru_split_dft(1, dims(1), 1, howmany(1), a1, a2, a3, a4, plan_type)
+      plan = fftwf_plan_guru_split_dft(1, dims(1), 1, howmany(1), a1, a2, a3, a4, plan_type_dtt)
 #endif
 
       call fftw_free(a1_p)
@@ -1751,9 +1752,9 @@ contains
       howmany(1)%is = decomp%xsz(1)
       howmany(1)%os = decomp2%xsz(1)
 #ifdef DOUBLE_PREC
-      plan = fftw_plan_guru_split_dft_c2r(1, dims(1), 1, howmany(1), a1, a2, a3, plan_type)
+      plan = fftw_plan_guru_split_dft_c2r(1, dims(1), 1, howmany(1), a1, a2, a3, plan_type_dtt)
 #else
-      plan = fftwf_plan_guru_split_dft_c2r(1, dims(1), 1, howmany(1), a1, a2, a3, plan_type)
+      plan = fftwf_plan_guru_split_dft_c2r(1, dims(1), 1, howmany(1), a1, a2, a3, plan_type_dtt)
 #endif
 
       call fftw_free(a1_p)
@@ -1808,9 +1809,9 @@ contains
       howmany(1)%is = 1
       howmany(1)%os = 1
 #ifdef DOUBLE_PREC
-      plan = fftw_plan_guru_split_dft_c2r(1, dims(1), 1, howmany(1), a1, a2, a3, plan_type)
+      plan = fftw_plan_guru_split_dft_c2r(1, dims(1), 1, howmany(1), a1, a2, a3, plan_type_dtt)
 #else
-      plan = fftwf_plan_guru_split_dft_c2r(1, dims(1), 1, howmany(1), a1, a2, a3, plan_type)
+      plan = fftwf_plan_guru_split_dft_c2r(1, dims(1), 1, howmany(1), a1, a2, a3, plan_type_dtt)
 #endif
 
       call fftw_free(a1_p)
@@ -1865,9 +1866,9 @@ contains
       howmany(1)%is = 1
       howmany(1)%os = 1
 #ifdef DOUBLE_PREC
-      plan = fftw_plan_guru_split_dft_c2r(1, dims(1), 1, howmany(1), a1, a2, a3, plan_type)
+      plan = fftw_plan_guru_split_dft_c2r(1, dims(1), 1, howmany(1), a1, a2, a3, plan_type_dtt)
 #else
-      plan = fftwf_plan_guru_split_dft_c2r(1, dims(1), 1, howmany(1), a1, a2, a3, plan_type)
+      plan = fftwf_plan_guru_split_dft_c2r(1, dims(1), 1, howmany(1), a1, a2, a3, plan_type_dtt)
 #endif
 
       call fftw_free(a1_p)
@@ -1922,9 +1923,9 @@ contains
       howmany(1)%is = decomp%xsz(1)
       howmany(1)%os = decomp2%xsz(1)
 #ifdef DOUBLE_PREC
-      plan = fftw_plan_guru_split_dft_r2c(1, dims(1), 1, howmany(1), a1, a2, a3, plan_type)
+      plan = fftw_plan_guru_split_dft_r2c(1, dims(1), 1, howmany(1), a1, a2, a3, plan_type_dtt)
 #else
-      plan = fftwf_plan_guru_split_dft_r2c(1, dims(1), 1, howmany(1), a1, a2, a3, plan_type)
+      plan = fftwf_plan_guru_split_dft_r2c(1, dims(1), 1, howmany(1), a1, a2, a3, plan_type_dtt)
 #endif
 
       call fftw_free(a1_p)
@@ -1979,9 +1980,9 @@ contains
       howmany(1)%is = 1
       howmany(1)%os = 1
 #ifdef DOUBLE_PREC
-      plan = fftw_plan_guru_split_dft_r2c(1, dims(1), 1, howmany(1), a1, a2, a3, plan_type)
+      plan = fftw_plan_guru_split_dft_r2c(1, dims(1), 1, howmany(1), a1, a2, a3, plan_type_dtt)
 #else
-      plan = fftwf_plan_guru_split_dft_r2c(1, dims(1), 1, howmany(1), a1, a2, a3, plan_type)
+      plan = fftwf_plan_guru_split_dft_r2c(1, dims(1), 1, howmany(1), a1, a2, a3, plan_type_dtt)
 #endif
 
       call fftw_free(a1_p)
@@ -2036,9 +2037,9 @@ contains
       howmany(1)%is = 1
       howmany(1)%os = 1
 #ifdef DOUBLE_PREC
-      plan = fftw_plan_guru_split_dft_r2c(1, dims(1), 1, howmany(1), a1, a2, a3, plan_type)
+      plan = fftw_plan_guru_split_dft_r2c(1, dims(1), 1, howmany(1), a1, a2, a3, plan_type_dtt)
 #else
-      plan = fftwf_plan_guru_split_dft_r2c(1, dims(1), 1, howmany(1), a1, a2, a3, plan_type)
+      plan = fftwf_plan_guru_split_dft_r2c(1, dims(1), 1, howmany(1), a1, a2, a3, plan_type_dtt)
 #endif
 
       call fftw_free(a1_p)
@@ -2088,7 +2089,7 @@ contains
 #endif
                                  a1, decomp%xsz(1), 1, decomp%xsz(1), &
                                  a2, decomp%xsz(1), 1, decomp%xsz(1), &
-                                 tmp(1), plan_type)
+                                 tmp(1), plan_type_dtt)
 
       call fftw_free(a1_p)
       call fftw_free(a2_p)
@@ -2135,7 +2136,7 @@ contains
 #endif
                                  a1, decomp%ysz(2), decomp%ysz(1), 1, &
                                  a2, decomp%ysz(2), decomp%ysz(1), 1, &
-                                 tmp(1), plan_type)
+                                 tmp(1), plan_type_dtt)
 
       call fftw_free(a1_p)
       call fftw_free(a2_p)
@@ -2182,7 +2183,7 @@ contains
 #endif
                                  a1, decomp%zsz(3), decomp%zsz(1) * decomp%zsz(2), 1, &
                                  a2, decomp%zsz(3), decomp%zsz(1) * decomp%zsz(2), 1, &
-                                 tmp(1), plan_type)
+                                 tmp(1), plan_type_dtt)
 
       call fftw_free(a1_p)
       call fftw_free(a2_p)

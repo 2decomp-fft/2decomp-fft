@@ -653,88 +653,88 @@ contains
    end subroutine decomp_2d_fft_engine_dtt_init
 
    ! Set default values in the DTT config
-   subroutine dtt_assign_default(dtt)
+   subroutine dtt_assign_default(arg_dtt)
 
       implicit none
 
-      integer, intent(inout) :: dtt(15)
+      integer, intent(inout) :: arg_dtt(15)
 
       integer :: k
 
       ! Generic values
       ! ifirst = 1, use the array from the beginning
-      dtt(4:6) = 1
+      arg_dtt(4:6) = 1
       ! ndismiss = 1, skip one point
-      dtt(7:9) = 1
+      arg_dtt(7:9) = 1
 
       ! Specific cases
       do k = 1, 3
-         if (dtt(k) == 0) dtt(k + 6) = 0 ! Periodic, ndismiss = 0
-         if (dtt(k) == 1) dtt(k + 6) = 0 ! DCT1, ndismiss = 0
-         if (dtt(k) == 5) dtt(k + 3) = 2 ! DST1, ifirst = 2
-         if (dtt(k) == 5) dtt(k + 6) = 2 ! DST1, ndismiss = 2
-         if (dtt(k) == 7) dtt(k + 3) = 2 ! DST3, ifirst = 2
+         if (arg_dtt(k) == 0) arg_dtt(k + 6) = 0 ! Periodic, ndismiss = 0
+         if (arg_dtt(k) == 1) arg_dtt(k + 6) = 0 ! DCT1, ndismiss = 0
+         if (arg_dtt(k) == 5) arg_dtt(k + 3) = 2 ! DST1, ifirst = 2
+         if (arg_dtt(k) == 5) arg_dtt(k + 6) = 2 ! DST1, ndismiss = 2
+         if (arg_dtt(k) == 7) arg_dtt(k + 3) = 2 ! DST3, ifirst = 2
       end do
 
       ! ofirst = ifirst
-      dtt(10:12) = dtt(4:6)
+      arg_dtt(10:12) = arg_dtt(4:6)
 
    end subroutine dtt_assign_default
 
    ! Set the backward transforms in the DTT config
-   subroutine dtt_invert(dtt)
+   subroutine dtt_invert(arg_dtt)
 
       implicit none
 
-      integer, intent(inout) :: dtt(15)
+      integer, intent(inout) :: arg_dtt(15)
 
       integer :: k
 
       ! Default : inv(DTT) = DTT
-      dtt(13:15) = dtt(1:3)
+      arg_dtt(13:15) = arg_dtt(1:3)
 
       ! Except for DCT2, DCT3, DST2, DST3
       do k = 1, 3
-         if (dtt(k) == 0) dtt(12 + k) = 9
-         if (dtt(k) == 2) dtt(12 + k) = 3 ! inv(DCT2) = DCT3
-         if (dtt(k) == 3) dtt(12 + k) = 2 ! inv(DCT3) = DCT2
-         if (dtt(k) == 6) dtt(12 + k) = 7 ! inv(DST2) = DST3
-         if (dtt(k) == 7) dtt(12 + k) = 6 ! inv(DST3) = DST2
+         if (arg_dtt(k) == 0) arg_dtt(12 + k) = 9
+         if (arg_dtt(k) == 2) arg_dtt(12 + k) = 3 ! inv(DCT2) = DCT3
+         if (arg_dtt(k) == 3) arg_dtt(12 + k) = 2 ! inv(DCT3) = DCT2
+         if (arg_dtt(k) == 6) arg_dtt(12 + k) = 7 ! inv(DST2) = DST3
+         if (arg_dtt(k) == 7) arg_dtt(12 + k) = 6 ! inv(DST3) = DST2
       end do
 
    end subroutine dtt_invert
 
    ! Adapt the DTT type to FFTW
-   subroutine dtt_for_fftw(dtt)
+   subroutine dtt_for_fftw(arg_dtt)
 
       implicit none
 
-      integer, intent(inout) :: dtt(:)
+      integer, intent(inout) :: arg_dtt(:)
 
       integer :: k
 
-      do k = 1, size(dtt)
-         select case (dtt(k))
+      do k = 1, size(arg_dtt)
+         select case (arg_dtt(k))
          case (0)
-            dtt(k) = FFTW_FORWARD
+            arg_dtt(k) = FFTW_FORWARD
          case (1)
-            dtt(k) = FFTW_REDFT00
+            arg_dtt(k) = FFTW_REDFT00
          case (2)
-            dtt(k) = FFTW_REDFT10
+            arg_dtt(k) = FFTW_REDFT10
          case (3)
-            dtt(k) = FFTW_REDFT01
+            arg_dtt(k) = FFTW_REDFT01
          case (4)
-            dtt(k) = FFTW_REDFT11
+            arg_dtt(k) = FFTW_REDFT11
          case (5)
-            dtt(k) = FFTW_RODFT00
+            arg_dtt(k) = FFTW_RODFT00
          case (6)
-            dtt(k) = FFTW_RODFT10
+            arg_dtt(k) = FFTW_RODFT10
          case (7)
-            dtt(k) = FFTW_RODFT01
+            arg_dtt(k) = FFTW_RODFT01
          case (8)
-            dtt(k) = FFTW_RODFT11
+            arg_dtt(k) = FFTW_RODFT11
          case (9)
-            dtt(k) = FFTW_BACKWARD
+            arg_dtt(k) = FFTW_BACKWARD
          end select
       end do
 

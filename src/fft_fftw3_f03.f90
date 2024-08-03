@@ -3462,7 +3462,7 @@ contains
       integer, intent(in) :: ii, ij, ik, isz, oi, oj, ok, osz
 
       ! Local variables
-      real(mytype), dimension(:), pointer :: inr2, ini2, outr2, outi2
+      real(mytype), dimension(:), contiguous, pointer :: inr2, ini2, outr2, outi2
 
       ! Create 1D pointers starting at the ifirst / ofirst location
       call c_f_pointer(c_loc(inr(ii, ij, ik)), inr2, (/isz/))
@@ -3500,7 +3500,7 @@ contains
       integer, intent(in) :: ii, ij, ik, isz, oi, oj, ok, osz
 
       ! Local variables
-      real(mytype), dimension(:), pointer :: inr2, outr2
+      real(mytype), dimension(:), contiguous, pointer :: inr2, outr2
 
       ! Create 1D pointers starting at the ifirst / ofirst location
       call c_f_pointer(c_loc(inr(ii, ij, ik)), inr2, (/isz/))
@@ -3535,7 +3535,7 @@ contains
       integer, intent(in) :: ii, ij, ik, isz, oi, oj, ok, osz
 
       ! Local variables
-      real(mytype), dimension(:), pointer :: inr2, ini2, outr2
+      real(mytype), dimension(:), contiguous, pointer :: inr2, ini2, outr2
 
       ! Create 1D pointers starting at the ifirst / ofirst location
       call c_f_pointer(c_loc(inr(ii, ij, ik)), inr2, (/isz/))
@@ -3572,7 +3572,7 @@ contains
       integer, intent(in) :: ii, ij, ik, isz, oi, oj, ok, osz
 
       ! Local variables
-      real(mytype), dimension(:), pointer :: inr2, outr2, outi2
+      real(mytype), dimension(:), contiguous, pointer :: inr2, outr2, outi2
 
       ! Create 1D pointers starting at the ifirst / ofirst location
       call c_f_pointer(c_loc(inr(ii, ij, ik)), inr2, (/isz/))

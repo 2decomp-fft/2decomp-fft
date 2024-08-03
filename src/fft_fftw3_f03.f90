@@ -1551,7 +1551,7 @@ contains
       type(fftwf_iodim) :: dims(1), howmany(1)
 #endif
 
-      sz = product(decomp%xsz) - ndismiss
+      sz = product(decomp%xsz)
       a1_p = fftw_alloc_real(sz)
       a2_p = fftw_alloc_real(sz)
       a3_p = fftw_alloc_real(sz)
@@ -1613,7 +1613,7 @@ contains
       type(fftwf_iodim) :: dims(1), howmany(1)
 #endif
 
-      sz = decomp%ysz(1) * (decomp%ysz(2) - ndismiss)
+      sz = decomp%ysz(1) * decomp%ysz(2)
       a1_p = fftw_alloc_real(sz)
       a2_p = fftw_alloc_real(sz)
       a3_p = fftw_alloc_real(sz)

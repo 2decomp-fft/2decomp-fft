@@ -579,8 +579,8 @@ contains
       if (engine%format == PHYSICAL_IN_X) then
          ! in x
          if (engine%dtt(1) == FFTW_FORWARD) then
-            call r2rr_1m_x_plan(engine%dtt_plan(1), engine%ph, engine%sp, engine%dtt(7))
-            call rr2r_1m_x_plan(engine%dtt_plan(4), engine%sp, engine%ph, engine%dtt(7))
+            call r2rr_1m_x_plan(engine%dtt_plan(1), engine%ph, engine%sp)
+            call rr2r_1m_x_plan(engine%dtt_plan(4), engine%sp, engine%ph)
          else
             call r2r_1m_x_plan(engine%dtt_plan(1), engine%ph, engine%dtt(1), engine%dtt(7))
             call r2r_1m_x_plan(engine%dtt_plan(4), engine%ph, engine%dtt(13), engine%dtt(7))
@@ -588,11 +588,11 @@ contains
          ! in y
          if (engine%dtt(2) == FFTW_FORWARD) then
             if (engine%dtt(1) == FFTW_FORWARD) then
-               call rr2rr_1m_y_plan(engine%dtt_plan(2), engine%dtt_decomp_xy, engine%dtt(8))
-               call rr2rr_1m_y_plan(engine%dtt_plan(5), engine%dtt_decomp_xy, engine%dtt(8)) ! Duplicated plan, this can be improved
+               call rr2rr_1m_y_plan(engine%dtt_plan(2), engine%dtt_decomp_xy)
+               call rr2rr_1m_y_plan(engine%dtt_plan(5), engine%dtt_decomp_xy) ! Duplicated plan, this can be improved
             else
-               call r2rr_1m_y_plan(engine%dtt_plan(2), engine%dtt_decomp_xy, engine%dtt_decomp_yz, engine%dtt(8))
-               call rr2r_1m_y_plan(engine%dtt_plan(5), engine%dtt_decomp_yz, engine%dtt_decomp_xy, engine%dtt(8))
+               call r2rr_1m_y_plan(engine%dtt_plan(2), engine%dtt_decomp_xy, engine%dtt_decomp_yz)
+               call rr2r_1m_y_plan(engine%dtt_plan(5), engine%dtt_decomp_yz, engine%dtt_decomp_xy)
             end if
          else
             call r2r_1m_y_plan(engine%dtt_plan(2), engine%dtt_decomp_xy, engine%dtt(2), engine%dtt(8))
@@ -601,11 +601,11 @@ contains
          ! in z
          if (engine%dtt(3) == FFTW_FORWARD) then
             if (engine%dtt(1) == FFTW_FORWARD .or. engine%dtt(2) == FFTW_FORWARD) then
-               call rr2rr_1m_z_plan(engine%dtt_plan(3), engine%dtt_decomp_sp, engine%dtt(9))
-               call rr2rr_1m_z_plan(engine%dtt_plan(6), engine%dtt_decomp_sp, engine%dtt(9)) ! Duplicated plan, this can be improved
+               call rr2rr_1m_z_plan(engine%dtt_plan(3), engine%dtt_decomp_sp)
+               call rr2rr_1m_z_plan(engine%dtt_plan(6), engine%dtt_decomp_sp) ! Duplicated plan, this can be improved
             else
-               call r2rr_1m_z_plan(engine%dtt_plan(3), engine%dtt_decomp_yz, engine%dtt_decomp_sp, engine%dtt(9))
-               call rr2r_1m_z_plan(engine%dtt_plan(6), engine%dtt_decomp_sp, engine%dtt_decomp_yz, engine%dtt(9))
+               call r2rr_1m_z_plan(engine%dtt_plan(3), engine%dtt_decomp_yz, engine%dtt_decomp_sp)
+               call rr2r_1m_z_plan(engine%dtt_plan(6), engine%dtt_decomp_sp, engine%dtt_decomp_yz)
             end if
          else
             call r2r_1m_z_plan(engine%dtt_plan(3), engine%dtt_decomp_sp, engine%dtt(3), engine%dtt(9))
@@ -614,8 +614,8 @@ contains
       else
          ! in z
          if (engine%dtt(3) == FFTW_FORWARD) then
-            call r2rr_1m_z_plan(engine%dtt_plan(3), engine%ph, engine%sp, engine%dtt(9))
-            call rr2r_1m_z_plan(engine%dtt_plan(6), engine%sp, engine%ph, engine%dtt(9))
+            call r2rr_1m_z_plan(engine%dtt_plan(3), engine%ph, engine%sp)
+            call rr2r_1m_z_plan(engine%dtt_plan(6), engine%sp, engine%ph)
          else
             call r2r_1m_z_plan(engine%dtt_plan(3), engine%ph, engine%dtt(3), engine%dtt(9))
             call r2r_1m_z_plan(engine%dtt_plan(6), engine%ph, engine%dtt(15), engine%dtt(9))
@@ -623,11 +623,11 @@ contains
          ! in y
          if (engine%dtt(2) == FFTW_FORWARD) then
             if (engine%dtt(3) == FFTW_FORWARD) then
-               call rr2rr_1m_y_plan(engine%dtt_plan(2), engine%dtt_decomp_xy, engine%dtt(8))
-               call rr2rr_1m_y_plan(engine%dtt_plan(5), engine%dtt_decomp_xy, engine%dtt(8)) ! Duplicated plan, this can be improved
+               call rr2rr_1m_y_plan(engine%dtt_plan(2), engine%dtt_decomp_xy)
+               call rr2rr_1m_y_plan(engine%dtt_plan(5), engine%dtt_decomp_xy) ! Duplicated plan, this can be improved
             else
-               call r2rr_1m_y_plan(engine%dtt_plan(2), engine%dtt_decomp_yz, engine%dtt_decomp_xy, engine%dtt(8))
-               call rr2r_1m_y_plan(engine%dtt_plan(5), engine%dtt_decomp_xy, engine%dtt_decomp_yz, engine%dtt(8))
+               call r2rr_1m_y_plan(engine%dtt_plan(2), engine%dtt_decomp_yz, engine%dtt_decomp_xy)
+               call rr2r_1m_y_plan(engine%dtt_plan(5), engine%dtt_decomp_xy, engine%dtt_decomp_yz)
             end if
          else
             call r2r_1m_y_plan(engine%dtt_plan(2), engine%dtt_decomp_xy, engine%dtt(2), engine%dtt(8))
@@ -636,11 +636,11 @@ contains
          ! in x
          if (engine%dtt(1) == FFTW_FORWARD) then
             if (engine%dtt(2) == FFTW_FORWARD .or. engine%dtt(3) == FFTW_FORWARD) then
-               call rr2rr_1m_x_plan(engine%dtt_plan(1), engine%dtt_decomp_sp, engine%dtt(7))
-               call rr2rr_1m_x_plan(engine%dtt_plan(4), engine%dtt_decomp_sp, engine%dtt(7)) ! Duplicated plan, this can be improved
+               call rr2rr_1m_x_plan(engine%dtt_plan(1), engine%dtt_decomp_sp)
+               call rr2rr_1m_x_plan(engine%dtt_plan(4), engine%dtt_decomp_sp) ! Duplicated plan, this can be improved
             else
-               call r2rr_1m_x_plan(engine%dtt_plan(1), engine%dtt_decomp_xy, engine%dtt_decomp_sp, engine%dtt(7))
-               call rr2r_1m_x_plan(engine%dtt_plan(4), engine%dtt_decomp_sp, engine%dtt_decomp_xy, engine%dtt(7))
+               call r2rr_1m_x_plan(engine%dtt_plan(1), engine%dtt_decomp_xy, engine%dtt_decomp_sp)
+               call rr2r_1m_x_plan(engine%dtt_plan(4), engine%dtt_decomp_sp, engine%dtt_decomp_xy)
             end if
          else
             call r2r_1m_x_plan(engine%dtt_plan(1), engine%dtt_decomp_sp, engine%dtt(1), engine%dtt(7))
@@ -1524,13 +1524,12 @@ contains
    end subroutine c2r_1m_z_plan
 
    ! Return a FFTW3 plan for multiple 1D DTTs in X direction, with possibility to dismiss points
-   subroutine rr2rr_1m_x_plan(plan, decomp, ndismiss)
+   subroutine rr2rr_1m_x_plan(plan, decomp)
 
       implicit none
 
       type(C_PTR), intent(out) :: plan
       TYPE(DECOMP_INFO), intent(in) :: decomp
-      integer, intent(in) :: ndismiss  ! to dismiss n points from the signal
 
       ! Local variables
 #ifdef DOUBLE_PREC
@@ -1562,7 +1561,7 @@ contains
       call c_f_pointer(a3_p, a3, decomp%xsz)
       call c_f_pointer(a4_p, a4, decomp%xsz)
 
-      dims(1)%n = decomp%xsz(1) - ndismiss
+      dims(1)%n = decomp%xsz(1)
       dims(1)%is = 1
       dims(1)%os = 1
       howmany(1)%n = decomp%xsz(2) * decomp%xsz(3)
@@ -1586,13 +1585,12 @@ contains
    end subroutine rr2rr_1m_x_plan
 
    ! Return a FFTW3 plan for multiple 1D DTTs in Y direction, with possibility to dismiss points
-   subroutine rr2rr_1m_y_plan(plan, decomp, ndismiss)
+   subroutine rr2rr_1m_y_plan(plan, decomp)
 
       implicit none
 
       type(C_PTR), intent(out) :: plan
       TYPE(DECOMP_INFO), intent(in) :: decomp
-      integer, intent(in) :: ndismiss  ! to dismiss n points from the signal
 
       ! Local variables
 #ifdef DOUBLE_PREC
@@ -1624,7 +1622,7 @@ contains
       call c_f_pointer(a3_p, a3, (/decomp%ysz(1), decomp%ysz(2)/))
       call c_f_pointer(a4_p, a4, (/decomp%ysz(1), decomp%ysz(2)/))
 
-      dims(1)%n = decomp%ysz(2) - ndismiss
+      dims(1)%n = decomp%ysz(2)
       dims(1)%is = decomp%ysz(1)
       dims(1)%os = decomp%ysz(1)
       howmany(1)%n = decomp%ysz(1)
@@ -1648,13 +1646,12 @@ contains
    end subroutine rr2rr_1m_y_plan
 
    ! Return a FFTW3 plan for multiple 1D DTTs in Z direction, with possibility to dismiss points
-   subroutine rr2rr_1m_z_plan(plan, decomp, ndismiss)
+   subroutine rr2rr_1m_z_plan(plan, decomp)
 
       implicit none
 
       type(C_PTR), intent(out) :: plan
       TYPE(DECOMP_INFO), intent(in) :: decomp
-      integer, intent(in) :: ndismiss  ! to dismiss n points from the signal
 
       ! Local variables
 #ifdef DOUBLE_PREC
@@ -1686,7 +1683,7 @@ contains
       call c_f_pointer(a3_p, a3, decomp%zsz)
       call c_f_pointer(a4_p, a4, decomp%zsz)
 
-      dims(1)%n = decomp%zsz(3) - ndismiss
+      dims(1)%n = decomp%zsz(3)
       dims(1)%is = decomp%zsz(1) * decomp%zsz(2)
       dims(1)%os = decomp%zsz(1) * decomp%zsz(2)
       howmany(1)%n = decomp%zsz(1) * decomp%zsz(2)
@@ -1710,13 +1707,12 @@ contains
    end subroutine rr2rr_1m_z_plan
 
    ! Return a FFTW3 plan for multiple 1D DTTs in X direction, with possibility to dismiss points
-   subroutine rr2r_1m_x_plan(plan, decomp, decomp2, ndismiss)
+   subroutine rr2r_1m_x_plan(plan, decomp, decomp2)
 
       implicit none
 
       type(C_PTR), intent(out) :: plan
       TYPE(DECOMP_INFO), intent(in) :: decomp, decomp2
-      integer, intent(in) :: ndismiss  ! to dismiss n points from the signal
 
       ! Local variables
 #ifdef DOUBLE_PREC
@@ -1745,7 +1741,7 @@ contains
       call c_f_pointer(a2_p, a2, decomp%xsz)
       call c_f_pointer(a3_p, a3, decomp2%xsz)
 
-      dims(1)%n = decomp2%xsz(1) - ndismiss
+      dims(1)%n = decomp2%xsz(1)
       dims(1)%is = 1
       dims(1)%os = 1
       howmany(1)%n = decomp%xsz(2) * decomp%xsz(3)
@@ -1767,13 +1763,12 @@ contains
    end subroutine rr2r_1m_x_plan
 
    ! Return a FFTW3 plan for multiple 1D DTTs in Y direction, with possibility to dismiss points
-   subroutine rr2r_1m_y_plan(plan, decomp, decomp2, ndismiss)
+   subroutine rr2r_1m_y_plan(plan, decomp, decomp2)
 
       implicit none
 
       type(C_PTR), intent(out) :: plan
       TYPE(DECOMP_INFO), intent(in) :: decomp, decomp2
-      integer, intent(in) :: ndismiss  ! to dismiss n points from the signal
 
       ! Local variables
 #ifdef DOUBLE_PREC
@@ -1802,7 +1797,7 @@ contains
       call c_f_pointer(a2_p, a2, (/decomp%ysz(1), decomp%ysz(2)/))
       call c_f_pointer(a3_p, a3, (/decomp2%ysz(1), decomp2%ysz(2)/))
 
-      dims(1)%n = decomp2%ysz(2) - ndismiss
+      dims(1)%n = decomp2%ysz(2)
       dims(1)%is = decomp%ysz(1)
       dims(1)%os = decomp2%ysz(1)
       howmany(1)%n = decomp%ysz(1)
@@ -1824,13 +1819,12 @@ contains
    end subroutine rr2r_1m_y_plan
 
    ! Return a FFTW3 plan for multiple 1D DTTs in Z direction, with possibility to dismiss points
-   subroutine rr2r_1m_z_plan(plan, decomp, decomp2, ndismiss)
+   subroutine rr2r_1m_z_plan(plan, decomp, decomp2)
 
       implicit none
 
       type(C_PTR), intent(out) :: plan
       TYPE(DECOMP_INFO), intent(in) :: decomp, decomp2
-      integer, intent(in) :: ndismiss  ! to dismiss n points from the signal
 
       ! Local variables
 #ifdef DOUBLE_PREC
@@ -1859,7 +1853,7 @@ contains
       call c_f_pointer(a2_p, a2, decomp%zsz)
       call c_f_pointer(a3_p, a3, decomp2%zsz)
 
-      dims(1)%n = decomp2%zsz(3) - ndismiss
+      dims(1)%n = decomp2%zsz(3)
       dims(1)%is = decomp%zsz(1) * decomp%zsz(2)
       dims(1)%os = decomp2%zsz(1) * decomp2%zsz(2)
       howmany(1)%n = decomp%zsz(1) * decomp%zsz(2)
@@ -1881,13 +1875,12 @@ contains
    end subroutine rr2r_1m_z_plan
 
    ! Return a FFTW3 plan for multiple 1D DTTs in X direction, with possibility to dismiss points
-   subroutine r2rr_1m_x_plan(plan, decomp, decomp2, ndismiss)
+   subroutine r2rr_1m_x_plan(plan, decomp, decomp2)
 
       implicit none
 
       type(C_PTR), intent(out) :: plan
       TYPE(DECOMP_INFO), intent(in) :: decomp, decomp2
-      integer, intent(in) :: ndismiss  ! to dismiss n points from the signal
 
       ! Local variables
 #ifdef DOUBLE_PREC
@@ -1916,7 +1909,7 @@ contains
       call c_f_pointer(a2_p, a2, decomp2%xsz)
       call c_f_pointer(a3_p, a3, decomp2%xsz)
 
-      dims(1)%n = decomp%xsz(1) - ndismiss
+      dims(1)%n = decomp%xsz(1)
       dims(1)%is = 1
       dims(1)%os = 1
       howmany(1)%n = decomp%xsz(2) * decomp%xsz(3)
@@ -1938,13 +1931,12 @@ contains
    end subroutine r2rr_1m_x_plan
 
    ! Return a FFTW3 plan for multiple 1D DTTs in Y direction, with possibility to dismiss points
-   subroutine r2rr_1m_y_plan(plan, decomp, decomp2, ndismiss)
+   subroutine r2rr_1m_y_plan(plan, decomp, decomp2)
 
       implicit none
 
       type(C_PTR), intent(out) :: plan
       TYPE(DECOMP_INFO), intent(in) :: decomp, decomp2
-      integer, intent(in) :: ndismiss  ! to dismiss n points from the signal
 
       ! Local variables
 #ifdef DOUBLE_PREC
@@ -1973,7 +1965,7 @@ contains
       call c_f_pointer(a2_p, a2, (/decomp2%ysz(1), decomp2%ysz(2)/))
       call c_f_pointer(a3_p, a3, (/decomp2%ysz(1), decomp2%ysz(2)/))
 
-      dims(1)%n = decomp%ysz(2) - ndismiss
+      dims(1)%n = decomp%ysz(2)
       dims(1)%is = decomp%ysz(1)
       dims(1)%os = decomp2%ysz(1)
       howmany(1)%n = decomp%ysz(1)
@@ -1995,13 +1987,12 @@ contains
    end subroutine r2rr_1m_y_plan
 
    ! Return a FFTW3 plan for multiple 1D DTTs in Z direction, with possibility to dismiss points
-   subroutine r2rr_1m_z_plan(plan, decomp, decomp2, ndismiss)
+   subroutine r2rr_1m_z_plan(plan, decomp, decomp2)
 
       implicit none
 
       type(C_PTR), intent(out) :: plan
       TYPE(DECOMP_INFO), intent(in) :: decomp, decomp2
-      integer, intent(in) :: ndismiss  ! to dismiss n points from the signal
 
       ! Local variables
 #ifdef DOUBLE_PREC
@@ -2030,7 +2021,7 @@ contains
       call c_f_pointer(a2_p, a2, decomp2%zsz)
       call c_f_pointer(a3_p, a3, decomp2%zsz)
 
-      dims(1)%n = decomp%zsz(3) - ndismiss
+      dims(1)%n = decomp%zsz(3)
       dims(1)%is = decomp%zsz(1) * decomp%zsz(2)
       dims(1)%os = decomp2%zsz(1) * decomp2%zsz(2)
       howmany(1)%n = decomp%zsz(1) * decomp%zsz(2)

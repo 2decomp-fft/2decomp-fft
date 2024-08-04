@@ -2409,10 +2409,6 @@ contains
       real(mytype), dimension(:, :, :), contiguous, target, intent(out) :: outr, outi
       integer, intent(in) :: isign
 
-      ! Local variables
-      type(c_ptr) :: plan
-      integer :: ifirst, ofirst
-
       ! Copy and exit if needed
       if (skip_x_c2c) then
          outr = inr
@@ -2420,26 +2416,15 @@ contains
          return
       end if
 
-      ! Get the DTT config
-      if (isign == DECOMP_2D_FFT_FORWARD) then
-         plan = dtt_plan(1)
-         ifirst = dtt(4)
-         ofirst = dtt(10)
-      else
-         plan = dtt_plan(4)
-         ifirst = dtt(10)
-         ofirst = dtt(4)
-      end if
-
       ! Perform the DFT
       if (isign == DECOMP_2D_FFT_FORWARD) then
-         call wrapper_rr2rr(plan, &
-                            inr, ini, ifirst, 1, 1, size(inr) - ifirst + 1, &
-                            outr, outi, ofirst, 1, 1, size(outr) - ofirst + 1)
+         call wrapper_rr2rr(dtt_plan(1), &
+                            inr, ini, 1, 1, 1, size(inr), &
+                            outr, outi, 1, 1, 1, size(outr))
       else
-         call wrapper_rr2rr(plan, &
-                            ini, inr, ifirst, 1, 1, size(inr) - ifirst + 1, &
-                            outi, outr, ofirst, 1, 1, size(outr) - ofirst + 1)
+         call wrapper_rr2rr(dtt_plan(4), &
+                            ini, inr, 1, 1, 1, size(inr), &
+                            outi, outr, 1, 1, 1, size(outr))
       end if
 
    end subroutine rr2rr_1m_x
@@ -2453,9 +2438,8 @@ contains
       real(mytype), dimension(:, :, :), contiguous, target, intent(out) :: outr, outi
       integer, intent(in) :: isign
 
-      ! Local variables
-      integer :: k, ifirst, ofirst
-      type(c_ptr) :: plan
+      ! Local variable
+      integer :: k
 
       ! Copy and exit if needed
       if (skip_y_c2c) then
@@ -2464,29 +2448,18 @@ contains
          return
       end if
 
-      ! Get the DTT config
-      if (isign == DECOMP_2D_FFT_FORWARD) then
-         plan = dtt_plan(2)
-         ifirst = dtt(5)
-         ofirst = dtt(11)
-      else
-         plan = dtt_plan(5)
-         ifirst = dtt(11)
-         ofirst = dtt(5)
-      end if
-
       ! Perform the DFT
       if (isign == DECOMP_2D_FFT_FORWARD) then
          do k = 1, size(inr, 3)
-            call wrapper_rr2rr(plan, &
-                               inr, ini, 1, ifirst, k, size(inr, 1) * (size(inr, 2) - ifirst + 1), &
-                               outr, outi, 1, ofirst, k, size(outr, 1) * (size(outr, 2) - ofirst + 1))
+            call wrapper_rr2rr(dtt_plan(2), &
+                               inr, ini, 1, 1, k, size(inr, 1) * size(inr, 2), &
+                               outr, outi, 1, 1, k, size(outr, 1) * size(outr, 2))
          end do
       else
          do k = 1, size(inr, 3)
-            call wrapper_rr2rr(plan, &
-                               ini, inr, 1, ifirst, k, size(inr, 1) * (size(inr, 2) - ifirst + 1), &
-                               outi, outr, 1, ofirst, k, size(outr, 1) * (size(outr, 2) - ofirst + 1))
+            call wrapper_rr2rr(dtt_plan(5), &
+                               ini, inr, 1, 1, k, size(inr, 1) * size(inr, 2), &
+                               outi, outr, 1, 1, k, size(outr, 1) * size(outr, 2))
          end do
       end if
 
@@ -2501,10 +2474,6 @@ contains
       real(mytype), dimension(:, :, :), contiguous, target, intent(out) :: outr, outi
       integer, intent(in) :: isign
 
-      ! Local variables
-      type(c_ptr) :: plan
-      integer :: ifirst, ofirst
-
       ! Copy and exit if needed
       if (skip_z_c2c) then
          outr = inr
@@ -2512,26 +2481,15 @@ contains
          return
       end if
 
-      ! Get the DTT config
-      if (isign == DECOMP_2D_FFT_FORWARD) then
-         plan = dtt_plan(3)
-         ifirst = dtt(6)
-         ofirst = dtt(12)
-      else
-         plan = dtt_plan(6)
-         ifirst = dtt(12)
-         ofirst = dtt(6)
-      end if
-
       ! Perform the DFT
       if (isign == DECOMP_2D_FFT_FORWARD) then
-         call wrapper_rr2rr(plan, &
-                            inr, ini, 1, 1, ifirst, size(inr, 1) * size(inr, 2) * (size(inr, 3) - ifirst + 1), &
-                            outr, outi, 1, 1, ofirst, size(outr, 1) * size(outr, 2) * (size(outr, 3) - ofirst + 1))
+         call wrapper_rr2rr(dtt_plan(3), &
+                            inr, ini, 1, 1, 1, size(inr), &
+                            outr, outi, 1, 1, 1, size(outr))
       else
-         call wrapper_rr2rr(plan, &
-                            ini, inr, 1, 1, ifirst, size(inr, 1) * size(inr, 2) * (size(inr, 3) - ifirst + 1), &
-                            outi, outr, 1, 1, ofirst, size(outr, 1) * size(outr, 2) * (size(outr, 3) - ofirst + 1))
+         call wrapper_rr2rr(dtt_plan(6), &
+                            ini, inr, 1, 1, 1, size(inr), &
+                            outi, outr, 1, 1, 1, size(outr))
       end if
 
    end subroutine rr2rr_1m_z
@@ -2659,8 +2617,8 @@ contains
 
       ! Perform the DFT
       call wrapper_rr2r(dtt_plan(4), &
-                        inr, ini, dtt(10), 1, 1, size(inr) - dtt(10) + 1, &
-                        outr, dtt(4), 1, 1, size(outr) - dtt(4) + 1)
+                        inr, ini, 1, 1, 1, size(inr), &
+                        outr, 1, 1, 1, size(outr))
 
    end subroutine rr2r_1m_x
 
@@ -2677,8 +2635,8 @@ contains
       ! Perform the DFT
       do k = 1, size(inr, 3)
          call wrapper_rr2r(dtt_plan(5), &
-                           inr, ini, 1, dtt(11), k, size(inr, 1) * (size(inr, 2) - dtt(11) + 1), &
-                           outr, 1, dtt(5), k, size(outr, 1) * (size(outr, 2) - dtt(5) + 1))
+                           inr, ini, 1, 1, k, size(inr, 1) * size(inr, 2), &
+                           outr, 1, 1, k, size(outr, 1) * size(outr, 2))
       end do
 
    end subroutine rr2r_1m_y
@@ -2693,8 +2651,8 @@ contains
 
       ! Perform the DFT
       call wrapper_rr2r(dtt_plan(6), &
-                        inr, ini, 1, 1, dtt(12), size(inr, 1) * size(inr, 2) * (size(inr, 3) - dtt(12) + 1), &
-                        outr, 1, 1, dtt(6), size(outr, 1) * size(outr, 2) * (size(outr, 3) - dtt(6) + 1))
+                        inr, ini, 1, 1, 1, size(inr), &
+                        outr, 1, 1, 1, size(outr))
 
    end subroutine rr2r_1m_z
 
@@ -2708,8 +2666,8 @@ contains
 
       ! Perform the DFT
       call wrapper_r2rr(dtt_plan(1), &
-                        inr, dtt(4), 1, 1, size(inr) - dtt(4) + 1, &
-                        outr, outi, dtt(10), 1, 1, size(outr) - dtt(10) + 1)
+                        inr, 1, 1, 1, size(inr), &
+                        outr, outi, 1, 1, 1, size(outr))
 
    end subroutine r2rr_1m_x
 
@@ -2726,8 +2684,8 @@ contains
       ! Perform the DFT
       do k = 1, size(inr, 3)
          call wrapper_r2rr(dtt_plan(2), &
-                           inr, 1, dtt(5), k, size(inr, 1) * (size(inr, 2) - dtt(5) + 1), &
-                           outr, outi, 1, dtt(11), k, size(outr, 1) * (size(outr, 2) - dtt(11) + 1))
+                           inr, 1, 1, k, size(inr, 1) * size(inr, 2), &
+                           outr, outi, 1, 1, k, size(outr, 1) * size(outr, 2))
       end do
 
    end subroutine r2rr_1m_y
@@ -2742,8 +2700,8 @@ contains
 
       ! Perform the DFT
       call wrapper_r2rr(dtt_plan(3), &
-                        inr, 1, 1, dtt(6), size(inr, 1) * size(inr, 2) * (size(inr, 3) - dtt(6) + 1), &
-                        outr, outi, 1, 1, dtt(12), size(outr, 1) * size(outr, 2) * (size(outr, 3) - dtt(12) + 1))
+                        inr, 1, 1, 1, size(inr), &
+                        outr, outi, 1, 1, 1, size(outr))
 
    end subroutine r2rr_1m_z
 

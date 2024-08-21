@@ -1,13 +1,4 @@
-!=======================================================================
-! This is part of the 2DECOMP&FFT library
-!
-! 2DECOMP&FFT is a software framework for general-purpose 2D (pencil)
-! decomposition. It also implements a highly scalable distributed
-! three-dimensional Fast Fourier Transform (FFT).
-!
-! Copyright (C) 2009-2021 Ning Li, the Numerical Algorithms Group (NAG)
-!
-!=======================================================================
+!! SPDX-License-Identifier: BSD-3-Clause
 
 ! This file contain common code to be included by subroutines
 ! 'update_halo_...' in halo.f90
@@ -154,7 +145,7 @@
           !$acc end kernels
        else if (ipencil == 3) then
           jst = decomp%zst(2); jen = decomp%zen(2)
-          ist = decomp%xst(1); ien = decomp%xen(1)
+          ist = decomp%zst(1); ien = decomp%zen(1)
           !$acc kernels default(present)
           do k = 1, s3  ! z all local
              do j = jst, jen

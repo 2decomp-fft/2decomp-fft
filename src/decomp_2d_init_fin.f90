@@ -1,14 +1,4 @@
-!!!=======================================================================
-!!! This is part of the 2DECOMP&FFT library
-!!!
-!!! 2DECOMP&FFT is a software framework for general-purpose 2D (pencil)
-!!! decomposition. It also implements a highly scalable distributed
-!!! three-dimensional Fast Fourier Transform (FFT).
-!!!
-!!! Copyright (C) 2009-2012 Ning Li, the Numerical Algorithms Group (NAG)
-!!! Copyright (C) 2022-              the Xcompact3d developers
-!!!
-!!!=======================================================================
+!! SPDX-License-Identifier: BSD-3-Clause
 
   !======================================================================
   ! Routine to be called by applications to initialise this library
@@ -192,7 +182,12 @@
      call decomp_info_finalize(decomp_main)
 
      decomp_buf_size = 0
-     deallocate (work1_r, work2_r, work1_c, work2_c)
+     if (associated(work1_r)) nullify (work1_r)
+     if (associated(work2_r)) nullify (work2_r)
+     if (associated(work1_c)) nullify (work1_c)
+     if (associated(work2_c)) nullify (work2_c)
+     if (allocated(work1)) deallocate (work1)
+     if (allocated(work2)) deallocate (work2)
 #if defined(_GPU)
      call decomp_2d_cumpi_fin()
 #if defined(_NCCL)

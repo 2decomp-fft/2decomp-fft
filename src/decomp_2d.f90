@@ -1,14 +1,4 @@
-!=======================================================================
-! This is part of the 2DECOMP&FFT library
-!
-! 2DECOMP&FFT is a software framework for general-purpose 2D (pencil)
-! decomposition. It also implements a highly scalable distributed
-! three-dimensional Fast Fourier Transform (FFT).
-!
-! Copyright (C) 2009-2012 Ning Li, the Numerical Algorithms Group (NAG)
-! Copyright (C) 2021               the University of Edinburgh (UoE)
-!
-!=======================================================================
+!! SPDX-License-Identifier: BSD-3-Clause
 
 ! This is the main 2D pencil decomposition module
 
@@ -126,8 +116,11 @@ module decomp_2d
 
    ! These are the buffers used by MPI_ALLTOALL(V) calls
    integer, save :: decomp_buf_size = 0
-   real(mytype), allocatable, dimension(:) :: work1_r, work2_r
-   complex(mytype), allocatable, dimension(:) :: work1_c, work2_c
+   ! Shared real/complex buffers
+   real(mytype), target, allocatable, dimension(:) :: work1, work2
+   ! Real/complex pointers to buffers
+   real(mytype), pointer, contiguous, dimension(:) :: work1_r, work2_r
+   complex(mytype), pointer, contiguous, dimension(:) :: work1_c, work2_c
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
    ! To define smaller arrays using every several mesh points
@@ -382,6 +375,8 @@ contains
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
    subroutine decomp_info_init(nx, ny, nz, decomp)
 
+      use, intrinsic:: iso_c_binding, only: c_f_pointer, c_loc
+
       implicit none
 
       integer, intent(IN) :: nx, ny, nz
@@ -444,43 +439,35 @@ contains
 #endif
 
       ! check if additional memory is required
-      ! *** TODO: consider how to share the real/complex buffers
       if (buf_size > decomp_buf_size) then
          decomp_buf_size = buf_size
 #if defined(_GPU)
          call decomp_2d_cumpi_init(buf_size)
 #endif
-         if (allocated(work1_r)) deallocate (work1_r)
-         if (allocated(work2_r)) deallocate (work2_r)
-         if (allocated(work1_c)) deallocate (work1_c)
-         if (allocated(work2_c)) deallocate (work2_c)
-         allocate (work1_r(buf_size), STAT=status)
+         if (associated(work1_r)) nullify (work1_r)
+         if (associated(work2_r)) nullify (work2_r)
+         if (associated(work1_c)) nullify (work1_c)
+         if (associated(work2_c)) nullify (work2_c)
+         if (allocated(work1)) deallocate (work1)
+         if (allocated(work2)) deallocate (work2)
+         allocate (work1(2 * buf_size), STAT=status)
          if (status /= 0) then
             errorcode = 2
             call decomp_2d_abort(__FILE__, __LINE__, errorcode, &
                                  'Out of memory when allocating 2DECOMP workspace')
          end if
-         allocate (work2_r(buf_size), STAT=status)
+         allocate (work2(2 * buf_size), STAT=status)
          if (status /= 0) then
             errorcode = 2
             call decomp_2d_abort(__FILE__, __LINE__, errorcode, &
                                  'Out of memory when allocating 2DECOMP workspace')
          end if
-         allocate (work1_c(buf_size), STAT=status)
-         if (status /= 0) then
-            errorcode = 2
-            call decomp_2d_abort(__FILE__, __LINE__, errorcode, &
-                                 'Out of memory when allocating 2DECOMP workspace')
-         end if
-         allocate (work2_c(buf_size), STAT=status)
-         if (status /= 0) then
-            errorcode = 2
-            call decomp_2d_abort(__FILE__, __LINE__, errorcode, &
-                                 'Out of memory when allocating 2DECOMP workspace')
-         end if
+         call c_f_pointer(c_loc(work1), work1_r, [buf_size])
+         call c_f_pointer(c_loc(work2), work2_r, [buf_size])
+         call c_f_pointer(c_loc(work1), work1_c, [buf_size])
+         call c_f_pointer(c_loc(work2), work2_c, [buf_size])
       end if
 
-      return
    end subroutine decomp_info_init
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!

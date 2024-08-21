@@ -1,14 +1,4 @@
-!=======================================================================
-! This is part of the 2DECOMP&FFT library
-!
-! 2DECOMP&FFT is a software framework for general-purpose 2D (pencil)
-! decomposition. It also implements a highly scalable distributed
-! three-dimensional Fast Fourier Transform (FFT).
-!
-! Copyright (C) 2009-2012 Ning Li, the Numerical Algorithms Group (NAG)
-! Copyright (C) 2022               Science and Technology Facilities Council(STFC)
-!
-!=======================================================================
+!! SPDX-License-Identifier: BSD-3-Clause
 
 ! Module for the cuda aware MPI
 
@@ -108,10 +98,13 @@ contains
 
       implicit none
 
+      integer :: cuda_stat
       type(ncclResult) :: nccl_stat
 
       nccl_stat = ncclCommDestroy(nccl_comm_2decomp)
       if (nccl_stat /= ncclSuccess) call decomp_2d_abort(__FILE__, __LINE__, nccl_stat, "ncclCommDestroy")
+      cuda_stat = cudaStreamDestroy(cuda_stream_2decomp)
+      if (cuda_stat /= 0) call decomp_2d_abort(__FILE__, __LINE__, cuda_stat, "cudaStreamDestroy")
 
    end subroutine decomp_2d_nccl_fin
    !
@@ -148,6 +141,8 @@ contains
       end do
       nccl_stat = ncclGroupEnd()
       if (nccl_stat /= ncclSuccess) call decomp_2d_abort(__FILE__, __LINE__, nccl_stat, "ncclGroupEnd")
+      cuda_stat = cudaStreamSynchronize(cuda_stream_2decomp)
+      if (cuda_stat /= 0) call decomp_2d_abort(__FILE__, __LINE__, cuda_stat, "cudaStreamSynchronize")
 
    end subroutine decomp_2d_nccl_send_recv_real_col
    !
@@ -243,6 +238,8 @@ contains
       end do
       nccl_stat = ncclGroupEnd()
       if (nccl_stat /= ncclSuccess) call decomp_2d_abort(__FILE__, __LINE__, nccl_stat, "ncclGroupEnd")
+      cuda_stat = cudaStreamSynchronize(cuda_stream_2decomp)
+      if (cuda_stat /= 0) call decomp_2d_abort(__FILE__, __LINE__, cuda_stat, "cudaStreamSynchronize")
 
    end subroutine decomp_2d_nccl_send_recv_real_row
    !

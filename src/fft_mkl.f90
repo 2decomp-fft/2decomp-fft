@@ -1,13 +1,4 @@
-!=======================================================================
-! This is part of the 2DECOMP&FFT library
-!
-! 2DECOMP&FFT is a software framework for general-purpose 2D (pencil)
-! decomposition. It also implements a highly scalable distributed
-! three-dimensional Fast Fourier Transform (FFT).
-!
-! Copyright (C) 2009-2012 Ning Li, the Numerical Algorithms Group (NAG)
-!
-!=======================================================================
+!! SPDX-License-Identifier: BSD-3-Clause
 
 ! This is the Intel MKL implementation of the FFT library
 
@@ -382,13 +373,13 @@ module decomp_2d_fft
 
          ! ===== 1D FFTs in Y =====
 #ifdef OVERWRITE
-         do k = 1, ph%xsz(3)
+         do k = 1, ph%ysz(3)
             status = wrapper_c2c_inplace(c2c_y, wk2_c2c(1, 1, k), isign)
             if (status /= 0) call decomp_2d_abort(__FILE__, __LINE__, status, "wrapper_c2c")
          end do
 #else
          allocate (wk2b(ph%ysz(1), ph%ysz(2), ph%ysz(3)))
-         do k = 1, ph%xsz(3) ! one Z-plane at a time
+         do k = 1, ph%ysz(3) ! one Z-plane at a time
             !          if (isign==DECOMP_2D_FFT_FORWARD) then
             !             status = DftiComputeForward(c2c_y, wk2(:,1,k), wk2b(:,1,k))
             !          else if (isign==DECOMP_2D_FFT_BACKWARD) then
@@ -447,13 +438,13 @@ module decomp_2d_fft
 
          ! ===== 1D FFTs in Y =====
 #ifdef OVERWRITE
-         do k = 1, ph%xsz(3)
+         do k = 1, ph%ysz(3)
             status = wrapper_c2c_inplace(c2c_y, wk2_c2c(1, 1, k), isign)
             if (status /= 0) call decomp_2d_abort(__FILE__, __LINE__, status, "wrapper_c2c")
          end do
 #else
          allocate (wk2b(ph%ysz(1), ph%ysz(2), ph%ysz(3)))
-         do k = 1, ph%xsz(3) ! one Z-plane at a time
+         do k = 1, ph%ysz(3) ! one Z-plane at a time
             !          if (isign==DECOMP_2D_FFT_FORWARD) then
             !             status = DftiComputeForward(c2c_y, wk2(:,1,k), wk2b(:,1,k))
             !          else if (isign==DECOMP_2D_FFT_BACKWARD) then

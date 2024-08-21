@@ -1,14 +1,4 @@
-!=======================================================================
-! This is part of the 2DECOMP&FFT library
-!
-! 2DECOMP&FFT is a software framework for general-purpose 2D (pencil)
-! decomposition. It also implements a highly scalable distributed
-! three-dimensional Fast Fourier Transform (FFT).
-!
-! Copyright (C) 2009-2012 Ning Li, the Numerical Algorithms Group (NAG)
-! Copyright (C) 2021               the University of Edinburgh (UoE)
-!
-!=======================================================================
+!! SPDX-License-Identifier: BSD-3-Clause
 
 ! Constants for the 2decomp&fft library
 
@@ -84,10 +74,8 @@ module decomp_2d_constants
    !    0 => no profiling, default
    !    1 => Caliper (https://github.com/LLNL/Caliper)
    !
-   enum, bind(c)
-      enumerator :: decomp_profiler_none = 0
-      enumerator :: decomp_profiler_caliper = 1
-   end enum
+   integer, parameter, public :: DECOMP_PROFILER_NONE = 0
+   integer, parameter, public :: DECOMP_PROFILER_CALIPER = 1
 
    !
    ! Supported FFT backends
@@ -115,7 +103,7 @@ module decomp_2d_constants
    !
    integer, parameter :: D2D_MAJOR = 2
    integer, parameter :: D2D_MINOR = 0
-   logical, parameter :: D2D_RELEASE = .false.
+   logical, parameter :: D2D_RELEASE = .true.
 
 end module decomp_2d_constants
 

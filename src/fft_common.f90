@@ -1,13 +1,4 @@
-!=======================================================================
-! This is part of the 2DECOMP&FFT library
-!
-! 2DECOMP&FFT is a software framework for general-purpose 2D (pencil)
-! decomposition. It also implements a highly scalable distributed
-! three-dimensional Fast Fourier Transform (FFT).
-!
-! Copyright (C) 2009-2011 Ning Li, the Numerical Algorithms Group (NAG)
-!
-!=======================================================================
+!! SPDX-License-Identifier: BSD-3-Clause
 
 ! This file contains common code shared by all FFT engines
 
@@ -25,6 +16,7 @@ integer, save, dimension(2) :: dims
 
 ! Decomposition objects
 TYPE(DECOMP_INFO), pointer, save :: ph => null()  ! physical space
+TYPE(DECOMP_INFO), target, save :: ph_target  ! ph => ph_target or ph => decomp_main
 TYPE(DECOMP_INFO), target, save :: sp  ! spectral space
 
 ! Workspace to store the intermediate Y-pencil data
@@ -124,8 +116,8 @@ subroutine fft_init_general(pencil, nx, ny, nz)
    if (nx_fft == nx_global .and. ny_fft == ny_global .and. nz_fft == nz_global) then
       ph => decomp_main
    else
-      if (.not. associated(ph)) allocate (ph)
-      call decomp_info_init(nx, ny, nz, ph)
+      call decomp_info_init(nx, ny, nz, ph_target)
+      ph => ph_target
    end if
    if (format == PHYSICAL_IN_X) then
       call decomp_info_init(nx / 2 + 1, ny, nz, sp)
@@ -194,8 +186,7 @@ subroutine decomp_2d_fft_finalize
 #endif
 
    if (nx_fft /= nx_global .or. ny_fft /= ny_global .or. nz_fft /= nz_global) then
-      call decomp_info_finalize(ph)
-      deallocate (ph)
+      call decomp_info_finalize(ph_target)
    end if
    nullify (ph)
    call decomp_info_finalize(sp)

@@ -117,21 +117,18 @@ module decomp_2d_fft
       type(decomp_info), pointer, private :: dtt_decomp_xy => null(), &
                                              dtt_decomp_yz => null()
       type(decomp_info), private :: dtt_decomp_sp_target
-      type(c_ptr), private :: wk1ra_p, wk1ia_p, wk1rb_p, wk1ib_p, &
-                              wk2ra_p, wk2ia_p, wk2rb_p, wk2ib_p, &
-                              wk3ra_p, wk3ia_p, wk3rb_p, wk3ib_p
-      real(mytype), contiguous, pointer, private :: wk1ra(:, :, :) => null(), &
-                                                    wk1ia(:, :, :) => null(), &
-                                                    wk1rb(:, :, :) => null(), &
-                                                    wk1ib(:, :, :) => null(), &
-                                                    wk2ra(:, :, :) => null(), &
-                                                    wk2ia(:, :, :) => null(), &
-                                                    wk2rb(:, :, :) => null(), &
-                                                    wk2ib(:, :, :) => null(), &
-                                                    wk3ra(:, :, :) => null(), &
-                                                    wk3ia(:, :, :) => null(), &
-                                                    wk3rb(:, :, :) => null(), &
-                                                    wk3ib(:, :, :) => null()
+      real(mytype), allocatable, private :: wk1ra(:, :, :), &
+                                            wk1ia(:, :, :), &
+                                            wk1rb(:, :, :), &
+                                            wk1ib(:, :, :), &
+                                            wk2ra(:, :, :), &
+                                            wk2ia(:, :, :), &
+                                            wk2rb(:, :, :), &
+                                            wk2ib(:, :, :), &
+                                            wk3ra(:, :, :), &
+                                            wk3ia(:, :, :), &
+                                            wk3rb(:, :, :), &
+                                            wk3ib(:, :, :)
    contains
       procedure, public :: init => decomp_2d_fft_engine_init
       procedure, public :: fin => decomp_2d_fft_engine_fin
@@ -423,8 +420,6 @@ contains
       class(decomp_2d_fft_engine), intent(inout), target :: engine
       integer, dimension(:), intent(in) :: in_DTT
 
-      integer(C_SIZE_T) :: sz
-
       ! Safety check
       if (minval(in_DTT) < 0) call decomp_2d_abort(__FILE__, __LINE__, minval(in_DTT), "Invalid argument")
       if (maxval(in_DTT) > 8) call decomp_2d_abort(__FILE__, __LINE__, maxval(in_DTT), "Invalid argument")
@@ -496,27 +491,14 @@ contains
 
       ! Working arrays in x
       if (engine%format == PHYSICAL_IN_X) then
-         ! Allocate the memory
-         sz = product(engine%ph%xsz)
-         engine%wk1ra_p = fftw_alloc_real(sz)
-         engine%wk1ia_p = fftw_alloc_real(sz)
-         ! Associated the pointers
-         call c_f_pointer(engine%wk1ra_p, engine%wk1ra, engine%ph%xsz)
-         call c_f_pointer(engine%wk1ia_p, engine%wk1ia, engine%ph%xsz)
+         call alloc_x(engine%wk1ra, engine%ph, opt_global = .false.)
+         call alloc_x(engine%wk1ia, engine%ph, opt_global = .false.)
       else
-         sz = product(engine%dtt_decomp_sp%xsz)
-         engine%wk1ra_p = fftw_alloc_real(sz)
-         engine%wk1ia_p = fftw_alloc_real(sz)
-         ! Associated the pointers
-         call c_f_pointer(engine%wk1ra_p, engine%wk1ra, engine%dtt_decomp_sp%xsz)
-         call c_f_pointer(engine%wk1ia_p, engine%wk1ia, engine%dtt_decomp_sp%xsz)
+         call alloc_x(engine%wk1ra, engine%dtt_decomp_sp, opt_global = .false.)
+         call alloc_x(engine%wk1ia, engine%dtt_decomp_sp, opt_global = .false.)
       end if
-      sz = product(engine%dtt_decomp_xy%xsz)
-      ! Allocate the memory
-      engine%wk1rb_p = fftw_alloc_real(sz)
-      engine%wk1ib_p = fftw_alloc_real(sz)
-      call c_f_pointer(engine%wk1rb_p, engine%wk1rb, engine%dtt_decomp_xy%xsz)
-      call c_f_pointer(engine%wk1ib_p, engine%wk1ib, engine%dtt_decomp_xy%xsz)
+      call alloc_x(engine%wk1rb, engine%dtt_decomp_xy, opt_global = .false.)
+      call alloc_x(engine%wk1ib, engine%dtt_decomp_xy, opt_global = .false.)
       ! Set to zero
       engine%wk1ra = 0._mytype
       engine%wk1ia = 0._mytype
@@ -524,18 +506,10 @@ contains
       engine%wk1ib = 0._mytype
 
       ! Working arrays in y
-      ! Allocate the memory
-      sz = product(engine%dtt_decomp_xy%ysz)
-      engine%wk2ra_p = fftw_alloc_real(sz)
-      engine%wk2ia_p = fftw_alloc_real(sz)
-      sz = product(engine%dtt_decomp_yz%ysz)
-      engine%wk2rb_p = fftw_alloc_real(sz)
-      engine%wk2ib_p = fftw_alloc_real(sz)
-      ! Associated the pointers
-      call c_f_pointer(engine%wk2ra_p, engine%wk2ra, engine%dtt_decomp_xy%ysz)
-      call c_f_pointer(engine%wk2ia_p, engine%wk2ia, engine%dtt_decomp_xy%ysz)
-      call c_f_pointer(engine%wk2rb_p, engine%wk2rb, engine%dtt_decomp_yz%ysz)
-      call c_f_pointer(engine%wk2ib_p, engine%wk2ib, engine%dtt_decomp_yz%ysz)
+      call alloc_y(engine%wk2ra, engine%dtt_decomp_xy, opt_global = .false.)
+      call alloc_y(engine%wk2ia, engine%dtt_decomp_xy, opt_global = .false.)
+      call alloc_y(engine%wk2rb, engine%dtt_decomp_yz, opt_global = .false.)
+      call alloc_y(engine%wk2ib, engine%dtt_decomp_yz, opt_global = .false.)
       ! Set to zero
       engine%wk2ra = 0._mytype
       engine%wk2ia = 0._mytype
@@ -543,29 +517,14 @@ contains
       engine%wk2ib = 0._mytype
 
       ! Working arrays in z
-      ! Allocate the memory
-      sz = product(engine%dtt_decomp_yz%zsz)
-      engine%wk3ra_p = fftw_alloc_real(sz)
-      engine%wk3ia_p = fftw_alloc_real(sz)
-      ! Associated the pointers
-      call c_f_pointer(engine%wk3ra_p, engine%wk3ra, engine%dtt_decomp_yz%zsz)
-      call c_f_pointer(engine%wk3ia_p, engine%wk3ia, engine%dtt_decomp_yz%zsz)
+      call alloc_z(engine%wk3ra, engine%dtt_decomp_yz, opt_global = .false.)
+      call alloc_z(engine%wk3ia, engine%dtt_decomp_yz, opt_global = .false.)
       if (engine%format == PHYSICAL_IN_X) then
-         ! Allocate the memory
-         sz = product(engine%dtt_decomp_sp%zsz)
-         engine%wk3rb_p = fftw_alloc_real(sz)
-         engine%wk3ib_p = fftw_alloc_real(sz)
-         ! Associated the pointers
-         call c_f_pointer(engine%wk3rb_p, engine%wk3rb, engine%dtt_decomp_sp%zsz)
-         call c_f_pointer(engine%wk3ib_p, engine%wk3ib, engine%dtt_decomp_sp%zsz)
+         call alloc_z(engine%wk3rb, engine%dtt_decomp_sp, opt_global = .false.)
+         call alloc_z(engine%wk3ib, engine%dtt_decomp_sp, opt_global = .false.)
       else
-         ! Allocate the memory
-         sz = product(engine%ph%zsz)
-         engine%wk3rb_p = fftw_alloc_real(sz)
-         engine%wk3ib_p = fftw_alloc_real(sz)
-         ! Associated the pointers
-         call c_f_pointer(engine%wk3rb_p, engine%wk3rb, engine%ph%zsz)
-         call c_f_pointer(engine%wk3ib_p, engine%wk3ib, engine%ph%zsz)
+         call alloc_z(engine%wk3rb, engine%ph, opt_global = .false.)
+         call alloc_z(engine%wk3ib, engine%ph, opt_global = .false.)
       end if
       ! Set to zero
       engine%wk3ra = 0._mytype
@@ -852,33 +811,19 @@ contains
       if (allocated(engine%dtt_decomp_sp_target%x1dist)) &
          call decomp_info_finalize(engine%dtt_decomp_sp_target)
 
-      ! Release the memory
-      call fftw_free(engine%wk1ra_p)
-      call fftw_free(engine%wk1ia_p)
-      call fftw_free(engine%wk1rb_p)
-      call fftw_free(engine%wk1ib_p)
-      call fftw_free(engine%wk2ra_p)
-      call fftw_free(engine%wk2ia_p)
-      call fftw_free(engine%wk2rb_p)
-      call fftw_free(engine%wk2ib_p)
-      call fftw_free(engine%wk3ra_p)
-      call fftw_free(engine%wk3ia_p)
-      call fftw_free(engine%wk3rb_p)
-      call fftw_free(engine%wk3ib_p)
-
       ! Set pointers to null
-      nullify (engine%wk1ra)
-      nullify (engine%wk1ia)
-      nullify (engine%wk1rb)
-      nullify (engine%wk1ib)
-      nullify (engine%wk2ra)
-      nullify (engine%wk2ia)
-      nullify (engine%wk2rb)
-      nullify (engine%wk2ib)
-      nullify (engine%wk3ra)
-      nullify (engine%wk3ia)
-      nullify (engine%wk3rb)
-      nullify (engine%wk3ib)
+      deallocate (engine%wk1ra)
+      deallocate (engine%wk1ia)
+      deallocate (engine%wk1rb)
+      deallocate (engine%wk1ib)
+      deallocate (engine%wk2ra)
+      deallocate (engine%wk2ia)
+      deallocate (engine%wk2rb)
+      deallocate (engine%wk2ib)
+      deallocate (engine%wk3ra)
+      deallocate (engine%wk3ia)
+      deallocate (engine%wk3rb)
+      deallocate (engine%wk3ib)
 
       ! Clean the fftw plans
       do i = 1, 6
@@ -1531,33 +1476,23 @@ contains
 
       ! Local variables
 #ifdef DOUBLE_PREC
-      real(C_DOUBLE), contiguous, pointer :: a1(:, :, :)
-      real(C_DOUBLE), contiguous, pointer :: a2(:, :, :)
-      real(C_DOUBLE), contiguous, pointer :: a3(:, :, :)
-      real(C_DOUBLE), contiguous, pointer :: a4(:, :, :)
-#else
-      real(C_FLOAT), contiguous, pointer :: a1(:, :, :)
-      real(C_FLOAT), contiguous, pointer :: a2(:, :, :)
-      real(C_FLOAT), contiguous, pointer :: a3(:, :, :)
-      real(C_FLOAT), contiguous, pointer :: a4(:, :, :)
-#endif
-      type(C_PTR) :: a1_p, a2_p, a3_p, a4_p
-      integer(C_SIZE_T) :: sz
-#ifdef DOUBLE_PREC
+      real(C_DOUBLE), allocatable, target :: a1(:, :, :)
+      real(C_DOUBLE), allocatable, target :: a2(:, :, :)
+      real(C_DOUBLE), allocatable, target :: a3(:, :, :)
+      real(C_DOUBLE), allocatable, target :: a4(:, :, :)
       type(fftw_iodim) :: dims(1), howmany(1)
 #else
+      real(C_FLOAT), allocatable, target :: a1(:, :, :)
+      real(C_FLOAT), allocatable, target :: a2(:, :, :)
+      real(C_FLOAT), allocatable, target :: a3(:, :, :)
+      real(C_FLOAT), allocatable, target :: a4(:, :, :)
       type(fftwf_iodim) :: dims(1), howmany(1)
 #endif
 
-      sz = product(decomp%xsz)
-      a1_p = fftw_alloc_real(sz)
-      a2_p = fftw_alloc_real(sz)
-      a3_p = fftw_alloc_real(sz)
-      a4_p = fftw_alloc_real(sz)
-      call c_f_pointer(a1_p, a1, decomp%xsz)
-      call c_f_pointer(a2_p, a2, decomp%xsz)
-      call c_f_pointer(a3_p, a3, decomp%xsz)
-      call c_f_pointer(a4_p, a4, decomp%xsz)
+      call alloc_x(a1, decomp, opt_global = .false.)
+      call alloc_x(a2, decomp, opt_global = .false.)
+      call alloc_x(a3, decomp, opt_global = .false.)
+      call alloc_x(a4, decomp, opt_global = .false.)
 
       dims(1)%n = decomp%xsz(1)
       dims(1)%is = 1
@@ -1571,14 +1506,10 @@ contains
       plan = fftwf_plan_guru_split_dft(1, dims(1), 1, howmany(1), a1, a2, a3, a4, plan_type_dtt)
 #endif
 
-      call fftw_free(a1_p)
-      call fftw_free(a2_p)
-      call fftw_free(a3_p)
-      call fftw_free(a4_p)
-      nullify (a1)
-      nullify (a2)
-      nullify (a3)
-      nullify (a4)
+      deallocate (a1)
+      deallocate (a2)
+      deallocate (a3)
+      deallocate (a4)
       if (.not. c_associated(plan)) call decomp_2d_abort(__FILE__, __LINE__, 8, "Plan creation failed")
 
    end subroutine rr2rr_1m_x_plan
@@ -1593,33 +1524,23 @@ contains
 
       ! Local variables
 #ifdef DOUBLE_PREC
-      real(C_DOUBLE), contiguous, pointer :: a1(:, :)
-      real(C_DOUBLE), contiguous, pointer :: a2(:, :)
-      real(C_DOUBLE), contiguous, pointer :: a3(:, :)
-      real(C_DOUBLE), contiguous, pointer :: a4(:, :)
-#else
-      real(C_FLOAT), contiguous, pointer :: a1(:, :)
-      real(C_FLOAT), contiguous, pointer :: a2(:, :)
-      real(C_FLOAT), contiguous, pointer :: a3(:, :)
-      real(C_FLOAT), contiguous, pointer :: a4(:, :)
-#endif
-      type(C_PTR) :: a1_p, a2_p, a3_p, a4_p
-      integer(C_SIZE_T) :: sz
-#ifdef DOUBLE_PREC
+      real(C_DOUBLE), allocatable, target :: a1(:, :)
+      real(C_DOUBLE), allocatable, target :: a2(:, :)
+      real(C_DOUBLE), allocatable, target :: a3(:, :)
+      real(C_DOUBLE), allocatable, target :: a4(:, :)
       type(fftw_iodim) :: dims(1), howmany(1)
 #else
+      real(C_FLOAT), allocatable, target :: a1(:, :)
+      real(C_FLOAT), allocatable, target :: a2(:, :)
+      real(C_FLOAT), allocatable, target :: a3(:, :)
+      real(C_FLOAT), allocatable, target :: a4(:, :)
       type(fftwf_iodim) :: dims(1), howmany(1)
 #endif
 
-      sz = decomp%ysz(1) * decomp%ysz(2)
-      a1_p = fftw_alloc_real(sz)
-      a2_p = fftw_alloc_real(sz)
-      a3_p = fftw_alloc_real(sz)
-      a4_p = fftw_alloc_real(sz)
-      call c_f_pointer(a1_p, a1, (/decomp%ysz(1), decomp%ysz(2)/))
-      call c_f_pointer(a2_p, a2, (/decomp%ysz(1), decomp%ysz(2)/))
-      call c_f_pointer(a3_p, a3, (/decomp%ysz(1), decomp%ysz(2)/))
-      call c_f_pointer(a4_p, a4, (/decomp%ysz(1), decomp%ysz(2)/))
+      allocate(a1(decomp%ysz(1), decomp%ysz(2)))
+      allocate(a2(decomp%ysz(1), decomp%ysz(2)))
+      allocate(a3(decomp%ysz(1), decomp%ysz(2)))
+      allocate(a4(decomp%ysz(1), decomp%ysz(2)))
 
       dims(1)%n = decomp%ysz(2)
       dims(1)%is = decomp%ysz(1)
@@ -1633,14 +1554,10 @@ contains
       plan = fftwf_plan_guru_split_dft(1, dims(1), 1, howmany(1), a1, a2, a3, a4, plan_type_dtt)
 #endif
 
-      call fftw_free(a1_p)
-      call fftw_free(a2_p)
-      call fftw_free(a3_p)
-      call fftw_free(a4_p)
-      nullify (a1)
-      nullify (a2)
-      nullify (a3)
-      nullify (a4)
+      deallocate (a1)
+      deallocate (a2)
+      deallocate (a3)
+      deallocate (a4)
       if (.not. c_associated(plan)) call decomp_2d_abort(__FILE__, __LINE__, 9, "Plan creation failed")
 
    end subroutine rr2rr_1m_y_plan
@@ -1655,33 +1572,23 @@ contains
 
       ! Local variables
 #ifdef DOUBLE_PREC
-      real(C_DOUBLE), contiguous, pointer :: a1(:, :, :)
-      real(C_DOUBLE), contiguous, pointer :: a2(:, :, :)
-      real(C_DOUBLE), contiguous, pointer :: a3(:, :, :)
-      real(C_DOUBLE), contiguous, pointer :: a4(:, :, :)
-#else
-      real(C_FLOAT), contiguous, pointer :: a1(:, :, :)
-      real(C_FLOAT), contiguous, pointer :: a2(:, :, :)
-      real(C_FLOAT), contiguous, pointer :: a3(:, :, :)
-      real(C_FLOAT), contiguous, pointer :: a4(:, :, :)
-#endif
-      type(C_PTR) :: a1_p, a2_p, a3_p, a4_p
-      integer(C_SIZE_T) :: sz
-#ifdef DOUBLE_PREC
+      real(C_DOUBLE), allocatable, target :: a1(:, :, :)
+      real(C_DOUBLE), allocatable, target :: a2(:, :, :)
+      real(C_DOUBLE), allocatable, target :: a3(:, :, :)
+      real(C_DOUBLE), allocatable, target :: a4(:, :, :)
       type(fftw_iodim) :: dims(1), howmany(1)
 #else
+      real(C_FLOAT), allocatable, target :: a1(:, :, :)
+      real(C_FLOAT), allocatable, target :: a2(:, :, :)
+      real(C_FLOAT), allocatable, target :: a3(:, :, :)
+      real(C_FLOAT), allocatable, target :: a4(:, :, :)
       type(fftwf_iodim) :: dims(1), howmany(1)
 #endif
 
-      sz = product(decomp%zsz)
-      a1_p = fftw_alloc_real(sz)
-      a2_p = fftw_alloc_real(sz)
-      a3_p = fftw_alloc_real(sz)
-      a4_p = fftw_alloc_real(sz)
-      call c_f_pointer(a1_p, a1, decomp%zsz)
-      call c_f_pointer(a2_p, a2, decomp%zsz)
-      call c_f_pointer(a3_p, a3, decomp%zsz)
-      call c_f_pointer(a4_p, a4, decomp%zsz)
+      call alloc_z(a1, decomp, opt_global = .false.)
+      call alloc_z(a2, decomp, opt_global = .false.)
+      call alloc_z(a3, decomp, opt_global = .false.)
+      call alloc_z(a4, decomp, opt_global = .false.)
 
       dims(1)%n = decomp%zsz(3)
       dims(1)%is = decomp%zsz(1) * decomp%zsz(2)
@@ -1695,14 +1602,10 @@ contains
       plan = fftwf_plan_guru_split_dft(1, dims(1), 1, howmany(1), a1, a2, a3, a4, plan_type_dtt)
 #endif
 
-      call fftw_free(a1_p)
-      call fftw_free(a2_p)
-      call fftw_free(a3_p)
-      call fftw_free(a4_p)
-      nullify (a1)
-      nullify (a2)
-      nullify (a3)
-      nullify (a4)
+      deallocate (a1)
+      deallocate (a2)
+      deallocate (a3)
+      deallocate (a4)
       if (.not. c_associated(plan)) call decomp_2d_abort(__FILE__, __LINE__, 10, "Plan creation failed")
 
    end subroutine rr2rr_1m_z_plan
@@ -1717,30 +1620,20 @@ contains
 
       ! Local variables
 #ifdef DOUBLE_PREC
-      real(C_DOUBLE), contiguous, pointer :: a1(:, :, :)
-      real(C_DOUBLE), contiguous, pointer :: a2(:, :, :)
-      real(C_DOUBLE), contiguous, pointer :: a3(:, :, :)
-#else
-      real(C_FLOAT), contiguous, pointer :: a1(:, :, :)
-      real(C_FLOAT), contiguous, pointer :: a2(:, :, :)
-      real(C_FLOAT), contiguous, pointer :: a3(:, :, :)
-#endif
-      type(C_PTR) :: a1_p, a2_p, a3_p
-      integer(C_SIZE_T) :: sz
-#ifdef DOUBLE_PREC
+      real(C_DOUBLE), allocatable, target :: a1(:, :, :)
+      real(C_DOUBLE), allocatable, target :: a2(:, :, :)
+      real(C_DOUBLE), allocatable, target :: a3(:, :, :)
       type(fftw_iodim) :: dims(1), howmany(1)
 #else
+      real(C_FLOAT), allocatable, target :: a1(:, :, :)
+      real(C_FLOAT), allocatable, target :: a2(:, :, :)
+      real(C_FLOAT), allocatable, target :: a3(:, :, :)
       type(fftwf_iodim) :: dims(1), howmany(1)
 #endif
 
-      sz = product(decomp%xsz)
-      a1_p = fftw_alloc_real(sz)
-      a2_p = fftw_alloc_real(sz)
-      sz = product(decomp2%xsz)
-      a3_p = fftw_alloc_real(sz)
-      call c_f_pointer(a1_p, a1, decomp%xsz)
-      call c_f_pointer(a2_p, a2, decomp%xsz)
-      call c_f_pointer(a3_p, a3, decomp2%xsz)
+      call alloc_x(a1, decomp, opt_global = .false.)
+      call alloc_x(a2, decomp, opt_global = .false.)
+      call alloc_x(a3, decomp2, opt_global = .false.)
 
       dims(1)%n = decomp2%xsz(1)
       dims(1)%is = 1
@@ -1754,12 +1647,9 @@ contains
       plan = fftwf_plan_guru_split_dft_c2r(1, dims(1), 1, howmany(1), a1, a2, a3, plan_type_dtt)
 #endif
 
-      call fftw_free(a1_p)
-      call fftw_free(a2_p)
-      call fftw_free(a3_p)
-      nullify (a1)
-      nullify (a2)
-      nullify (a3)
+      deallocate (a1)
+      deallocate (a2)
+      deallocate (a3)
       if (.not. c_associated(plan)) call decomp_2d_abort(__FILE__, __LINE__, 11, "Plan creation failed")
 
    end subroutine rr2r_1m_x_plan
@@ -1774,30 +1664,20 @@ contains
 
       ! Local variables
 #ifdef DOUBLE_PREC
-      real(C_DOUBLE), contiguous, pointer :: a1(:, :)
-      real(C_DOUBLE), contiguous, pointer :: a2(:, :)
-      real(C_DOUBLE), contiguous, pointer :: a3(:, :)
-#else
-      real(C_FLOAT), contiguous, pointer :: a1(:, :)
-      real(C_FLOAT), contiguous, pointer :: a2(:, :)
-      real(C_FLOAT), contiguous, pointer :: a3(:, :)
-#endif
-      type(C_PTR) :: a1_p, a2_p, a3_p
-      integer(C_SIZE_T) :: sz
-#ifdef DOUBLE_PREC
+      real(C_DOUBLE), allocatable, target :: a1(:, :)
+      real(C_DOUBLE), allocatable, target :: a2(:, :)
+      real(C_DOUBLE), allocatable, target :: a3(:, :)
       type(fftw_iodim) :: dims(1), howmany(1)
 #else
+      real(C_FLOAT), allocatable, target :: a1(:, :)
+      real(C_FLOAT), allocatable, target :: a2(:, :)
+      real(C_FLOAT), allocatable, target :: a3(:, :)
       type(fftwf_iodim) :: dims(1), howmany(1)
 #endif
 
-      sz = decomp%ysz(1) * decomp%ysz(2)
-      a1_p = fftw_alloc_real(sz)
-      a2_p = fftw_alloc_real(sz)
-      sz = decomp2%ysz(1) * decomp2%ysz(2)
-      a3_p = fftw_alloc_real(sz)
-      call c_f_pointer(a1_p, a1, (/decomp%ysz(1), decomp%ysz(2)/))
-      call c_f_pointer(a2_p, a2, (/decomp%ysz(1), decomp%ysz(2)/))
-      call c_f_pointer(a3_p, a3, (/decomp2%ysz(1), decomp2%ysz(2)/))
+      allocate(a1(decomp%ysz(1), decomp%ysz(2)))
+      allocate(a2(decomp%ysz(1), decomp%ysz(2)))
+      allocate(a3(decomp2%ysz(1), decomp2%ysz(2)))
 
       dims(1)%n = decomp2%ysz(2)
       dims(1)%is = decomp%ysz(1)
@@ -1811,12 +1691,9 @@ contains
       plan = fftwf_plan_guru_split_dft_c2r(1, dims(1), 1, howmany(1), a1, a2, a3, plan_type_dtt)
 #endif
 
-      call fftw_free(a1_p)
-      call fftw_free(a2_p)
-      call fftw_free(a3_p)
-      nullify (a1)
-      nullify (a2)
-      nullify (a3)
+      deallocate (a1)
+      deallocate (a2)
+      deallocate (a3)
       if (.not. c_associated(plan)) call decomp_2d_abort(__FILE__, __LINE__, 12, "Plan creation failed")
 
    end subroutine rr2r_1m_y_plan
@@ -1831,30 +1708,20 @@ contains
 
       ! Local variables
 #ifdef DOUBLE_PREC
-      real(C_DOUBLE), contiguous, pointer :: a1(:, :, :)
-      real(C_DOUBLE), contiguous, pointer :: a2(:, :, :)
-      real(C_DOUBLE), contiguous, pointer :: a3(:, :, :)
-#else
-      real(C_FLOAT), contiguous, pointer :: a1(:, :, :)
-      real(C_FLOAT), contiguous, pointer :: a2(:, :, :)
-      real(C_FLOAT), contiguous, pointer :: a3(:, :, :)
-#endif
-      type(C_PTR) :: a1_p, a2_p, a3_p
-      integer(C_SIZE_T) :: sz
-#ifdef DOUBLE_PREC
+      real(C_DOUBLE), allocatable, target :: a1(:, :, :)
+      real(C_DOUBLE), allocatable, target :: a2(:, :, :)
+      real(C_DOUBLE), allocatable, target :: a3(:, :, :)
       type(fftw_iodim) :: dims(1), howmany(1)
 #else
+      real(C_FLOAT), allocatable, target :: a1(:, :, :)
+      real(C_FLOAT), allocatable, target :: a2(:, :, :)
+      real(C_FLOAT), allocatable, target :: a3(:, :, :)
       type(fftwf_iodim) :: dims(1), howmany(1)
 #endif
 
-      sz = product(decomp%zsz)
-      a1_p = fftw_alloc_real(sz)
-      a2_p = fftw_alloc_real(sz)
-      sz = product(decomp2%zsz)
-      a3_p = fftw_alloc_real(sz)
-      call c_f_pointer(a1_p, a1, decomp%zsz)
-      call c_f_pointer(a2_p, a2, decomp%zsz)
-      call c_f_pointer(a3_p, a3, decomp2%zsz)
+      call alloc_z(a1, decomp, opt_global = .false.)
+      call alloc_z(a2, decomp, opt_global = .false.)
+      call alloc_z(a3, decomp2, opt_global = .false.)
 
       dims(1)%n = decomp2%zsz(3)
       dims(1)%is = decomp%zsz(1) * decomp%zsz(2)
@@ -1868,12 +1735,9 @@ contains
       plan = fftwf_plan_guru_split_dft_c2r(1, dims(1), 1, howmany(1), a1, a2, a3, plan_type_dtt)
 #endif
 
-      call fftw_free(a1_p)
-      call fftw_free(a2_p)
-      call fftw_free(a3_p)
-      nullify (a1)
-      nullify (a2)
-      nullify (a3)
+      deallocate (a1)
+      deallocate (a2)
+      deallocate (a3)
       if (.not. c_associated(plan)) call decomp_2d_abort(__FILE__, __LINE__, 13, "Plan creation failed")
 
    end subroutine rr2r_1m_z_plan
@@ -1888,30 +1752,20 @@ contains
 
       ! Local variables
 #ifdef DOUBLE_PREC
-      real(C_DOUBLE), contiguous, pointer :: a1(:, :, :)
-      real(C_DOUBLE), contiguous, pointer :: a2(:, :, :)
-      real(C_DOUBLE), contiguous, pointer :: a3(:, :, :)
-#else
-      real(C_FLOAT), contiguous, pointer :: a1(:, :, :)
-      real(C_FLOAT), contiguous, pointer :: a2(:, :, :)
-      real(C_FLOAT), contiguous, pointer :: a3(:, :, :)
-#endif
-      type(C_PTR) :: a1_p, a2_p, a3_p
-      integer(C_SIZE_T) :: sz
-#ifdef DOUBLE_PREC
+      real(C_DOUBLE), allocatable, target :: a1(:, :, :)
+      real(C_DOUBLE), allocatable, target :: a2(:, :, :)
+      real(C_DOUBLE), allocatable, target :: a3(:, :, :)
       type(fftw_iodim) :: dims(1), howmany(1)
 #else
+      real(C_FLOAT), allocatable, target :: a1(:, :, :)
+      real(C_FLOAT), allocatable, target :: a2(:, :, :)
+      real(C_FLOAT), allocatable, target :: a3(:, :, :)
       type(fftwf_iodim) :: dims(1), howmany(1)
 #endif
 
-      sz = product(decomp%xsz)
-      a1_p = fftw_alloc_real(sz)
-      sz = product(decomp2%xsz)
-      a2_p = fftw_alloc_real(sz)
-      a3_p = fftw_alloc_real(sz)
-      call c_f_pointer(a1_p, a1, decomp%xsz)
-      call c_f_pointer(a2_p, a2, decomp2%xsz)
-      call c_f_pointer(a3_p, a3, decomp2%xsz)
+      call alloc_x(a1, decomp, opt_global = .false.)
+      call alloc_x(a2, decomp2, opt_global = .false.)
+      call alloc_x(a3, decomp2, opt_global = .false.)
 
       dims(1)%n = decomp%xsz(1)
       dims(1)%is = 1
@@ -1925,12 +1779,9 @@ contains
       plan = fftwf_plan_guru_split_dft_r2c(1, dims(1), 1, howmany(1), a1, a2, a3, plan_type_dtt)
 #endif
 
-      call fftw_free(a1_p)
-      call fftw_free(a2_p)
-      call fftw_free(a3_p)
-      nullify (a1)
-      nullify (a2)
-      nullify (a3)
+      deallocate (a1)
+      deallocate (a2)
+      deallocate (a3)
       if (.not. c_associated(plan)) call decomp_2d_abort(__FILE__, __LINE__, 14, "Plan creation failed")
 
    end subroutine r2rr_1m_x_plan
@@ -1945,30 +1796,20 @@ contains
 
       ! Local variables
 #ifdef DOUBLE_PREC
-      real(C_DOUBLE), contiguous, pointer :: a1(:, :)
-      real(C_DOUBLE), contiguous, pointer :: a2(:, :)
-      real(C_DOUBLE), contiguous, pointer :: a3(:, :)
-#else
-      real(C_FLOAT), contiguous, pointer :: a1(:, :)
-      real(C_FLOAT), contiguous, pointer :: a2(:, :)
-      real(C_FLOAT), contiguous, pointer :: a3(:, :)
-#endif
-      type(C_PTR) :: a1_p, a2_p, a3_p
-      integer(C_SIZE_T) :: sz
-#ifdef DOUBLE_PREC
+      real(C_DOUBLE), allocatable, target :: a1(:, :)
+      real(C_DOUBLE), allocatable, target :: a2(:, :)
+      real(C_DOUBLE), allocatable, target :: a3(:, :)
       type(fftw_iodim) :: dims(1), howmany(1)
 #else
+      real(C_FLOAT), allocatable, target :: a1(:, :)
+      real(C_FLOAT), allocatable, target :: a2(:, :)
+      real(C_FLOAT), allocatable, target :: a3(:, :)
       type(fftwf_iodim) :: dims(1), howmany(1)
 #endif
 
-      sz = decomp%ysz(1) * decomp%ysz(2)
-      a1_p = fftw_alloc_real(sz)
-      sz = decomp2%ysz(1) * decomp2%ysz(2)
-      a2_p = fftw_alloc_real(sz)
-      a3_p = fftw_alloc_real(sz)
-      call c_f_pointer(a1_p, a1, (/decomp%ysz(1), decomp%ysz(2)/))
-      call c_f_pointer(a2_p, a2, (/decomp2%ysz(1), decomp2%ysz(2)/))
-      call c_f_pointer(a3_p, a3, (/decomp2%ysz(1), decomp2%ysz(2)/))
+      allocate(a1(decomp%ysz(1), decomp%ysz(2)))
+      allocate(a2(decomp2%ysz(1), decomp2%ysz(2)))
+      allocate(a3(decomp2%ysz(1), decomp2%ysz(2)))
 
       dims(1)%n = decomp%ysz(2)
       dims(1)%is = decomp%ysz(1)
@@ -1982,12 +1823,9 @@ contains
       plan = fftwf_plan_guru_split_dft_r2c(1, dims(1), 1, howmany(1), a1, a2, a3, plan_type_dtt)
 #endif
 
-      call fftw_free(a1_p)
-      call fftw_free(a2_p)
-      call fftw_free(a3_p)
-      nullify (a1)
-      nullify (a2)
-      nullify (a3)
+      deallocate (a1)
+      deallocate (a2)
+      deallocate (a3)
       if (.not. c_associated(plan)) call decomp_2d_abort(__FILE__, __LINE__, 15, "Plan creation failed")
 
    end subroutine r2rr_1m_y_plan
@@ -2002,30 +1840,20 @@ contains
 
       ! Local variables
 #ifdef DOUBLE_PREC
-      real(C_DOUBLE), contiguous, pointer :: a1(:, :, :)
-      real(C_DOUBLE), contiguous, pointer :: a2(:, :, :)
-      real(C_DOUBLE), contiguous, pointer :: a3(:, :, :)
-#else
-      real(C_FLOAT), contiguous, pointer :: a1(:, :, :)
-      real(C_FLOAT), contiguous, pointer :: a2(:, :, :)
-      real(C_FLOAT), contiguous, pointer :: a3(:, :, :)
-#endif
-      type(C_PTR) :: a1_p, a2_p, a3_p
-      integer(C_SIZE_T) :: sz
-#ifdef DOUBLE_PREC
+      real(C_DOUBLE), allocatable, target :: a1(:, :, :)
+      real(C_DOUBLE), allocatable, target :: a2(:, :, :)
+      real(C_DOUBLE), allocatable, target :: a3(:, :, :)
       type(fftw_iodim) :: dims(1), howmany(1)
 #else
+      real(C_FLOAT), allocatable, target :: a1(:, :, :)
+      real(C_FLOAT), allocatable, target :: a2(:, :, :)
+      real(C_FLOAT), allocatable, target :: a3(:, :, :)
       type(fftwf_iodim) :: dims(1), howmany(1)
 #endif
 
-      sz = product(decomp%zsz)
-      a1_p = fftw_alloc_real(sz)
-      sz = product(decomp2%zsz)
-      a2_p = fftw_alloc_real(sz)
-      a3_p = fftw_alloc_real(sz)
-      call c_f_pointer(a1_p, a1, decomp%zsz)
-      call c_f_pointer(a2_p, a2, decomp2%zsz)
-      call c_f_pointer(a3_p, a3, decomp2%zsz)
+      call alloc_z(a1, decomp, opt_global = .false.)
+      call alloc_z(a2, decomp2, opt_global = .false.)
+      call alloc_z(a3, decomp2, opt_global = .false.)
 
       dims(1)%n = decomp%zsz(3)
       dims(1)%is = decomp%zsz(1) * decomp%zsz(2)
@@ -2039,12 +1867,9 @@ contains
       plan = fftwf_plan_guru_split_dft_r2c(1, dims(1), 1, howmany(1), a1, a2, a3, plan_type_dtt)
 #endif
 
-      call fftw_free(a1_p)
-      call fftw_free(a2_p)
-      call fftw_free(a3_p)
-      nullify (a1)
-      nullify (a2)
-      nullify (a3)
+      deallocate (a1)
+      deallocate (a2)
+      deallocate (a3)
       if (.not. c_associated(plan)) call decomp_2d_abort(__FILE__, __LINE__, 16, "Plan creation failed")
 
    end subroutine r2rr_1m_z_plan

@@ -423,7 +423,6 @@ contains
       class(decomp_2d_fft_engine), intent(inout), target :: engine
       integer, dimension(:), intent(in) :: in_DTT
 
-      integer :: i
       integer(C_SIZE_T) :: sz
 
       ! Safety check
@@ -589,7 +588,6 @@ contains
          if (engine%dtt(2) == FFTW_FORWARD) then
             if (engine%dtt(1) == FFTW_FORWARD) then
                call rr2rr_1m_y_plan(engine%dtt_plan(2), engine%dtt_decomp_xy)
-               call rr2rr_1m_y_plan(engine%dtt_plan(5), engine%dtt_decomp_xy) ! Duplicated plan, this can be improved
             else
                call r2rr_1m_y_plan(engine%dtt_plan(2), engine%dtt_decomp_xy, engine%dtt_decomp_yz)
                call rr2r_1m_y_plan(engine%dtt_plan(5), engine%dtt_decomp_yz, engine%dtt_decomp_xy)
@@ -602,7 +600,6 @@ contains
          if (engine%dtt(3) == FFTW_FORWARD) then
             if (engine%dtt(1) == FFTW_FORWARD .or. engine%dtt(2) == FFTW_FORWARD) then
                call rr2rr_1m_z_plan(engine%dtt_plan(3), engine%dtt_decomp_sp)
-               call rr2rr_1m_z_plan(engine%dtt_plan(6), engine%dtt_decomp_sp) ! Duplicated plan, this can be improved
             else
                call r2rr_1m_z_plan(engine%dtt_plan(3), engine%dtt_decomp_yz, engine%dtt_decomp_sp)
                call rr2r_1m_z_plan(engine%dtt_plan(6), engine%dtt_decomp_sp, engine%dtt_decomp_yz)
@@ -624,7 +621,6 @@ contains
          if (engine%dtt(2) == FFTW_FORWARD) then
             if (engine%dtt(3) == FFTW_FORWARD) then
                call rr2rr_1m_y_plan(engine%dtt_plan(2), engine%dtt_decomp_xy)
-               call rr2rr_1m_y_plan(engine%dtt_plan(5), engine%dtt_decomp_xy) ! Duplicated plan, this can be improved
             else
                call r2rr_1m_y_plan(engine%dtt_plan(2), engine%dtt_decomp_yz, engine%dtt_decomp_xy)
                call rr2r_1m_y_plan(engine%dtt_plan(5), engine%dtt_decomp_xy, engine%dtt_decomp_yz)
@@ -637,7 +633,6 @@ contains
          if (engine%dtt(1) == FFTW_FORWARD) then
             if (engine%dtt(2) == FFTW_FORWARD .or. engine%dtt(3) == FFTW_FORWARD) then
                call rr2rr_1m_x_plan(engine%dtt_plan(1), engine%dtt_decomp_sp)
-               call rr2rr_1m_x_plan(engine%dtt_plan(4), engine%dtt_decomp_sp) ! Duplicated plan, this can be improved
             else
                call r2rr_1m_x_plan(engine%dtt_plan(1), engine%dtt_decomp_xy, engine%dtt_decomp_sp)
                call rr2r_1m_x_plan(engine%dtt_plan(4), engine%dtt_decomp_sp, engine%dtt_decomp_xy)
@@ -647,9 +642,6 @@ contains
             call r2r_1m_x_plan(engine%dtt_plan(4), engine%dtt_decomp_sp, engine%dtt(13), engine%dtt(7))
          end if
       end if
-      do i = 1, 6
-         if (.not. c_associated(engine%dtt_plan(i))) call decomp_2d_abort(__FILE__, __LINE__, i, "DTT plan creation failed")
-      end do
 
    end subroutine decomp_2d_fft_engine_dtt_init
 
@@ -890,11 +882,13 @@ contains
 
       ! Clean the fftw plans
       do i = 1, 6
+         if (c_associated(engine%dtt_plan(i))) then
 #ifdef DOUBLE_PREC
-         call fftw_destroy_plan(engine%dtt_plan(i))
+            call fftw_destroy_plan(engine%dtt_plan(i))
 #else
-         call fftwf_destroy_plan(engine%dtt_plan(i))
+            call fftwf_destroy_plan(engine%dtt_plan(i))
 #endif
+         end if
       end do
       engine%dtt_plan = c_null_ptr
 
@@ -1253,8 +1247,8 @@ contains
 #endif
 
       call fftw_free(a1_p)
+      if (.not. c_associated(plan1)) call decomp_2d_abort(__FILE__, __LINE__, 1, "Plan creation failed")
 
-      return
    end subroutine c2c_1m_x_plan
 
    ! Return a FFTW3 plan for multiple 1D c2c FFTs in Y direction
@@ -1294,8 +1288,8 @@ contains
 #endif
 
       call fftw_free(a1_p)
+      if (.not. c_associated(plan1)) call decomp_2d_abort(__FILE__, __LINE__, 2, "Plan creation failed")
 
-      return
    end subroutine c2c_1m_y_plan
 
    ! Return a FFTW3 plan for multiple 1D c2c FFTs in Z direction
@@ -1335,8 +1329,8 @@ contains
 #endif
 
       call fftw_free(a1_p)
+      if (.not. c_associated(plan1)) call decomp_2d_abort(__FILE__, __LINE__, 3, "Plan creation failed")
 
-      return
    end subroutine c2c_1m_z_plan
 
    ! Return a FFTW3 plan for multiple 1D r2c FFTs in X direction
@@ -1382,6 +1376,7 @@ contains
 
       call fftw_free(a1_p)
       if (.not. inplace_r2c) call fftw_free(a2_p)
+      if (.not. c_associated(plan1)) call decomp_2d_abort(__FILE__, __LINE__, 4, "Plan creation failed")
 
    end subroutine r2c_1m_x_plan
 
@@ -1428,6 +1423,7 @@ contains
 
       if (.not. inplace_c2r) call fftw_free(a1_p)
       call fftw_free(a2_p)
+      if (.not. c_associated(plan1)) call decomp_2d_abort(__FILE__, __LINE__, 5, "Plan creation failed")
 
    end subroutine c2r_1m_x_plan
 
@@ -1474,6 +1470,7 @@ contains
 
       call fftw_free(a1_p)
       if (.not. inplace_r2c) call fftw_free(a2_p)
+      if (.not. c_associated(plan1)) call decomp_2d_abort(__FILE__, __LINE__, 6, "Plan creation failed")
 
    end subroutine r2c_1m_z_plan
 
@@ -1520,6 +1517,7 @@ contains
 
       if (.not. inplace_c2r) call fftw_free(a1_p)
       call fftw_free(a2_p)
+      if (.not. c_associated(plan1)) call decomp_2d_abort(__FILE__, __LINE__, 7, "Plan creation failed")
 
    end subroutine c2r_1m_z_plan
 
@@ -1581,6 +1579,7 @@ contains
       nullify (a2)
       nullify (a3)
       nullify (a4)
+      if (.not. c_associated(plan)) call decomp_2d_abort(__FILE__, __LINE__, 8, "Plan creation failed")
 
    end subroutine rr2rr_1m_x_plan
 
@@ -1642,6 +1641,7 @@ contains
       nullify (a2)
       nullify (a3)
       nullify (a4)
+      if (.not. c_associated(plan)) call decomp_2d_abort(__FILE__, __LINE__, 9, "Plan creation failed")
 
    end subroutine rr2rr_1m_y_plan
 
@@ -1703,6 +1703,7 @@ contains
       nullify (a2)
       nullify (a3)
       nullify (a4)
+      if (.not. c_associated(plan)) call decomp_2d_abort(__FILE__, __LINE__, 10, "Plan creation failed")
 
    end subroutine rr2rr_1m_z_plan
 
@@ -1759,6 +1760,7 @@ contains
       nullify (a1)
       nullify (a2)
       nullify (a3)
+      if (.not. c_associated(plan)) call decomp_2d_abort(__FILE__, __LINE__, 11, "Plan creation failed")
 
    end subroutine rr2r_1m_x_plan
 
@@ -1815,6 +1817,7 @@ contains
       nullify (a1)
       nullify (a2)
       nullify (a3)
+      if (.not. c_associated(plan)) call decomp_2d_abort(__FILE__, __LINE__, 12, "Plan creation failed")
 
    end subroutine rr2r_1m_y_plan
 
@@ -1871,6 +1874,7 @@ contains
       nullify (a1)
       nullify (a2)
       nullify (a3)
+      if (.not. c_associated(plan)) call decomp_2d_abort(__FILE__, __LINE__, 13, "Plan creation failed")
 
    end subroutine rr2r_1m_z_plan
 
@@ -1927,6 +1931,7 @@ contains
       nullify (a1)
       nullify (a2)
       nullify (a3)
+      if (.not. c_associated(plan)) call decomp_2d_abort(__FILE__, __LINE__, 14, "Plan creation failed")
 
    end subroutine r2rr_1m_x_plan
 
@@ -1983,6 +1988,7 @@ contains
       nullify (a1)
       nullify (a2)
       nullify (a3)
+      if (.not. c_associated(plan)) call decomp_2d_abort(__FILE__, __LINE__, 15, "Plan creation failed")
 
    end subroutine r2rr_1m_y_plan
 
@@ -2039,6 +2045,7 @@ contains
       nullify (a1)
       nullify (a2)
       nullify (a3)
+      if (.not. c_associated(plan)) call decomp_2d_abort(__FILE__, __LINE__, 16, "Plan creation failed")
 
    end subroutine r2rr_1m_z_plan
 
@@ -2086,6 +2093,7 @@ contains
       call fftw_free(a2_p)
       nullify (a1)
       nullify (a2)
+      if (.not. c_associated(plan)) call decomp_2d_abort(__FILE__, __LINE__, 17, "Plan creation failed")
 
    end subroutine r2r_1m_x_plan
 
@@ -2133,6 +2141,7 @@ contains
       call fftw_free(a2_p)
       nullify (a1)
       nullify (a2)
+      if (.not. c_associated(plan)) call decomp_2d_abort(__FILE__, __LINE__, 18, "Plan creation failed")
 
    end subroutine r2r_1m_y_plan
 
@@ -2180,6 +2189,7 @@ contains
       call fftw_free(a2_p)
       nullify (a1)
       nullify (a2)
+      if (.not. c_associated(plan)) call decomp_2d_abort(__FILE__, __LINE__, 19, "Plan creation failed")
 
    end subroutine r2r_1m_z_plan
 
@@ -2422,7 +2432,7 @@ contains
                             inr, ini, 1, 1, 1, size(inr), &
                             outr, outi, 1, 1, 1, size(outr))
       else
-         call wrapper_rr2rr(dtt_plan(4), &
+         call wrapper_rr2rr(dtt_plan(1), &
                             ini, inr, 1, 1, 1, size(inr), &
                             outi, outr, 1, 1, 1, size(outr))
       end if
@@ -2457,7 +2467,7 @@ contains
          end do
       else
          do k = 1, size(inr, 3)
-            call wrapper_rr2rr(dtt_plan(5), &
+            call wrapper_rr2rr(dtt_plan(2), &
                                ini, inr, 1, 1, k, size(inr, 1) * size(inr, 2), &
                                outi, outr, 1, 1, k, size(outr, 1) * size(outr, 2))
          end do
@@ -2487,7 +2497,7 @@ contains
                             inr, ini, 1, 1, 1, size(inr), &
                             outr, outi, 1, 1, 1, size(outr))
       else
-         call wrapper_rr2rr(dtt_plan(6), &
+         call wrapper_rr2rr(dtt_plan(3), &
                             ini, inr, 1, 1, 1, size(inr), &
                             outi, outr, 1, 1, 1, size(outr))
       end if

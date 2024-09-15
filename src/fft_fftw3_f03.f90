@@ -135,6 +135,7 @@ module decomp_2d_fft
       procedure, public :: use_it => decomp_2d_fft_engine_use_it
       procedure, private :: dtt_init => decomp_2d_fft_engine_dtt_init
       procedure, private :: dtt_fin => decomp_2d_fft_engine_dtt_fin
+      procedure, public :: dtt_input => decomp_2d_fft_engine_dtt_input
       generic, public :: fft => c2c, r2c, c2r
       procedure, private :: c2c => decomp_2d_fft_engine_fft_c2c
       procedure, private :: r2c => decomp_2d_fft_engine_fft_r2c
@@ -153,7 +154,7 @@ module decomp_2d_fft
              decomp_2d_dtt_3d_x2r, decomp_2d_dtt_3d_r2x, &
              decomp_2d_fft_finalize, decomp_2d_fft_get_size, &
              decomp_2d_fft_get_ph, decomp_2d_fft_get_sp, &
-             decomp_2d_fft_get_dtt_sp, &
+             decomp_2d_fft_get_dtt_sp, decomp_2d_fft_get_dtt_input, &
              decomp_2d_fft_get_ngrid, decomp_2d_fft_set_ngrid, &
              decomp_2d_fft_use_grid, decomp_2d_fft_engine, &
              decomp_2d_fft_get_engine, decomp_2d_fft_get_format, &
@@ -657,6 +658,7 @@ contains
    end subroutine dtt_invert
 
    ! Adapt the DTT type to FFTW
+   ! FIXME add constants in the module decomp_2d_constants ?
    subroutine dtt_for_fftw(arg_dtt)
 
       implicit none
@@ -687,10 +689,52 @@ contains
             arg_dtt(k) = FFTW_RODFT11
          case (9)
             arg_dtt(k) = FFTW_BACKWARD
+         case default
+            call decomp_2d_abort(__FILE__, __LINE__, arg_dtt(k), "Invalid value")
          end select
       end do
 
    end subroutine dtt_for_fftw
+
+   ! Adapt the FFTW type to DTT
+   ! FIXME add constants in the module decomp_2d_constants ?
+   function fftw_for_dtt(arg_dtt)
+
+      implicit none
+
+      integer, dimension(3) :: fftw_for_dtt
+      integer, intent(in) :: arg_dtt(3)
+
+      ! Local variables
+      integer :: i
+
+      ! Convert FFTW transforms into 2decomp transforms
+      do i = 1, 3
+         select case (arg_dtt(i))
+         case (FFTW_FORWARD)
+            fftw_for_dtt(i) = 0
+         case (FFTW_REDFT00)
+            fftw_for_dtt(i) = 1
+         case (FFTW_REDFT10)
+            fftw_for_dtt(i) = 2
+         case (FFTW_REDFT01)
+            fftw_for_dtt(i) = 3
+         case (FFTW_REDFT11)
+            fftw_for_dtt(i) = 4
+         case (FFTW_RODFT00)
+            fftw_for_dtt(i) = 5
+         case (FFTW_RODFT10)
+            fftw_for_dtt(i) = 6
+         case (FFTW_RODFT01)
+            fftw_for_dtt(i) = 7
+         case (FFTW_RODFT11)
+            fftw_for_dtt(i) = 8
+         case default
+            call decomp_2d_abort(__FILE__, __LINE__, arg_dtt(i), "Invalid value")
+         end select
+      end do
+
+   end function fftw_for_dtt
 
    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
    ! Final clean up
@@ -838,6 +882,39 @@ contains
       engine%dtt_plan = c_null_ptr
 
    end subroutine decomp_2d_fft_engine_dtt_fin
+
+   ! Return the type of the transform in each direction
+   function decomp_2d_fft_get_dtt_input()
+
+      implicit none
+
+      integer, dimension(3) :: decomp_2d_fft_get_dtt_input
+
+      if (.not.associated(with_dtt)) call decomp_2d_abort(__FILE__, __LINE__, 1, "Invalid operation")
+
+      if (with_dtt) then
+         decomp_2d_fft_get_dtt_input = fftw_for_dtt(dtt(1:3))
+      else
+         call decomp_2d_abort(__FILE__, __LINE__, 1, "No DTT for the current engine")
+      end if
+
+   end function decomp_2d_fft_get_dtt_input
+
+   ! Return the type of the transform in each direction
+   function decomp_2d_fft_engine_dtt_input(engine)
+
+      implicit none
+
+      class(decomp_2d_fft_engine), intent(in) :: engine
+      integer, dimension(3) :: decomp_2d_fft_engine_dtt_input
+
+      if (with_dtt) then
+         decomp_2d_fft_engine_dtt_input = fftw_for_dtt(engine%dtt(1:3))
+      else
+         call decomp_2d_abort(__FILE__, __LINE__, 1, "No DTT for the current engine")
+      end if
+
+   end function decomp_2d_fft_engine_dtt_input
 
    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
    ! Return the size, starting/ending index of the distributed array

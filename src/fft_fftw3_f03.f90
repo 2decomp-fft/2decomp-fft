@@ -542,7 +542,7 @@ contains
             call rr2r_1m_x_plan(engine%dtt_plan(4), engine%sp, engine%ph)
          else
             call r2r_1m_x_plan(engine%dtt_plan(1), engine%ph, engine%dtt(1), engine%dtt(7))
-            call r2r_1m_x_plan(engine%dtt_plan(4), engine%ph, engine%dtt(13), engine%dtt(7))
+            if (engine%dtt(13) /= engine%dtt(1)) call r2r_1m_x_plan(engine%dtt_plan(4), engine%ph, engine%dtt(13), engine%dtt(7))
          end if
          ! in y
          if (engine%dtt(2) == FFTW_FORWARD) then
@@ -554,7 +554,7 @@ contains
             end if
          else
             call r2r_1m_y_plan(engine%dtt_plan(2), engine%dtt_decomp_xy, engine%dtt(2), engine%dtt(8))
-            call r2r_1m_y_plan(engine%dtt_plan(5), engine%dtt_decomp_xy, engine%dtt(14), engine%dtt(8))
+            if (engine%dtt(14) /= engine%dtt(2)) call r2r_1m_y_plan(engine%dtt_plan(5), engine%dtt_decomp_xy, engine%dtt(14), engine%dtt(8))
          end if
          ! in z
          if (engine%dtt(3) == FFTW_FORWARD) then
@@ -566,7 +566,7 @@ contains
             end if
          else
             call r2r_1m_z_plan(engine%dtt_plan(3), engine%dtt_decomp_sp, engine%dtt(3), engine%dtt(9))
-            call r2r_1m_z_plan(engine%dtt_plan(6), engine%dtt_decomp_sp, engine%dtt(15), engine%dtt(9))
+            if (engine%dtt(15) /= engine%dtt(3)) call r2r_1m_z_plan(engine%dtt_plan(6), engine%dtt_decomp_sp, engine%dtt(15), engine%dtt(9))
          end if
       else
          ! in z
@@ -575,7 +575,7 @@ contains
             call rr2r_1m_z_plan(engine%dtt_plan(6), engine%sp, engine%ph)
          else
             call r2r_1m_z_plan(engine%dtt_plan(3), engine%ph, engine%dtt(3), engine%dtt(9))
-            call r2r_1m_z_plan(engine%dtt_plan(6), engine%ph, engine%dtt(15), engine%dtt(9))
+            if (engine%dtt(15) /= engine%dtt(3)) call r2r_1m_z_plan(engine%dtt_plan(6), engine%ph, engine%dtt(15), engine%dtt(9))
          end if
          ! in y
          if (engine%dtt(2) == FFTW_FORWARD) then
@@ -587,7 +587,7 @@ contains
             end if
          else
             call r2r_1m_y_plan(engine%dtt_plan(2), engine%dtt_decomp_xy, engine%dtt(2), engine%dtt(8))
-            call r2r_1m_y_plan(engine%dtt_plan(5), engine%dtt_decomp_xy, engine%dtt(14), engine%dtt(8))
+            if (engine%dtt(14) /= engine%dtt(2)) call r2r_1m_y_plan(engine%dtt_plan(5), engine%dtt_decomp_xy, engine%dtt(14), engine%dtt(8))
          end if
          ! in x
          if (engine%dtt(1) == FFTW_FORWARD) then
@@ -599,13 +599,14 @@ contains
             end if
          else
             call r2r_1m_x_plan(engine%dtt_plan(1), engine%dtt_decomp_sp, engine%dtt(1), engine%dtt(7))
-            call r2r_1m_x_plan(engine%dtt_plan(4), engine%dtt_decomp_sp, engine%dtt(13), engine%dtt(7))
+            if (engine%dtt(13) /= engine%dtt(1)) call r2r_1m_x_plan(engine%dtt_plan(4), engine%dtt_decomp_sp, engine%dtt(13), engine%dtt(7))
          end if
       end if
 
    end subroutine decomp_2d_fft_engine_dtt_init
 
    ! Set default values in the DTT config
+   ! FIXME add constants in the module decomp_2d_constants ?
    subroutine dtt_assign_default(arg_dtt)
 
       implicit none
@@ -635,6 +636,7 @@ contains
    end subroutine dtt_assign_default
 
    ! Set the backward transforms in the DTT config
+   ! FIXME add constants in the module decomp_2d_constants ?
    subroutine dtt_invert(arg_dtt)
 
       implicit none
@@ -1555,21 +1557,21 @@ contains
 #ifdef DOUBLE_PREC
       real(C_DOUBLE), allocatable, target :: a1(:, :, :)
       real(C_DOUBLE), allocatable, target :: a2(:, :, :)
-      real(C_DOUBLE), allocatable, target :: a3(:, :, :)
-      real(C_DOUBLE), allocatable, target :: a4(:, :, :)
+      real(C_DOUBLE), contiguous, pointer :: a3(:, :, :)
+      real(C_DOUBLE), contiguous, pointer :: a4(:, :, :)
       type(fftw_iodim) :: dims(1), howmany(1)
 #else
       real(C_FLOAT), allocatable, target :: a1(:, :, :)
       real(C_FLOAT), allocatable, target :: a2(:, :, :)
-      real(C_FLOAT), allocatable, target :: a3(:, :, :)
-      real(C_FLOAT), allocatable, target :: a4(:, :, :)
+      real(C_FLOAT), contiguous, pointer :: a3(:, :, :)
+      real(C_FLOAT), contiguous, pointer :: a4(:, :, :)
       type(fftwf_iodim) :: dims(1), howmany(1)
 #endif
 
       call alloc_x(a1, decomp, opt_global = .false.)
       call alloc_x(a2, decomp, opt_global = .false.)
-      call alloc_x(a3, decomp, opt_global = .false.)
-      call alloc_x(a4, decomp, opt_global = .false.)
+      a3 => a1
+      a4 => a2
 
       dims(1)%n = decomp%xsz(1)
       dims(1)%is = 1
@@ -1585,8 +1587,8 @@ contains
 
       deallocate (a1)
       deallocate (a2)
-      deallocate (a3)
-      deallocate (a4)
+      nullify (a3) 
+      nullify (a4)
       if (.not. c_associated(plan)) call decomp_2d_abort(__FILE__, __LINE__, 8, "Plan creation failed")
 
    end subroutine rr2rr_1m_x_plan
@@ -1601,23 +1603,23 @@ contains
 
       ! Local variables
 #ifdef DOUBLE_PREC
-      real(C_DOUBLE), allocatable, target :: a1(:, :)
-      real(C_DOUBLE), allocatable, target :: a2(:, :)
-      real(C_DOUBLE), allocatable, target :: a3(:, :)
-      real(C_DOUBLE), allocatable, target :: a4(:, :)
+      real(C_DOUBLE), allocatable, target :: a1(:, :, :)
+      real(C_DOUBLE), allocatable, target :: a2(:, :, :)
+      real(C_DOUBLE), contiguous, pointer :: a3(:, :, :)
+      real(C_DOUBLE), contiguous, pointer :: a4(:, :, :)
       type(fftw_iodim) :: dims(1), howmany(1)
 #else
-      real(C_FLOAT), allocatable, target :: a1(:, :)
-      real(C_FLOAT), allocatable, target :: a2(:, :)
-      real(C_FLOAT), allocatable, target :: a3(:, :)
-      real(C_FLOAT), allocatable, target :: a4(:, :)
+      real(C_FLOAT), allocatable, target :: a1(:, :, :)
+      real(C_FLOAT), allocatable, target :: a2(:, :, :)
+      real(C_FLOAT), contiguous, pointer :: a3(:, :, :)
+      real(C_FLOAT), contiguous, pointer :: a4(:, :, :)
       type(fftwf_iodim) :: dims(1), howmany(1)
 #endif
 
-      allocate(a1(decomp%ysz(1), decomp%ysz(2)))
-      allocate(a2(decomp%ysz(1), decomp%ysz(2)))
-      allocate(a3(decomp%ysz(1), decomp%ysz(2)))
-      allocate(a4(decomp%ysz(1), decomp%ysz(2)))
+      allocate(a1(decomp%ysz(1), decomp%ysz(2), 1))
+      allocate(a2(decomp%ysz(1), decomp%ysz(2), 1))
+      a3 => a1
+      a4 => a2
 
       dims(1)%n = decomp%ysz(2)
       dims(1)%is = decomp%ysz(1)
@@ -1633,8 +1635,8 @@ contains
 
       deallocate (a1)
       deallocate (a2)
-      deallocate (a3)
-      deallocate (a4)
+      nullify (a3)
+      nullify (a4)
       if (.not. c_associated(plan)) call decomp_2d_abort(__FILE__, __LINE__, 9, "Plan creation failed")
 
    end subroutine rr2rr_1m_y_plan
@@ -1651,21 +1653,21 @@ contains
 #ifdef DOUBLE_PREC
       real(C_DOUBLE), allocatable, target :: a1(:, :, :)
       real(C_DOUBLE), allocatable, target :: a2(:, :, :)
-      real(C_DOUBLE), allocatable, target :: a3(:, :, :)
-      real(C_DOUBLE), allocatable, target :: a4(:, :, :)
+      real(C_DOUBLE), contiguous, pointer :: a3(:, :, :)
+      real(C_DOUBLE), contiguous, pointer :: a4(:, :, :)
       type(fftw_iodim) :: dims(1), howmany(1)
 #else
       real(C_FLOAT), allocatable, target :: a1(:, :, :)
       real(C_FLOAT), allocatable, target :: a2(:, :, :)
-      real(C_FLOAT), allocatable, target :: a3(:, :, :)
-      real(C_FLOAT), allocatable, target :: a4(:, :, :)
+      real(C_FLOAT), contiguous, pointer :: a3(:, :, :)
+      real(C_FLOAT), contiguous, pointer :: a4(:, :, :)
       type(fftwf_iodim) :: dims(1), howmany(1)
 #endif
 
       call alloc_z(a1, decomp, opt_global = .false.)
       call alloc_z(a2, decomp, opt_global = .false.)
-      call alloc_z(a3, decomp, opt_global = .false.)
-      call alloc_z(a4, decomp, opt_global = .false.)
+      a3 => a1
+      a4 => a2
 
       dims(1)%n = decomp%zsz(3)
       dims(1)%is = decomp%zsz(1) * decomp%zsz(2)
@@ -1681,8 +1683,8 @@ contains
 
       deallocate (a1)
       deallocate (a2)
-      deallocate (a3)
-      deallocate (a4)
+      nullify (a3)
+      nullify (a4)
       if (.not. c_associated(plan)) call decomp_2d_abort(__FILE__, __LINE__, 10, "Plan creation failed")
 
    end subroutine rr2rr_1m_z_plan
@@ -1741,20 +1743,20 @@ contains
 
       ! Local variables
 #ifdef DOUBLE_PREC
-      real(C_DOUBLE), allocatable, target :: a1(:, :)
-      real(C_DOUBLE), allocatable, target :: a2(:, :)
-      real(C_DOUBLE), allocatable, target :: a3(:, :)
+      real(C_DOUBLE), allocatable, target :: a1(:, :, :)
+      real(C_DOUBLE), allocatable, target :: a2(:, :, :)
+      real(C_DOUBLE), allocatable, target :: a3(:, :, :)
       type(fftw_iodim) :: dims(1), howmany(1)
 #else
-      real(C_FLOAT), allocatable, target :: a1(:, :)
-      real(C_FLOAT), allocatable, target :: a2(:, :)
-      real(C_FLOAT), allocatable, target :: a3(:, :)
+      real(C_FLOAT), allocatable, target :: a1(:, :, :)
+      real(C_FLOAT), allocatable, target :: a2(:, :, :)
+      real(C_FLOAT), allocatable, target :: a3(:, :, :)
       type(fftwf_iodim) :: dims(1), howmany(1)
 #endif
 
-      allocate(a1(decomp%ysz(1), decomp%ysz(2)))
-      allocate(a2(decomp%ysz(1), decomp%ysz(2)))
-      allocate(a3(decomp2%ysz(1), decomp2%ysz(2)))
+      allocate(a1(decomp%ysz(1), decomp%ysz(2), 1))
+      allocate(a2(decomp%ysz(1), decomp%ysz(2), 1))
+      allocate(a3(decomp2%ysz(1), decomp2%ysz(2), 1))
 
       dims(1)%n = decomp2%ysz(2)
       dims(1)%is = decomp%ysz(1)
@@ -1873,20 +1875,20 @@ contains
 
       ! Local variables
 #ifdef DOUBLE_PREC
-      real(C_DOUBLE), allocatable, target :: a1(:, :)
-      real(C_DOUBLE), allocatable, target :: a2(:, :)
-      real(C_DOUBLE), allocatable, target :: a3(:, :)
+      real(C_DOUBLE), allocatable, target :: a1(:, :, :)
+      real(C_DOUBLE), allocatable, target :: a2(:, :, :)
+      real(C_DOUBLE), allocatable, target :: a3(:, :, :)
       type(fftw_iodim) :: dims(1), howmany(1)
 #else
-      real(C_FLOAT), allocatable, target :: a1(:, :)
-      real(C_FLOAT), allocatable, target :: a2(:, :)
-      real(C_FLOAT), allocatable, target :: a3(:, :)
+      real(C_FLOAT), allocatable, target :: a1(:, :, :)
+      real(C_FLOAT), allocatable, target :: a2(:, :, :)
+      real(C_FLOAT), allocatable, target :: a3(:, :, :)
       type(fftwf_iodim) :: dims(1), howmany(1)
 #endif
 
-      allocate(a1(decomp%ysz(1), decomp%ysz(2)))
-      allocate(a2(decomp2%ysz(1), decomp2%ysz(2)))
-      allocate(a3(decomp2%ysz(1), decomp2%ysz(2)))
+      allocate(a1(decomp%ysz(1), decomp%ysz(2), 1))
+      allocate(a2(decomp2%ysz(1), decomp2%ysz(2), 1))
+      allocate(a3(decomp2%ysz(1), decomp2%ysz(2), 1))
 
       dims(1)%n = decomp%ysz(2)
       dims(1)%is = decomp%ysz(1)
@@ -1963,22 +1965,17 @@ contains
 
       ! Local variables
 #ifdef DOUBLE_PREC
-      real(C_DOUBLE), contiguous, pointer :: a1(:, :, :)
-      real(C_DOUBLE), contiguous, pointer :: a2(:, :, :)
+      real(C_DOUBLE), allocatable, target :: a1(:, :, :)
+      real(C_DOUBLE), allocatable, target :: a2(:, :, :)
 #else
-      real(C_FLOAT), contiguous, pointer :: a1(:, :, :)
-      real(C_FLOAT), contiguous, pointer :: a2(:, :, :)
+      real(C_FLOAT), allocatable, target :: a1(:, :, :)
+      real(C_FLOAT), allocatable, target :: a2(:, :, :)
 #endif
-      type(C_PTR) :: a1_p, a2_p
-      integer(C_SIZE_T) :: sz
       integer(C_INT) :: ntmp(1)
       integer(C_FFTW_R2R_KIND) :: tmp(1)
 
-      sz = product(decomp%xsz)
-      a1_p = fftw_alloc_real(sz)
-      a2_p = fftw_alloc_real(sz)
-      call c_f_pointer(a1_p, a1, decomp%xsz)
-      call c_f_pointer(a2_p, a2, decomp%xsz)
+      call alloc_x(a1, decomp)
+      call alloc_x(a2, decomp)
 
       ntmp(1) = decomp%xsz(1) - ndismiss
       tmp(1) = dtt
@@ -1991,10 +1988,8 @@ contains
                                  a2, decomp%xsz(1), 1, decomp%xsz(1), &
                                  tmp(1), plan_type_dtt)
 
-      call fftw_free(a1_p)
-      call fftw_free(a2_p)
-      nullify (a1)
-      nullify (a2)
+      deallocate(a1)
+      deallocate(a2)
       if (.not. c_associated(plan)) call decomp_2d_abort(__FILE__, __LINE__, 17, "Plan creation failed")
 
    end subroutine r2r_1m_x_plan
@@ -2011,22 +2006,17 @@ contains
 
       ! Local variables
 #ifdef DOUBLE_PREC
-      real(C_DOUBLE), contiguous, pointer :: a1(:, :)
-      real(C_DOUBLE), contiguous, pointer :: a2(:, :)
+      real(C_DOUBLE), allocatable, target :: a1(:, :, :)
+      real(C_DOUBLE), allocatable, target :: a2(:, :, :)
 #else
-      real(C_FLOAT), contiguous, pointer :: a1(:, :)
-      real(C_FLOAT), contiguous, pointer :: a2(:, :)
+      real(C_FLOAT), allocatable, target :: a1(:, :, :)
+      real(C_FLOAT), allocatable, target :: a2(:, :, :)
 #endif
-      type(C_PTR) :: a1_p, a2_p
-      integer(C_SIZE_T) :: sz
       integer(C_INT) :: ntmp(1)
       integer(C_FFTW_R2R_KIND) :: tmp(1)
 
-      sz = decomp%ysz(1) * decomp%ysz(2)
-      a1_p = fftw_alloc_real(sz)
-      a2_p = fftw_alloc_real(sz)
-      call c_f_pointer(a1_p, a1, (/decomp%ysz(1), decomp%ysz(2)/))
-      call c_f_pointer(a2_p, a2, (/decomp%ysz(1), decomp%ysz(2)/))
+      allocate(a1(decomp%ysz(1), decomp%ysz(2), 1))
+      allocate(a2(decomp%ysz(1), decomp%ysz(2), 1))
 
       ntmp(1) = decomp%ysz(2) - ndismiss
       tmp(1) = dtt
@@ -2039,10 +2029,8 @@ contains
                                  a2, decomp%ysz(2), decomp%ysz(1), 1, &
                                  tmp(1), plan_type_dtt)
 
-      call fftw_free(a1_p)
-      call fftw_free(a2_p)
-      nullify (a1)
-      nullify (a2)
+      deallocate(a1)
+      deallocate(a2)
       if (.not. c_associated(plan)) call decomp_2d_abort(__FILE__, __LINE__, 18, "Plan creation failed")
 
    end subroutine r2r_1m_y_plan
@@ -2059,22 +2047,17 @@ contains
 
       ! Local variables
 #ifdef DOUBLE_PREC
-      real(C_DOUBLE), contiguous, pointer :: a1(:, :, :)
-      real(C_DOUBLE), contiguous, pointer :: a2(:, :, :)
+      real(C_DOUBLE), allocatable, target :: a1(:, :, :)
+      real(C_DOUBLE), allocatable, target :: a2(:, :, :)
 #else
-      real(C_FLOAT), contiguous, pointer :: a1(:, :, :)
-      real(C_FLOAT), contiguous, pointer :: a2(:, :, :)
+      real(C_FLOAT), allocatable, target :: a1(:, :, :)
+      real(C_FLOAT), allocatable, target :: a2(:, :, :)
 #endif
-      type(C_PTR) :: a1_p, a2_p
-      integer(C_SIZE_T) :: sz
       integer(C_INT) :: ntmp(1)
       integer(C_FFTW_R2R_KIND) :: tmp(1)
 
-      sz = product(decomp%zsz)
-      a1_p = fftw_alloc_real(sz)
-      a2_p = fftw_alloc_real(sz)
-      call c_f_pointer(a1_p, a1, decomp%zsz)
-      call c_f_pointer(a2_p, a2, decomp%zsz)
+      call alloc_z(a1, decomp)
+      call alloc_z(a2, decomp)
 
       ntmp(1) = decomp%zsz(3) - ndismiss
       tmp(1) = dtt
@@ -2087,10 +2070,8 @@ contains
                                  a2, decomp%zsz(3), decomp%zsz(1) * decomp%zsz(2), 1, &
                                  tmp(1), plan_type_dtt)
 
-      call fftw_free(a1_p)
-      call fftw_free(a2_p)
-      nullify (a1)
-      nullify (a2)
+      deallocate(a1)
+      deallocate(a2)
       if (.not. c_associated(plan)) call decomp_2d_abort(__FILE__, __LINE__, 19, "Plan creation failed")
 
    end subroutine r2r_1m_z_plan
@@ -2321,22 +2302,22 @@ contains
       real(mytype), dimension(:, :, :), contiguous, target, intent(out) :: outr, outi
       integer, intent(in) :: isign
 
-      ! Copy and exit if needed
-      if (skip_x_c2c) then
-         outr = inr
-         outi = ini
-         return
-      end if
+      ! Copy for in-place transform
+      outr = inr
+      outi = ini
+      
+      ! Exit if needed
+      if (skip_x_c2c) return
 
       ! Perform the DFT
       if (isign == DECOMP_2D_FFT_FORWARD) then
          call wrapper_rr2rr(dtt_plan(1), &
-                            inr, ini, 1, 1, 1, size(inr), &
-                            outr, outi, 1, 1, 1, size(outr))
+                            outr, outi, size(inr), &
+                            outr, outi, size(outr))
       else
          call wrapper_rr2rr(dtt_plan(1), &
-                            ini, inr, 1, 1, 1, size(inr), &
-                            outi, outr, 1, 1, 1, size(outr))
+                            outi, outr, size(inr), &
+                            outi, outr, size(outr))
       end if
 
    end subroutine rr2rr_1m_x
@@ -2353,25 +2334,25 @@ contains
       ! Local variable
       integer :: k
 
-      ! Copy and exit if needed
-      if (skip_y_c2c) then
-         outr = inr
-         outi = ini
-         return
-      end if
+      ! Copy for in-place transform
+      outr = inr
+      outi = ini
+      
+      ! Exit if needed
+      if (skip_y_c2c) return
 
       ! Perform the DFT
       if (isign == DECOMP_2D_FFT_FORWARD) then
          do k = 1, size(inr, 3)
             call wrapper_rr2rr(dtt_plan(2), &
-                               inr, ini, 1, 1, k, size(inr, 1) * size(inr, 2), &
-                               outr, outi, 1, 1, k, size(outr, 1) * size(outr, 2))
+                               outr(:,:,k:k), outi(:,:,k:k), size(inr, 1) * size(inr, 2), &
+                               outr(:,:,k:k), outi(:,:,k:k), size(outr, 1) * size(outr, 2))
          end do
       else
          do k = 1, size(inr, 3)
             call wrapper_rr2rr(dtt_plan(2), &
-                               ini, inr, 1, 1, k, size(inr, 1) * size(inr, 2), &
-                               outi, outr, 1, 1, k, size(outr, 1) * size(outr, 2))
+                               outi(:,:,k:k), outr(:,:,k:k), size(inr, 1) * size(inr, 2), &
+                               outi(:,:,k:k), outr(:,:,k:k), size(outr, 1) * size(outr, 2))
          end do
       end if
 
@@ -2386,22 +2367,22 @@ contains
       real(mytype), dimension(:, :, :), contiguous, target, intent(out) :: outr, outi
       integer, intent(in) :: isign
 
-      ! Copy and exit if needed
-      if (skip_z_c2c) then
-         outr = inr
-         outi = ini
-         return
-      end if
+      ! Copy for in-place transform
+      outr = inr
+      outi = ini
+      
+      ! Exit if needed
+      if (skip_z_c2c) return
 
       ! Perform the DFT
       if (isign == DECOMP_2D_FFT_FORWARD) then
          call wrapper_rr2rr(dtt_plan(3), &
-                            inr, ini, 1, 1, 1, size(inr), &
-                            outr, outi, 1, 1, 1, size(outr))
+                            outr, outi, size(inr), &
+                            outr, outi, size(outr))
       else
          call wrapper_rr2rr(dtt_plan(3), &
-                            ini, inr, 1, 1, 1, size(inr), &
-                            outi, outr, 1, 1, 1, size(outr))
+                            outi, outr, size(inr), &
+                            outi, outr, size(outr))
       end if
 
    end subroutine rr2rr_1m_z
@@ -2431,15 +2412,19 @@ contains
          ifirst = dtt(4)
          ofirst = dtt(10)
       else
-         plan = dtt_plan(4)
+         if (c_associated(dtt_plan(4))) then
+            plan = dtt_plan(4)
+         else
+            plan = dtt_plan(1)
+         end if
          ifirst = dtt(10)
          ofirst = dtt(4)
       end if
 
       ! Perform the DFT
       call wrapper_r2r(plan, &
-                       inr, ifirst, 1, 1, size(inr) - ifirst + 1, &
-                       outr, ofirst, 1, 1, size(outr) - ofirst + 1)
+                       inr, ifirst, size(inr) - ifirst + 1, &
+                       outr, ofirst, size(outr) - ofirst + 1)
 
    end subroutine r2r_1m_x
 
@@ -2468,7 +2453,11 @@ contains
          ifirst = dtt(5)
          ofirst = dtt(11)
       else
-         plan = dtt_plan(5)
+         if (c_associated(dtt_plan(5))) then
+            plan = dtt_plan(5)
+         else
+            plan = dtt_plan(2)
+         end if
          ifirst = dtt(11)
          ofirst = dtt(5)
       end if
@@ -2476,8 +2465,8 @@ contains
       ! Perform the DFT
       do k = 1, size(inr, 3)
          call wrapper_r2r(plan, &
-                          inr, 1, ifirst, k, size(inr, 1) * (size(inr, 2) - ifirst + 1), &
-                          outr, 1, ofirst, k, size(outr, 1) * (size(outr, 2) - ofirst + 1))
+                          inr(:,:,k:k), 1 + size(inr, 1) * (ifirst - 1), size(inr, 1) * (size(inr, 2) - ifirst + 1), &
+                          outr(:,:,k:k), 1 + size(outr, 1) * (ofirst - 1), size(outr, 1) * (size(outr, 2) - ofirst + 1))
       end do
 
    end subroutine r2r_1m_y
@@ -2507,15 +2496,19 @@ contains
          ifirst = dtt(6)
          ofirst = dtt(12)
       else
-         plan = dtt_plan(6)
+         if (c_associated(dtt_plan(6))) then
+            plan = dtt_plan(6)
+         else
+            plan = dtt_plan(3)
+         end if
          ifirst = dtt(12)
          ofirst = dtt(6)
       end if
 
       ! Perform the DFT
       call wrapper_r2r(plan, &
-                       inr, 1, 1, ifirst, size(inr, 1) * size(inr, 2) * (size(inr, 3) - ifirst + 1), &
-                       outr, 1, 1, ofirst, size(outr, 1) * size(outr, 2) * (size(outr, 3) - ofirst + 1))
+                       inr(:,:,ifirst:), 1, size(inr, 1) * size(inr, 2) * (size(inr, 3) - ifirst + 1), &
+                       outr(:,:,ofirst:), 1, size(outr, 1) * size(outr, 2) * (size(outr, 3) - ofirst + 1))
 
    end subroutine r2r_1m_z
 
@@ -2529,8 +2522,8 @@ contains
 
       ! Perform the DFT
       call wrapper_rr2r(dtt_plan(4), &
-                        inr, ini, 1, 1, 1, size(inr), &
-                        outr, 1, 1, 1, size(outr))
+                        inr, ini, size(inr), &
+                        outr, size(outr))
 
    end subroutine rr2r_1m_x
 
@@ -2547,8 +2540,8 @@ contains
       ! Perform the DFT
       do k = 1, size(inr, 3)
          call wrapper_rr2r(dtt_plan(5), &
-                           inr, ini, 1, 1, k, size(inr, 1) * size(inr, 2), &
-                           outr, 1, 1, k, size(outr, 1) * size(outr, 2))
+                           inr(:, :, k:k), ini(:, :, k:k), size(inr, 1) * size(inr, 2), &
+                           outr(:, :, k:k), size(outr, 1) * size(outr, 2))
       end do
 
    end subroutine rr2r_1m_y
@@ -2563,8 +2556,8 @@ contains
 
       ! Perform the DFT
       call wrapper_rr2r(dtt_plan(6), &
-                        inr, ini, 1, 1, 1, size(inr), &
-                        outr, 1, 1, 1, size(outr))
+                        inr, ini, size(inr), &
+                        outr, size(outr))
 
    end subroutine rr2r_1m_z
 
@@ -2578,8 +2571,8 @@ contains
 
       ! Perform the DFT
       call wrapper_r2rr(dtt_plan(1), &
-                        inr, 1, 1, 1, size(inr), &
-                        outr, outi, 1, 1, 1, size(outr))
+                        inr, size(inr), &
+                        outr, outi, size(outr))
 
    end subroutine r2rr_1m_x
 
@@ -2596,8 +2589,8 @@ contains
       ! Perform the DFT
       do k = 1, size(inr, 3)
          call wrapper_r2rr(dtt_plan(2), &
-                           inr, 1, 1, k, size(inr, 1) * size(inr, 2), &
-                           outr, outi, 1, 1, k, size(outr, 1) * size(outr, 2))
+                           inr(:, :, k:k), size(inr, 1) * size(inr, 2), &
+                           outr(:, :, k:k), outi(:, :, k:k), size(outr, 1) * size(outr, 2))
       end do
 
    end subroutine r2rr_1m_y
@@ -2612,8 +2605,8 @@ contains
 
       ! Perform the DFT
       call wrapper_r2rr(dtt_plan(3), &
-                        inr, 1, 1, 1, size(inr), &
-                        outr, outi, 1, 1, 1, size(outr))
+                        inr, size(inr), &
+                        outr, outi, size(outr))
 
    end subroutine r2rr_1m_z
 
@@ -3310,27 +3303,27 @@ contains
    subroutine wrapper_rr2rr(plan, &
                             inr, &
                             ini, &
-                            ii, ij, ik, isz, &
+                            isz, &
                             outr, &
                             outi, &
-                            oi, oj, ok, osz)
+                            osz)
 
       implicit none
 
       ! Arguments
       type(c_ptr), intent(in) :: plan
       real(mytype), dimension(:, :, :), target, contiguous, intent(inout) :: inr, ini
-      real(mytype), dimension(:, :, :), target, contiguous, intent(out) :: outr, outi
-      integer, intent(in) :: ii, ij, ik, isz, oi, oj, ok, osz
+      real(mytype), dimension(:, :, :), target, contiguous, intent(inout) :: outr, outi
+      integer, intent(in) :: isz, osz
 
       ! Local variables
       real(mytype), dimension(:), contiguous, pointer :: inr2, ini2, outr2, outi2
 
       ! Create 1D pointers starting at the ifirst / ofirst location
-      call c_f_pointer(c_loc(inr(ii, ij, ik)), inr2, (/isz/))
-      call c_f_pointer(c_loc(ini(ii, ij, ik)), ini2, (/isz/))
-      call c_f_pointer(c_loc(outr(oi, oj, ok)), outr2, (/osz/))
-      call c_f_pointer(c_loc(outi(oi, oj, ok)), outi2, (/osz/))
+      call c_f_pointer(c_loc(inr), inr2, (/isz/))
+      call c_f_pointer(c_loc(ini), ini2, (/isz/))
+      call c_f_pointer(c_loc(outr), outr2, (/osz/))
+      call c_f_pointer(c_loc(outi), outi2, (/osz/))
 
       ! Perform DFT
 #ifdef DOUBLE_PREC
@@ -3349,9 +3342,9 @@ contains
    !
    subroutine wrapper_r2r(plan, &
                           inr, &
-                          ii, ij, ik, isz, &
+                          ii, isz, &
                           outr, &
-                          oi, oj, ok, osz)
+                          oi, osz)
 
       implicit none
 
@@ -3359,20 +3352,20 @@ contains
       type(c_ptr), intent(in) :: plan
       real(mytype), dimension(:, :, :), target, contiguous, intent(inout) :: inr
       real(mytype), dimension(:, :, :), target, contiguous, intent(out) :: outr
-      integer, intent(in) :: ii, ij, ik, isz, oi, oj, ok, osz
+      integer, intent(in) :: ii, isz, oi, osz
 
       ! Local variables
       real(mytype), dimension(:), contiguous, pointer :: inr2, outr2
 
       ! Create 1D pointers starting at the ifirst / ofirst location
-      call c_f_pointer(c_loc(inr(ii, ij, ik)), inr2, (/isz/))
-      call c_f_pointer(c_loc(outr(oi, oj, ok)), outr2, (/osz/))
+      call c_f_pointer(c_loc(inr), inr2, (/isz + ii - 1/))
+      call c_f_pointer(c_loc(outr), outr2, (/osz + oi - 1/))
 
       ! Perform DFT
 #ifdef DOUBLE_PREC
-      call fftw_execute_r2r(plan, inr2, outr2)
+      call fftw_execute_r2r(plan, inr2(ii:), outr2(oi:))
 #else
-      call fftwf_execute_r2r(plan, inr2, outr2)
+      call fftwf_execute_r2r(plan, inr2(ii:), outr2(oi:))
 #endif
 
       ! Release pointers
@@ -3384,9 +3377,9 @@ contains
    subroutine wrapper_rr2r(plan, &
                            inr, &
                            ini, &
-                           ii, ij, ik, isz, &
+                           isz, &
                            outr, &
-                           oi, oj, ok, osz)
+                           osz)
 
       implicit none
 
@@ -3394,15 +3387,15 @@ contains
       type(c_ptr), intent(in) :: plan
       real(mytype), dimension(:, :, :), target, contiguous, intent(inout) :: inr, ini
       real(mytype), dimension(:, :, :), target, contiguous, intent(out) :: outr
-      integer, intent(in) :: ii, ij, ik, isz, oi, oj, ok, osz
+      integer, intent(in) :: isz, osz
 
       ! Local variables
       real(mytype), dimension(:), contiguous, pointer :: inr2, ini2, outr2
 
       ! Create 1D pointers starting at the ifirst / ofirst location
-      call c_f_pointer(c_loc(inr(ii, ij, ik)), inr2, (/isz/))
-      call c_f_pointer(c_loc(ini(ii, ij, ik)), ini2, (/isz/))
-      call c_f_pointer(c_loc(outr(oi, oj, ok)), outr2, (/osz/))
+      call c_f_pointer(c_loc(inr), inr2, (/isz/))
+      call c_f_pointer(c_loc(ini), ini2, (/isz/))
+      call c_f_pointer(c_loc(outr), outr2, (/osz/))
 
       ! Perform DFT
 #ifdef DOUBLE_PREC
@@ -3420,10 +3413,10 @@ contains
    !
    subroutine wrapper_r2rr(plan, &
                            inr, &
-                           ii, ij, ik, isz, &
+                           isz, &
                            outr, &
                            outi, &
-                           oi, oj, ok, osz)
+                           osz)
 
       implicit none
 
@@ -3431,15 +3424,15 @@ contains
       type(c_ptr), intent(in) :: plan
       real(mytype), dimension(:, :, :), target, contiguous, intent(inout) :: inr
       real(mytype), dimension(:, :, :), target, contiguous, intent(out) :: outr, outi
-      integer, intent(in) :: ii, ij, ik, isz, oi, oj, ok, osz
+      integer, intent(in) :: isz, osz
 
       ! Local variables
       real(mytype), dimension(:), contiguous, pointer :: inr2, outr2, outi2
 
       ! Create 1D pointers starting at the ifirst / ofirst location
-      call c_f_pointer(c_loc(inr(ii, ij, ik)), inr2, (/isz/))
-      call c_f_pointer(c_loc(outr(oi, oj, ok)), outr2, (/osz/))
-      call c_f_pointer(c_loc(outi(oi, oj, ok)), outi2, (/osz/))
+      call c_f_pointer(c_loc(inr), inr2, (/isz/))
+      call c_f_pointer(c_loc(outr), outr2, (/osz/))
+      call c_f_pointer(c_loc(outi), outi2, (/osz/))
 
       ! Perform DFT
 #ifdef DOUBLE_PREC

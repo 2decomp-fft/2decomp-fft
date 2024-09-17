@@ -1966,16 +1966,16 @@ contains
       ! Local variables
 #ifdef DOUBLE_PREC
       real(C_DOUBLE), allocatable, target :: a1(:, :, :)
-      real(C_DOUBLE), allocatable, target :: a2(:, :, :)
+      real(C_DOUBLE), contiguous, pointer :: a2(:, :, :)
 #else
       real(C_FLOAT), allocatable, target :: a1(:, :, :)
-      real(C_FLOAT), allocatable, target :: a2(:, :, :)
+      real(C_FLOAT), contiguous, pointer :: a2(:, :, :)
 #endif
       integer(C_INT) :: ntmp(1)
       integer(C_FFTW_R2R_KIND) :: tmp(1)
 
       call alloc_x(a1, decomp)
-      call alloc_x(a2, decomp)
+      a2 => a1
 
       ntmp(1) = decomp%xsz(1) - ndismiss
       tmp(1) = dtt
@@ -1989,7 +1989,7 @@ contains
                                  tmp(1), plan_type_dtt)
 
       deallocate(a1)
-      deallocate(a2)
+      nullify (a2)
       if (.not. c_associated(plan)) call decomp_2d_abort(__FILE__, __LINE__, 17, "Plan creation failed")
 
    end subroutine r2r_1m_x_plan
@@ -2007,16 +2007,16 @@ contains
       ! Local variables
 #ifdef DOUBLE_PREC
       real(C_DOUBLE), allocatable, target :: a1(:, :, :)
-      real(C_DOUBLE), allocatable, target :: a2(:, :, :)
+      real(C_DOUBLE), contiguous, pointer :: a2(:, :, :)
 #else
       real(C_FLOAT), allocatable, target :: a1(:, :, :)
-      real(C_FLOAT), allocatable, target :: a2(:, :, :)
+      real(C_FLOAT), contiguous, pointer :: a2(:, :, :)
 #endif
       integer(C_INT) :: ntmp(1)
       integer(C_FFTW_R2R_KIND) :: tmp(1)
 
       allocate(a1(decomp%ysz(1), decomp%ysz(2), 1))
-      allocate(a2(decomp%ysz(1), decomp%ysz(2), 1))
+      a2 => a1
 
       ntmp(1) = decomp%ysz(2) - ndismiss
       tmp(1) = dtt
@@ -2029,8 +2029,8 @@ contains
                                  a2, decomp%ysz(2), decomp%ysz(1), 1, &
                                  tmp(1), plan_type_dtt)
 
-      deallocate(a1)
-      deallocate(a2)
+      deallocate (a1)
+      nullify (a2)
       if (.not. c_associated(plan)) call decomp_2d_abort(__FILE__, __LINE__, 18, "Plan creation failed")
 
    end subroutine r2r_1m_y_plan
@@ -2048,16 +2048,16 @@ contains
       ! Local variables
 #ifdef DOUBLE_PREC
       real(C_DOUBLE), allocatable, target :: a1(:, :, :)
-      real(C_DOUBLE), allocatable, target :: a2(:, :, :)
+      real(C_DOUBLE), contiguous, pointer :: a2(:, :, :)
 #else
       real(C_FLOAT), allocatable, target :: a1(:, :, :)
-      real(C_FLOAT), allocatable, target :: a2(:, :, :)
+      real(C_FLOAT), contiguous, pointer :: a2(:, :, :)
 #endif
       integer(C_INT) :: ntmp(1)
       integer(C_FFTW_R2R_KIND) :: tmp(1)
 
       call alloc_z(a1, decomp)
-      call alloc_z(a2, decomp)
+      a2 => a1
 
       ntmp(1) = decomp%zsz(3) - ndismiss
       tmp(1) = dtt
@@ -2071,7 +2071,7 @@ contains
                                  tmp(1), plan_type_dtt)
 
       deallocate(a1)
-      deallocate(a2)
+      nullify (a2)
       if (.not. c_associated(plan)) call decomp_2d_abort(__FILE__, __LINE__, 19, "Plan creation failed")
 
    end subroutine r2r_1m_z_plan
@@ -3360,12 +3360,13 @@ contains
       ! Create 1D pointers starting at the ifirst / ofirst location
       call c_f_pointer(c_loc(inr), inr2, (/isz + ii - 1/))
       call c_f_pointer(c_loc(outr), outr2, (/osz + oi - 1/))
+      outr2(oi:) = inr2(ii:)
 
       ! Perform DFT
 #ifdef DOUBLE_PREC
-      call fftw_execute_r2r(plan, inr2(ii:), outr2(oi:))
+      call fftw_execute_r2r(plan, outr2(oi:), outr2(oi:))
 #else
-      call fftwf_execute_r2r(plan, inr2(ii:), outr2(oi:))
+      call fftwf_execute_r2r(plan, outr2(oi:), outr2(oi:))
 #endif
 
       ! Release pointers

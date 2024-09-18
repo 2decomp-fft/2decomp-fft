@@ -1732,7 +1732,7 @@ contains
 
       ! Perform the DFT
       call wrapper_r2r(plan, &
-                       inr(:, :, ifirst:), 1 + size(inr, 1) * size(inr, 2) * (ifirst - 1), size(inr))
+                       inr, 1 + size(inr, 1) * size(inr, 2) * (ifirst - 1), size(inr))
 
    end subroutine r2r_1m_z
 

@@ -664,7 +664,7 @@ contains
       ! Deallocate the DTT config
       deallocate (engine%dtt)
 
-      ! Set pointers to null
+      ! Free memory
       deallocate (engine%wk2ra)
 
       ! Clean the fftw plans
@@ -706,7 +706,7 @@ contains
       class(decomp_2d_fft_engine), intent(in) :: engine
       integer, dimension(3) :: decomp_2d_fft_engine_dtt_input
 
-      if (with_dtt) then
+      if (engine%with_dtt) then
          decomp_2d_fft_engine_dtt_input = fftw_for_dtt(engine%dtt(1:3))
       else
          call decomp_2d_abort(__FILE__, __LINE__, 1, "No DTT for the current engine")
@@ -1640,7 +1640,7 @@ contains
       type(c_ptr) :: plan
       integer :: ifirst
 
-      ! Copy and exit if needed
+      ! Exit if needed
       if (skip_x_c2c) return
 
       ! Get the DTT config
@@ -1674,7 +1674,7 @@ contains
       type(c_ptr) :: plan
       integer :: k, ifirst
 
-      ! Copy and exit if needed
+      ! Exit if needed
       if (skip_y_c2c) return
 
       ! Get the DTT config
@@ -1710,7 +1710,7 @@ contains
       type(c_ptr) :: plan
       integer :: ifirst
 
-      ! Copy and exit if needed
+      ! Exit if needed
       if (skip_z_c2c) return
 
       ! Get the DTT config
@@ -2165,7 +2165,7 @@ contains
       ! Local variables
       real(mytype), dimension(:), contiguous, pointer :: inr2
 
-      ! Create 1D pointers starting at the ifirst / ofirst location
+      ! Create 1D pointers starting at the ifirst location
       call c_f_pointer(c_loc(inr), inr2, (/isz + ii - 1/))
 
       ! Perform DFT

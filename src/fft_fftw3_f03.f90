@@ -414,7 +414,7 @@ contains
       call dtt_for_fftw(engine%dtt(13:15))
 
       ! Working array in y
-      call alloc_y(engine%wk2ra, engine%ph, opt_global = .false.)
+      call alloc_y(engine%wk2ra, engine%ph, opt_global=.false.)
 
       ! Set to zero
       engine%wk2ra = 0._mytype
@@ -688,7 +688,7 @@ contains
 
       integer, dimension(3) :: decomp_2d_fft_get_dtt_input
 
-      if (.not.associated(with_dtt)) call decomp_2d_abort(__FILE__, __LINE__, 1, "Invalid operation")
+      if (.not. associated(with_dtt)) call decomp_2d_abort(__FILE__, __LINE__, 1, "Invalid operation")
 
       if (with_dtt) then
          decomp_2d_fft_get_dtt_input = fftw_for_dtt(dtt(1:3))
@@ -1324,7 +1324,7 @@ contains
                                  a2, decomp%xsz(1), 1, decomp%xsz(1), &
                                  tmp(1), plan_type_dtt)
 
-      deallocate(a1)
+      deallocate (a1)
       nullify (a2)
       if (.not. c_associated(plan)) call decomp_2d_abort(__FILE__, __LINE__, 17, "Plan creation failed")
 
@@ -1351,7 +1351,7 @@ contains
       integer(C_INT) :: ntmp(1)
       integer(C_FFTW_R2R_KIND) :: tmp(1)
 
-      allocate(a1(decomp%ysz(1), decomp%ysz(2), 1))
+      allocate (a1(decomp%ysz(1), decomp%ysz(2), 1))
       a2 => a1
 
       ntmp(1) = decomp%ysz(2) - ndismiss
@@ -1406,7 +1406,7 @@ contains
                                  a2, decomp%zsz(3), decomp%zsz(1) * decomp%zsz(2), 1, &
                                  tmp(1), plan_type_dtt)
 
-      deallocate(a1)
+      deallocate (a1)
       nullify (a2)
       if (.not. c_associated(plan)) call decomp_2d_abort(__FILE__, __LINE__, 19, "Plan creation failed")
 
@@ -1693,7 +1693,7 @@ contains
       ! Perform the DFT
       do k = 1, size(inr, 3)
          call wrapper_r2r(plan, &
-                          inr(:,:,k:k), 1 + size(inr, 1) * (ifirst - 1), size(inr, 1) * (size(inr, 2) - ifirst + 1))
+                          inr(:, :, k:k), 1 + size(inr, 1) * (ifirst - 1), size(inr, 1) * (size(inr, 2) - ifirst + 1))
       end do
 
    end subroutine r2r_1m_y
@@ -1728,7 +1728,7 @@ contains
 
       ! Perform the DFT
       call wrapper_r2r(plan, &
-                       inr(:,:,ifirst:), 1, size(inr, 1) * size(inr, 2) * (size(inr, 3) - ifirst + 1))
+                       inr(:, :, ifirst:), 1, size(inr, 1) * size(inr, 2) * (size(inr, 3) - ifirst + 1))
 
    end subroutine r2r_1m_z
 

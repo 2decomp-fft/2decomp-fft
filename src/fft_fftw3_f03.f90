@@ -388,21 +388,25 @@ contains
       integer, dimension(:), intent(in) :: in_DTT
 
       ! Safety check
-      if (minval(in_DTT) < 1) call decomp_2d_abort(__FILE__, __LINE__, minval(in_DTT), "Invalid argument")
-      if (maxval(in_DTT) > 8) call decomp_2d_abort(__FILE__, __LINE__, maxval(in_DTT), "Invalid argument")
+      if (size(in_DTT) < 3) call decomp_2d_abort(__FILE__, __LINE__, size(in_DTT), "Invalid argument")
+      if (minval(in_DTT(1:3)) < 1) call decomp_2d_abort(__FILE__, __LINE__, minval(in_DTT(1:3)), "Invalid argument")
+      if (maxval(in_DTT(1:3)) > 8) call decomp_2d_abort(__FILE__, __LINE__, maxval(in_DTT(1:3)), "Invalid argument")
 
       ! Prepare engine%dtt
       ! Mandatory
       !    1:3 => type of forward transform
       ! Optional, default values in dtt_assign_default
-      !    4:6 => ifirst, index where the transform starts in the input
+      !    4:6 => ifirst, index where the in-place r2r transform starts
       !    7:9 => ndismiss, number of points skipped
-      !    10:12 => ofirst, index where the transform starts in the output
+      !    10:12 => ofirst, should match ifirst (in-place r2r transform)
       ! Values defined in dtt_invert
       !    12:15 => type of backward transform
       allocate (engine%dtt(15))
       if (size(in_DTT) == 12) then
          engine%dtt(1:12) = in_DTT
+         if (any(engine%dtt(4:6) /= engine%dtt(10:12))) then
+            call decomp_2d_abort(__FILE__, __LINE__, 1, "Setup is not compatible with in-place r2r transforms")
+         end if
       elseif (size(in_DTT) == 3) then
          engine%dtt(1:3) = in_DTT
          call dtt_assign_default(engine%dtt)
@@ -1296,8 +1300,8 @@ contains
 
       type(C_PTR), intent(out) :: plan
       TYPE(DECOMP_INFO), intent(in) :: decomp
-      integer, intent(in) :: dtt
-      integer, intent(in) :: ndismiss  ! to dismiss n points from the signal
+      integer, intent(in) :: dtt ! Type of DTT compatible with fftw3
+      integer, intent(in) :: ndismiss ! to dismiss n points from the signal
 
       ! Local variables
 #ifdef DOUBLE_PREC
@@ -1337,8 +1341,8 @@ contains
 
       type(C_PTR), intent(out) :: plan
       TYPE(DECOMP_INFO), intent(in) :: decomp
-      integer, intent(in) :: dtt
-      integer, intent(in) :: ndismiss  ! to dismiss n points from the signal
+      integer, intent(in) :: dtt ! Type of DTT compatible with fftw3
+      integer, intent(in) :: ndismiss ! to dismiss n points from the signal
 
       ! Local variables
 #ifdef DOUBLE_PREC
@@ -1378,8 +1382,8 @@ contains
 
       type(C_PTR), intent(out) :: plan
       TYPE(DECOMP_INFO), intent(in) :: decomp
-      integer, intent(in) :: dtt
-      integer, intent(in) :: ndismiss  ! to dismiss n points from the signal
+      integer, intent(in) :: dtt ! Type of DTT compatible with fftw3
+      integer, intent(in) :: ndismiss ! to dismiss n points from the signal
 
       ! Local variables
 #ifdef DOUBLE_PREC
@@ -1628,7 +1632,7 @@ contains
 
    end subroutine c2r_1m_z
 
-   ! r2r transform, x direction
+   ! r2r transform, multiple 1D DTTs in x direction
    subroutine r2r_1m_x(inr, isign)
 
       implicit none
@@ -1662,7 +1666,7 @@ contains
 
    end subroutine r2r_1m_x
 
-   ! r2r transform, y direction
+   ! r2r transform, multiple 1D DTTs in y direction
    subroutine r2r_1m_y(inr, isign)
 
       implicit none
@@ -1698,7 +1702,7 @@ contains
 
    end subroutine r2r_1m_y
 
-   ! r2r transform, z direction
+   ! r2r transform, multiple 1D DTTs in z direction
    subroutine r2r_1m_z(inr, isign)
 
       implicit none

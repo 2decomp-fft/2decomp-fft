@@ -20,8 +20,6 @@ program dtt_z
 
    ! Decomp_info objects in the phuysical and spectral space
    type(decomp_info), pointer :: ph => null(), sp => null()
-   ! Output in case of periodicity
-   complex(mytype), target, allocatable, dimension(:, :, :) :: out_c
    ! Ouput when there is no periodicity
    real(mytype), target, allocatable, dimension(:, :, :) :: out_r
    ! Input
@@ -53,19 +51,19 @@ program dtt_z
    ! Now we can check if user put some inputs
    call decomp_2d_testing_init(p_row, p_col, nx, ny, nz, dttxi, dttyi, dttzi)
    if (dttxi == -1) then
-      dttxi = 1
+      dttxi = 2
       dttxf = 9
    else
       dttxf = dttxi
    end if
    if (dttyi == -1) then
-      dttyi = 1
+      dttyi = 2
       dttyf = 9
    else
       dttyf = dttyi
    end if
    if (dttzi == -1) then
-      dttzi = 1
+      dttzi = 2
       dttzf = 9
    else
       dttzf = dttzi
@@ -103,13 +101,11 @@ program dtt_z
 
             ! Get the decomp_info objects
             ph => decomp_2d_fft_get_ph()
-            sp => decomp_2d_fft_get_dtt_sp()
+            sp => ph
 
             ! Allocate memory and set to zero
             call alloc_z(in_r, ph, .true.)
             in_r = 0._mytype
-            call alloc_x(out_c, sp, .true.)
-            out_c = cmplx(0._mytype, 0._mytype, kind=mytype)
             call alloc_x(out_r, sp, .true.)
             out_r = 0._mytype
 
@@ -131,9 +127,9 @@ program dtt_z
 
             ! Perform forward and backward transform once
             ! Forward, real input, real or complex output
-            call decomp_2d_dtt_3d_r2x(in=in_r, out_real=out_r, out_cplx=out_c)
+            call decomp_2d_dtt_3d_r2r(in_r, out_r, DECOMP_2D_FFT_FORWARD)
             ! Backward, real or complex input, real output
-            call decomp_2d_dtt_3d_x2r(in_real=out_r, in_cplx=out_c, out=in_r)
+            call decomp_2d_dtt_3d_r2r(out_r, in_r, DECOMP_2D_FFT_BACKWARD)
 
             ! Rescale
             if (DTT(1, j, k, l) == 0) then
@@ -217,7 +213,6 @@ program dtt_z
 
             ! Free memory and objects
             if (allocated(out_r)) deallocate (out_r)
-            if (allocated(out_c)) deallocate (out_c)
             deallocate (in_r)
             nullify (sp)
             nullify (ph)

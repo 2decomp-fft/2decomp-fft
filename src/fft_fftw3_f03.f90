@@ -1662,7 +1662,7 @@ contains
 
       ! Perform the DFT
       call wrapper_r2r(plan, &
-                       inr, ifirst, size(inr) - ifirst + 1)
+                       inr, ifirst, size(inr))
 
    end subroutine r2r_1m_x
 
@@ -1697,7 +1697,7 @@ contains
       ! Perform the DFT
       do k = 1, size(inr, 3)
          call wrapper_r2r(plan, &
-                          inr(:, :, k:k), 1 + size(inr, 1) * (ifirst - 1), size(inr, 1) * (size(inr, 2) - ifirst + 1))
+                          inr(:, :, k:k), 1 + size(inr, 1) * (ifirst - 1), size(inr, 1) * size(inr, 2))
       end do
 
    end subroutine r2r_1m_y
@@ -1732,7 +1732,7 @@ contains
 
       ! Perform the DFT
       call wrapper_r2r(plan, &
-                       inr(:, :, ifirst:), 1, size(inr, 1) * size(inr, 2) * (size(inr, 3) - ifirst + 1))
+                       inr(:, :, ifirst:), 1 + size(inr, 1) * size(inr, 2) * (ifirst - 1), size(inr))
 
    end subroutine r2r_1m_z
 
@@ -2166,13 +2166,13 @@ contains
       real(mytype), dimension(:, :, :), target, contiguous, intent(inout) :: inr
       integer, intent(in) :: ii, isz
 
-      ! Local variables
+      ! Local variable
       real(mytype), dimension(:), contiguous, pointer :: inr2
 
-      ! Create 1D pointers starting at the ifirst location
-      call c_f_pointer(c_loc(inr), inr2, (/isz + ii - 1/))
+      ! Create 1D pointers mapping the provided 3D array
+      call c_f_pointer(c_loc(inr), inr2, (/isz/))
 
-      ! Perform DFT
+      ! Perform DFT starting at the ifirst location
 #ifdef DOUBLE_PREC
       call fftw_execute_r2r(plan, inr2(ii:), inr2(ii:))
 #else

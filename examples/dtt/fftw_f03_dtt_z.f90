@@ -28,7 +28,7 @@ program dtt_z
    type(decomp_2d_fft_engine), target, save :: dtt_engine
 
    ! 3 directions
-   ! 9 transforms (periodicity, 4 DCT, 4 DST)
+   ! 8 transforms (4 DCT, 4 DST)
    ! Default values for ifirst, ofirst and ndismiss
    integer, dimension(3, 9, 9, 9) :: DTT
 
@@ -104,9 +104,9 @@ program dtt_z
             sp => ph
 
             ! Allocate memory and set to zero
-            call alloc_z(in_r, ph, .true.)
+            call alloc_z(in_r, ph, opt_global = .true.)
             in_r = 0._mytype
-            call alloc_x(out_r, sp, .true.)
+            call alloc_x(out_r, sp, opt_global = .true.)
             out_r = 0._mytype
 
             ! Local size
@@ -126,9 +126,9 @@ program dtt_z
             end do
 
             ! Perform forward and backward transform once
-            ! Forward, real input, real or complex output
+            ! Forward, real input, real output
             call decomp_2d_dtt_3d_r2r(in_r, out_r, DECOMP_2D_FFT_FORWARD)
-            ! Backward, real or complex input, real output
+            ! Backward, real input, real output
             call decomp_2d_dtt_3d_r2r(out_r, in_r, DECOMP_2D_FFT_BACKWARD)
 
             ! Rescale

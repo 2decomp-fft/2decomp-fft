@@ -16,6 +16,7 @@ _e.g._ vX.Y - YYYY-MM-DD and a new "Unreleased" section started above.
 - The FFT can be performed on various grids for all backends. In addition, the fftw_f03 FFT backend also supports in-place r2c and in-place c2r transforms (experimental support currently). Based on the work of [Lionel Gelebart](https://github.com/LionelGelebart) and coworkers, see [AMITEX_FFTP](https://amitexfftp.github.io/AMITEX/index.html) and [2decomp15_mg](https://github.com/LionelGelebart/2decomp15_mg). See [PR 302](https://github.com/2decomp-fft/2decomp-fft/pull/302).
 - The external code can now provide [hints for MPI IO](https://www.mpi-forum.org/docs/mpi-3.1/mpi31-report/node315.htm#Node316). Non-blocking MPI IO is also added. See [PR #269](https://github.com/2decomp-fft/2decomp-fft/pull/269)
 - Add the possibility to allocate 3D integers and logical arrays. See [PR 345](https://github.com/2decomp-fft/2decomp-fft/pull/345)
+- Add the possibility to perform r2r DCT and DST transforms when using the backend `fftw_f03` [PR #350](https://github.com/2decomp-fft/2decomp-fft/pull/350)
 
 ### Fixed
 

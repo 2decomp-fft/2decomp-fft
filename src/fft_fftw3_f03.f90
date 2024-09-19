@@ -73,9 +73,6 @@ module decomp_2d_fft
    !    4, 5, 6 : backward transform in X, Y and Z
    type(C_PTR), contiguous, pointer, save :: dtt_plan(:) => null()
 
-   ! Workspace for DTT
-   real(mytype), contiguous, pointer :: wk2ra(:, :, :) => null()
-
    ! Derived type with all the quantities needed to perform FFT
    type decomp_2d_fft_engine
       type(c_ptr), private :: plan(-1:2, 3), wk2_c2c_p, wk13_p
@@ -94,7 +91,6 @@ module decomp_2d_fft
       logical, public :: with_dtt
       integer, allocatable, public, dimension(:) :: dtt
       type(C_PTR), private :: dtt_plan(6)
-      real(mytype), allocatable, private :: wk2ra(:, :, :)
    contains
       procedure, public :: init => decomp_2d_fft_engine_init
       procedure, public :: fin => decomp_2d_fft_engine_fin
@@ -417,12 +413,6 @@ contains
       call dtt_for_fftw(engine%dtt(1:3))
       call dtt_for_fftw(engine%dtt(13:15))
 
-      ! Working array in y
-      call alloc_y(engine%wk2ra, engine%ph, opt_global=.false.)
-
-      ! Set to zero
-      engine%wk2ra = 0._mytype
-
       ! Prepare the fftw plans
       engine%dtt_plan = c_null_ptr
       ! in x
@@ -609,7 +599,6 @@ contains
       if (associated(dtt)) then
          nullify (dtt)
          nullify (dtt_plan)
-         nullify (wk2ra)
       end if
 
       ! Clean the FFTW library
@@ -667,9 +656,6 @@ contains
 
       ! Deallocate the DTT config
       deallocate (engine%dtt)
-
-      ! Free memory
-      deallocate (engine%wk2ra)
 
       ! Clean the fftw plans
       do i = 1, 6
@@ -897,11 +883,9 @@ contains
       if (with_dtt) then
          dtt => engine%dtt
          dtt_plan => engine%dtt_plan
-         wk2ra => engine%wk2ra
       else if (associated(dtt)) then
          nullify (dtt)
          nullify (dtt_plan)
-         nullify (wk2ra)
       end if
 
    end subroutine decomp_2d_fft_engine_use_it
@@ -2060,12 +2044,18 @@ contains
       real(mytype), dimension(:, :, :), contiguous, target, intent(out) :: out_real
       integer, intent(in) :: isign
 
+      ! Local variable
+      real(mytype), dimension(:, :, :), contiguous, pointer :: wk2ra
+
       if (decomp_profiler_fft) call decomp_profiler_start("decomp_2d_dtt_3d_r2r")
 
       ! Safety check
       if (isign /= DECOMP_2D_FFT_FORWARD .and. isign /= DECOMP_2D_FFT_BACKWARD) then
          call decomp_2d_abort(__FILE__, __LINE__, isign, "Invalid value")
       end if
+
+      ! Get a buffer for arrays in y-pencil                                                
+      call c_f_pointer(c_loc(wk2_c2c), wk2ra, ph%ysz)
 
       ! Perform the 3D DTT
       if ((format == PHYSICAL_IN_X .and. isign == DECOMP_2D_FFT_FORWARD) .or. &
@@ -2104,6 +2094,8 @@ contains
          call r2r_1m_x(out_real, isign)
 
       end if
+
+      nullify (wk2ra)
 
       if (decomp_profiler_fft) call decomp_profiler_end("decomp_2d_dtt_3d_r2r")
 

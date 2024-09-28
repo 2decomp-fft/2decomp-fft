@@ -1699,19 +1699,16 @@ contains
 
       ! Local variables
 #ifdef DOUBLE_PREC
-      real(C_DOUBLE), allocatable, target :: a1(:, :, :)
-      real(C_DOUBLE), allocatable, target :: a2(:, :, :)
+      complex(C_DOUBLE), allocatable, target :: a1(:, :, :)
       real(C_DOUBLE), allocatable, target :: a3(:, :, :)
       type(fftw_iodim) :: dims(1), howmany(1)
 #else
-      real(C_FLOAT), allocatable, target :: a1(:, :, :)
-      real(C_FLOAT), allocatable, target :: a2(:, :, :)
+      complex(C_FLOAT), allocatable, target :: a1(:, :, :)
       real(C_FLOAT), allocatable, target :: a3(:, :, :)
       type(fftwf_iodim) :: dims(1), howmany(1)
 #endif
 
       call alloc_x(a1, decomp, opt_global = .false.)
-      call alloc_x(a2, decomp, opt_global = .false.)
       call alloc_x(a3, decomp2, opt_global = .false.)
 
       dims(1)%n = decomp2%xsz(1)
@@ -1721,13 +1718,12 @@ contains
       howmany(1)%is = decomp%xsz(1)
       howmany(1)%os = decomp2%xsz(1)
 #ifdef DOUBLE_PREC
-      plan = fftw_plan_guru_split_dft_c2r(1, dims(1), 1, howmany(1), a1, a2, a3, plan_type_dtt)
+      plan = fftw_plan_guru_dft_c2r(1, dims(1), 1, howmany(1), a1, a3, plan_type_dtt)
 #else
-      plan = fftwf_plan_guru_split_dft_c2r(1, dims(1), 1, howmany(1), a1, a2, a3, plan_type_dtt)
+      plan = fftwf_plan_guru_dft_c2r(1, dims(1), 1, howmany(1), a1, a3, plan_type_dtt)
 #endif
 
       deallocate (a1)
-      deallocate (a2)
       deallocate (a3)
       if (.not. c_associated(plan)) call decomp_2d_abort(__FILE__, __LINE__, 11, "Plan creation failed")
 
@@ -1743,19 +1739,16 @@ contains
 
       ! Local variables
 #ifdef DOUBLE_PREC
-      real(C_DOUBLE), allocatable, target :: a1(:, :, :)
-      real(C_DOUBLE), allocatable, target :: a2(:, :, :)
+      complex(C_DOUBLE), allocatable, target :: a1(:, :, :)
       real(C_DOUBLE), allocatable, target :: a3(:, :, :)
       type(fftw_iodim) :: dims(1), howmany(1)
 #else
-      real(C_FLOAT), allocatable, target :: a1(:, :, :)
-      real(C_FLOAT), allocatable, target :: a2(:, :, :)
+      complex(C_FLOAT), allocatable, target :: a1(:, :, :)
       real(C_FLOAT), allocatable, target :: a3(:, :, :)
       type(fftwf_iodim) :: dims(1), howmany(1)
 #endif
 
       allocate(a1(decomp%ysz(1), decomp%ysz(2), 1))
-      allocate(a2(decomp%ysz(1), decomp%ysz(2), 1))
       allocate(a3(decomp2%ysz(1), decomp2%ysz(2), 1))
 
       dims(1)%n = decomp2%ysz(2)
@@ -1765,13 +1758,12 @@ contains
       howmany(1)%is = 1
       howmany(1)%os = 1
 #ifdef DOUBLE_PREC
-      plan = fftw_plan_guru_split_dft_c2r(1, dims(1), 1, howmany(1), a1, a2, a3, plan_type_dtt)
+      plan = fftw_plan_guru_dft_c2r(1, dims(1), 1, howmany(1), a1, a3, plan_type_dtt)
 #else
-      plan = fftwf_plan_guru_split_dft_c2r(1, dims(1), 1, howmany(1), a1, a2, a3, plan_type_dtt)
+      plan = fftwf_plan_guru_dft_c2r(1, dims(1), 1, howmany(1), a1, a3, plan_type_dtt)
 #endif
 
       deallocate (a1)
-      deallocate (a2)
       deallocate (a3)
       if (.not. c_associated(plan)) call decomp_2d_abort(__FILE__, __LINE__, 12, "Plan creation failed")
 
@@ -1787,19 +1779,16 @@ contains
 
       ! Local variables
 #ifdef DOUBLE_PREC
-      real(C_DOUBLE), allocatable, target :: a1(:, :, :)
-      real(C_DOUBLE), allocatable, target :: a2(:, :, :)
+      complex(C_DOUBLE), allocatable, target :: a1(:, :, :)
       real(C_DOUBLE), allocatable, target :: a3(:, :, :)
       type(fftw_iodim) :: dims(1), howmany(1)
 #else
-      real(C_FLOAT), allocatable, target :: a1(:, :, :)
-      real(C_FLOAT), allocatable, target :: a2(:, :, :)
+      complex(C_FLOAT), allocatable, target :: a1(:, :, :)
       real(C_FLOAT), allocatable, target :: a3(:, :, :)
       type(fftwf_iodim) :: dims(1), howmany(1)
 #endif
 
       call alloc_z(a1, decomp, opt_global = .false.)
-      call alloc_z(a2, decomp, opt_global = .false.)
       call alloc_z(a3, decomp2, opt_global = .false.)
 
       dims(1)%n = decomp2%zsz(3)
@@ -1809,13 +1798,12 @@ contains
       howmany(1)%is = 1
       howmany(1)%os = 1
 #ifdef DOUBLE_PREC
-      plan = fftw_plan_guru_split_dft_c2r(1, dims(1), 1, howmany(1), a1, a2, a3, plan_type_dtt)
+      plan = fftw_plan_guru_dft_c2r(1, dims(1), 1, howmany(1), a1, a3, plan_type_dtt)
 #else
-      plan = fftwf_plan_guru_split_dft_c2r(1, dims(1), 1, howmany(1), a1, a2, a3, plan_type_dtt)
+      plan = fftwf_plan_guru_dft_c2r(1, dims(1), 1, howmany(1), a1, a3, plan_type_dtt)
 #endif
 
       deallocate (a1)
-      deallocate (a2)
       deallocate (a3)
       if (.not. c_associated(plan)) call decomp_2d_abort(__FILE__, __LINE__, 13, "Plan creation failed")
 
@@ -1832,19 +1820,16 @@ contains
       ! Local variables
 #ifdef DOUBLE_PREC
       real(C_DOUBLE), allocatable, target :: a1(:, :, :)
-      real(C_DOUBLE), allocatable, target :: a2(:, :, :)
-      real(C_DOUBLE), allocatable, target :: a3(:, :, :)
+      complex(C_DOUBLE), allocatable, target :: a2(:, :, :)
       type(fftw_iodim) :: dims(1), howmany(1)
 #else
       real(C_FLOAT), allocatable, target :: a1(:, :, :)
-      real(C_FLOAT), allocatable, target :: a2(:, :, :)
-      real(C_FLOAT), allocatable, target :: a3(:, :, :)
+      complex(C_FLOAT), allocatable, target :: a2(:, :, :)
       type(fftwf_iodim) :: dims(1), howmany(1)
 #endif
 
       call alloc_x(a1, decomp, opt_global = .false.)
       call alloc_x(a2, decomp2, opt_global = .false.)
-      call alloc_x(a3, decomp2, opt_global = .false.)
 
       dims(1)%n = decomp%xsz(1)
       dims(1)%is = 1
@@ -1853,14 +1838,13 @@ contains
       howmany(1)%is = decomp%xsz(1)
       howmany(1)%os = decomp2%xsz(1)
 #ifdef DOUBLE_PREC
-      plan = fftw_plan_guru_split_dft_r2c(1, dims(1), 1, howmany(1), a1, a2, a3, plan_type_dtt)
+      plan = fftw_plan_guru_dft_r2c(1, dims(1), 1, howmany(1), a1, a2, plan_type_dtt)
 #else
-      plan = fftwf_plan_guru_split_dft_r2c(1, dims(1), 1, howmany(1), a1, a2, a3, plan_type_dtt)
+      plan = fftwf_plan_guru_dft_r2c(1, dims(1), 1, howmany(1), a1, a2, plan_type_dtt)
 #endif
 
       deallocate (a1)
       deallocate (a2)
-      deallocate (a3)
       if (.not. c_associated(plan)) call decomp_2d_abort(__FILE__, __LINE__, 14, "Plan creation failed")
 
    end subroutine r2rr_1m_x_plan
@@ -1876,19 +1860,16 @@ contains
       ! Local variables
 #ifdef DOUBLE_PREC
       real(C_DOUBLE), allocatable, target :: a1(:, :, :)
-      real(C_DOUBLE), allocatable, target :: a2(:, :, :)
-      real(C_DOUBLE), allocatable, target :: a3(:, :, :)
+      complex(C_DOUBLE), allocatable, target :: a2(:, :, :)
       type(fftw_iodim) :: dims(1), howmany(1)
 #else
       real(C_FLOAT), allocatable, target :: a1(:, :, :)
-      real(C_FLOAT), allocatable, target :: a2(:, :, :)
-      real(C_FLOAT), allocatable, target :: a3(:, :, :)
+      complex(C_FLOAT), allocatable, target :: a2(:, :, :)
       type(fftwf_iodim) :: dims(1), howmany(1)
 #endif
 
       allocate(a1(decomp%ysz(1), decomp%ysz(2), 1))
       allocate(a2(decomp2%ysz(1), decomp2%ysz(2), 1))
-      allocate(a3(decomp2%ysz(1), decomp2%ysz(2), 1))
 
       dims(1)%n = decomp%ysz(2)
       dims(1)%is = decomp%ysz(1)
@@ -1897,14 +1878,13 @@ contains
       howmany(1)%is = 1
       howmany(1)%os = 1
 #ifdef DOUBLE_PREC
-      plan = fftw_plan_guru_split_dft_r2c(1, dims(1), 1, howmany(1), a1, a2, a3, plan_type_dtt)
+      plan = fftw_plan_guru_dft_r2c(1, dims(1), 1, howmany(1), a1, a2, plan_type_dtt)
 #else
-      plan = fftwf_plan_guru_split_dft_r2c(1, dims(1), 1, howmany(1), a1, a2, a3, plan_type_dtt)
+      plan = fftwf_plan_guru_dft_r2c(1, dims(1), 1, howmany(1), a1, a2, plan_type_dtt)
 #endif
 
       deallocate (a1)
       deallocate (a2)
-      deallocate (a3)
       if (.not. c_associated(plan)) call decomp_2d_abort(__FILE__, __LINE__, 15, "Plan creation failed")
 
    end subroutine r2rr_1m_y_plan
@@ -1920,19 +1900,16 @@ contains
       ! Local variables
 #ifdef DOUBLE_PREC
       real(C_DOUBLE), allocatable, target :: a1(:, :, :)
-      real(C_DOUBLE), allocatable, target :: a2(:, :, :)
-      real(C_DOUBLE), allocatable, target :: a3(:, :, :)
+      complex(C_DOUBLE), allocatable, target :: a2(:, :, :)
       type(fftw_iodim) :: dims(1), howmany(1)
 #else
       real(C_FLOAT), allocatable, target :: a1(:, :, :)
-      real(C_FLOAT), allocatable, target :: a2(:, :, :)
-      real(C_FLOAT), allocatable, target :: a3(:, :, :)
+      complex(C_FLOAT), allocatable, target :: a2(:, :, :)
       type(fftwf_iodim) :: dims(1), howmany(1)
 #endif
 
       call alloc_z(a1, decomp, opt_global = .false.)
       call alloc_z(a2, decomp2, opt_global = .false.)
-      call alloc_z(a3, decomp2, opt_global = .false.)
 
       dims(1)%n = decomp%zsz(3)
       dims(1)%is = decomp%zsz(1) * decomp%zsz(2)
@@ -1941,14 +1918,13 @@ contains
       howmany(1)%is = 1
       howmany(1)%os = 1
 #ifdef DOUBLE_PREC
-      plan = fftw_plan_guru_split_dft_r2c(1, dims(1), 1, howmany(1), a1, a2, a3, plan_type_dtt)
+      plan = fftw_plan_guru_dft_r2c(1, dims(1), 1, howmany(1), a1, a2, plan_type_dtt)
 #else
-      plan = fftwf_plan_guru_split_dft_r2c(1, dims(1), 1, howmany(1), a1, a2, a3, plan_type_dtt)
+      plan = fftwf_plan_guru_dft_r2c(1, dims(1), 1, howmany(1), a1, a2, plan_type_dtt)
 #endif
 
       deallocate (a1)
       deallocate (a2)
-      deallocate (a3)
       if (.not. c_associated(plan)) call decomp_2d_abort(__FILE__, __LINE__, 16, "Plan creation failed")
 
    end subroutine r2rr_1m_z_plan
@@ -3391,24 +3367,42 @@ contains
       integer, intent(in) :: isz, osz
 
       ! Local variables
+      integer :: i
       real(mytype), dimension(:), contiguous, pointer :: inr2, ini2, outr2
+      complex(mytype), dimension(:), contiguous, pointer :: inc
+      complex(mytype), dimension(:), allocatable, target :: buffer
 
       ! Create 1D pointers starting at the ifirst / ofirst location
       call c_f_pointer(c_loc(inr), inr2, (/isz/))
       call c_f_pointer(c_loc(ini), ini2, (/isz/))
       call c_f_pointer(c_loc(outr), outr2, (/osz/))
 
+      ! Allocate if needed
+      if (size(wk2_c2c) > isz) then
+         call c_f_pointer(c_loc(wk2_c2c), inc, (/isz/))
+      else
+         allocate(buffer(isz))
+         inc => buffer
+      end if
+
+      ! FIXME : using split_dft would be better
+      do i = 1, isz
+         inc(i) = cmplx(inr2(i), ini2(i), kind=mytype)
+      end do
+
       ! Perform DFT
 #ifdef DOUBLE_PREC
-      call fftw_execute_split_dft_c2r(plan, inr2, ini2, outr2)
+      call fftw_execute_dft_c2r(plan, inc, outr2)
 #else
-      call fftwf_execute_split_dft_c2r(plan, inr2, ini2, outr2)
+      call fftwf_execute_dft_c2r(plan, inc, outr2)
 #endif
 
-      ! Release pointers
+      ! Release pointers and free memory
       nullify (inr2)
       nullify (ini2)
       nullify (outr2)
+      nullify (inc)
+      if (allocated(buffer)) deallocate(buffer)
 
    end subroutine wrapper_rr2r
    !
@@ -3428,24 +3422,43 @@ contains
       integer, intent(in) :: isz, osz
 
       ! Local variables
+      integer :: i
       real(mytype), dimension(:), contiguous, pointer :: inr2, outr2, outi2
+      complex(mytype), dimension(:), contiguous, pointer :: outc
+      complex(mytype), dimension(:), allocatable, target :: buffer
 
       ! Create 1D pointers starting at the ifirst / ofirst location
       call c_f_pointer(c_loc(inr), inr2, (/isz/))
       call c_f_pointer(c_loc(outr), outr2, (/osz/))
       call c_f_pointer(c_loc(outi), outi2, (/osz/))
 
+      ! Allocate if needed
+      if (size(wk2_c2c) > osz) then
+         call c_f_pointer(c_loc(wk2_c2c), outc, (/osz/))
+      else
+         allocate(buffer(osz))
+         outc => buffer
+      end if
+
       ! Perform DFT
 #ifdef DOUBLE_PREC
-      call fftw_execute_split_dft_r2c(plan, inr2, outr2, outi2)
+      call fftw_execute_dft_r2c(plan, inr2, outc)
 #else
-      call fftwf_execute_split_dft_r2c(plan, inr2, outr2, outi2)
+      call fftwf_execute_dft_r2c(plan, inr2, outc)
 #endif
 
-      ! Release pointers
+      ! FIXME : using split_dft would be better
+      do i = 1, osz
+         outr2(i) = real(outc(i), kind=mytype)
+         outi2(i) = aimag(outc(i))
+      end do
+
+      ! Release pointers and free memory
       nullify (inr2)
       nullify (outr2)
       nullify (outi2)
+      nullify (outc)
+      if (allocated(buffer)) deallocate(buffer)
 
    end subroutine wrapper_r2rr
 

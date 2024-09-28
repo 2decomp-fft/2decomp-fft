@@ -23,6 +23,9 @@ add_subdirectory(grad3d)
 if (IO_BACKEND MATCHES "adios2")
   add_subdirectory(io_adios)
 endif (IO_BACKEND MATCHES "adios2")
+if (FFT_Choice MATCHES "fftw_f03")
+  add_subdirectory(dtt)
+endif()
 
 # Set real/complex tests
 set(COMPLEX_TESTS "OFF" CACHE STRING "Enables complex numbers for tests that support it")

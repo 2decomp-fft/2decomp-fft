@@ -18,7 +18,8 @@ module decomp_2d_fft
    private        ! Make everything private unless declared public
 
    ! engine-specific global variables
-   integer, save :: plan_type = FFTW_MEASURE
+   integer, parameter :: plan_type = FFTW_MEASURE
+   integer, parameter :: plan_type_dtt = FFTW_MEASURE + FFTW_UNALIGNED
 
    ! FFTW plans
    ! j=1,2,3 corresponds to the 1D FFTs in X,Y,Z direction, respectively
@@ -61,6 +62,17 @@ module decomp_2d_fft
    logical, pointer, save :: skip_y_c2c => null()
    logical, pointer, save :: skip_z_c2c => null()
 
+   ! Flag to check if DTT is active
+   logical, pointer, save :: with_dtt => null()
+
+   ! array with the DTT setup
+   integer, contiguous, pointer, save :: dtt(:) => null()
+
+   ! FFTW plans for DTT
+   !    1, 2, 3 : forward transform in X, Y and Z
+   !    4, 5, 6 : backward transform in X, Y and Z
+   type(C_PTR), contiguous, pointer, save :: dtt_plan(:) => null()
+
    ! Derived type with all the quantities needed to perform FFT
    type decomp_2d_fft_engine
       type(c_ptr), private :: plan(-1:2, 3), wk2_c2c_p, wk13_p
@@ -75,10 +87,17 @@ module decomp_2d_fft
       complex(mytype), contiguous, pointer, private :: wk13(:, :, :) => null()
       logical, private :: inplace, inplace_r2c, inplace_c2r
       logical, private :: skip_x_c2c, skip_y_c2c, skip_z_c2c
+      ! Below is specific to DTT
+      logical, public :: with_dtt
+      integer, allocatable, public, dimension(:) :: dtt
+      type(C_PTR), private :: dtt_plan(6)
    contains
       procedure, public :: init => decomp_2d_fft_engine_init
       procedure, public :: fin => decomp_2d_fft_engine_fin
       procedure, public :: use_it => decomp_2d_fft_engine_use_it
+      procedure, private :: dtt_init => decomp_2d_fft_engine_dtt_init
+      procedure, private :: dtt_fin => decomp_2d_fft_engine_dtt_fin
+      procedure, public :: dtt_input => decomp_2d_fft_engine_dtt_input
       generic, public :: fft => c2c, r2c, c2r
       procedure, private :: c2c => decomp_2d_fft_engine_fft_c2c
       procedure, private :: r2c => decomp_2d_fft_engine_fft_r2c
@@ -94,8 +113,10 @@ module decomp_2d_fft
    type(decomp_2d_fft_engine), allocatable, target, save :: fft_engines(:)
 
    public :: decomp_2d_fft_init, decomp_2d_fft_3d, &
+             decomp_2d_dtt_3d_r2r, &
              decomp_2d_fft_finalize, decomp_2d_fft_get_size, &
              decomp_2d_fft_get_ph, decomp_2d_fft_get_sp, &
+             decomp_2d_fft_get_dtt_input, &
              decomp_2d_fft_get_ngrid, decomp_2d_fft_set_ngrid, &
              decomp_2d_fft_use_grid, decomp_2d_fft_engine, &
              decomp_2d_fft_get_engine, decomp_2d_fft_get_format, &
@@ -136,15 +157,17 @@ contains
 
    end subroutine fft_init_noarg
 
-   subroutine fft_init_arg(pencil, opt_skip_XYZ_c2c)     ! allow to handle Z-pencil input
+   subroutine fft_init_arg(pencil, opt_skip_XYZ_c2c, opt_DTT)     ! allow to handle Z-pencil input
 
       implicit none
 
       integer, intent(IN) :: pencil
       logical, dimension(3), intent(in), optional :: opt_skip_XYZ_c2c
+      integer, dimension(:), intent(in), optional :: opt_DTT
 
       call fft_init_one_grid(pencil, nx_global, ny_global, nz_global, &
-                             opt_skip_XYZ_c2c=opt_skip_XYZ_c2c)
+                             opt_skip_XYZ_c2c=opt_skip_XYZ_c2c, &
+                             opt_DTT=opt_DTT)
 
    end subroutine fft_init_arg
 
@@ -153,13 +176,15 @@ contains
                                 opt_inplace, &
                                 opt_inplace_r2c, &
                                 opt_inplace_c2r, &
-                                opt_skip_XYZ_c2c)
+                                opt_skip_XYZ_c2c, &
+                                opt_DTT)
 
       implicit none
 
       integer, intent(IN) :: pencil, nx, ny, nz
       logical, intent(in), optional :: opt_inplace, opt_inplace_r2c, opt_inplace_c2r
       logical, dimension(3), intent(in), optional :: opt_skip_XYZ_c2c
+      integer, dimension(:), intent(in), optional :: opt_DTT
 
       ! Only one FFT engine will be used
       call decomp_2d_fft_set_ngrid(1)
@@ -169,7 +194,8 @@ contains
                               opt_inplace, &
                               opt_inplace_r2c, &
                               opt_inplace_c2r, &
-                              opt_skip_XYZ_c2c=opt_skip_XYZ_c2c)
+                              opt_skip_XYZ_c2c=opt_skip_XYZ_c2c, &
+                              opt_DTT=opt_DTT)
 
    end subroutine fft_init_one_grid
 
@@ -178,13 +204,15 @@ contains
                                       opt_inplace, &
                                       opt_inplace_r2c, &
                                       opt_inplace_c2r, &
-                                      opt_skip_XYZ_c2c)
+                                      opt_skip_XYZ_c2c, &
+                                      opt_DTT)
 
       implicit none
 
       integer, intent(in) :: pencil, nx, ny, nz, igrid
       logical, intent(in), optional :: opt_inplace, opt_inplace_r2c, opt_inplace_c2r
       logical, dimension(3), intent(in), optional :: opt_skip_XYZ_c2c
+      integer, dimension(:), intent(in), optional :: opt_DTT
 
       ! Safety check
       if (igrid < 1 .or. igrid > n_grid) then
@@ -196,7 +224,8 @@ contains
                                    opt_inplace, &
                                    opt_inplace_r2c, &
                                    opt_inplace_c2r, &
-                                   opt_skip_XYZ_c2c)
+                                   opt_skip_XYZ_c2c, &
+                                   opt_DTT=opt_DTT)
 
    end subroutine fft_init_multiple_grids
 
@@ -205,7 +234,8 @@ contains
                                         opt_inplace, &
                                         opt_inplace_r2c, &
                                         opt_inplace_c2r, &
-                                        opt_skip_XYZ_c2c)
+                                        opt_skip_XYZ_c2c, &
+                                        opt_DTT)
 
       implicit none
 
@@ -213,6 +243,7 @@ contains
       integer, intent(in) :: pencil, nx, ny, nz
       logical, intent(in), optional :: opt_inplace, opt_inplace_r2c, opt_inplace_c2r
       logical, dimension(3), intent(in), optional :: opt_skip_XYZ_c2c
+      integer, dimension(:), intent(in), optional :: opt_DTT
 
       integer(C_SIZE_T) :: sz
 
@@ -320,6 +351,14 @@ contains
          end if
       end if
 
+      ! Prepare the DTT components
+      if (present(opt_DTT)) then
+         engine%with_dtt = .true.
+         call engine%dtt_init(opt_DTT)
+      else
+         engine%with_dtt = .false.
+      end if
+
       ! Warning : replace the default engine
       call engine%use_it(opt_force=.true.)
 
@@ -335,6 +374,191 @@ contains
       if (decomp_profiler_fft) call decomp_profiler_end("fft_init")
 
    end subroutine decomp_2d_fft_engine_init
+
+   ! Initialise the DTT components of the provided engine
+   subroutine decomp_2d_fft_engine_dtt_init(engine, in_DTT)
+
+      implicit none
+
+      class(decomp_2d_fft_engine), intent(inout), target :: engine
+      integer, dimension(:), intent(in) :: in_DTT
+
+      ! Safety check
+      if (size(in_DTT) < 3) call decomp_2d_abort(__FILE__, __LINE__, size(in_DTT), "Invalid argument")
+      if (minval(in_DTT(1:3)) < 1) call decomp_2d_abort(__FILE__, __LINE__, minval(in_DTT(1:3)), "Invalid argument")
+      if (maxval(in_DTT(1:3)) > 8) call decomp_2d_abort(__FILE__, __LINE__, maxval(in_DTT(1:3)), "Invalid argument")
+
+      ! Prepare engine%dtt
+      ! Mandatory
+      !    1:3 => type of forward transform
+      ! Optional, default values in dtt_assign_default
+      !    4:6 => ifirst, index where the in-place r2r transform starts
+      !    7:9 => ndismiss, number of points skipped
+      !    10:12 => ofirst, should match ifirst (in-place r2r transform)
+      ! Values defined in dtt_invert
+      !    12:15 => type of backward transform
+      allocate (engine%dtt(15))
+      if (size(in_DTT) == 12) then
+         engine%dtt(1:12) = in_DTT
+         if (any(engine%dtt(4:6) /= engine%dtt(10:12))) then
+            call decomp_2d_abort(__FILE__, __LINE__, 1, "Setup is not compatible with in-place r2r transforms")
+         end if
+      elseif (size(in_DTT) == 3) then
+         engine%dtt(1:3) = in_DTT
+         call dtt_assign_default(engine%dtt)
+      else
+         call decomp_2d_abort(__FILE__, __LINE__, size(in_DTT), "Invalid argument")
+      end if
+      call dtt_invert(engine%dtt)
+      call dtt_for_fftw(engine%dtt(1:3))
+      call dtt_for_fftw(engine%dtt(13:15))
+
+      ! Prepare the fftw plans
+      engine%dtt_plan = c_null_ptr
+      ! in x
+      call r2r_1m_x_plan(engine%dtt_plan(1), engine%ph, engine%dtt(1), engine%dtt(7))
+      if (engine%dtt(13) /= engine%dtt(1)) call r2r_1m_x_plan(engine%dtt_plan(4), engine%ph, engine%dtt(13), engine%dtt(7))
+      ! in y
+      call r2r_1m_y_plan(engine%dtt_plan(2), engine%ph, engine%dtt(2), engine%dtt(8))
+      if (engine%dtt(14) /= engine%dtt(2)) call r2r_1m_y_plan(engine%dtt_plan(5), engine%ph, engine%dtt(14), engine%dtt(8))
+      ! in z
+      call r2r_1m_z_plan(engine%dtt_plan(3), engine%ph, engine%dtt(3), engine%dtt(9))
+      if (engine%dtt(15) /= engine%dtt(3)) call r2r_1m_z_plan(engine%dtt_plan(6), engine%ph, engine%dtt(15), engine%dtt(9))
+
+   end subroutine decomp_2d_fft_engine_dtt_init
+
+   ! Set default values in the DTT config
+   ! FIXME add constants in the module decomp_2d_constants ?
+   subroutine dtt_assign_default(arg_dtt)
+
+      implicit none
+
+      integer, intent(inout) :: arg_dtt(15)
+
+      integer :: k
+
+      ! Generic values
+      ! ifirst = 1, use the array from the beginning
+      arg_dtt(4:6) = 1
+      ! ndismiss = 1, skip one point
+      arg_dtt(7:9) = 1
+
+      ! Specific cases
+      do k = 1, 3
+         if (arg_dtt(k) == 0) arg_dtt(k + 6) = 0 ! Periodic, ndismiss = 0
+         if (arg_dtt(k) == 1) arg_dtt(k + 6) = 0 ! DCT1, ndismiss = 0
+         if (arg_dtt(k) == 5) arg_dtt(k + 3) = 2 ! DST1, ifirst = 2
+         if (arg_dtt(k) == 5) arg_dtt(k + 6) = 2 ! DST1, ndismiss = 2
+         if (arg_dtt(k) == 7) arg_dtt(k + 3) = 2 ! DST3, ifirst = 2
+      end do
+
+      ! ofirst = ifirst
+      arg_dtt(10:12) = arg_dtt(4:6)
+
+   end subroutine dtt_assign_default
+
+   ! Set the backward transforms in the DTT config
+   ! FIXME add constants in the module decomp_2d_constants ?
+   subroutine dtt_invert(arg_dtt)
+
+      implicit none
+
+      integer, intent(inout) :: arg_dtt(15)
+
+      integer :: k
+
+      ! Default : inv(DTT) = DTT
+      arg_dtt(13:15) = arg_dtt(1:3)
+
+      ! Except for DCT2, DCT3, DST2, DST3
+      do k = 1, 3
+         if (arg_dtt(k) == 0) arg_dtt(12 + k) = 9
+         if (arg_dtt(k) == 2) arg_dtt(12 + k) = 3 ! inv(DCT2) = DCT3
+         if (arg_dtt(k) == 3) arg_dtt(12 + k) = 2 ! inv(DCT3) = DCT2
+         if (arg_dtt(k) == 6) arg_dtt(12 + k) = 7 ! inv(DST2) = DST3
+         if (arg_dtt(k) == 7) arg_dtt(12 + k) = 6 ! inv(DST3) = DST2
+      end do
+
+   end subroutine dtt_invert
+
+   ! Adapt the DTT type to FFTW
+   ! FIXME add constants in the module decomp_2d_constants ?
+   subroutine dtt_for_fftw(arg_dtt)
+
+      implicit none
+
+      integer, intent(inout) :: arg_dtt(:)
+
+      integer :: k
+
+      do k = 1, size(arg_dtt)
+         select case (arg_dtt(k))
+         case (0)
+            arg_dtt(k) = FFTW_FORWARD
+         case (1)
+            arg_dtt(k) = FFTW_REDFT00
+         case (2)
+            arg_dtt(k) = FFTW_REDFT10
+         case (3)
+            arg_dtt(k) = FFTW_REDFT01
+         case (4)
+            arg_dtt(k) = FFTW_REDFT11
+         case (5)
+            arg_dtt(k) = FFTW_RODFT00
+         case (6)
+            arg_dtt(k) = FFTW_RODFT10
+         case (7)
+            arg_dtt(k) = FFTW_RODFT01
+         case (8)
+            arg_dtt(k) = FFTW_RODFT11
+         case (9)
+            arg_dtt(k) = FFTW_BACKWARD
+         case default
+            call decomp_2d_abort(__FILE__, __LINE__, arg_dtt(k), "Invalid value")
+         end select
+      end do
+
+   end subroutine dtt_for_fftw
+
+   ! Adapt the FFTW type to DTT
+   ! FIXME add constants in the module decomp_2d_constants ?
+   function fftw_for_dtt(arg_dtt)
+
+      implicit none
+
+      integer, dimension(3) :: fftw_for_dtt
+      integer, intent(in) :: arg_dtt(3)
+
+      ! Local variables
+      integer :: i
+
+      ! Convert FFTW transforms into 2decomp transforms
+      do i = 1, 3
+         select case (arg_dtt(i))
+         case (FFTW_FORWARD)
+            fftw_for_dtt(i) = 0
+         case (FFTW_REDFT00)
+            fftw_for_dtt(i) = 1
+         case (FFTW_REDFT10)
+            fftw_for_dtt(i) = 2
+         case (FFTW_REDFT01)
+            fftw_for_dtt(i) = 3
+         case (FFTW_REDFT11)
+            fftw_for_dtt(i) = 4
+         case (FFTW_RODFT00)
+            fftw_for_dtt(i) = 5
+         case (FFTW_RODFT10)
+            fftw_for_dtt(i) = 6
+         case (FFTW_RODFT01)
+            fftw_for_dtt(i) = 7
+         case (FFTW_RODFT11)
+            fftw_for_dtt(i) = 8
+         case default
+            call decomp_2d_abort(__FILE__, __LINE__, arg_dtt(i), "Invalid value")
+         end select
+      end do
+
+   end function fftw_for_dtt
 
    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
    ! Final clean up
@@ -371,6 +595,11 @@ contains
       nullify (skip_x_c2c)
       nullify (skip_y_c2c)
       nullify (skip_z_c2c)
+      nullify (with_dtt)
+      if (associated(dtt)) then
+         nullify (dtt)
+         nullify (dtt_plan)
+      end if
 
       ! Clean the FFTW library
       call fftw_cleanup()
@@ -405,11 +634,75 @@ contains
 
       call finalize_fft_engine(engine%plan)
 
+      if (engine%with_dtt) call engine%dtt_fin()
+
       engine%initialised = .false.
 
       if (decomp_profiler_fft) call decomp_profiler_end("fft_fin")
 
    end subroutine decomp_2d_fft_engine_fin
+
+   ! Clean the DTT components of the provided engine
+   subroutine decomp_2d_fft_engine_dtt_fin(engine)
+
+      implicit none
+
+      class(decomp_2d_fft_engine), intent(inout) :: engine
+
+      integer :: i
+
+      ! Restore the dtt flag
+      engine%with_dtt = .false.
+
+      ! Deallocate the DTT config
+      deallocate (engine%dtt)
+
+      ! Clean the fftw plans
+      do i = 1, 6
+         if (c_associated(engine%dtt_plan(i))) then
+#ifdef DOUBLE_PREC
+            call fftw_destroy_plan(engine%dtt_plan(i))
+#else
+            call fftwf_destroy_plan(engine%dtt_plan(i))
+#endif
+         end if
+      end do
+      engine%dtt_plan = c_null_ptr
+
+   end subroutine decomp_2d_fft_engine_dtt_fin
+
+   ! Return the type of the transform in each direction
+   function decomp_2d_fft_get_dtt_input()
+
+      implicit none
+
+      integer, dimension(3) :: decomp_2d_fft_get_dtt_input
+
+      if (.not. associated(with_dtt)) call decomp_2d_abort(__FILE__, __LINE__, 1, "Invalid operation")
+
+      if (with_dtt) then
+         decomp_2d_fft_get_dtt_input = fftw_for_dtt(dtt(1:3))
+      else
+         call decomp_2d_abort(__FILE__, __LINE__, 1, "No DTT for the current engine")
+      end if
+
+   end function decomp_2d_fft_get_dtt_input
+
+   ! Return the type of the transform in each direction
+   function decomp_2d_fft_engine_dtt_input(engine)
+
+      implicit none
+
+      class(decomp_2d_fft_engine), intent(in) :: engine
+      integer, dimension(3) :: decomp_2d_fft_engine_dtt_input
+
+      if (engine%with_dtt) then
+         decomp_2d_fft_engine_dtt_input = fftw_for_dtt(engine%dtt(1:3))
+      else
+         call decomp_2d_abort(__FILE__, __LINE__, 1, "No DTT for the current engine")
+      end if
+
+   end function decomp_2d_fft_engine_dtt_input
 
    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
    ! Return the size, starting/ending index of the distributed array
@@ -585,6 +878,15 @@ contains
       skip_x_c2c => engine%skip_x_c2c
       skip_y_c2c => engine%skip_y_c2c
       skip_z_c2c => engine%skip_z_c2c
+      with_dtt => engine%with_dtt
+
+      if (with_dtt) then
+         dtt => engine%dtt
+         dtt_plan => engine%dtt_plan
+      else if (associated(dtt)) then
+         nullify (dtt)
+         nullify (dtt_plan)
+      end if
 
    end subroutine decomp_2d_fft_engine_use_it
 
@@ -701,8 +1003,8 @@ contains
 #endif
 
       call fftw_free(a1_p)
+      if (.not. c_associated(plan1)) call decomp_2d_abort(__FILE__, __LINE__, 1, "Plan creation failed")
 
-      return
    end subroutine c2c_1m_x_plan
 
    ! Return a FFTW3 plan for multiple 1D c2c FFTs in Y direction
@@ -742,8 +1044,8 @@ contains
 #endif
 
       call fftw_free(a1_p)
+      if (.not. c_associated(plan1)) call decomp_2d_abort(__FILE__, __LINE__, 2, "Plan creation failed")
 
-      return
    end subroutine c2c_1m_y_plan
 
    ! Return a FFTW3 plan for multiple 1D c2c FFTs in Z direction
@@ -783,8 +1085,8 @@ contains
 #endif
 
       call fftw_free(a1_p)
+      if (.not. c_associated(plan1)) call decomp_2d_abort(__FILE__, __LINE__, 3, "Plan creation failed")
 
-      return
    end subroutine c2c_1m_z_plan
 
    ! Return a FFTW3 plan for multiple 1D r2c FFTs in X direction
@@ -830,6 +1132,7 @@ contains
 
       call fftw_free(a1_p)
       if (.not. inplace_r2c) call fftw_free(a2_p)
+      if (.not. c_associated(plan1)) call decomp_2d_abort(__FILE__, __LINE__, 4, "Plan creation failed")
 
    end subroutine r2c_1m_x_plan
 
@@ -876,6 +1179,7 @@ contains
 
       if (.not. inplace_c2r) call fftw_free(a1_p)
       call fftw_free(a2_p)
+      if (.not. c_associated(plan1)) call decomp_2d_abort(__FILE__, __LINE__, 5, "Plan creation failed")
 
    end subroutine c2r_1m_x_plan
 
@@ -922,6 +1226,7 @@ contains
 
       call fftw_free(a1_p)
       if (.not. inplace_r2c) call fftw_free(a2_p)
+      if (.not. c_associated(plan1)) call decomp_2d_abort(__FILE__, __LINE__, 6, "Plan creation failed")
 
    end subroutine r2c_1m_z_plan
 
@@ -968,8 +1273,132 @@ contains
 
       if (.not. inplace_c2r) call fftw_free(a1_p)
       call fftw_free(a2_p)
+      if (.not. c_associated(plan1)) call decomp_2d_abort(__FILE__, __LINE__, 7, "Plan creation failed")
 
    end subroutine c2r_1m_z_plan
+
+   ! Return a FFTW3 plan for multiple 1D DTTs in X direction, with possibility to dismiss points
+   subroutine r2r_1m_x_plan(plan, decomp, dtt, ndismiss)
+
+      implicit none
+
+      type(C_PTR), intent(out) :: plan
+      TYPE(DECOMP_INFO), intent(in) :: decomp
+      integer, intent(in) :: dtt ! Type of DTT compatible with fftw3
+      integer, intent(in) :: ndismiss ! to dismiss n points from the signal
+
+      ! Local variables
+#ifdef DOUBLE_PREC
+      real(C_DOUBLE), allocatable, target :: a1(:, :, :)
+      real(C_DOUBLE), contiguous, pointer :: a2(:, :, :)
+#else
+      real(C_FLOAT), allocatable, target :: a1(:, :, :)
+      real(C_FLOAT), contiguous, pointer :: a2(:, :, :)
+#endif
+      integer(C_INT) :: ntmp(1)
+      integer(C_FFTW_R2R_KIND) :: tmp(1)
+
+      call alloc_x(a1, decomp)
+      a2 => a1
+
+      ntmp(1) = decomp%xsz(1) - ndismiss
+      tmp(1) = dtt
+#ifdef DOUBLE_PREC
+      plan = fftw_plan_many_r2r(1, ntmp(1), decomp%xsz(2) * decomp%xsz(3), &
+#else
+      plan = fftwf_plan_many_r2r(1, ntmp(1), decomp%xsz(2) * decomp%xsz(3), & !&
+#endif
+                                 a1, decomp%xsz(1), 1, decomp%xsz(1), &
+                                 a2, decomp%xsz(1), 1, decomp%xsz(1), &
+                                 tmp(1), plan_type_dtt)
+
+      deallocate (a1)
+      nullify (a2)
+      if (.not. c_associated(plan)) call decomp_2d_abort(__FILE__, __LINE__, 17, "Plan creation failed")
+
+   end subroutine r2r_1m_x_plan
+
+   ! Return a FFTW3 plan for multiple 1D DTTs in Y direction, with possibility to dismiss points
+   subroutine r2r_1m_y_plan(plan, decomp, dtt, ndismiss)
+
+      implicit none
+
+      type(C_PTR), intent(out) :: plan
+      TYPE(DECOMP_INFO), intent(in) :: decomp
+      integer, intent(in) :: dtt ! Type of DTT compatible with fftw3
+      integer, intent(in) :: ndismiss ! to dismiss n points from the signal
+
+      ! Local variables
+#ifdef DOUBLE_PREC
+      real(C_DOUBLE), allocatable, target :: a1(:, :, :)
+      real(C_DOUBLE), contiguous, pointer :: a2(:, :, :)
+#else
+      real(C_FLOAT), allocatable, target :: a1(:, :, :)
+      real(C_FLOAT), contiguous, pointer :: a2(:, :, :)
+#endif
+      integer(C_INT) :: ntmp(1)
+      integer(C_FFTW_R2R_KIND) :: tmp(1)
+
+      allocate (a1(decomp%ysz(1), decomp%ysz(2), 1))
+      a2 => a1
+
+      ntmp(1) = decomp%ysz(2) - ndismiss
+      tmp(1) = dtt
+#ifdef DOUBLE_PREC
+      plan = fftw_plan_many_r2r(1, ntmp(1), decomp%ysz(1), &
+#else
+      plan = fftwf_plan_many_r2r(1, ntmp(1), decomp%ysz(1), & !&
+#endif
+                                 a1, decomp%ysz(2), decomp%ysz(1), 1, &
+                                 a2, decomp%ysz(2), decomp%ysz(1), 1, &
+                                 tmp(1), plan_type_dtt)
+
+      deallocate (a1)
+      nullify (a2)
+      if (.not. c_associated(plan)) call decomp_2d_abort(__FILE__, __LINE__, 18, "Plan creation failed")
+
+   end subroutine r2r_1m_y_plan
+
+   ! Return a FFTW3 plan for multiple 1D DTTs in Z direction, with possibility to dismiss points
+   subroutine r2r_1m_z_plan(plan, decomp, dtt, ndismiss)
+
+      implicit none
+
+      type(C_PTR), intent(out) :: plan
+      TYPE(DECOMP_INFO), intent(in) :: decomp
+      integer, intent(in) :: dtt ! Type of DTT compatible with fftw3
+      integer, intent(in) :: ndismiss ! to dismiss n points from the signal
+
+      ! Local variables
+#ifdef DOUBLE_PREC
+      real(C_DOUBLE), allocatable, target :: a1(:, :, :)
+      real(C_DOUBLE), contiguous, pointer :: a2(:, :, :)
+#else
+      real(C_FLOAT), allocatable, target :: a1(:, :, :)
+      real(C_FLOAT), contiguous, pointer :: a2(:, :, :)
+#endif
+      integer(C_INT) :: ntmp(1)
+      integer(C_FFTW_R2R_KIND) :: tmp(1)
+
+      call alloc_z(a1, decomp)
+      a2 => a1
+
+      ntmp(1) = decomp%zsz(3) - ndismiss
+      tmp(1) = dtt
+#ifdef DOUBLE_PREC
+      plan = fftw_plan_many_r2r(1, ntmp(1), decomp%zsz(1) * decomp%zsz(2), &
+#else
+      plan = fftwf_plan_many_r2r(1, ntmp(1), decomp%zsz(1) * decomp%zsz(2), & !&
+#endif
+                                 a1, decomp%zsz(3), decomp%zsz(1) * decomp%zsz(2), 1, &
+                                 a2, decomp%zsz(3), decomp%zsz(1) * decomp%zsz(2), 1, &
+                                 tmp(1), plan_type_dtt)
+
+      deallocate (a1)
+      nullify (a2)
+      if (.not. c_associated(plan)) call decomp_2d_abort(__FILE__, __LINE__, 19, "Plan creation failed")
+
+   end subroutine r2r_1m_z_plan
 
    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
    !  This routine performs one-time initialisations for the FFT engine
@@ -1186,6 +1615,110 @@ contains
       return
 
    end subroutine c2r_1m_z
+
+   ! r2r transform, multiple 1D DTTs in x direction
+   subroutine r2r_1m_x(inr, isign)
+
+      implicit none
+
+      real(mytype), dimension(:, :, :), contiguous, target, intent(inout) :: inr
+      integer, intent(in) :: isign
+
+      ! Local variables
+      type(c_ptr) :: plan
+      integer :: ifirst
+
+      ! Exit if needed
+      if (skip_x_c2c) return
+
+      ! Get the DTT config
+      if (isign == DECOMP_2D_FFT_FORWARD) then
+         plan = dtt_plan(1)
+         ifirst = dtt(4)
+      else
+         if (c_associated(dtt_plan(4))) then
+            plan = dtt_plan(4)
+         else
+            plan = dtt_plan(1)
+         end if
+         ifirst = dtt(10)
+      end if
+
+      ! Perform the DFT
+      call wrapper_r2r(plan, &
+                       inr, ifirst, size(inr))
+
+   end subroutine r2r_1m_x
+
+   ! r2r transform, multiple 1D DTTs in y direction
+   subroutine r2r_1m_y(inr, isign)
+
+      implicit none
+
+      real(mytype), dimension(:, :, :), contiguous, target, intent(inout) :: inr
+      integer, intent(in) :: isign
+
+      ! Local variables
+      type(c_ptr) :: plan
+      integer :: k, ifirst
+
+      ! Exit if needed
+      if (skip_y_c2c) return
+
+      ! Get the DTT config
+      if (isign == DECOMP_2D_FFT_FORWARD) then
+         plan = dtt_plan(2)
+         ifirst = dtt(5)
+      else
+         if (c_associated(dtt_plan(5))) then
+            plan = dtt_plan(5)
+         else
+            plan = dtt_plan(2)
+         end if
+         ifirst = dtt(11)
+      end if
+
+      ! Perform the DFT
+      do k = 1, size(inr, 3)
+         call wrapper_r2r(plan, &
+                          inr(:, :, k:k), 1 + size(inr, 1) * (ifirst - 1), size(inr, 1) * size(inr, 2))
+      end do
+
+   end subroutine r2r_1m_y
+
+   ! r2r transform, multiple 1D DTTs in z direction
+   subroutine r2r_1m_z(inr, isign)
+
+      implicit none
+
+      real(mytype), dimension(:, :, :), contiguous, target, intent(inout) :: inr
+      integer, intent(in) :: isign
+
+      ! Local variables
+      type(c_ptr) :: plan
+      integer :: ifirst
+
+      ! Exit if needed
+      if (skip_z_c2c) return
+
+      ! Get the DTT config
+      if (isign == DECOMP_2D_FFT_FORWARD) then
+         plan = dtt_plan(3)
+         ifirst = dtt(6)
+      else
+         if (c_associated(dtt_plan(6))) then
+            plan = dtt_plan(6)
+         else
+            plan = dtt_plan(3)
+         end if
+         ifirst = dtt(12)
+      end if
+
+      ! Perform the DFT
+      call wrapper_r2r(plan, &
+                       inr, 1 + size(inr, 1) * size(inr, 2) * (ifirst - 1), size(inr))
+
+   end subroutine r2r_1m_z
 
    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
    ! 3D FFT - complex to complex
@@ -1500,6 +2033,75 @@ contains
    end subroutine fft_3d_c2r
 
    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+   ! Forward 3D DTT - real to real
+   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+   subroutine decomp_2d_dtt_3d_r2r(in, out_real, isign)
+
+      implicit none
+
+      ! Arguments
+      real(mytype), dimension(:, :, :), contiguous, target, intent(inout) :: in
+      real(mytype), dimension(:, :, :), contiguous, target, intent(out) :: out_real
+      integer, intent(in) :: isign
+
+      ! Local variable
+      real(mytype), dimension(:, :, :), contiguous, pointer :: wk2ra
+
+      if (decomp_profiler_fft) call decomp_profiler_start("decomp_2d_dtt_3d_r2r")
+
+      ! Safety check
+      if (isign /= DECOMP_2D_FFT_FORWARD .and. isign /= DECOMP_2D_FFT_BACKWARD) then
+         call decomp_2d_abort(__FILE__, __LINE__, isign, "Invalid value")
+      end if
+
+      ! Get a buffer for arrays in y-pencil                                                
+      call c_f_pointer(c_loc(wk2_c2c), wk2ra, ph%ysz)
+
+      ! Perform the 3D DTT
+      if ((format == PHYSICAL_IN_X .and. isign == DECOMP_2D_FFT_FORWARD) .or. &
+          (format == PHYSICAL_IN_Z .and. isign == DECOMP_2D_FFT_BACKWARD)) then
+
+         ! DCT / DST in x
+         call r2r_1m_x(in, isign)
+
+         ! Transpose x => y
+         call transpose_x_to_y(in, wk2ra, ph)
+
+         ! DCT / DST in y
+         call r2r_1m_y(wk2ra, isign)
+
+         ! Transpose y => z
+         call transpose_y_to_z(wk2ra, out_real, ph)
+
+         ! DCT / DST in z
+         call r2r_1m_z(out_real, isign)
+
+      else
+
+         ! DCT / DST in z
+         call r2r_1m_z(in, isign)
+
+         ! Transpose z => y
+         call transpose_z_to_y(in, wk2ra, ph)
+
+         ! DCT / DST in y
+         call r2r_1m_y(wk2ra, isign)
+
+         ! Transpose y => x
+         call transpose_y_to_x(wk2ra, out_real, ph)
+
+         ! DCT / DST in x
+         call r2r_1m_x(out_real, isign)
+
+      end if
+
+      nullify (wk2ra)
+
+      if (decomp_profiler_fft) call decomp_profiler_end("decomp_2d_dtt_3d_r2r")
+
+   end subroutine decomp_2d_dtt_3d_r2r
+
+   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
    ! Wrappers for calling 3D FFT directly using the engine object
    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
    subroutine decomp_2d_fft_engine_fft_c2c(engine, in, out, isign)
@@ -1541,5 +2143,37 @@ contains
       call decomp_2d_fft_3d(in, out)
 
    end subroutine decomp_2d_fft_engine_fft_c2r
+
+   !
+   ! Wrappers are needed for skipping points
+   !
+   subroutine wrapper_r2r(plan, &
+                          inr, &
+                          ii, isz)
+
+      implicit none
+
+      ! Arguments
+      type(c_ptr), intent(in) :: plan
+      real(mytype), dimension(:, :, :), target, contiguous, intent(inout) :: inr
+      integer, intent(in) :: ii, isz
+
+      ! Local variable
+      real(mytype), dimension(:), contiguous, pointer :: inr2
+
+      ! Create 1D pointers mapping the provided 3D array
+      call c_f_pointer(c_loc(inr), inr2, (/isz/))
+
+      ! Perform DFT starting at the ifirst location
+#ifdef DOUBLE_PREC
+      call fftw_execute_r2r(plan, inr2(ii:), inr2(ii:))
+#else
+      call fftwf_execute_r2r(plan, inr2(ii:), inr2(ii:))
+#endif
+
+      ! Release pointers
+      nullify (inr2)
+
+   end subroutine wrapper_r2r
 
 end module decomp_2d_fft

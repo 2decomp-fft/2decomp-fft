@@ -111,6 +111,9 @@
 
      real(mytype), dimension(:, :, :), intent(INOUT) :: inout
      integer, dimension(3), optional :: opt_xlevel
+#if defined(_GPU)
+     attributes(device) :: inout
+#endif
 
      call exchange_halo_x_real(inout, decomp_main, opt_xlevel)
 
@@ -123,6 +126,9 @@
      real(mytype), dimension(:, :, :), intent(INOUT) :: inout
      TYPE(DECOMP_INFO), intent(in) :: decomp
      integer, dimension(3), optional :: opt_xlevel
+#if defined(_GPU)
+     attributes(device) :: inout
+#endif
 
      integer :: level_x, level_y, level_z
      integer :: ierror
@@ -147,6 +153,9 @@
 
      complex(mytype), dimension(:, :, :), intent(INOUT) :: inout
      integer, dimension(3), optional :: opt_xlevel
+#if defined(_GPU)
+     attributes(device) :: inout
+#endif
 
      call exchange_halo_x_complex(inout, decomp_main, opt_xlevel)
 
@@ -159,6 +168,9 @@
      complex(mytype), dimension(:, :, :), intent(INOUT) :: inout
      TYPE(DECOMP_INFO), intent(in) :: decomp
      integer, dimension(3), optional :: opt_xlevel
+#if defined(_GPU)
+     attributes(device) :: inout
+#endif
 
      integer :: level_x, level_y, level_z
      integer :: ierror
@@ -183,6 +195,9 @@
 
      real(mytype), dimension(:, :, :), intent(INOUT) :: inout
      integer, dimension(3), optional :: opt_ylevel
+#if defined(_GPU)
+     attributes(device) :: inout
+#endif
 
      call exchange_halo_y_real(inout, decomp_main, opt_ylevel)
 
@@ -195,6 +210,9 @@
      real(mytype), dimension(:, :, :), intent(INOUT) :: inout
      TYPE(DECOMP_INFO), intent(in) :: decomp
      integer, dimension(3), optional :: opt_ylevel
+#if defined(_GPU)
+     attributes(device) :: inout
+#endif
 
      integer :: level_x, level_y, level_z
      integer :: ierror
@@ -219,6 +237,9 @@
 
      complex(mytype), dimension(:, :, :), intent(INOUT) :: inout
      integer, dimension(3), optional :: opt_ylevel
+#if defined(_GPU)
+     attributes(device) :: inout
+#endif
 
      call exchange_halo_y_complex(inout, decomp_main, opt_ylevel)
 
@@ -231,6 +252,9 @@
      complex(mytype), dimension(:, :, :), intent(INOUT) :: inout
      TYPE(DECOMP_INFO), intent(in) :: decomp
      integer, dimension(3), optional :: opt_ylevel
+#if defined(_GPU)
+     attributes(device) :: inout
+#endif
 
      integer :: level_x, level_y, level_z
      integer :: ierror
@@ -253,6 +277,9 @@
      implicit none
      real(mytype), dimension(:, :, :), intent(INOUT) :: inout
      integer, dimension(3), optional :: opt_zlevel
+#if defined(_GPU)
+     attributes(device) :: inout
+#endif
 
      call exchange_halo_z_real(inout, decomp_main, opt_zlevel)
   end subroutine exchange_halo_z_real_short
@@ -262,6 +289,9 @@
      real(mytype), dimension(:, :, :), intent(INOUT) :: inout
      TYPE(DECOMP_INFO), intent(in) :: decomp
      integer, dimension(3), optional :: opt_zlevel
+#if defined(_GPU)
+     attributes(device) :: inout
+#endif
 
      integer :: level_x, level_y, level_z
      integer :: ierror
@@ -286,6 +316,9 @@
 
      complex(mytype), dimension(:, :, :), intent(INOUT) :: inout
      integer, dimension(3), optional :: opt_zlevel
+#if defined(_GPU)
+     attributes(device) :: inout
+#endif
 
      call exchange_halo_z_complex(inout, decomp_main, opt_zlevel)
   end subroutine exchange_halo_z_complex_short
@@ -297,6 +330,9 @@
      complex(mytype), dimension(:, :, :), intent(INOUT) :: inout
      TYPE(DECOMP_INFO), intent(in) :: decomp
      integer, dimension(3), optional :: opt_zlevel
+#if defined(_GPU)
+     attributes(device) :: inout
+#endif
 
      integer :: level_x, level_y, level_z
      integer :: ierror

@@ -2399,8 +2399,8 @@ contains
 
       ! Perform the DFT
       call wrapper_r2r(plan, &
-                       inr, ifirst, size(inr) - ifirst + 1, &
-                       outr, ofirst, size(outr) - ofirst + 1)
+                       inr, ifirst, size(inr), &
+                       outr, ofirst, size(outr))
 
    end subroutine r2r_1m_x
 
@@ -2441,8 +2441,8 @@ contains
       ! Perform the DFT
       do k = 1, size(inr, 3)
          call wrapper_r2r(plan, &
-                          inr(:,:,k:k), 1 + size(inr, 1) * (ifirst - 1), size(inr, 1) * (size(inr, 2) - ifirst + 1), &
-                          outr(:,:,k:k), 1 + size(outr, 1) * (ofirst - 1), size(outr, 1) * (size(outr, 2) - ofirst + 1))
+                          inr(:,:,k:k), 1 + size(inr, 1) * (ifirst - 1), size(inr, 1) * size(inr, 2), &
+                          outr(:,:,k:k), 1 + size(outr, 1) * (ofirst - 1), size(outr, 1) * size(outr, 2))
       end do
 
    end subroutine r2r_1m_y
@@ -2483,8 +2483,8 @@ contains
 
       ! Perform the DFT
       call wrapper_r2r(plan, &
-                       inr(:,:,ifirst:), 1, size(inr, 1) * size(inr, 2) * (size(inr, 3) - ifirst + 1), &
-                       outr(:,:,ofirst:), 1, size(outr, 1) * size(outr, 2) * (size(outr, 3) - ofirst + 1))
+                       inr(:,:,ifirst:), 1, size(inr), &
+                       outr(:,:,ofirst:), 1, size(outr))
 
    end subroutine r2r_1m_z
 
@@ -3334,8 +3334,8 @@ contains
       real(mytype), dimension(:), contiguous, pointer :: inr2, outr2
 
       ! Create 1D pointers starting at the ifirst / ofirst location
-      call c_f_pointer(c_loc(inr), inr2, (/isz + ii - 1/))
-      call c_f_pointer(c_loc(outr), outr2, (/osz + oi - 1/))
+      call c_f_pointer(c_loc(inr), inr2, (/isz/))
+      call c_f_pointer(c_loc(outr), outr2, (/osz/))
       outr2(oi:) = inr2(ii:)
 
       ! Perform DFT

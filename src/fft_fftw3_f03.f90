@@ -10,6 +10,8 @@ module decomp_2d_fft
    use decomp_2d_mpi
    use decomp_2d_profiler
    use, intrinsic :: iso_c_binding
+   use, intrinsic :: iso_fortran_env
+   use iso_c_binding, only: c_associated, c_loc, c_ptr
 
    implicit none
 
@@ -82,18 +84,10 @@ module decomp_2d_fft
                                        dtt_decomp_sp => null()
 
    ! Workspace for DTT
-   real(mytype), contiguous, pointer :: wk1ra(:, :, :) => null(), &
-                                        wk1ia(:, :, :) => null(), &
-                                        wk1rb(:, :, :) => null(), &
-                                        wk1ib(:, :, :) => null(), &
-                                        wk2ra(:, :, :) => null(), &
-                                        wk2ia(:, :, :) => null(), &
-                                        wk2rb(:, :, :) => null(), &
-                                        wk2ib(:, :, :) => null(), &
-                                        wk3ra(:, :, :) => null(), &
-                                        wk3ia(:, :, :) => null(), &
-                                        wk3rb(:, :, :) => null(), &
-                                        wk3ib(:, :, :) => null()
+   real(mytype), contiguous, pointer :: dtt_rbuf1(:, :, :) => null(), &
+                                        dtt_rbuf2(:, :, :) => null(), &
+                                        dtt_ibuf1(:, :, :) => null(), &
+                                        dtt_ibuf2(:, :, :) => null()
 
    ! Derived type with all the quantities needed to perform FFT
    type decomp_2d_fft_engine
@@ -117,18 +111,10 @@ module decomp_2d_fft
       type(decomp_info), pointer, private :: dtt_decomp_xy => null(), &
                                              dtt_decomp_yz => null()
       type(decomp_info), private :: dtt_decomp_sp_target
-      real(mytype), allocatable, private :: wk1ra(:, :, :), &
-                                            wk1ia(:, :, :), &
-                                            wk1rb(:, :, :), &
-                                            wk1ib(:, :, :), &
-                                            wk2ra(:, :, :), &
-                                            wk2ia(:, :, :), &
-                                            wk2rb(:, :, :), &
-                                            wk2ib(:, :, :), &
-                                            wk3ra(:, :, :), &
-                                            wk3ia(:, :, :), &
-                                            wk3rb(:, :, :), &
-                                            wk3ib(:, :, :)
+      real(mytype), allocatable, private :: dtt_rbuf1(:, :, :), &
+                                            dtt_rbuf2(:, :, :), &
+                                            dtt_ibuf1(:, :, :), &
+                                            dtt_ibuf2(:, :, :)
    contains
       procedure, public :: init => decomp_2d_fft_engine_init
       procedure, public :: fin => decomp_2d_fft_engine_fin
@@ -418,8 +404,12 @@ contains
 
       implicit none
 
+      ! Arguments
       class(decomp_2d_fft_engine), intent(inout), target :: engine
       integer, dimension(:), intent(in) :: in_DTT
+
+      ! Local variable
+      integer(int64) :: sz
 
       ! Safety check
       if (minval(in_DTT) < 0) call decomp_2d_abort(__FILE__, __LINE__, minval(in_DTT), "Invalid argument")
@@ -490,48 +480,26 @@ contains
          end if
       end if
 
-      ! Working arrays in x
+      ! Working arrays
+      sz = 0
+      sz = max(sz, int(product(engine%dtt_decomp_xy%xsz), int64))
+      sz = max(sz, int(product(engine%dtt_decomp_xy%ysz), int64))
+      sz = max(sz, int(product(engine%dtt_decomp_yz%ysz), int64))
+      sz = max(sz, int(product(engine%dtt_decomp_yz%zsz), int64))
       if (engine%format == PHYSICAL_IN_X) then
-         call alloc_x(engine%wk1ra, engine%ph, opt_global = .false.)
-         call alloc_x(engine%wk1ia, engine%ph, opt_global = .false.)
+         sz = max(sz, int(product(engine%dtt_decomp_sp%zsz), int64))
       else
-         call alloc_x(engine%wk1ra, engine%dtt_decomp_sp, opt_global = .false.)
-         call alloc_x(engine%wk1ia, engine%dtt_decomp_sp, opt_global = .false.)
+         sz = max(sz, int(product(engine%dtt_decomp_sp%xsz), int64))
       end if
-      call alloc_x(engine%wk1rb, engine%dtt_decomp_xy, opt_global = .false.)
-      call alloc_x(engine%wk1ib, engine%dtt_decomp_xy, opt_global = .false.)
+      allocate(engine%dtt_rbuf1(sz, 1, 1))
+      allocate(engine%dtt_rbuf2(sz, 1, 1))
+      allocate(engine%dtt_ibuf1(sz, 1, 1))
+      allocate(engine%dtt_ibuf2(sz, 1, 1))
       ! Set to zero
-      engine%wk1ra = 0._mytype
-      engine%wk1ia = 0._mytype
-      engine%wk1rb = 0._mytype
-      engine%wk1ib = 0._mytype
-
-      ! Working arrays in y
-      call alloc_y(engine%wk2ra, engine%dtt_decomp_xy, opt_global = .false.)
-      call alloc_y(engine%wk2ia, engine%dtt_decomp_xy, opt_global = .false.)
-      call alloc_y(engine%wk2rb, engine%dtt_decomp_yz, opt_global = .false.)
-      call alloc_y(engine%wk2ib, engine%dtt_decomp_yz, opt_global = .false.)
-      ! Set to zero
-      engine%wk2ra = 0._mytype
-      engine%wk2ia = 0._mytype
-      engine%wk2rb = 0._mytype
-      engine%wk2ib = 0._mytype
-
-      ! Working arrays in z
-      call alloc_z(engine%wk3ra, engine%dtt_decomp_yz, opt_global = .false.)
-      call alloc_z(engine%wk3ia, engine%dtt_decomp_yz, opt_global = .false.)
-      if (engine%format == PHYSICAL_IN_X) then
-         call alloc_z(engine%wk3rb, engine%dtt_decomp_sp, opt_global = .false.)
-         call alloc_z(engine%wk3ib, engine%dtt_decomp_sp, opt_global = .false.)
-      else
-         call alloc_z(engine%wk3rb, engine%ph, opt_global = .false.)
-         call alloc_z(engine%wk3ib, engine%ph, opt_global = .false.)
-      end if
-      ! Set to zero
-      engine%wk3ra = 0._mytype
-      engine%wk3ia = 0._mytype
-      engine%wk3rb = 0._mytype
-      engine%wk3ib = 0._mytype
+      engine%dtt_rbuf1 = 0._mytype
+      engine%dtt_rbuf2 = 0._mytype
+      engine%dtt_ibuf1 = 0._mytype
+      engine%dtt_ibuf2 = 0._mytype
 
       ! Prepare the fftw plans
       engine%dtt_plan = c_null_ptr
@@ -780,18 +748,10 @@ contains
          nullify (dtt_decomp_xy)
          nullify (dtt_decomp_yz)
          nullify (dtt_decomp_sp)
-         nullify (wk1ra)
-         nullify (wk1ia)
-         nullify (wk1rb)
-         nullify (wk1ib)
-         nullify (wk2ra)
-         nullify (wk2ia)
-         nullify (wk2rb)
-         nullify (wk2ib)
-         nullify (wk3ra)
-         nullify (wk3ia)
-         nullify (wk3rb)
-         nullify (wk3ib)
+         nullify (dtt_rbuf1)
+         nullify (dtt_rbuf2)
+         nullify (dtt_ibuf1)
+         nullify (dtt_ibuf2)
       end if
 
       ! Clean the FFTW library
@@ -858,18 +818,10 @@ contains
          call decomp_info_finalize(engine%dtt_decomp_sp_target)
 
       ! Set pointers to null
-      deallocate (engine%wk1ra)
-      deallocate (engine%wk1ia)
-      deallocate (engine%wk1rb)
-      deallocate (engine%wk1ib)
-      deallocate (engine%wk2ra)
-      deallocate (engine%wk2ia)
-      deallocate (engine%wk2rb)
-      deallocate (engine%wk2ib)
-      deallocate (engine%wk3ra)
-      deallocate (engine%wk3ia)
-      deallocate (engine%wk3rb)
-      deallocate (engine%wk3ib)
+      deallocate (engine%dtt_rbuf1)
+      deallocate (engine%dtt_rbuf2)
+      deallocate (engine%dtt_ibuf1)
+      deallocate (engine%dtt_ibuf2)
 
       ! Clean the fftw plans
       do i = 1, 6
@@ -1124,36 +1076,20 @@ contains
          dtt_decomp_xy => engine%dtt_decomp_xy
          dtt_decomp_yz => engine%dtt_decomp_yz
          dtt_decomp_sp => engine%dtt_decomp_sp
-         wk1ra => engine%wk1ra
-         wk1ia => engine%wk1ia
-         wk1rb => engine%wk1rb
-         wk1ib => engine%wk1ib
-         wk2ra => engine%wk2ra
-         wk2ia => engine%wk2ia
-         wk2rb => engine%wk2rb
-         wk2ib => engine%wk2ib
-         wk3ra => engine%wk3ra
-         wk3ia => engine%wk3ia
-         wk3rb => engine%wk3rb
-         wk3ib => engine%wk3ib
+         dtt_rbuf1 => engine%dtt_rbuf1
+         dtt_rbuf2 => engine%dtt_rbuf2
+         dtt_ibuf1 => engine%dtt_ibuf1
+         dtt_ibuf2 => engine%dtt_ibuf2
       else if (associated(dtt_decomp_xy)) then
          nullify (dtt)
          nullify (dtt_plan)
          nullify (dtt_decomp_xy)
          nullify (dtt_decomp_yz)
          nullify (dtt_decomp_sp)
-         nullify (wk1ra)
-         nullify (wk1ia)
-         nullify (wk1rb)
-         nullify (wk1ib)
-         nullify (wk2ra)
-         nullify (wk2ia)
-         nullify (wk2rb)
-         nullify (wk2ib)
-         nullify (wk3ra)
-         nullify (wk3ia)
-         nullify (wk3rb)
-         nullify (wk3ib)
+         nullify (dtt_rbuf1)
+         nullify (dtt_rbuf2)
+         nullify (dtt_ibuf1)
+         nullify (dtt_ibuf2)
       end if
 
    end subroutine decomp_2d_fft_engine_use_it
@@ -2913,6 +2849,7 @@ contains
       ! Local variables
       logical :: cplx
       integer :: i, j, k
+      real(mytype), dimension(:, :, :), contiguous, pointer :: rbuf1, rbuf2, ibuf1, ibuf2
 
       if (decomp_profiler_fft) call decomp_profiler_start("decomp_2d_dtt_3d_r2x")
 
@@ -2927,111 +2864,135 @@ contains
       ! Perform the 3D DTT
       if (format == PHYSICAL_IN_X) then
 
-         ! DFT / DTT in x
+         ! DFT / DTT in x, result in rbuf1 (and ibuf1)
+         call c_f_pointer(c_loc(dtt_rbuf1), rbuf1, dtt_decomp_xy%xsz)
          if (dtt_x_dft) then
-            call r2rr_1m_x(in, wk1rb, wk1ib)
+            call c_f_pointer(c_loc(dtt_ibuf1), ibuf1, dtt_decomp_xy%xsz)
+            call r2rr_1m_x(in, rbuf1, ibuf1)
             cplx = .true.
          else
-            call r2r_1m_x(in, wk1rb, DECOMP_2D_FFT_FORWARD)
+            call r2r_1m_x(in, rbuf1, DECOMP_2D_FFT_FORWARD)
          end if
 
-         ! Transpose x => y
-         call transpose_x_to_y(wk1rb, wk2ra, dtt_decomp_xy)
+         ! Transpose x => y, result in rbuf2 (and ibuf2)
+         call c_f_pointer(c_loc(dtt_rbuf2), rbuf2, dtt_decomp_xy%ysz)
+         call transpose_x_to_y(rbuf1, rbuf2, dtt_decomp_xy)
          if (cplx) then
-            call transpose_x_to_y(wk1ib, wk2ia, dtt_decomp_xy)
+            call c_f_pointer(c_loc(dtt_ibuf2), ibuf2, dtt_decomp_xy%ysz)
+            call transpose_x_to_y(ibuf1, ibuf2, dtt_decomp_xy)
          end if
 
-         ! DFT / DTT in y
+         ! DFT / DTT in y, result in rbuf1 (and ibuf1)
+         call c_f_pointer(c_loc(dtt_rbuf1), rbuf1, dtt_decomp_yz%ysz)
+         if (dtt_y_dft .or. cplx) call c_f_pointer(c_loc(dtt_ibuf1), ibuf1, dtt_decomp_yz%ysz)
          if (dtt_y_dft) then
             if (cplx) then
-               call rr2rr_1m_y(wk2ra, wk2ia, wk2rb, wk2ib, DECOMP_2D_FFT_FORWARD)
+               call rr2rr_1m_y(rbuf2, ibuf2, rbuf1, ibuf1, DECOMP_2D_FFT_FORWARD)
             else
-               call r2rr_1m_y(wk2ra, wk2rb, wk2ib)
+               call r2rr_1m_y(rbuf2, rbuf1, ibuf1)
                cplx = .true.
             end if
          else
-            call r2r_1m_y(wk2ra, wk2rb, DECOMP_2D_FFT_FORWARD)
+            call r2r_1m_y(rbuf2, rbuf1, DECOMP_2D_FFT_FORWARD)
             if (cplx) then
-               call r2r_1m_y(wk2ia, wk2ib, DECOMP_2D_FFT_FORWARD)
+               call r2r_1m_y(ibuf2, ibuf1, DECOMP_2D_FFT_FORWARD)
             end if
          end if
 
-         ! Transpose y => z
-         call transpose_y_to_z(wk2rb, wk3ra, dtt_decomp_yz)
+         ! Transpose y => z, result in rbuf2 (and ibuf2)
+         call c_f_pointer(c_loc(dtt_rbuf2), rbuf2, dtt_decomp_yz%zsz)
+         call transpose_y_to_z(rbuf1, rbuf2, dtt_decomp_yz)
          if (cplx) then
-            call transpose_y_to_z(wk2ib, wk3ia, dtt_decomp_yz)
+            call c_f_pointer(c_loc(dtt_ibuf2), ibuf2, dtt_decomp_yz%zsz)
+            call transpose_y_to_z(ibuf1, ibuf2, dtt_decomp_yz)
          end if
 
-         ! DFT / DTT in z
+         ! DFT / DTT in z, result in out_real or rbuf1 / ibuf1
+         if (dtt_z_dft .or. cplx) then
+            call c_f_pointer(c_loc(dtt_rbuf1), rbuf1, dtt_decomp_sp%zsz)
+            call c_f_pointer(c_loc(dtt_ibuf1), ibuf1, dtt_decomp_sp%zsz)
+         end if
          if (dtt_z_dft) then
             if (cplx) then
-               call rr2rr_1m_z(wk3ra, wk3ia, wk3rb, wk3ib, DECOMP_2D_FFT_FORWARD)
+               call rr2rr_1m_z(rbuf2, ibuf2, rbuf1, ibuf1, DECOMP_2D_FFT_FORWARD)
             else
-               call r2rr_1m_z(wk3ra, wk3rb, wk3ib)
+               call r2rr_1m_z(rbuf2, rbuf1, ibuf1)
                cplx = .true.
             end if
          else
             if (cplx) then
-               call r2r_1m_z(wk3ra, wk3rb, DECOMP_2D_FFT_FORWARD)
-               call r2r_1m_z(wk3ia, wk3ib, DECOMP_2D_FFT_FORWARD)
+               call r2r_1m_z(rbuf2, rbuf1, DECOMP_2D_FFT_FORWARD)
+               call r2r_1m_z(ibuf2, ibuf1, DECOMP_2D_FFT_FORWARD)
             else
                if (.not. present(out_real)) call decomp_2d_abort(__FILE__, __LINE__, 1, "Invalid arguments")
-               call r2r_1m_z(wk3ra, out_real, DECOMP_2D_FFT_FORWARD)
+               call r2r_1m_z(rbuf2, out_real, DECOMP_2D_FFT_FORWARD)
             end if
          end if
 
       else
 
-         ! DFT / DTT in z
+         ! DFT / DTT in z, result in rbuf1 (and ibuf1)
+         call c_f_pointer(c_loc(dtt_rbuf1), rbuf1, dtt_decomp_yz%zsz)
          if (dtt_z_dft) then
-            call r2rr_1m_z(in, wk3ra, wk3ia)
+            call c_f_pointer(c_loc(dtt_ibuf1), ibuf1, dtt_decomp_yz%zsz)
+            call r2rr_1m_z(in, rbuf1, ibuf1)
             cplx = .true.
          else
-            call r2r_1m_z(in, wk3ra, DECOMP_2D_FFT_FORWARD)
+            call r2r_1m_z(in, rbuf1, DECOMP_2D_FFT_FORWARD)
          end if
 
-         ! Transpose z => y
-         call transpose_z_to_y(wk3ra, wk2rb, dtt_decomp_yz)
+         ! Transpose z => y, result in rbuf2 (and ibuf2)
+         call c_f_pointer(c_loc(dtt_rbuf2), rbuf2, dtt_decomp_yz%ysz)
+         call transpose_z_to_y(rbuf1, rbuf2, dtt_decomp_yz)
          if (cplx) then
-            call transpose_z_to_y(wk3ia, wk2ib, dtt_decomp_yz)
+            call c_f_pointer(c_loc(dtt_ibuf2), ibuf2, dtt_decomp_yz%ysz)
+            call transpose_z_to_y(ibuf1, ibuf2, dtt_decomp_yz)
          end if
 
-         ! DFT / DTT in y
+         ! DFT / DTT in y, result in rbuf1 (and ibuf1)
+         call c_f_pointer(c_loc(dtt_rbuf1), rbuf1, dtt_decomp_xy%ysz)
+         if (dtt_y_dft .or. cplx) call c_f_pointer(c_loc(dtt_ibuf1), ibuf1, dtt_decomp_xy%ysz)
          if (dtt_y_dft) then
             if (cplx) then
-               call rr2rr_1m_y(wk2rb, wk2ib, wk2ra, wk2ia, DECOMP_2D_FFT_FORWARD)
+               call rr2rr_1m_y(rbuf2, ibuf2, rbuf1, ibuf1, DECOMP_2D_FFT_FORWARD)
             else
-               call r2rr_1m_y(wk2rb, wk2ra, wk2ia)
+               call r2rr_1m_y(rbuf2, rbuf1, ibuf1)
                cplx = .true.
             end if
          else
-            call r2r_1m_y(wk2rb, wk2ra, DECOMP_2D_FFT_FORWARD)
+            call r2r_1m_y(rbuf2, rbuf1, DECOMP_2D_FFT_FORWARD)
             if (cplx) then
-               call r2r_1m_y(wk2ib, wk2ia, DECOMP_2D_FFT_FORWARD)
+               call r2r_1m_y(ibuf2, ibuf1, DECOMP_2D_FFT_FORWARD)
             end if
          end if
 
-         ! Transpose y => x
-         call transpose_y_to_x(wk2ra, wk1rb, dtt_decomp_xy)
+         ! Transpose y => x, result in rbuf2 (and ibuf2)
+         call c_f_pointer(c_loc(dtt_rbuf2), rbuf2, dtt_decomp_xy%xsz)
+         call transpose_y_to_x(rbuf1, rbuf2, dtt_decomp_xy)
          if (cplx) then
-            call transpose_y_to_x(wk2ia, wk1ib, dtt_decomp_xy)
+            call c_f_pointer(c_loc(dtt_ibuf2), ibuf2, dtt_decomp_xy%xsz)
+            call transpose_y_to_x(ibuf1, ibuf2, dtt_decomp_xy)
          end if
 
-         ! DFT / DTT in x
+         ! DFT / DTT in x, result in out_real or rbuf1 / ibuf1
+         if (dtt_x_dft .or. cplx) then
+            call c_f_pointer(c_loc(dtt_rbuf1), rbuf1, dtt_decomp_sp%xsz)
+            call c_f_pointer(c_loc(dtt_ibuf1), ibuf1, dtt_decomp_sp%xsz)
+         end if
          if (dtt_x_dft) then
             if (cplx) then
-               call rr2rr_1m_x(wk1rb, wk1ib, wk1ra, wk1ia, DECOMP_2D_FFT_FORWARD)
+               call rr2rr_1m_x(rbuf2, ibuf2, rbuf1, ibuf1, DECOMP_2D_FFT_FORWARD)
             else
-               call r2rr_1m_x(wk1rb, wk1ra, wk1ia)
+               call r2rr_1m_x(rbuf2, rbuf1, ibuf1)
                cplx = .true.
             end if
          else
             if (cplx) then
-               call r2r_1m_x(wk1rb, wk1ra, DECOMP_2D_FFT_FORWARD)
-               call r2r_1m_x(wk1ib, wk1ia, DECOMP_2D_FFT_FORWARD)
+               call r2r_1m_x(rbuf2, rbuf1, DECOMP_2D_FFT_FORWARD)
+               call r2r_1m_x(ibuf2, ibuf1, DECOMP_2D_FFT_FORWARD)
             else
                if (.not. present(out_real)) call decomp_2d_abort(__FILE__, __LINE__, 1, "Invalid arguments")
-               call r2r_1m_x(wk1rb, out_real, DECOMP_2D_FFT_FORWARD)
+               call r2r_1m_x(rbuf2, out_real, DECOMP_2D_FFT_FORWARD)
             end if
          end if
 
@@ -3047,7 +3008,7 @@ contains
          do k = 1, dtt_decomp_sp%zsz(3)
             do j = 1, dtt_decomp_sp%zsz(2)
                do i = 1, dtt_decomp_sp%zsz(1)
-                  out_cplx(i, j, k) = cmplx(wk3rb(i, j, k), wk3ib(i, j, k), kind=mytype)
+                  out_cplx(i, j, k) = cmplx(rbuf1(i, j, k), ibuf1(i, j, k), kind=mytype)
                end do
             end do
          end do
@@ -3055,11 +3016,17 @@ contains
          do k = 1, dtt_decomp_sp%xsz(3)
             do j = 1, dtt_decomp_sp%xsz(2)
                do i = 1, dtt_decomp_sp%xsz(1)
-                  out_cplx(i, j, k) = cmplx(wk1ra(i, j, k), wk1ia(i, j, k), kind=mytype)
+                  out_cplx(i, j, k) = cmplx(rbuf1(i, j, k), ibuf1(i, j, k), kind=mytype)
                end do
             end do
          end do
       end if
+
+      ! Avoid memory leaks
+      nullify(rbuf1)
+      nullify(rbuf2)
+      if (associated(ibuf1)) nullify(ibuf1)
+      if (associated(ibuf2)) nullify(ibuf2)
 
       if (decomp_profiler_fft) call decomp_profiler_end("decomp_2d_dtt_3d_r2x")
 
@@ -3080,6 +3047,7 @@ contains
       ! Local variables
       logical :: cplx
       integer :: i, j, k
+      real(mytype), dimension(:, :, :), contiguous, pointer :: rbuf1, rbuf2, ibuf1, ibuf2
 
       if (decomp_profiler_fft) call decomp_profiler_start("decomp_2d_dtt_3d_x2r")
 
@@ -3098,23 +3066,27 @@ contains
       end if
       if (.not. present(out)) call decomp_2d_abort(__FILE__, __LINE__, 1, "Invalid arguments")
 
-      ! Split real and imag parts if needed
+      ! Split real and imag parts if needed, output in rbuf1 and ibuf1
       if (cplx) then
          if (format == PHYSICAL_IN_X) then
+            call c_f_pointer(c_loc(dtt_rbuf1), rbuf1, dtt_decomp_sp%zsz)
+            call c_f_pointer(c_loc(dtt_ibuf1), ibuf1, dtt_decomp_sp%zsz)
             do k = 1, dtt_decomp_sp%zsz(3)
                do j = 1, dtt_decomp_sp%zsz(2)
                   do i = 1, dtt_decomp_sp%zsz(1)
-                     wk3rb(i, j, k) = real(in_cplx(i, j, k), kind=mytype)
-                     wk3ib(i, j, k) = aimag(in_cplx(i, j, k))
+                     rbuf1(i, j, k) = real(in_cplx(i, j, k), kind=mytype)
+                     ibuf1(i, j, k) = aimag(in_cplx(i, j, k))
                   end do
                end do
             end do
          else
+            call c_f_pointer(c_loc(dtt_rbuf1), rbuf1, dtt_decomp_sp%xsz)
+            call c_f_pointer(c_loc(dtt_ibuf1), ibuf1, dtt_decomp_sp%xsz)
             do k = 1, dtt_decomp_sp%xsz(3)
                do j = 1, dtt_decomp_sp%xsz(2)
                   do i = 1, dtt_decomp_sp%xsz(1)
-                     wk1ra(i, j, k) = real(in_cplx(i, j, k), kind=mytype)
-                     wk1ia(i, j, k) = aimag(in_cplx(i, j, k))
+                     rbuf1(i, j, k) = real(in_cplx(i, j, k), kind=mytype)
+                     ibuf1(i, j, k) = aimag(in_cplx(i, j, k))
                   end do
                end do
             end do
@@ -3124,107 +3096,137 @@ contains
       ! Perform the 3D DTT
       if (format == PHYSICAL_IN_Z) then
 
-         ! DFT / DTT in x
+         ! DFT / DTT in x, output in rbuf2 (and ibuf2)
+         call c_f_pointer(c_loc(dtt_rbuf2), rbuf2, dtt_decomp_xy%xsz)
          if (dtt_x_dft) then
             if (dtt_y_dft .or. dtt_z_dft) then
-               call rr2rr_1m_x(wk1ra, wk1ia, wk1rb, wk1ib, DECOMP_2D_FFT_BACKWARD)
+               call c_f_pointer(c_loc(dtt_ibuf2), ibuf2, dtt_decomp_xy%xsz)
+               call rr2rr_1m_x(rbuf1, ibuf1, rbuf2, ibuf2, DECOMP_2D_FFT_BACKWARD)
             else
-               call rr2r_1m_x(wk1ra, wk1ia, wk1rb)
+               call rr2r_1m_x(rbuf1, ibuf1, rbuf2)
                cplx = .false.
             end if
          else
             if (cplx) then
-               call r2r_1m_x(wk1ra, wk1rb, DECOMP_2D_FFT_BACKWARD)
-               call r2r_1m_x(wk1ia, wk1ib, DECOMP_2D_FFT_BACKWARD)
+               call c_f_pointer(c_loc(dtt_ibuf2), ibuf2, dtt_decomp_xy%xsz)
+               call r2r_1m_x(rbuf1, rbuf2, DECOMP_2D_FFT_BACKWARD)
+               call r2r_1m_x(ibuf1, ibuf2, DECOMP_2D_FFT_BACKWARD)
             else
-               call r2r_1m_x(in_real, wk1rb, DECOMP_2D_FFT_BACKWARD)
+               call r2r_1m_x(in_real, rbuf2, DECOMP_2D_FFT_BACKWARD)
             end if
          end if
 
-         ! Transpose x => y
-         call transpose_x_to_y(wk1rb, wk2ra, dtt_decomp_xy)
+         ! Transpose x => y, output in rbuf1 (and ibuf1)
+         call c_f_pointer(c_loc(dtt_rbuf1), rbuf1, dtt_decomp_xy%ysz)
+         call transpose_x_to_y(rbuf2, rbuf1, dtt_decomp_xy)
          if (cplx) then
-            call transpose_x_to_y(wk1ib, wk2ia, dtt_decomp_xy)
+            call c_f_pointer(c_loc(dtt_ibuf1), ibuf1, dtt_decomp_xy%ysz)
+            call transpose_x_to_y(ibuf2, ibuf1, dtt_decomp_xy)
          end if
 
-         ! DFT / DTT in y
+         ! DFT / DTT in y, output in rbuf2 (and ibuf2)
+         call c_f_pointer(c_loc(dtt_rbuf2), rbuf2, dtt_decomp_yz%ysz)
          if (dtt_y_dft) then
             if (dtt_z_dft) then
-               call rr2rr_1m_y(wk2ra, wk2ia, wk2rb, wk2ib, DECOMP_2D_FFT_BACKWARD)
+               call c_f_pointer(c_loc(dtt_ibuf2), ibuf2, dtt_decomp_yz%ysz)
+               call rr2rr_1m_y(rbuf1, ibuf1, rbuf2, ibuf2, DECOMP_2D_FFT_BACKWARD)
             else
-               call rr2r_1m_y(wk2ra, wk2ia, wk2rb)
+               call rr2r_1m_y(rbuf1, ibuf1, rbuf2)
                cplx = .false.
             end if
          else
-            call r2r_1m_y(wk2ra, wk2rb, DECOMP_2D_FFT_BACKWARD)
-            if (cplx) call r2r_1m_y(wk2ia, wk2ib, DECOMP_2D_FFT_BACKWARD)
+            call r2r_1m_y(rbuf1, rbuf2, DECOMP_2D_FFT_BACKWARD)
+            if (cplx) then
+               call c_f_pointer(c_loc(dtt_ibuf2), ibuf2, dtt_decomp_yz%ysz)
+               call r2r_1m_y(ibuf1, ibuf2, DECOMP_2D_FFT_BACKWARD)
+            end if
          end if
 
-         ! Transpose y => z
-         call transpose_y_to_z(wk2rb, wk3ra, dtt_decomp_yz)
+         ! Transpose y => z, output in rbuf1 (and ibuf1)
+         call c_f_pointer(c_loc(dtt_rbuf1), rbuf1, dtt_decomp_yz%zsz)
+         call transpose_y_to_z(rbuf2, rbuf1, dtt_decomp_yz)
          if (cplx) then
-            call transpose_y_to_z(wk2ib, wk3ia, dtt_decomp_yz)
+            call c_f_pointer(c_loc(dtt_ibuf1), ibuf1, dtt_decomp_yz%zsz)
+            call transpose_y_to_z(ibuf2, ibuf1, dtt_decomp_yz)
          end if
 
          ! DFT / DTT in z
          if (cplx) then
-            call rr2r_1m_z(wk3ra, wk3ia, out)
+            call rr2r_1m_z(rbuf1, ibuf1, out)
          else
-            call r2r_1m_z(wk3ra, out, DECOMP_2D_FFT_BACKWARD)
+            call r2r_1m_z(rbuf1, out, DECOMP_2D_FFT_BACKWARD)
          end if
 
       else
 
-         ! DFT / DTT in z
+         ! DFT / DTT in z, output in rbuf2 (and ibuf2)
+         call c_f_pointer(c_loc(dtt_rbuf2), rbuf2, dtt_decomp_yz%zsz)
          if (dtt_z_dft) then
             if (dtt_y_dft .or. dtt_x_dft) then
-               call rr2rr_1m_z(wk3rb, wk3ib, wk3ra, wk3ia, DECOMP_2D_FFT_BACKWARD)
+               call c_f_pointer(c_loc(dtt_ibuf2), ibuf2, dtt_decomp_yz%zsz)
+               call rr2rr_1m_z(rbuf1, ibuf1, rbuf2, ibuf2, DECOMP_2D_FFT_BACKWARD)
             else
-               call rr2r_1m_z(wk3rb, wk3ib, wk3ra)
+               call rr2r_1m_z(rbuf1, ibuf1, rbuf2)
                cplx = .false.
             end if
          else
             if (cplx) then
-               call r2r_1m_z(wk3rb, wk3ra, DECOMP_2D_FFT_BACKWARD)
-               call r2r_1m_z(wk3ib, wk3ia, DECOMP_2D_FFT_BACKWARD)
+               call c_f_pointer(c_loc(dtt_ibuf2), ibuf2, dtt_decomp_yz%zsz)
+               call r2r_1m_z(rbuf1, rbuf2, DECOMP_2D_FFT_BACKWARD)
+               call r2r_1m_z(ibuf1, ibuf2, DECOMP_2D_FFT_BACKWARD)
             else
-               call r2r_1m_z(in_real, wk3ra, DECOMP_2D_FFT_BACKWARD)
+               call r2r_1m_z(in_real, rbuf2, DECOMP_2D_FFT_BACKWARD)
             end if
          end if
 
-         ! Transpose z => y
-         call transpose_z_to_y(wk3ra, wk2rb, dtt_decomp_yz)
+         ! Transpose z => y, output in rbuf1 (and ibuf1)
+         call c_f_pointer(c_loc(dtt_rbuf1), rbuf1, dtt_decomp_yz%ysz)
+         call transpose_z_to_y(rbuf2, rbuf1, dtt_decomp_yz)
          if (cplx) then
-            call transpose_z_to_y(wk3ia, wk2ib, dtt_decomp_yz)
+            call c_f_pointer(c_loc(dtt_ibuf1), ibuf1, dtt_decomp_yz%ysz)
+            call transpose_z_to_y(ibuf2, ibuf1, dtt_decomp_yz)
          end if
 
-         ! DFT / DTT in y
+         ! DFT / DTT in y, output in rbuf2 (and ibuf2)
+         call c_f_pointer(c_loc(dtt_rbuf2), rbuf2, dtt_decomp_xy%ysz)
          if (dtt_y_dft) then
             if (dtt_x_dft) then
-               call rr2rr_1m_y(wk2rb, wk2ib, wk2ra, wk2ia, DECOMP_2D_FFT_BACKWARD)
+               call c_f_pointer(c_loc(dtt_ibuf2), ibuf2, dtt_decomp_xy%ysz)
+               call rr2rr_1m_y(rbuf1, ibuf1, rbuf2, ibuf2, DECOMP_2D_FFT_BACKWARD)
             else
-               call rr2r_1m_y(wk2rb, wk2ib, wk2ra)
+               call rr2r_1m_y(rbuf1, ibuf1, rbuf2)
                cplx = .false.
             end if
          else
-            call r2r_1m_y(wk2rb, wk2ra, DECOMP_2D_FFT_BACKWARD)
-            if (cplx) call r2r_1m_y(wk2ib, wk2ia, DECOMP_2D_FFT_BACKWARD)
+            call r2r_1m_y(rbuf1, rbuf2, DECOMP_2D_FFT_BACKWARD)
+            if (cplx) then
+               call c_f_pointer(c_loc(dtt_ibuf2), ibuf2, dtt_decomp_xy%ysz)
+               call r2r_1m_y(ibuf1, ibuf2, DECOMP_2D_FFT_BACKWARD)
+            end if
          end if
 
-         ! Transpose y => x
-         call transpose_y_to_x(wk2ra, wk1rb, dtt_decomp_xy)
+         ! Transpose y => x, output in rbuf1 (and ibuf1)
+         call c_f_pointer(c_loc(dtt_rbuf1), rbuf1, dtt_decomp_xy%xsz)
+         call transpose_y_to_x(rbuf2, rbuf1, dtt_decomp_xy)
          if (cplx) then
-            call transpose_y_to_x(wk2ia, wk1ib, dtt_decomp_xy)
+            call c_f_pointer(c_loc(dtt_ibuf1), ibuf1, dtt_decomp_xy%xsz)
+            call transpose_y_to_x(ibuf2, ibuf1, dtt_decomp_xy)
          end if
 
          ! DFT / DTT in x
          if (cplx) then
-            call rr2r_1m_x(wk1rb, wk1ib, out)
+            call rr2r_1m_x(rbuf1, ibuf1, out)
          else
-            call r2r_1m_x(wk1rb, out, DECOMP_2D_FFT_BACKWARD)
+            call r2r_1m_x(rbuf1, out, DECOMP_2D_FFT_BACKWARD)
          end if
 
       end if
+
+      ! Avoid memory leaks
+      nullify(rbuf1)
+      nullify(rbuf2)
+      if (associated(ibuf1)) nullify(ibuf1)
+      if (associated(ibuf2)) nullify(ibuf2)
 
       if (decomp_profiler_fft) call decomp_profiler_end("decomp_2d_dtt_3d_x2r")
 

@@ -84,10 +84,10 @@ module decomp_2d_fft
                                        dtt_decomp_sp => null()
 
    ! Workspace for DTT
-   real(mytype), contiguous, pointer :: dtt_rbuf1(:, :, :) => null(), &
-                                        dtt_rbuf2(:, :, :) => null(), &
-                                        dtt_ibuf1(:, :, :) => null(), &
-                                        dtt_ibuf2(:, :, :) => null()
+   real(mytype), contiguous, pointer :: dtt_rbuf1(:) => null(), &
+                                        dtt_rbuf2(:) => null(), &
+                                        dtt_ibuf1(:) => null(), &
+                                        dtt_ibuf2(:) => null()
 
    ! Derived type with all the quantities needed to perform FFT
    type decomp_2d_fft_engine
@@ -111,10 +111,10 @@ module decomp_2d_fft
       type(decomp_info), pointer, private :: dtt_decomp_xy => null(), &
                                              dtt_decomp_yz => null()
       type(decomp_info), private :: dtt_decomp_sp_target
-      real(mytype), allocatable, private :: dtt_rbuf1(:, :, :), &
-                                            dtt_rbuf2(:, :, :), &
-                                            dtt_ibuf1(:, :, :), &
-                                            dtt_ibuf2(:, :, :)
+      real(mytype), allocatable, private :: dtt_rbuf1(:), &
+                                            dtt_rbuf2(:), &
+                                            dtt_ibuf1(:), &
+                                            dtt_ibuf2(:)
    contains
       procedure, public :: init => decomp_2d_fft_engine_init
       procedure, public :: fin => decomp_2d_fft_engine_fin
@@ -481,6 +481,7 @@ contains
       end if
 
       ! Working arrays
+      ! Compute the size
       sz = 0
       sz = max(sz, product(int(engine%dtt_decomp_xy%xsz, int64)))
       sz = max(sz, product(int(engine%dtt_decomp_xy%ysz, int64)))
@@ -491,10 +492,11 @@ contains
       else
          sz = max(sz, product(int(engine%dtt_decomp_sp%xsz, int64)))
       end if
-      allocate(engine%dtt_rbuf1(sz, 1, 1))
-      allocate(engine%dtt_rbuf2(sz, 1, 1))
-      allocate(engine%dtt_ibuf1(sz, 1, 1))
-      allocate(engine%dtt_ibuf2(sz, 1, 1))
+      ! Allocate
+      allocate(engine%dtt_rbuf1(sz))
+      allocate(engine%dtt_rbuf2(sz))
+      allocate(engine%dtt_ibuf1(sz))
+      allocate(engine%dtt_ibuf2(sz))
       ! Set to zero
       engine%dtt_rbuf1 = 0._mytype
       engine%dtt_rbuf2 = 0._mytype

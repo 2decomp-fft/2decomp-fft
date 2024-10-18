@@ -493,10 +493,10 @@ contains
          sz = max(sz, product(int(engine%dtt_decomp_sp%xsz, int64)))
       end if
       ! Allocate
-      allocate(engine%dtt_rbuf1(sz))
-      allocate(engine%dtt_rbuf2(sz))
-      allocate(engine%dtt_ibuf1(sz))
-      allocate(engine%dtt_ibuf2(sz))
+      allocate (engine%dtt_rbuf1(sz))
+      allocate (engine%dtt_rbuf2(sz))
+      allocate (engine%dtt_ibuf1(sz))
+      allocate (engine%dtt_ibuf2(sz))
       ! Set to zero
       engine%dtt_rbuf1 = 0._mytype
       engine%dtt_rbuf2 = 0._mytype
@@ -524,7 +524,8 @@ contains
             end if
          else
             call r2r_1m_y_plan(engine%dtt_plan(2), engine%dtt_decomp_xy, engine%dtt(2), engine%dtt(8))
-            if (engine%dtt(14) /= engine%dtt(2)) call r2r_1m_y_plan(engine%dtt_plan(5), engine%dtt_decomp_xy, engine%dtt(14), engine%dtt(8))
+            if (engine%dtt(14) /= engine%dtt(2)) &
+               call r2r_1m_y_plan(engine%dtt_plan(5), engine%dtt_decomp_xy, engine%dtt(14), engine%dtt(8))
          end if
          ! in z
          if (engine%dtt(3) == FFTW_FORWARD) then
@@ -536,7 +537,8 @@ contains
             end if
          else
             call r2r_1m_z_plan(engine%dtt_plan(3), engine%dtt_decomp_sp, engine%dtt(3), engine%dtt(9))
-            if (engine%dtt(15) /= engine%dtt(3)) call r2r_1m_z_plan(engine%dtt_plan(6), engine%dtt_decomp_sp, engine%dtt(15), engine%dtt(9))
+            if (engine%dtt(15) /= engine%dtt(3)) &
+               call r2r_1m_z_plan(engine%dtt_plan(6), engine%dtt_decomp_sp, engine%dtt(15), engine%dtt(9))
          end if
       else
          ! in z
@@ -557,7 +559,8 @@ contains
             end if
          else
             call r2r_1m_y_plan(engine%dtt_plan(2), engine%dtt_decomp_xy, engine%dtt(2), engine%dtt(8))
-            if (engine%dtt(14) /= engine%dtt(2)) call r2r_1m_y_plan(engine%dtt_plan(5), engine%dtt_decomp_xy, engine%dtt(14), engine%dtt(8))
+            if (engine%dtt(14) /= engine%dtt(2)) &
+               call r2r_1m_y_plan(engine%dtt_plan(5), engine%dtt_decomp_xy, engine%dtt(14), engine%dtt(8))
          end if
          ! in x
          if (engine%dtt(1) == FFTW_FORWARD) then
@@ -569,7 +572,8 @@ contains
             end if
          else
             call r2r_1m_x_plan(engine%dtt_plan(1), engine%dtt_decomp_sp, engine%dtt(1), engine%dtt(7))
-            if (engine%dtt(13) /= engine%dtt(1)) call r2r_1m_x_plan(engine%dtt_plan(4), engine%dtt_decomp_sp, engine%dtt(13), engine%dtt(7))
+            if (engine%dtt(13) /= engine%dtt(1)) &
+               call r2r_1m_x_plan(engine%dtt_plan(4), engine%dtt_decomp_sp, engine%dtt(13), engine%dtt(7))
          end if
       end if
 
@@ -846,7 +850,7 @@ contains
 
       integer, dimension(3) :: decomp_2d_fft_get_dtt_input
 
-      if (.not.associated(with_dtt)) call decomp_2d_abort(__FILE__, __LINE__, 1, "Invalid operation")
+      if (.not. associated(with_dtt)) call decomp_2d_abort(__FILE__, __LINE__, 1, "Invalid operation")
 
       if (with_dtt) then
          decomp_2d_fft_get_dtt_input = fftw_for_dtt(dtt(1:3))
@@ -1506,8 +1510,8 @@ contains
       type(fftwf_iodim) :: dims(1), howmany(1)
 #endif
 
-      call alloc_x(a1, decomp, opt_global = .false.)
-      call alloc_x(a2, decomp, opt_global = .false.)
+      call alloc_x(a1, decomp, opt_global=.false.)
+      call alloc_x(a2, decomp, opt_global=.false.)
       a3 => a1
       a4 => a2
 
@@ -1525,7 +1529,7 @@ contains
 
       deallocate (a1)
       deallocate (a2)
-      nullify (a3) 
+      nullify (a3)
       nullify (a4)
       if (.not. c_associated(plan)) call decomp_2d_abort(__FILE__, __LINE__, 8, "Plan creation failed")
 
@@ -1554,8 +1558,8 @@ contains
       type(fftwf_iodim) :: dims(1), howmany(1)
 #endif
 
-      allocate(a1(decomp%ysz(1), decomp%ysz(2), 1))
-      allocate(a2(decomp%ysz(1), decomp%ysz(2), 1))
+      allocate (a1(decomp%ysz(1), decomp%ysz(2), 1))
+      allocate (a2(decomp%ysz(1), decomp%ysz(2), 1))
       a3 => a1
       a4 => a2
 
@@ -1602,8 +1606,8 @@ contains
       type(fftwf_iodim) :: dims(1), howmany(1)
 #endif
 
-      call alloc_z(a1, decomp, opt_global = .false.)
-      call alloc_z(a2, decomp, opt_global = .false.)
+      call alloc_z(a1, decomp, opt_global=.false.)
+      call alloc_z(a2, decomp, opt_global=.false.)
       a3 => a1
       a4 => a2
 
@@ -1646,8 +1650,8 @@ contains
       type(fftwf_iodim) :: dims(1), howmany(1)
 #endif
 
-      call alloc_x(a1, decomp, opt_global = .false.)
-      call alloc_x(a3, decomp2, opt_global = .false.)
+      call alloc_x(a1, decomp, opt_global=.false.)
+      call alloc_x(a3, decomp2, opt_global=.false.)
 
       dims(1)%n = decomp2%xsz(1)
       dims(1)%is = 1
@@ -1686,8 +1690,8 @@ contains
       type(fftwf_iodim) :: dims(1), howmany(1)
 #endif
 
-      allocate(a1(decomp%ysz(1), decomp%ysz(2), 1))
-      allocate(a3(decomp2%ysz(1), decomp2%ysz(2), 1))
+      allocate (a1(decomp%ysz(1), decomp%ysz(2), 1))
+      allocate (a3(decomp2%ysz(1), decomp2%ysz(2), 1))
 
       dims(1)%n = decomp2%ysz(2)
       dims(1)%is = decomp%ysz(1)
@@ -1726,8 +1730,8 @@ contains
       type(fftwf_iodim) :: dims(1), howmany(1)
 #endif
 
-      call alloc_z(a1, decomp, opt_global = .false.)
-      call alloc_z(a3, decomp2, opt_global = .false.)
+      call alloc_z(a1, decomp, opt_global=.false.)
+      call alloc_z(a3, decomp2, opt_global=.false.)
 
       dims(1)%n = decomp2%zsz(3)
       dims(1)%is = decomp%zsz(1) * decomp%zsz(2)
@@ -1766,8 +1770,8 @@ contains
       type(fftwf_iodim) :: dims(1), howmany(1)
 #endif
 
-      call alloc_x(a1, decomp, opt_global = .false.)
-      call alloc_x(a2, decomp2, opt_global = .false.)
+      call alloc_x(a1, decomp, opt_global=.false.)
+      call alloc_x(a2, decomp2, opt_global=.false.)
 
       dims(1)%n = decomp%xsz(1)
       dims(1)%is = 1
@@ -1806,8 +1810,8 @@ contains
       type(fftwf_iodim) :: dims(1), howmany(1)
 #endif
 
-      allocate(a1(decomp%ysz(1), decomp%ysz(2), 1))
-      allocate(a2(decomp2%ysz(1), decomp2%ysz(2), 1))
+      allocate (a1(decomp%ysz(1), decomp%ysz(2), 1))
+      allocate (a2(decomp2%ysz(1), decomp2%ysz(2), 1))
 
       dims(1)%n = decomp%ysz(2)
       dims(1)%is = decomp%ysz(1)
@@ -1846,8 +1850,8 @@ contains
       type(fftwf_iodim) :: dims(1), howmany(1)
 #endif
 
-      call alloc_z(a1, decomp, opt_global = .false.)
-      call alloc_z(a2, decomp2, opt_global = .false.)
+      call alloc_z(a1, decomp, opt_global=.false.)
+      call alloc_z(a2, decomp2, opt_global=.false.)
 
       dims(1)%n = decomp%zsz(3)
       dims(1)%is = decomp%zsz(1) * decomp%zsz(2)
@@ -1902,7 +1906,7 @@ contains
                                  a2, decomp%xsz(1), 1, decomp%xsz(1), &
                                  tmp(1), plan_type_dtt)
 
-      deallocate(a1)
+      deallocate (a1)
       nullify (a2)
       if (.not. c_associated(plan)) call decomp_2d_abort(__FILE__, __LINE__, 17, "Plan creation failed")
 
@@ -1929,7 +1933,7 @@ contains
       integer(C_INT) :: ntmp(1)
       integer(C_FFTW_R2R_KIND) :: tmp(1)
 
-      allocate(a1(decomp%ysz(1), decomp%ysz(2), 1))
+      allocate (a1(decomp%ysz(1), decomp%ysz(2), 1))
       a2 => a1
 
       ntmp(1) = decomp%ysz(2) - ndismiss
@@ -1984,7 +1988,7 @@ contains
                                  a2, decomp%zsz(3), decomp%zsz(1) * decomp%zsz(2), 1, &
                                  tmp(1), plan_type_dtt)
 
-      deallocate(a1)
+      deallocate (a1)
       nullify (a2)
       if (.not. c_associated(plan)) call decomp_2d_abort(__FILE__, __LINE__, 19, "Plan creation failed")
 
@@ -2226,7 +2230,7 @@ contains
       ! Copy for in-place transform
       outr = inr
       outi = ini
-      
+
       ! Exit if needed
       if (skip_x_c2c) return
 
@@ -2258,7 +2262,7 @@ contains
       ! Copy for in-place transform
       outr = inr
       outi = ini
-      
+
       ! Exit if needed
       if (skip_y_c2c) return
 
@@ -2266,14 +2270,14 @@ contains
       if (isign == DECOMP_2D_FFT_FORWARD) then
          do k = 1, size(inr, 3)
             call wrapper_rr2rr(dtt_plan(2), &
-                               outr(:,:,k:k), outi(:,:,k:k), size(inr, 1) * size(inr, 2), &
-                               outr(:,:,k:k), outi(:,:,k:k), size(outr, 1) * size(outr, 2))
+                               outr(:, :, k:k), outi(:, :, k:k), size(inr, 1) * size(inr, 2), &
+                               outr(:, :, k:k), outi(:, :, k:k), size(outr, 1) * size(outr, 2))
          end do
       else
          do k = 1, size(inr, 3)
             call wrapper_rr2rr(dtt_plan(2), &
-                               outi(:,:,k:k), outr(:,:,k:k), size(inr, 1) * size(inr, 2), &
-                               outi(:,:,k:k), outr(:,:,k:k), size(outr, 1) * size(outr, 2))
+                               outi(:, :, k:k), outr(:, :, k:k), size(inr, 1) * size(inr, 2), &
+                               outi(:, :, k:k), outr(:, :, k:k), size(outr, 1) * size(outr, 2))
          end do
       end if
 
@@ -2291,7 +2295,7 @@ contains
       ! Copy for in-place transform
       outr = inr
       outi = ini
-      
+
       ! Exit if needed
       if (skip_z_c2c) return
 
@@ -2386,8 +2390,8 @@ contains
       ! Perform the DFT
       do k = 1, size(inr, 3)
          call wrapper_r2r(plan, &
-                          inr(:,:,k:k), 1 + size(inr, 1) * (ifirst - 1), size(inr, 1) * size(inr, 2), &
-                          outr(:,:,k:k), 1 + size(outr, 1) * (ofirst - 1), size(outr, 1) * size(outr, 2))
+                          inr(:, :, k:k), 1 + size(inr, 1) * (ifirst - 1), size(inr, 1) * size(inr, 2), &
+                          outr(:, :, k:k), 1 + size(outr, 1) * (ofirst - 1), size(outr, 1) * size(outr, 2))
       end do
 
    end subroutine r2r_1m_y
@@ -2428,8 +2432,8 @@ contains
 
       ! Perform the DFT
       call wrapper_r2r(plan, &
-                       inr(:,:,ifirst:), 1, size(inr), &
-                       outr(:,:,ofirst:), 1, size(outr))
+                       inr(:, :, ifirst:), 1, size(inr), &
+                       outr(:, :, ofirst:), 1, size(outr))
 
    end subroutine r2r_1m_z
 
@@ -3032,10 +3036,10 @@ contains
       end if
 
       ! Avoid memory leaks
-      nullify(rbuf1)
-      nullify(rbuf2)
-      if (associated(ibuf1)) nullify(ibuf1)
-      if (associated(ibuf2)) nullify(ibuf2)
+      nullify (rbuf1)
+      nullify (rbuf2)
+      if (associated(ibuf1)) nullify (ibuf1)
+      if (associated(ibuf2)) nullify (ibuf2)
 
       if (decomp_profiler_fft) call decomp_profiler_end("decomp_2d_dtt_3d_r2x")
 
@@ -3232,10 +3236,10 @@ contains
       end if
 
       ! Avoid memory leaks
-      nullify(rbuf1)
-      nullify(rbuf2)
-      if (associated(ibuf1)) nullify(ibuf1)
-      if (associated(ibuf2)) nullify(ibuf2)
+      nullify (rbuf1)
+      nullify (rbuf2)
+      if (associated(ibuf1)) nullify (ibuf1)
+      if (associated(ibuf2)) nullify (ibuf2)
 
       if (decomp_profiler_fft) call decomp_profiler_end("decomp_2d_dtt_3d_x2r")
 
@@ -3392,7 +3396,7 @@ contains
       if (size(wk2_c2c) > isz) then
          call c_f_pointer(c_loc(wk2_c2c), inc, (/isz/))
       else
-         allocate(buffer(isz))
+         allocate (buffer(isz))
          inc => buffer
       end if
 
@@ -3413,7 +3417,7 @@ contains
       nullify (ini2)
       nullify (outr2)
       nullify (inc)
-      if (allocated(buffer)) deallocate(buffer)
+      if (allocated(buffer)) deallocate (buffer)
 
    end subroutine wrapper_rr2r
    !
@@ -3447,7 +3451,7 @@ contains
       if (size(wk2_c2c) > osz) then
          call c_f_pointer(c_loc(wk2_c2c), outc, (/osz/))
       else
-         allocate(buffer(osz))
+         allocate (buffer(osz))
          outc => buffer
       end if
 
@@ -3469,7 +3473,7 @@ contains
       nullify (outr2)
       nullify (outi2)
       nullify (outc)
-      if (allocated(buffer)) deallocate(buffer)
+      if (allocated(buffer)) deallocate (buffer)
 
    end subroutine wrapper_r2rr
 

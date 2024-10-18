@@ -482,14 +482,14 @@ contains
 
       ! Working arrays
       sz = 0
-      sz = max(sz, int(product(engine%dtt_decomp_xy%xsz), int64))
-      sz = max(sz, int(product(engine%dtt_decomp_xy%ysz), int64))
-      sz = max(sz, int(product(engine%dtt_decomp_yz%ysz), int64))
-      sz = max(sz, int(product(engine%dtt_decomp_yz%zsz), int64))
+      sz = max(sz, product(int(engine%dtt_decomp_xy%xsz, int64)))
+      sz = max(sz, product(int(engine%dtt_decomp_xy%ysz, int64)))
+      sz = max(sz, product(int(engine%dtt_decomp_yz%ysz, int64)))
+      sz = max(sz, product(int(engine%dtt_decomp_yz%zsz, int64)))
       if (engine%format == PHYSICAL_IN_X) then
-         sz = max(sz, int(product(engine%dtt_decomp_sp%zsz), int64))
+         sz = max(sz, product(int(engine%dtt_decomp_sp%zsz, int64)))
       else
-         sz = max(sz, int(product(engine%dtt_decomp_sp%xsz), int64))
+         sz = max(sz, product(int(engine%dtt_decomp_sp%xsz, int64)))
       end if
       allocate(engine%dtt_rbuf1(sz, 1, 1))
       allocate(engine%dtt_rbuf2(sz, 1, 1))

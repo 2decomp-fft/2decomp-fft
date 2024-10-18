@@ -1995,6 +1995,8 @@ contains
 
       implicit none
 
+      plan = c_null_ptr
+
       call decomp_2d_fft_log("FFTW (F2003 interface)")
 
       if (format == PHYSICAL_IN_X) then
@@ -2044,19 +2046,24 @@ contains
 
       implicit none
 
-      type(c_ptr) :: local_plan(-1:2, 3)
+      ! Argument
+      type(c_ptr), intent(inout) :: local_plan(-1:2, 3)
 
+      ! Local variables
       integer :: i, j
 
       do j = 1, 3
          do i = -1, 2
+            if (c_associated(local_plan(i, j))) then
 #ifdef DOUBLE_PREC
-            call fftw_destroy_plan(local_plan(i, j))
+               call fftw_destroy_plan(local_plan(i, j))
 #else
-            call fftwf_destroy_plan(local_plan(i, j))
+               call fftwf_destroy_plan(local_plan(i, j))
 #endif
+            end if
          end do
       end do
+      local_plan = c_null_ptr
 
    end subroutine finalize_fft_engine
 

@@ -817,7 +817,7 @@ contains
       if (allocated(engine%dtt_decomp_sp_target%x1dist)) &
          call decomp_info_finalize(engine%dtt_decomp_sp_target)
 
-      ! Set pointers to null
+      ! Free memory
       deallocate (engine%dtt_rbuf1)
       deallocate (engine%dtt_rbuf2)
       deallocate (engine%dtt_ibuf1)

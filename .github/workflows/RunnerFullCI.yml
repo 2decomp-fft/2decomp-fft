@@ -174,12 +174,14 @@ jobs:
         ls -ltr ~/.bashrc
         source /etc/profile.d/lmod.sh
         source ~/.bash_aliases
+        module avail 
         ml tbb
         ml compiler-rt
-        ml oclfpga
+        ml umf
         ml compiler
         ml mpi
         ml mkl
+        ml ifort
         export FC=mpiifort
         export MKL_DIR=${MKLROOT}/lib/cmake/mkl
         cmake -S . -B build -DCMAKE_BUILD_TYPE=Dev -DBUILD_TESTING=ON -DFFT_Choice=mkl
@@ -197,7 +199,7 @@ jobs:
         source ~/.bash_aliases
         ml tbb
         ml compiler-rt
-        ml oclfpga
+        ml umf
         ml compiler
         ml mpi
         ml mkl
@@ -218,7 +220,7 @@ jobs:
         source ~/.bash_aliases
         ml tbb
         ml compiler-rt
-        ml oclfpga
+        ml umf
         ml compiler
         ml mpi
         ml mkl

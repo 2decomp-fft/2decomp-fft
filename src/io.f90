@@ -339,7 +339,9 @@ contains
                                 newtype, 'native', MPI_INFO_NULL, ierror)
          if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_FILE_SET_VIEW")
          if (read_reduce_prec) then
-            allocate (varsingle(xstV(1):xenV(1), xstV(2):xenV(2), xstV(3):xenV(3)))
+            allocate (varsingle(starts(1):(starts(1)+subsizes(1)), &
+                                starts(2):(starts(2)+subsizes(2)), &
+                                starts(3):(starts(3)+subsizes(3))))
             call MPI_FILE_READ_ALL(fh, varsingle, &
                                    subsizes(1) * subsizes(2) * subsizes(3), &
                                    data_type, MPI_STATUS_IGNORE, ierror)
@@ -1263,7 +1265,9 @@ contains
          call coarse_extents(ipencil, icoarse, sizes, subsizes, starts)
       end if
       if (write_reduce_prec) then
-         allocate (varsingle(xstV(1):xenV(1), xstV(2):xenV(2), xstV(3):xenV(3)))
+         allocate (varsingle(starts(1):(starts(1)+subsizes(1)), &
+                             starts(2):(starts(2)+subsizes(2)), &
+                             starts(3):(starts(3)+subsizes(3))))
          varsingle = real(var, mytype_single)
       end if
 

@@ -181,6 +181,7 @@ jobs:
         ml compiler
         ml mpi
         ml mkl
+        ml ifort
         export FC=mpiifort
         export MKL_DIR=${MKLROOT}/lib/cmake/mkl
         cmake -S . -B build -DCMAKE_BUILD_TYPE=Dev -DBUILD_TESTING=ON -DFFT_Choice=mkl

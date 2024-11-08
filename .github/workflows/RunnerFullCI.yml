@@ -177,7 +177,7 @@ jobs:
         module avail 
         ml tbb
         ml compiler-rt
-        ml oclfpga
+        ml umf
         ml compiler
         ml mpi
         ml mkl
@@ -198,7 +198,7 @@ jobs:
         source ~/.bash_aliases
         ml tbb
         ml compiler-rt
-        ml oclfpga
+        ml umf
         ml compiler
         ml mpi
         ml mkl
@@ -219,7 +219,7 @@ jobs:
         source ~/.bash_aliases
         ml tbb
         ml compiler-rt
-        ml oclfpga
+        ml umf
         ml compiler
         ml mpi
         ml mkl

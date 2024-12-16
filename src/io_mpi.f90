@@ -215,7 +215,7 @@ contains
       call decomp_2d_io_object_mpi_init(file_open_info, file_set_view_info)
 
       ! Initialize the ADIOS2 IO module if needed
-      call decomp_2d_io_adios_init(adios_xml)
+      if (decomp_2d_with_adios2) call decomp_2d_io_adios_init(adios_xml)
 
       if (decomp_profiler_io) call decomp_profiler_end("io_mpi_init")
 
@@ -231,7 +231,7 @@ contains
       if (decomp_profiler_io) call decomp_profiler_start("io_mpi_fin")
 
       ! Finalize the ADIOS2 IO module if needed
-      call decomp_2d_io_adios_fin()
+      if (decomp_2d_with_adios2) call decomp_2d_io_adios_fin()
 
       ! Finalize the MPI IO object module
       call decomp_2d_io_object_mpi_fin()

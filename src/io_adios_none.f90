@@ -409,6 +409,7 @@ contains
       unused(type)
       unused(opt_reduce_prec)
       unused(opt_decomp)
+      call decomp_2d_abort(__FILE__, __LINE__, 1, "ADIOS2 is not available")
 
    end subroutine decomp_2d_register_var
 
@@ -437,6 +438,7 @@ contains
       unused(opt_reduce_prec)
       unused(opt_decomp)
       unused(opt_nplanes)
+      call decomp_2d_abort(__FILE__, __LINE__, 1, "ADIOS2 is not available")
 
    end subroutine decomp_2d_register_plane
 
@@ -450,6 +452,7 @@ contains
       character(len=*), intent(in), optional :: adios_xml
 
       unused(adios_xml)
+      call decomp_2d_abort(__FILE__, __LINE__, 1, "ADIOS2 is not available")
 
    end subroutine decomp_2d_io_adios_init
 
@@ -459,6 +462,8 @@ contains
    subroutine decomp_2d_io_adios_fin()
 
       implicit none
+
+      call decomp_2d_abort(__FILE__, __LINE__, 1, "ADIOS2 is not available")
 
    end subroutine decomp_2d_io_adios_fin
 
@@ -486,6 +491,7 @@ contains
       unused(opt_mode)
       unused(opt_family)
       unused(opt_reduce_prec)
+      call decomp_2d_abort(__FILE__, __LINE__, 1, "ADIOS2 is not available")
 
    end subroutine write_var_freal
    !
@@ -510,6 +516,7 @@ contains
       unused(opt_mode)
       unused(opt_family)
       unused(opt_reduce_prec)
+      call decomp_2d_abort(__FILE__, __LINE__, 1, "ADIOS2 is not available")
 
    end subroutine write_var_fcplx
    !
@@ -534,6 +541,7 @@ contains
       unused(opt_mode)
       unused(opt_family)
       unused(opt_reduce_prec)
+      call decomp_2d_abort(__FILE__, __LINE__, 1, "ADIOS2 is not available")
 
    end subroutine write_var_dreal
    !
@@ -558,6 +566,7 @@ contains
       unused(opt_mode)
       unused(opt_family)
       unused(opt_reduce_prec)
+      call decomp_2d_abort(__FILE__, __LINE__, 1, "ADIOS2 is not available")
 
    end subroutine write_var_dcplx
    !
@@ -587,6 +596,7 @@ contains
       unused(varname)
       unused(opt_family)
       unused(opt_reduce_prec)
+      call decomp_2d_abort(__FILE__, __LINE__, 1, "ADIOS2 is not available")
 
    end subroutine read_var_freal
    !
@@ -608,6 +618,7 @@ contains
       unused(varname)
       unused(opt_family)
       unused(opt_reduce_prec)
+      call decomp_2d_abort(__FILE__, __LINE__, 1, "ADIOS2 is not available")
 
    end subroutine read_var_fcplx
    !
@@ -629,6 +640,7 @@ contains
       unused(varname)
       unused(opt_family)
       unused(opt_reduce_prec)
+      call decomp_2d_abort(__FILE__, __LINE__, 1, "ADIOS2 is not available")
 
    end subroutine read_var_dreal
    !
@@ -650,6 +662,7 @@ contains
       unused(varname)
       unused(opt_family)
       unused(opt_reduce_prec)
+      call decomp_2d_abort(__FILE__, __LINE__, 1, "ADIOS2 is not available")
 
    end subroutine read_var_dcplx
    !
@@ -683,6 +696,7 @@ contains
       unused(opt_iplane)
       unused(opt_reduce_prec)
       unused(opt_ipencil)
+      call decomp_2d_abort(__FILE__, __LINE__, 1, "ADIOS2 is not available")
 
    end subroutine write_plane_freal
    !
@@ -716,6 +730,7 @@ contains
       unused(opt_iplane)
       unused(opt_reduce_prec)
       unused(opt_ipencil)
+      call decomp_2d_abort(__FILE__, __LINE__, 1, "ADIOS2 is not available")
 
    end subroutine write_plane_fcplx
    !
@@ -749,6 +764,7 @@ contains
       unused(opt_iplane)
       unused(opt_reduce_prec)
       unused(opt_ipencil)
+      call decomp_2d_abort(__FILE__, __LINE__, 1, "ADIOS2 is not available")
 
    end subroutine write_plane_dreal
    !
@@ -782,6 +798,7 @@ contains
       unused(opt_iplane)
       unused(opt_reduce_prec)
       unused(opt_ipencil)
+      call decomp_2d_abort(__FILE__, __LINE__, 1, "ADIOS2 is not available")
 
    end subroutine write_plane_dcplx
    !
@@ -811,6 +828,7 @@ contains
       unused(varname)
       unused(opt_family)
       unused(opt_reduce_prec)
+      call decomp_2d_abort(__FILE__, __LINE__, 1, "ADIOS2 is not available")
 
    end subroutine read_plane_freal
    !
@@ -832,6 +850,7 @@ contains
       unused(varname)
       unused(opt_family)
       unused(opt_reduce_prec)
+      call decomp_2d_abort(__FILE__, __LINE__, 1, "ADIOS2 is not available")
 
    end subroutine read_plane_fcplx
    !
@@ -853,6 +872,7 @@ contains
       unused(varname)
       unused(opt_family)
       unused(opt_reduce_prec)
+      call decomp_2d_abort(__FILE__, __LINE__, 1, "ADIOS2 is not available")
 
    end subroutine read_plane_dreal
    !
@@ -874,6 +894,7 @@ contains
       unused(varname)
       unused(opt_family)
       unused(opt_reduce_prec)
+      call decomp_2d_abort(__FILE__, __LINE__, 1, "ADIOS2 is not available")
 
    end subroutine read_plane_dcplx
 

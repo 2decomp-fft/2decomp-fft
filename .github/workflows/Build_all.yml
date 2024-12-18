@@ -153,7 +153,7 @@ jobs:
     - name: Generic FFT backend
       run: |
         source /opt/intel/oneapi/setvars.sh
-        export FC=mpiifort
+        export FC=mpiifx
         cmake -S . -B build -DCMAKE_BUILD_TYPE=Dev -DBUILD_TESTING=ON
         cmake --build build --verbose
 
@@ -161,7 +161,7 @@ jobs:
     - name: MKL FFT backend
       run: |
         source /opt/intel/oneapi/setvars.sh
-        export FC=mpiifort
+        export FC=mpiifx
         export MKL_DIR=${MKLROOT}/lib/cmake/mkl
         rm -rf ./build
         cmake -S . -B build -DCMAKE_BUILD_TYPE=Dev -DFFT_Choice=mkl -DBUILD_TESTING=ON
@@ -171,7 +171,7 @@ jobs:
     - name: MKL FFT backend inplace
       run: |
         source /opt/intel/oneapi/setvars.sh
-        export FC=mpiifort
+        export FC=mpiifx
         export MKL_DIR=${MKLROOT}/lib/cmake/mkl
         rm -rf ./build
         cmake -S . -B build -DCMAKE_BUILD_TYPE=Dev -DFFT_Choice=mkl -DBUILD_TESTING=ON -DENABLE_INPLACE=on

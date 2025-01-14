@@ -423,7 +423,7 @@ contains
                end do
             end do
          end do
-         !$omp end paralle do
+         !$omp end parallel do
 #endif
       end do
 

@@ -22,6 +22,7 @@ _e.g._ vX.Y - YYYY-MM-DD and a new "Unreleased" section started above.
 
 - Fix 3D complex-to-complex FFT for the MKL backend. See [PR 341](https://github.com/2decomp-fft/2decomp-fft/pull/341)
 - Fuse transpose CPU and GPU memory buffers to reduce memory usage. See [PR 271](https://github.com/2decomp-fft/2decomp-fft/pull/271)
+- Fixed CI and add `cudafor` module in NCCL. See [PR 362](https://github.com/2decomp-fft/2decomp-fft/pull/362)
 
 ### Changed
 

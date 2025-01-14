@@ -78,6 +78,14 @@ else ()
 endif (BUILD_TARGET MATCHES "gpu")
 set_property(CACHE FFT_Choice PROPERTY STRINGS generic fftw fftw_f03 mkl cufft)
 
+
+if (FFT_Choice MATCHES "fftw_f03")
+  option(FFTW_omp "Enable OpenMP with FFTW" OFF)
+  if (FFTW_omp)
+    add_definitions(-DFFTW_omp)
+  endif()
+endif()
+
 # Set now compilers flags
 include(D2D_Compilers)
 include(D2D_Profilers)

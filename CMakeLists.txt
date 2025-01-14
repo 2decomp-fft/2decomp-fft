@@ -3,7 +3,7 @@ cmake_policy(SET CMP0074 NEW)
 
 project(decomp2d
   LANGUAGES Fortran)
-set(version 2.0.3)
+set(version 2.0.4)
 enable_testing()
 if (IO_BACKEND MATCHES "adios2")
   # Can be useful to also activate CXX, sometimes is needed by packages

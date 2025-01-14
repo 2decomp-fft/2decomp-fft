@@ -4,6 +4,7 @@
 submodule(decomp_2d) d2d_transpose_x_to_y
 
    use decomp_2d_constants, only: mytype
+   use omp_lib
 
    implicit none
 
@@ -231,7 +232,7 @@ contains
       integer :: istat
 #endif
 
-      integer :: i, j, k, m, i1, i2, pos
+      integer :: i, j, k, m, i1, i2, pos, init_pos
 
       do m = 0, iproc - 1
          if (m == 0) then
@@ -243,9 +244,9 @@ contains
          end if
 
 #ifdef EVEN
-         pos = m * decomp%x1count + 1
+         init_pos = m * decomp%x1count + 1
 #else
-         pos = decomp%x1disp(m) + 1
+         init_pos = decomp%x1disp(m) + 1
 #endif
 
 #if defined(_GPU)
@@ -254,14 +255,16 @@ contains
          !$acc end host_data
          if (istat /= 0) call decomp_2d_abort(__FILE__, __LINE__, istat, "cudaMemcpy2D")
 #else
+         !$omp parallel do private(pos) collapse(3)
          do k = 1, n3
             do j = 1, n2
                do i = i1, i2
+                  pos = init_pos + (i-i1) + (j-1)*(i2-i1+1) + (k-1)*n2*(i2-i1+1)
                   out(pos) = in(i, j, k)
-                  pos = pos + 1
                end do
             end do
          end do
+         !$omp end parallel do
 #endif
       end do
 
@@ -282,7 +285,7 @@ contains
       integer :: istat
 #endif
 
-      integer :: i, j, k, m, i1, i2, pos
+      integer :: i, j, k, m, i1, i2, pos, init_pos
 
       do m = 0, iproc - 1
          if (m == 0) then
@@ -294,9 +297,9 @@ contains
          end if
 
 #ifdef EVEN
-         pos = m * decomp%x1count + 1
+         init_pos = m * decomp%x1count + 1
 #else
-         pos = decomp%x1disp(m) + 1
+         init_pos = decomp%x1disp(m) + 1
 #endif
 
 #if defined(_GPU)
@@ -305,14 +308,16 @@ contains
          !$acc end host_data
          if (istat /= 0) call decomp_2d_abort(__FILE__, __LINE__, istat, "cudaMemcpy2D")
 #else
+         !$omp parallel do private(pos) collapse(3)
          do k = 1, n3
             do j = 1, n2
                do i = i1, i2
+                  pos = init_pos + (i-i1) + (j-1)*(i2-i1+1) + (k-1)*n2*(i2-i1+1)
                   out(pos) = in(i, j, k)
-                  pos = pos + 1
                end do
             end do
          end do
+         !$omp end parallel do
 #endif
       end do
 
@@ -333,7 +338,7 @@ contains
       integer :: istat
 #endif
 
-      integer :: i, j, k, m, i1, i2, pos
+      integer :: i, j, k, m, i1, i2, pos, init_pos
 
       do m = 0, iproc - 1
          if (m == 0) then
@@ -345,9 +350,9 @@ contains
          end if
 
 #ifdef EVEN
-         pos = m * decomp%y1count + 1
+         init_pos = m * decomp%y1count + 1
 #else
-         pos = decomp%y1disp(m) + 1
+         init_pos = decomp%y1disp(m) + 1
 #endif
 
 #if defined(_GPU)
@@ -356,14 +361,16 @@ contains
          !$acc end host_data
          if (istat /= 0) call decomp_2d_abort(__FILE__, __LINE__, istat, "cudaMemcpy2D")
 #else
+         !$omp parallel do private(pos) collapse(3)
          do k = 1, n3
             do j = i1, i2
                do i = 1, n1
+                  pos = init_pos + (i-1) + (j-i1)*n1 + (k-1)*(i2-i1+1)*n1
                   out(i, j, k) = in(pos)
-                  pos = pos + 1
                end do
             end do
          end do
+         !$omp end parallel do
 #endif
       end do
 
@@ -384,7 +391,7 @@ contains
       integer :: istat
 #endif
 
-      integer :: i, j, k, m, i1, i2, pos
+      integer :: i, j, k, m, i1, i2, pos, init_pos
 
       do m = 0, iproc - 1
          if (m == 0) then
@@ -396,9 +403,9 @@ contains
          end if
 
 #ifdef EVEN
-         pos = m * decomp%y1count + 1
+         init_pos = m * decomp%y1count + 1
 #else
-         pos = decomp%y1disp(m) + 1
+         init_pos = decomp%y1disp(m) + 1
 #endif
 
 #if defined(_GPU)
@@ -407,14 +414,16 @@ contains
          !$acc end host_data
          if (istat /= 0) call decomp_2d_abort(__FILE__, __LINE__, istat, "cudaMemcpy2D")
 #else
+         !$omp parallel do private(pos) collapse(3)
          do k = 1, n3
             do j = i1, i2
                do i = 1, n1
+                  pos = init_pos + (i-1) + (j-i1)*n1 + (k-1)*(i2-i1+1)*n1
                   out(i, j, k) = in(pos)
-                  pos = pos + 1
                end do
             end do
          end do
+         !$omp end parallel do
 #endif
       end do
 

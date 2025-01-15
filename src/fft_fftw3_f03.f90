@@ -1424,7 +1424,7 @@ contains
 
 #ifdef FFTW_omp
       ierr = fftw_init_threads()
-      if (ierr/=0) call decomp_2d_abort(__FILE__, __LINE__, ierr, "fftw_init_threads")
+      if (ierr==0) call decomp_2d_abort(__FILE__, __LINE__, ierr, "fftw_init_threads")
       call fftw_plan_with_nthreads(omp_get_max_threads())
 #endif
 

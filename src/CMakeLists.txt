@@ -63,7 +63,7 @@ if (MPI_FOUND)
   target_link_libraries(decomp2d PRIVATE MPI::MPI_Fortran)
 endif (MPI_FOUND)
 
-find_package(OpenMP REQUIRED)
+find_package(OpenMP)
 if (OPENMP_FOUND)
   target_link_libraries(decomp2d PRIVATE OpenMP::OpenMP_Fortran)
 endif (OPENMP_FOUND)

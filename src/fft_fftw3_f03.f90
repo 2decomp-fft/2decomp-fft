@@ -1409,11 +1409,13 @@ contains
    !  This routine performs one-time initialisations for the FFT engine
    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
    subroutine init_fft_engine
+
 #ifdef FFTW_omp
       use omp_lib
 #endif
 
       implicit none
+
 #ifdef FFTW_omp
       integer :: ierr
 #endif
@@ -1422,6 +1424,7 @@ contains
 
 #ifdef FFTW_omp
       ierr = fftw_init_threads()
+      if (ierr/=0) call decomp_2d_abort(__FILE__, __LINE__, ierr, "fftw_init_threads")
       call fftw_plan_with_nthreads(omp_get_max_threads())
 #endif
 

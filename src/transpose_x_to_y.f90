@@ -4,9 +4,6 @@
 submodule(decomp_2d) d2d_transpose_x_to_y
 
    use decomp_2d_constants, only: mytype
-#ifdef FFTW_omp
-   use omp_lib
-#endif
 
    implicit none
 

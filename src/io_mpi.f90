@@ -2414,13 +2414,25 @@ contains
       else
          if (ipencil == 1) then
             allocate (var2d(1, size(var, 2), size(var, 3)))
-            var2d(1, :, :) = var(iplane, :, :)
+            if (iplane < 1) then
+               var2d(1, :, :) = sum(var(:, :, :), dim=ipencil)
+            else
+               var2d(1, :, :) = var(iplane, :, :)
+            end if
          else if (ipencil == 2) then
             allocate (var2d(size(var, 1), 1, size(var, 3)))
-            var2d(:, 1, :) = var(:, iplane, :)
+            if (iplane < 1) then
+               var2d(:, 1, :) = sum(var(:, :, :), dim=ipencil)
+            else
+               var2d(:, 1, :) = var(:, iplane, :)
+            end if
          else if (ipencil == 3) then
             allocate (var2d(size(var, 1), size(var, 2), 1))
-            var2d(:, :, 1) = var(:, :, iplane)
+            if (iplane < 1) then
+               var2d(:, :, 1) = sum(var(:, :, :), dim=ipencil)
+            else
+               var2d(:, :, 1) = var(:, :, iplane)
+            end if
          end if
          call write_plane(ipencil, varname, decomp, nplanes, &
                           opt_dirname=opt_dirname, &
@@ -2506,13 +2518,25 @@ contains
       else
          if (ipencil == 1) then
             allocate (var2d(1, size(var, 2), size(var, 3)))
-            var2d(1, :, :) = var(iplane, :, :)
+            if (iplane < 1) then
+               var2d(1, :, :) = sum(var(:, :, :), dim=ipencil)
+            else
+               var2d(1, :, :) = var(iplane, :, :)
+            end if
          else if (ipencil == 2) then
             allocate (var2d(size(var, 1), 1, size(var, 3)))
-            var2d(:, 1, :) = var(:, iplane, :)
+            if (iplane < 1) then
+               var2d(:, 1, :) = sum(var(:, :, :), dim=ipencil)
+            else
+               var2d(:, 1, :) = var(:, iplane, :)
+            end if
          else if (ipencil == 3) then
             allocate (var2d(size(var, 1), size(var, 2), 1))
-            var2d(:, :, 1) = var(:, :, iplane)
+            if (iplane < 1) then
+               var2d(:, :, 1) = sum(var(:, :, :), dim=ipencil)
+            else
+               var2d(:, :, 1) = var(:, :, iplane)
+            end if
          end if
          call write_plane(ipencil, varname, decomp, nplanes, &
                           opt_dirname=opt_dirname, &
@@ -2619,22 +2643,46 @@ contains
       else
          if (reduce .and. ipencil == 1) then
             allocate (var2dbis(1, size(var, 2), size(var, 3)))
-            var2dbis(1, :, :) = real(var(iplane, :, :), kind=real32)
+            if (iplane < 1) then
+               var2dbis(1, :, :) = real(sum(var(:, :, :), dim=ipencil), kind=real32)
+            else
+               var2dbis(1, :, :) = real(var(iplane, :, :), kind=real32)
+            end if
          else if (reduce .and. ipencil == 2) then
             allocate (var2dbis(size(var, 1), 1, size(var, 3)))
-            var2dbis(:, 1, :) = real(var(:, iplane, :), kind=real32)
+            if (iplane < 1) then
+               var2dbis(:, 1, :) = real(sum(var(:, :, :), dim=ipencil), kind=real32)
+            else
+               var2dbis(:, 1, :) = real(var(:, iplane, :), kind=real32)
+            end if
          else if (reduce .and. ipencil == 3) then
             allocate (var2dbis(size(var, 1), size(var, 2), 1))
-            var2dbis(:, :, 1) = real(var(:, :, iplane), kind=real32)
+            if (iplane < 1) then
+               var2dbis(:, :, 1) = real(sum(var(:, :, :), dim=ipencil), kind=real32)
+            else
+               var2dbis(:, :, 1) = real(var(:, :, iplane), kind=real32)
+            end if
          else if (ipencil == 1) then
             allocate (var2d(1, size(var, 2), size(var, 3)))
-            var2d(1, :, :) = var(iplane, :, :)
+            if (iplane < 1) then
+               var2d(1, :, :) = sum(var(:, :, :), dim=ipencil)
+            else
+               var2d(1, :, :) = var(iplane, :, :)
+            end if
          else if (ipencil == 2) then
             allocate (var2d(size(var, 1), 1, size(var, 3)))
-            var2d(:, 1, :) = var(:, iplane, :)
+            if (iplane < 1) then
+               var2d(:, 1, :) = sum(var(:, :, :), dim=ipencil)
+            else
+               var2d(:, 1, :) = var(:, iplane, :)
+            end if
          else if (ipencil == 3) then
             allocate (var2d(size(var, 1), size(var, 2), 1))
-            var2d(:, :, 1) = var(:, :, iplane)
+            if (iplane < 1) then
+               var2d(:, :, 1) = sum(var(:, :, :), dim=ipencil)
+            else
+               var2d(:, :, 1) = var(:, :, iplane)
+            end if
          end if
          if (reduce) then
             call write_plane(ipencil, varname, decomp, nplanes, &
@@ -2747,22 +2795,46 @@ contains
       else
          if (reduce .and. ipencil == 1) then
             allocate (var2dbis(1, size(var, 2), size(var, 3)))
-            var2dbis(1, :, :) = cmplx(var(iplane, :, :), kind=real32)
+            if (iplane < 1) then
+               var2dbis(1, :, :) = cmplx(sum(var(:, :, :), dim=ipencil), kind=real32)
+            else
+               var2dbis(1, :, :) = cmplx(var(iplane, :, :), kind=real32)
+            end if
          else if (reduce .and. ipencil == 2) then
             allocate (var2dbis(size(var, 1), 1, size(var, 3)))
-            var2dbis(:, 1, :) = cmplx(var(:, iplane, :), kind=real32)
+            if (iplane < 1) then
+               var2dbis(:, 1, :) = cmplx(sum(var(:, :, :), dim=ipencil), kind=real32)
+            else
+               var2dbis(:, 1, :) = cmplx(var(:, iplane, :), kind=real32)
+            end if
          else if (reduce .and. ipencil == 3) then
             allocate (var2dbis(size(var, 1), size(var, 2), 1))
-            var2dbis(:, :, 1) = cmplx(var(:, :, iplane), kind=real32)
+            if (iplane < 1) then
+               var2dbis(:, :, 1) = cmplx(sum(var(:, :, :), dim=ipencil), kind=real32)
+            else
+               var2dbis(:, :, 1) = cmplx(var(:, :, iplane), kind=real32)
+            end if
          else if (ipencil == 1) then
             allocate (var2d(1, size(var, 2), size(var, 3)))
-            var2d(1, :, :) = var(iplane, :, :)
+            if (iplane < 1) then
+               var2d(1, :, :) = sum(var(:, :, :), dim=ipencil)
+            else
+               var2d(1, :, :) = var(iplane, :, :)
+            end if
          else if (ipencil == 2) then
             allocate (var2d(size(var, 1), 1, size(var, 3)))
-            var2d(:, 1, :) = var(:, iplane, :)
+            if (iplane < 1) then
+               var2d(:, 1, :) = sum(var(:, :, :), dim=ipencil)
+            else
+               var2d(:, 1, :) = var(:, iplane, :)
+            end if
          else if (ipencil == 3) then
             allocate (var2d(size(var, 1), size(var, 2), 1))
-            var2d(:, :, 1) = var(:, :, iplane)
+            if (iplane < 1) then
+               var2d(:, :, 1) = sum(var(:, :, :), dim=ipencil)
+            else
+               var2d(:, :, 1) = var(:, :, iplane)
+            end if
          end if
          if (reduce) then
             call write_plane(ipencil, varname, decomp, nplanes, &
@@ -2854,13 +2926,25 @@ contains
       else
          if (ipencil == 1) then
             allocate (var2d(1, size(var, 2), size(var, 3)))
-            var2d(1, :, :) = var(iplane, :, :)
+            if (iplane < 1) then
+               var2d(1, :, :) = sum(var(:, :, :), dim=ipencil)
+            else
+               var2d(1, :, :) = var(iplane, :, :)
+            end if
          else if (ipencil == 2) then
             allocate (var2d(size(var, 1), 1, size(var, 3)))
-            var2d(:, 1, :) = var(:, iplane, :)
+            if (iplane < 1) then
+               var2d(:, 1, :) = sum(var(:, :, :), dim=ipencil)
+            else
+               var2d(:, 1, :) = var(:, iplane, :)
+            end if
          else if (ipencil == 3) then
             allocate (var2d(size(var, 1), size(var, 2), 1))
-            var2d(:, :, 1) = var(:, :, iplane)
+            if (iplane < 1) then
+               var2d(:, :, 1) = sum(var(:, :, :), dim=ipencil)
+            else
+               var2d(:, :, 1) = var(:, :, iplane)
+            end if
          end if
          call write_plane(ipencil, varname, decomp, nplanes, &
                           opt_dirname=opt_dirname, &
@@ -2946,13 +3030,25 @@ contains
       else
          if (ipencil == 1) then
             allocate (var2d(1, size(var, 2), size(var, 3)))
-            var2d(1, :, :) = var(iplane, :, :)
+            if (iplane < 1) then
+               call decomp_2d_abort(__FILE__, __LINE__, iplane, "Invalid value")
+            else
+               var2d(1, :, :) = var(iplane, :, :)
+            end if
          else if (ipencil == 2) then
             allocate (var2d(size(var, 1), 1, size(var, 3)))
-            var2d(:, 1, :) = var(:, iplane, :)
+            if (iplane < 1) then
+               call decomp_2d_abort(__FILE__, __LINE__, iplane, "Invalid value")
+            else
+               var2d(:, 1, :) = var(:, iplane, :)
+            end if
          else if (ipencil == 3) then
             allocate (var2d(size(var, 1), size(var, 2), 1))
-            var2d(:, :, 1) = var(:, :, iplane)
+            if (iplane < 1) then
+               call decomp_2d_abort(__FILE__, __LINE__, iplane, "Invalid value")
+            else
+               var2d(:, :, 1) = var(:, :, iplane)
+            end if
          end if
          call write_plane(ipencil, varname, decomp, nplanes, &
                           opt_dirname=opt_dirname, &

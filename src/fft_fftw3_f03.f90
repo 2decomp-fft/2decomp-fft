@@ -602,7 +602,12 @@ contains
       end if
 
       ! Clean the FFTW library
+#ifdef FFTW_omp
+      call fftw_cleanup_threads()
+#else
       call fftw_cleanup()
+#endif
+
 
    end subroutine decomp_2d_fft_finalize
 
@@ -1405,9 +1410,23 @@ contains
    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
    subroutine init_fft_engine
 
+#ifdef FFTW_omp
+      use omp_lib
+#endif
+
       implicit none
 
+#ifdef FFTW_omp
+      integer :: ierr
+#endif
+
       call decomp_2d_fft_log("FFTW (F2003 interface)")
+
+#ifdef FFTW_omp
+      ierr = fftw_init_threads()
+      if (ierr==0) call decomp_2d_abort(__FILE__, __LINE__, ierr, "fftw_init_threads")
+      call fftw_plan_with_nthreads(omp_get_max_threads())
+#endif
 
       if (format == PHYSICAL_IN_X) then
 

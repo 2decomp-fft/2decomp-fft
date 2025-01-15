@@ -1409,9 +1409,13 @@ contains
    !  This routine performs one-time initialisations for the FFT engine
    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
    subroutine init_fft_engine
+
+#ifdef FFTW_omp
       use omp_lib
+#endif
 
       implicit none
+
 #ifdef FFTW_omp
       integer :: ierr
 #endif

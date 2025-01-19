@@ -2391,10 +2391,6 @@ contains
       else
          iplane = 1
       end if
-      ! Safety check
-      if (iplane < 1) then
-         call decomp_2d_abort(__FILE__, __LINE__, iplane, "Error invalid value of iplane")
-      end if
 
       ! Use the provided decomp_info or the default one
       if (present(opt_decomp)) then
@@ -2494,10 +2490,6 @@ contains
          iplane = opt_iplane
       else
          iplane = 1
-      end if
-      ! Safety check
-      if (iplane < 1) then
-         call decomp_2d_abort(__FILE__, __LINE__, iplane, "Error invalid value of iplane")
       end if
 
       ! Use the provided decomp_info or the default one
@@ -2600,10 +2592,6 @@ contains
          iplane = opt_iplane
       else
          iplane = 1
-      end if
-      ! Safety check
-      if (iplane < 1) then
-         call decomp_2d_abort(__FILE__, __LINE__, iplane, "Error invalid value of iplane")
       end if
 
       ! Use the provided decomp_info or the default one
@@ -2753,10 +2741,6 @@ contains
       else
          iplane = 1
       end if
-      ! Safety check
-      if (iplane < 1) then
-         call decomp_2d_abort(__FILE__, __LINE__, iplane, "Error invalid value of iplane")
-      end if
 
       ! Use the provided decomp_info or the default one
       if (present(opt_decomp)) then
@@ -2903,10 +2887,6 @@ contains
       else
          iplane = 1
       end if
-      ! Safety check
-      if (iplane < 1) then
-         call decomp_2d_abort(__FILE__, __LINE__, iplane, "Error invalid value of iplane")
-      end if
 
       ! Use the provided decomp_info or the default one
       if (present(opt_decomp)) then
@@ -3006,10 +2986,6 @@ contains
          iplane = opt_iplane
       else
          iplane = 1
-      end if
-      ! Safety check
-      if (iplane < 1) then
-         call decomp_2d_abort(__FILE__, __LINE__, iplane, "Error invalid value of iplane")
       end if
 
       ! Use the provided decomp_info or the default one

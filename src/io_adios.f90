@@ -1006,13 +1006,13 @@ contains
    end subroutine write_plane_dcplx
    !
 
-!
-!
-!
-! The code below was generated with the script adios_read_plane located in the folder scripts
-!
-!
-!
+   !
+   !
+   !
+   ! The code below was generated with the script adios_read_plane located in the folder scripts
+   !
+   !
+   !
    subroutine read_plane_freal(io, var, varname, &
                                opt_family, &
                                opt_reduce_prec)
@@ -1037,7 +1037,7 @@ contains
       if (decomp_profiler_io) call decomp_profiler_end("adios_read_plane")
 
    end subroutine read_plane_freal
-!
+   !
    subroutine read_plane_fcplx(io, var, varname, &
                                opt_family, &
                                opt_reduce_prec)
@@ -1062,7 +1062,7 @@ contains
       if (decomp_profiler_io) call decomp_profiler_end("adios_read_plane")
 
    end subroutine read_plane_fcplx
-!
+   !
    subroutine read_plane_dreal(io, var, varname, &
                                opt_family, &
                                opt_reduce_prec)
@@ -1107,7 +1107,7 @@ contains
       if (decomp_profiler_io) call decomp_profiler_end("adios_read_plane")
 
    end subroutine read_plane_dreal
-!
+   !
    subroutine read_plane_dcplx(io, var, varname, &
                                opt_family, &
                                opt_reduce_prec)
@@ -1152,6 +1152,6 @@ contains
       if (decomp_profiler_io) call decomp_profiler_end("adios_read_plane")
 
    end subroutine read_plane_dcplx
-!
+   !
 
 end module decomp_2d_io_adios

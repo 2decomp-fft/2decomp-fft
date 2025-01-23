@@ -17,7 +17,7 @@ _e.g._ vX.Y - YYYY-MM-DD and a new "Unreleased" section started above.
 - The external code can now provide [hints for MPI IO](https://www.mpi-forum.org/docs/mpi-3.1/mpi31-report/node315.htm#Node316). Non-blocking MPI IO is also added. See [PR #269](https://github.com/2decomp-fft/2decomp-fft/pull/269)
 - Add the possibility to allocate 3D integers and logical arrays. See [PR 345](https://github.com/2decomp-fft/2decomp-fft/pull/345)
 - Add the possibility to perform r2r DCT and DST transforms when using the backend `fftw_f03` [PR #350](https://github.com/2decomp-fft/2decomp-fft/pull/350)
-- Add the possibility to average data in one direction when writing a plane. See [PR #368](https://github.com/2decomp-fft/2decomp-fft/pull/368) and [PR #369](https://github.com/2decomp-fft/2decomp-fft/pull/369).
+- Add the possibility to average data in one direction when writing a plane. See [PR #368](https://github.com/2decomp-fft/2decomp-fft/pull/368), [PR #369](https://github.com/2decomp-fft/2decomp-fft/pull/369) and [PR #370](https://github.com/2decomp-fft/2decomp-fft/pull/370).
 
 ### Fixed
 

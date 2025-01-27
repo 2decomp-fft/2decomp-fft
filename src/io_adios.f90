@@ -610,7 +610,7 @@ contains
 
       ! Local variables
       real(real32), allocatable, dimension(:, :, :) :: var2d
-      integer :: iplane
+      integer :: iplane, ipencil
 
       if (decomp_profiler_io) call decomp_profiler_start("adios_write_plane")
 
@@ -619,11 +619,10 @@ contains
       else
          iplane = 1
       end if
+      ipencil = 0
+      if (present(opt_ipencil)) ipencil = opt_ipencil
 
       ! Safety check
-      if (iplane < 1) then
-         call decomp_2d_abort(__FILE__, __LINE__, iplane, "Invalid value")
-      end if
       if (.not. (present(opt_nplanes) .or. present(opt_ipencil))) then
          call decomp_2d_abort(__FILE__, __LINE__, -1, "Invalid arguments")
       end if
@@ -636,13 +635,25 @@ contains
       else
          if (opt_ipencil == 1) then
             allocate (var2d(1, size(var, 2), size(var, 3)))
-            var2d(1, :, :) = var(iplane, :, :)
+            if (iplane < 1) then
+               var2d(1, :, :) = sum(var(:, :, :), dim=ipencil)
+            else
+               var2d(1, :, :) = var(iplane, :, :)
+            end if
          else if (opt_ipencil == 2) then
             allocate (var2d(size(var, 1), 1, size(var, 3)))
-            var2d(:, 1, :) = var(:, iplane, :)
+            if (iplane < 1) then
+               var2d(:, 1, :) = sum(var(:, :, :), dim=ipencil)
+            else
+               var2d(:, 1, :) = var(:, iplane, :)
+            end if
          else if (opt_ipencil == 3) then
             allocate (var2d(size(var, 1), size(var, 2), 1))
-            var2d(:, :, 1) = var(:, :, iplane)
+            if (iplane < 1) then
+               var2d(:, :, 1) = sum(var(:, :, :), dim=ipencil)
+            else
+               var2d(:, :, 1) = var(:, :, iplane)
+            end if
          end if
          call adios_write(io, varname, &
                           opt_mode=decomp_2d_io_sync, &
@@ -680,7 +691,7 @@ contains
 
       ! Local variables
       complex(real32), allocatable, dimension(:, :, :) :: var2d
-      integer :: iplane
+      integer :: iplane, ipencil
 
       if (decomp_profiler_io) call decomp_profiler_start("adios_write_plane")
 
@@ -689,11 +700,10 @@ contains
       else
          iplane = 1
       end if
+      ipencil = 0
+      if (present(opt_ipencil)) ipencil = opt_ipencil
 
       ! Safety check
-      if (iplane < 1) then
-         call decomp_2d_abort(__FILE__, __LINE__, iplane, "Invalid value")
-      end if
       if (.not. (present(opt_nplanes) .or. present(opt_ipencil))) then
          call decomp_2d_abort(__FILE__, __LINE__, -1, "Invalid arguments")
       end if
@@ -706,13 +716,25 @@ contains
       else
          if (opt_ipencil == 1) then
             allocate (var2d(1, size(var, 2), size(var, 3)))
-            var2d(1, :, :) = var(iplane, :, :)
+            if (iplane < 1) then
+               var2d(1, :, :) = sum(var(:, :, :), dim=ipencil)
+            else
+               var2d(1, :, :) = var(iplane, :, :)
+            end if
          else if (opt_ipencil == 2) then
             allocate (var2d(size(var, 1), 1, size(var, 3)))
-            var2d(:, 1, :) = var(:, iplane, :)
+            if (iplane < 1) then
+               var2d(:, 1, :) = sum(var(:, :, :), dim=ipencil)
+            else
+               var2d(:, 1, :) = var(:, iplane, :)
+            end if
          else if (opt_ipencil == 3) then
             allocate (var2d(size(var, 1), size(var, 2), 1))
-            var2d(:, :, 1) = var(:, :, iplane)
+            if (iplane < 1) then
+               var2d(:, :, 1) = sum(var(:, :, :), dim=ipencil)
+            else
+               var2d(:, :, 1) = var(:, :, iplane)
+            end if
          end if
          call adios_write(io, varname, &
                           opt_mode=decomp_2d_io_sync, &
@@ -752,7 +774,7 @@ contains
       logical :: reduce
       real(real64), allocatable, dimension(:, :, :) :: var2d
       real(real32), allocatable, dimension(:, :, :) :: var2dbis
-      integer :: iplane
+      integer :: iplane, ipencil
 
       if (decomp_profiler_io) call decomp_profiler_start("adios_write_plane")
 
@@ -761,11 +783,10 @@ contains
       else
          iplane = 1
       end if
+      ipencil = 0
+      if (present(opt_ipencil)) ipencil = opt_ipencil
 
       ! Safety check
-      if (iplane < 1) then
-         call decomp_2d_abort(__FILE__, __LINE__, iplane, "Invalid value")
-      end if
       if (.not. (present(opt_nplanes) .or. present(opt_ipencil))) then
          call decomp_2d_abort(__FILE__, __LINE__, -1, "Invalid arguments")
       end if
@@ -796,22 +817,46 @@ contains
       else
          if (reduce .and. opt_ipencil == 1) then
             allocate (var2dbis(1, size(var, 2), size(var, 3)))
-            var2dbis(1, :, :) = real(var(iplane, :, :), kind=real32)
+            if (iplane < 1) then
+               var2dbis(1, :, :) = real(sum(var(:, :, :), dim=ipencil), kind=real32)
+            else
+               var2dbis(1, :, :) = real(var(iplane, :, :), kind=real32)
+            end if
          else if (reduce .and. opt_ipencil == 2) then
             allocate (var2dbis(size(var, 1), 1, size(var, 3)))
-            var2dbis(:, 1, :) = real(var(:, iplane, :), kind=real32)
+            if (iplane < 1) then
+               var2dbis(:, 1, :) = real(sum(var(:, :, :), dim=ipencil), kind=real32)
+            else
+               var2dbis(:, 1, :) = real(var(:, iplane, :), kind=real32)
+            end if
          else if (reduce .and. opt_ipencil == 3) then
             allocate (var2dbis(size(var, 1), size(var, 2), 1))
-            var2dbis(:, :, 1) = real(var(:, :, iplane), kind=real32)
+            if (iplane < 1) then
+               var2dbis(:, :, 1) = real(sum(var(:, :, :), dim=ipencil), kind=real32)
+            else
+               var2dbis(:, :, 1) = real(var(:, :, iplane), kind=real32)
+            end if
          else if (opt_ipencil == 1) then
             allocate (var2d(1, size(var, 2), size(var, 3)))
-            var2d(1, :, :) = var(iplane, :, :)
+            if (iplane < 1) then
+               var2d(1, :, :) = sum(var(:, :, :), dim=ipencil)
+            else
+               var2d(1, :, :) = var(iplane, :, :)
+            end if
          else if (opt_ipencil == 2) then
             allocate (var2d(size(var, 1), 1, size(var, 3)))
-            var2d(:, 1, :) = var(:, iplane, :)
+            if (iplane < 1) then
+               var2d(:, 1, :) = sum(var(:, :, :), dim=ipencil)
+            else
+               var2d(:, 1, :) = var(:, iplane, :)
+            end if
          else if (opt_ipencil == 3) then
             allocate (var2d(size(var, 1), size(var, 2), 1))
-            var2d(:, :, 1) = var(:, :, iplane)
+            if (iplane < 1) then
+               var2d(:, :, 1) = sum(var(:, :, :), dim=ipencil)
+            else
+               var2d(:, :, 1) = var(:, :, iplane)
+            end if
          end if
          if (reduce) then
             call adios_write(io, varname, &
@@ -857,7 +902,7 @@ contains
       logical :: reduce
       complex(real64), allocatable, dimension(:, :, :) :: var2d
       complex(real32), allocatable, dimension(:, :, :) :: var2dbis
-      integer :: iplane
+      integer :: iplane, ipencil
 
       if (decomp_profiler_io) call decomp_profiler_start("adios_write_plane")
 
@@ -866,11 +911,10 @@ contains
       else
          iplane = 1
       end if
+      ipencil = 0
+      if (present(opt_ipencil)) ipencil = opt_ipencil
 
       ! Safety check
-      if (iplane < 1) then
-         call decomp_2d_abort(__FILE__, __LINE__, iplane, "Invalid value")
-      end if
       if (.not. (present(opt_nplanes) .or. present(opt_ipencil))) then
          call decomp_2d_abort(__FILE__, __LINE__, -1, "Invalid arguments")
       end if
@@ -901,22 +945,46 @@ contains
       else
          if (reduce .and. opt_ipencil == 1) then
             allocate (var2dbis(1, size(var, 2), size(var, 3)))
-            var2dbis(1, :, :) = cmplx(var(iplane, :, :), kind=real32)
+            if (iplane < 1) then
+               var2dbis(1, :, :) = cmplx(sum(var(:, :, :), dim=ipencil), kind=real32)
+            else
+               var2dbis(1, :, :) = cmplx(var(iplane, :, :), kind=real32)
+            end if
          else if (reduce .and. opt_ipencil == 2) then
             allocate (var2dbis(size(var, 1), 1, size(var, 3)))
-            var2dbis(:, 1, :) = cmplx(var(:, iplane, :), kind=real32)
+            if (iplane < 1) then
+               var2dbis(:, 1, :) = cmplx(sum(var(:, :, :), dim=ipencil), kind=real32)
+            else
+               var2dbis(:, 1, :) = cmplx(var(:, iplane, :), kind=real32)
+            end if
          else if (reduce .and. opt_ipencil == 3) then
             allocate (var2dbis(size(var, 1), size(var, 2), 1))
-            var2dbis(:, :, 1) = cmplx(var(:, :, iplane), kind=real32)
+            if (iplane < 1) then
+               var2dbis(:, :, 1) = cmplx(sum(var(:, :, :), dim=ipencil), kind=real32)
+            else
+               var2dbis(:, :, 1) = cmplx(var(:, :, iplane), kind=real32)
+            end if
          else if (opt_ipencil == 1) then
             allocate (var2d(1, size(var, 2), size(var, 3)))
-            var2d(1, :, :) = var(iplane, :, :)
+            if (iplane < 1) then
+               var2d(1, :, :) = sum(var(:, :, :), dim=ipencil)
+            else
+               var2d(1, :, :) = var(iplane, :, :)
+            end if
          else if (opt_ipencil == 2) then
             allocate (var2d(size(var, 1), 1, size(var, 3)))
-            var2d(:, 1, :) = var(:, iplane, :)
+            if (iplane < 1) then
+               var2d(:, 1, :) = sum(var(:, :, :), dim=ipencil)
+            else
+               var2d(:, 1, :) = var(:, iplane, :)
+            end if
          else if (opt_ipencil == 3) then
             allocate (var2d(size(var, 1), size(var, 2), 1))
-            var2d(:, :, 1) = var(:, :, iplane)
+            if (iplane < 1) then
+               var2d(:, :, 1) = sum(var(:, :, :), dim=ipencil)
+            else
+               var2d(:, :, 1) = var(:, :, iplane)
+            end if
          end if
          if (reduce) then
             call adios_write(io, varname, &

@@ -96,8 +96,8 @@ program fft_physical_x
    ph => decomp_2d_fft_get_ph()
    !  input is X-pencil data
    ! output is Z-pencil data
-   call alloc_x(in, ph, .true.)
-   call alloc_z(out, ph, .true.)
+   call alloc_x(in, ph, opt_global=.true.)
+   call alloc_z(out, ph, opt_global=.true.)
    ! Convert pointers to loops start/end to scalar
    ! This is define loop on GPUs
    xst1 = ph%xst(1); xen1 = ph%xen(1); 

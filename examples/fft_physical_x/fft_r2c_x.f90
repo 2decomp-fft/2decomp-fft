@@ -99,8 +99,8 @@ program fft_r2c_x
    sp => decomp_2d_fft_get_sp()
    !  input is X-pencil data
    ! output is Z-pencil data
-   call alloc_x(in_r, ph, .true.)
-   call alloc_z(out, sp, .true.)
+   call alloc_x(in_r, ph, opt_global=.true.)
+   call alloc_z(out, sp, opt_global=.true.)
    xst1 = xstart(1); xen1 = xend(1)
    xst2 = xstart(2); xen2 = xend(2)
    xst3 = xstart(3); xen3 = xend(3)

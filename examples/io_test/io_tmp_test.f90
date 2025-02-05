@@ -142,25 +142,25 @@ program io_test
       end do
    end do
 
-   call alloc_x(u1, .true.)
-   call alloc_y(u2, .true.)
-   call alloc_z(u3, .true.)
+   call alloc_x(u1, opt_global=.true.)
+   call alloc_y(u2, opt_global=.true.)
+   call alloc_z(u3, opt_global=.true.)
 
-   call alloc_x(u1b, .true.)
-   call alloc_y(u2b, .true.)
-   call alloc_z(u3b, .true.)
+   call alloc_x(u1b, opt_global=.true.)
+   call alloc_y(u2b, opt_global=.true.)
+   call alloc_z(u3b, opt_global=.true.)
 
-   call alloc_x(v1, .true.)
-   call alloc_y(v2, .true.)
-   call alloc_z(v3, .true.)
+   call alloc_x(v1, opt_global=.true.)
+   call alloc_y(v2, opt_global=.true.)
+   call alloc_z(v3, opt_global=.true.)
 
-   call alloc_x(v1b, .true.)
-   call alloc_y(v2b, .true.)
-   call alloc_z(v3b, .true.)
+   call alloc_x(v1b, opt_global=.true.)
+   call alloc_y(v2b, opt_global=.true.)
+   call alloc_z(v3b, opt_global=.true.)
 
-   call alloc_x(tmp1, .true.)
-   call alloc_y(tmp2, .true.)
-   call alloc_z(tmp3, .true.)
+   call alloc_x(tmp1, opt_global=.true.)
+   call alloc_y(tmp2, opt_global=.true.)
+   call alloc_z(tmp3, opt_global=.true.)
 
    xst1 = xstart(1); xen1 = xend(1)
    xst2 = xstart(2); xen2 = xend(2)

@@ -124,13 +124,13 @@ program io_test
       end do
    end do
 
-   call alloc_x(u1, .true.)
-   call alloc_y(u2, .true.)
-   call alloc_z(u3, .true.)
+   call alloc_x(u1, opt_global=.true.)
+   call alloc_y(u2, opt_global=.true.)
+   call alloc_z(u3, opt_global=.true.)
 
-   call alloc_x(u1b, .true.)
-   call alloc_y(u2b, .true.)
-   call alloc_z(u3b, .true.)
+   call alloc_x(u1b, opt_global=.true.)
+   call alloc_y(u2b, opt_global=.true.)
+   call alloc_z(u3b, opt_global=.true.)
 
    xst1 = xstart(1); xen1 = xend(1)
    xst2 = xstart(2); xen2 = xend(2)

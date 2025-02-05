@@ -41,14 +41,8 @@
      ! additional start end
      integer :: ist, ien, jst, jen, kst, ken
 
-     integer :: i, j, k, s1, s2, s3, ierror
+     integer :: i, j, k, s1, s2, s3
      integer :: data_type
-
-     integer :: icount, ilength, ijump
-     integer :: halo12, halo21, halo31, halo32
-     integer, dimension(4) :: requests
-     integer, dimension(MPI_STATUS_SIZE, 4) :: status
-     integer :: tag_e, tag_w, tag_n, tag_s, tag_t, tag_b
 
      integer :: ipencil
      logical, save :: first_call_x = .true., first_call_y = .true., first_call_z = .true.
@@ -98,14 +92,8 @@
      ! additional start end
      integer :: ist, ien, jst, jen, kst, ken
 
-     integer :: i, j, k, s1, s2, s3, ierror
+     integer :: i, j, k, s1, s2, s3
      integer :: data_type
-
-     integer :: icount, ilength, ijump
-     integer :: halo12, halo21, halo31, halo32
-     integer, dimension(4) :: requests
-     integer, dimension(MPI_STATUS_SIZE, 4) :: status
-     integer :: tag_e, tag_w, tag_n, tag_s, tag_t, tag_b
 
      integer :: ipencil
      logical, save :: first_call_x = .true., first_call_y = .true., first_call_z = .true.
@@ -116,3 +104,249 @@
 
      return
   end subroutine update_halo_complex
+
+  subroutine exchange_halo_x_real_short(inout, opt_xlevel)
+
+     implicit none
+
+     real(mytype), dimension(:, :, :), intent(INOUT) :: inout
+     integer, dimension(3), optional :: opt_xlevel
+#if defined(_GPU)
+     attributes(device) :: inout
+#endif
+
+     call exchange_halo_x_real(inout, decomp_main, opt_xlevel)
+
+  end subroutine exchange_halo_x_real_short
+
+  subroutine exchange_halo_x_real(inout, decomp, opt_xlevel)
+
+     implicit none
+
+     real(mytype), dimension(:, :, :), intent(INOUT) :: inout
+     TYPE(DECOMP_INFO), intent(in) :: decomp
+     integer, dimension(3), optional :: opt_xlevel
+#if defined(_GPU)
+     attributes(device) :: inout
+#endif
+
+     integer :: level_x, level_y, level_z
+     integer :: ierror
+     integer :: icount, ilength, ijump
+     integer :: halo12
+     integer, dimension(4) :: requests
+     integer, dimension(MPI_STATUS_SIZE, 4) :: status
+     integer :: tag_n, tag_s, tag_t, tag_b
+     integer :: data_type
+     integer :: xs, ys, zs, ye, ze, s1, s2, s3
+
+     data_type = real_type
+
+#include "halo_comm_x.f90"
+
+     return
+  end subroutine exchange_halo_x_real
+
+  subroutine exchange_halo_x_complex_short(inout, opt_xlevel)
+
+     implicit none
+
+     complex(mytype), dimension(:, :, :), intent(INOUT) :: inout
+     integer, dimension(3), optional :: opt_xlevel
+#if defined(_GPU)
+     attributes(device) :: inout
+#endif
+
+     call exchange_halo_x_complex(inout, decomp_main, opt_xlevel)
+
+  end subroutine exchange_halo_x_complex_short
+
+  subroutine exchange_halo_x_complex(inout, decomp, opt_xlevel)
+
+     implicit none
+
+     complex(mytype), dimension(:, :, :), intent(INOUT) :: inout
+     TYPE(DECOMP_INFO), intent(in) :: decomp
+     integer, dimension(3), optional :: opt_xlevel
+#if defined(_GPU)
+     attributes(device) :: inout
+#endif
+
+     integer :: level_x, level_y, level_z
+     integer :: ierror
+     integer :: icount, ilength, ijump
+     integer :: halo12
+     integer, dimension(4) :: requests
+     integer, dimension(MPI_STATUS_SIZE, 4) :: status
+     integer :: tag_n, tag_s, tag_t, tag_b
+     integer :: data_type
+     integer :: xs, ys, zs, ye, ze, s1, s2, s3
+
+     data_type = complex_type
+
+#include "halo_comm_x.f90"
+
+     return
+  end subroutine exchange_halo_x_complex
+
+  subroutine exchange_halo_y_real_short(inout, opt_ylevel)
+
+     implicit none
+
+     real(mytype), dimension(:, :, :), intent(INOUT) :: inout
+     integer, dimension(3), optional :: opt_ylevel
+#if defined(_GPU)
+     attributes(device) :: inout
+#endif
+
+     call exchange_halo_y_real(inout, decomp_main, opt_ylevel)
+
+  end subroutine exchange_halo_y_real_short
+
+  subroutine exchange_halo_y_real(inout, decomp, opt_ylevel)
+
+     implicit none
+
+     real(mytype), dimension(:, :, :), intent(INOUT) :: inout
+     TYPE(DECOMP_INFO), intent(in) :: decomp
+     integer, dimension(3), optional :: opt_ylevel
+#if defined(_GPU)
+     attributes(device) :: inout
+#endif
+
+     integer :: level_x, level_y, level_z
+     integer :: ierror
+     integer :: icount, ilength, ijump
+     integer :: halo21
+     integer, dimension(4) :: requests
+     integer, dimension(MPI_STATUS_SIZE, 4) :: status
+     integer :: tag_e, tag_w, tag_t, tag_b
+     integer :: data_type
+     integer :: xs, ys, zs, xe, ze, s1, s2, s3
+
+     data_type = real_type
+
+#include "halo_comm_y.f90"
+
+     return
+  end subroutine exchange_halo_y_real
+
+  subroutine exchange_halo_y_complex_short(inout, opt_ylevel)
+
+     implicit none
+
+     complex(mytype), dimension(:, :, :), intent(INOUT) :: inout
+     integer, dimension(3), optional :: opt_ylevel
+#if defined(_GPU)
+     attributes(device) :: inout
+#endif
+
+     call exchange_halo_y_complex(inout, decomp_main, opt_ylevel)
+
+  end subroutine exchange_halo_y_complex_short
+
+  subroutine exchange_halo_y_complex(inout, decomp, opt_ylevel)
+
+     implicit none
+
+     complex(mytype), dimension(:, :, :), intent(INOUT) :: inout
+     TYPE(DECOMP_INFO), intent(in) :: decomp
+     integer, dimension(3), optional :: opt_ylevel
+#if defined(_GPU)
+     attributes(device) :: inout
+#endif
+
+     integer :: level_x, level_y, level_z
+     integer :: ierror
+     integer :: icount, ilength, ijump
+     integer :: halo21
+     integer, dimension(4) :: requests
+     integer, dimension(MPI_STATUS_SIZE, 4) :: status
+     integer :: tag_e, tag_w, tag_t, tag_b
+     integer :: data_type
+     integer :: xs, ys, zs, xe, ze, s1, s2, s3
+
+     data_type = complex_type
+
+#include "halo_comm_y.f90"
+
+     return
+  end subroutine exchange_halo_y_complex
+
+  subroutine exchange_halo_z_real_short(inout, opt_zlevel)
+     implicit none
+     real(mytype), dimension(:, :, :), intent(INOUT) :: inout
+     integer, dimension(3), optional :: opt_zlevel
+#if defined(_GPU)
+     attributes(device) :: inout
+#endif
+
+     call exchange_halo_z_real(inout, decomp_main, opt_zlevel)
+  end subroutine exchange_halo_z_real_short
+
+  subroutine exchange_halo_z_real(inout, decomp, opt_zlevel)
+     implicit none
+     real(mytype), dimension(:, :, :), intent(INOUT) :: inout
+     TYPE(DECOMP_INFO), intent(in) :: decomp
+     integer, dimension(3), optional :: opt_zlevel
+#if defined(_GPU)
+     attributes(device) :: inout
+#endif
+
+     integer :: level_x, level_y, level_z
+     integer :: ierror
+     integer :: icount, ilength, ijump
+     integer :: halo31, halo32
+     integer, dimension(4) :: requests
+     integer, dimension(MPI_STATUS_SIZE, 4) :: status
+     integer :: tag_e, tag_w, tag_n, tag_s
+     integer :: data_type
+     integer :: xs, ys, zs, xe, ye, s1, s2, s3
+
+     data_type = real_type
+
+#include "halo_comm_z.f90"
+
+     return
+  end subroutine exchange_halo_z_real
+
+  subroutine exchange_halo_z_complex_short(inout, opt_zlevel)
+
+     implicit none
+
+     complex(mytype), dimension(:, :, :), intent(INOUT) :: inout
+     integer, dimension(3), optional :: opt_zlevel
+#if defined(_GPU)
+     attributes(device) :: inout
+#endif
+
+     call exchange_halo_z_complex(inout, decomp_main, opt_zlevel)
+  end subroutine exchange_halo_z_complex_short
+
+  subroutine exchange_halo_z_complex(inout, decomp, opt_zlevel)
+
+     implicit none
+
+     complex(mytype), dimension(:, :, :), intent(INOUT) :: inout
+     TYPE(DECOMP_INFO), intent(in) :: decomp
+     integer, dimension(3), optional :: opt_zlevel
+#if defined(_GPU)
+     attributes(device) :: inout
+#endif
+
+     integer :: level_x, level_y, level_z
+     integer :: ierror
+     integer :: icount, ilength, ijump
+     integer :: halo31, halo32
+     integer, dimension(4) :: requests
+     integer, dimension(MPI_STATUS_SIZE, 4) :: status
+     integer :: tag_e, tag_w, tag_n, tag_s
+     integer :: data_type
+     integer :: xs, ys, zs, xe, ye, s1, s2, s3
+
+     data_type = complex_type
+
+#include "halo_comm_z.f90"
+
+     return
+  end subroutine exchange_halo_z_complex

@@ -134,17 +134,17 @@ contains
       logical, parameter :: glob = .false.
 
       ! Allocate main variables in X-pencil
-      call alloc_x(phi1, glob)
-      call alloc_x(dphiX, glob)
-      call alloc_x(dphiY, glob)
-      call alloc_x(dphiZ, glob)
+      call alloc_x(phi1, opt_global=glob)
+      call alloc_x(dphiX, opt_global=glob)
+      call alloc_x(dphiY, opt_global=glob)
+      call alloc_x(dphiZ, opt_global=glob)
 
       ! Working array used more than once
-      call alloc_y(phi2, glob)
-      call alloc_y(wk2, glob)
+      call alloc_y(phi2, opt_global=glob)
+      call alloc_y(wk2, opt_global=glob)
 
-      call alloc_z(phi3, glob)
-      call alloc_z(wk3, glob)
+      call alloc_z(phi3, opt_global=glob)
+      call alloc_z(wk3, opt_global=glob)
 
       all_pass = .true.
 

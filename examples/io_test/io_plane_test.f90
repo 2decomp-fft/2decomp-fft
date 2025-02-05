@@ -114,9 +114,9 @@ program io_plane_test
       end do
    end do
 
-   call alloc_x(u1, .true.)
-   call alloc_y(u2, .true.)
-   call alloc_z(u3, .true.)
+   call alloc_x(u1, opt_global=.true.)
+   call alloc_y(u2, opt_global=.true.)
+   call alloc_z(u3, opt_global=.true.)
 
    ! For GPU we port the global data create the different pencil arrays
    ! Move back to host the arrays for writing on disk

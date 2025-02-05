@@ -31,7 +31,7 @@ program halo_test
    real(mytype), allocatable, dimension(:, :, :) :: u1, v1, w1
    real(mytype), allocatable, dimension(:, :, :) :: u2, v2, w2
    real(mytype), allocatable, dimension(:, :, :) :: u3, v3, w3
-   real(mytype), allocatable, dimension(:, :, :) :: div, wk2, wk3
+   real(mytype), allocatable, dimension(:, :, :) :: div, div1, div2, div3, wk2, wk3
 
    integer :: i, j, k, ierror, n
 
@@ -142,10 +142,13 @@ contains
 #endif
 
       ! initialise u,v,w with random numbers in X-pencil
-      call alloc_x(u1, global)
-      call alloc_x(v1, global)
-      call alloc_x(w1, global)
-      call alloc_x(div, global)
+      call alloc_x(u1, opt_global=global)
+      call alloc_x(v1, opt_global=global)
+      call alloc_x(w1, opt_global=global)
+      call alloc_x(div, opt_global=global)
+      call alloc_x(div1, opt_global=global)
+      call alloc_x(div2, opt_global=global)
+      call alloc_x(div3, opt_global=global)
 
       call random_seed(size=n)
       allocate (seed(n))
@@ -156,15 +159,15 @@ contains
       call random_number(w1)
 
       ! Working array used more than once
-      call alloc_y(u2, global)
-      call alloc_y(v2, global)
-      call alloc_y(w2, global)
-      call alloc_y(wk2, global)
+      call alloc_y(u2, opt_global=global)
+      call alloc_y(v2, opt_global=global)
+      call alloc_y(w2, opt_global=global)
+      call alloc_y(wk2, opt_global=global)
 
-      call alloc_z(u3, global)
-      call alloc_z(v3, global)
-      call alloc_z(w3, global)
-      call alloc_z(wk3, global)
+      call alloc_z(u3, opt_global=global)
+      call alloc_z(v3, opt_global=global)
+      call alloc_z(w3, opt_global=global)
+      call alloc_z(wk3, opt_global=global)
 
       all_pass = .true.
 
@@ -305,7 +308,7 @@ contains
       integer :: jfirst, jlast ! J loop start/end
       integer :: kfirst, klast ! K loop start/end
 
-      call alloc_x(div1, global)
+      call alloc_x(div1, opt_global=global)
 
       ! Expected sizes
       nx_expected = nx
@@ -379,7 +382,7 @@ contains
       integer :: jfirst, jlast ! J loop start/end
       integer :: kfirst, klast ! K loop start/end
 
-      call alloc_x(div2, global)
+      call alloc_x(div2, opt_global=global)
 
       ! Expected sizes
       nx_expected = ysize(1) + 2
@@ -453,7 +456,7 @@ contains
       integer :: jfirst, jlast ! J loop start/end
       integer :: kfirst, klast ! K loop start/end
 
-      call alloc_x(div3, global)
+      call alloc_x(div3, opt_global=global)
 
       ! Expected sizes
       nx_expected = zsize(1) + 2

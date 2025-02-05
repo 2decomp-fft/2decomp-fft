@@ -3,11 +3,6 @@
 ! This file contain common code to be included by subroutines
 ! 'update_halo_...' in halo.f90
 
-    ! Check for invalid argument
-    if ((ipencil < 1) .or. (ipencil > 3)) then
-       call decomp_2d_abort(__FILE__, __LINE__, ipencil, "Invalid pencil for halo exchange, should be in range 1<=pencil<=3")
-    end if
-
     if (present(opt_global)) then
        global = opt_global
     else
@@ -20,6 +15,10 @@
 
     if (present(opt_pencil)) then
        ipencil = opt_pencil
+       ! Check for invalid argument
+       if ((ipencil < 1) .or. (ipencil > 3)) then
+          call decomp_2d_abort(__FILE__, __LINE__, ipencil, "Invalid pencil for halo exchange, should be in range 1<=pencil<=3")
+       end if
     else
        ! Historic/default behaviour
        if (s1 == decomp%xsz(1)) then

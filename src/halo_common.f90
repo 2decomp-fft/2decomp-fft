@@ -112,7 +112,7 @@
 
     !    out = -1.0_mytype ! fill the halo for debugging
 
-    !$acc enter data create(requests,neighbour)
+    !$acc enter data create(neighbour)
     ! copy input data to output
     if (global) then
        ! using global coordinate

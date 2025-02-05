@@ -122,9 +122,9 @@ program io_read
       end do
    end do
 
-   call alloc_x(u1b, .true.)
-   call alloc_y(u2b, .true.)
-   call alloc_z(u3b, .true.)
+   call alloc_x(u1b, opt_global=.true.)
+   call alloc_y(u2b, opt_global=.true.)
+   call alloc_z(u3b, opt_global=.true.)
 
    ! read back to different arrays
 #ifdef ADIOS2

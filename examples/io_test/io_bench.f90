@@ -74,7 +74,7 @@ program io_bench
 
    call decomp_2d_init(nx, ny, nz, p_row, p_col)
 
-   call alloc_x(u1, .true.)
+   call alloc_x(u1, opt_global=.true.)
    call random_number(u1)
 
    t1 = MPI_WTIME()

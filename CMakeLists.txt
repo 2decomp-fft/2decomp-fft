@@ -10,7 +10,6 @@ if (IO_BACKEND MATCHES "adios2")
   enable_language(C CXX)
 endif (IO_BACKEND MATCHES "adios2")
 
-
 set(BUILD_TARGET "mpi" CACHE STRING "Target for acceleration (mpi (default) or gpu)")
 set_property(CACHE BUILD_TARGET PROPERTY STRINGS mpi gpu)
 
@@ -112,4 +111,3 @@ add_custom_target(format sh ${CMAKE_SOURCE_DIR}/scripts/format.sh
 #   #  add_test(NAME Test_dx_00 COMMAND ${MPIEXEC_EXECUTABLE} -n ${MPIEXEC_MAX_NUMPROCS} ${CMAKE_INSTALL_PREFIX}/bin/verif_x_00 WORKING_DIRECTORY ${test_dir}/Verif_x_00)
 #   #endif (PFUNIT_FOUND)
 # endif()
-

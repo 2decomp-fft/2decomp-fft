@@ -244,6 +244,10 @@ This variable is automatically added in GPU builds.
 
 This variable is valid only for GPU builds. The NVIDIA Collective Communication Library (NCCL) implements multi-GPU and multi-node communication primitives optimized for NVIDIA GPUs and Networking.
 
+#### FFTW_omp
+
+This variable is automatically added if the FFTW library was compiled with OpenMP support. This is used only in the `fftw3_f03` backend. OpenMP comments are present in the transpose subroutines.
+
 ## Optional dependencies
 
 ### ADIOS2

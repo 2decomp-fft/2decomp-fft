@@ -87,6 +87,7 @@ contains
 
       nrank = -1
       nproc = -1
+      decomp_2d_comm = MPI_COMM_NULL
 
    end subroutine decomp_2d_mpi_fin
 

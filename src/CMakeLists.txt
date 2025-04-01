@@ -1,13 +1,17 @@
-file(GLOB files_decomp factor.f90
+file(GLOB files_decomp block.f90
+	               factor.f90
 	               decomp_2d_constants.f90
 		       decomp_2d_mpi.f90
 	               decomp_2d.f90
+		       decomp_pool.f90
 		       log.f90
+		       info.f90
 		       io_family.f90
 		       io_object_mpi.f90
 		       io_mpi.f90
 		       io_utilities.f90
 		       interp.f90
+		       mem_pool.f90
 		       transpose_x_to_y.f90
 		       transpose_y_to_x.f90
 		       transpose_y_to_z.f90

@@ -18,6 +18,8 @@ module decomp_2d
    use decomp_2d_nccl
 #endif
 #endif
+   use m_info
+   use m_decomp_pool
 
    implicit none
 
@@ -75,11 +77,12 @@ module decomp_2d
 #endif
 
    ! derived type to store decomposition info for a given global data size
-   TYPE, public :: DECOMP_INFO
-      ! staring/ending index and size of data held by current processor
-      integer, dimension(3) :: xst, xen, xsz  ! x-pencil
-      integer, dimension(3) :: yst, yen, ysz  ! y-pencil
-      integer, dimension(3) :: zst, zen, zsz  ! z-pencil
+   TYPE, extends(info), public :: DECOMP_INFO
+      ! starting/ending index and size of data held by current processor
+      ! this is defined in the parent type
+      !integer, dimension(3) :: xst, xen, xsz
+      !integer, dimension(3) :: yst, yen, ysz
+      !integer, dimension(3) :: zst, zen, zsz
 
       ! in addition to local information, processors also need to know
       ! some global information for global communications to work

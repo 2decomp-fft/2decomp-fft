@@ -64,6 +64,8 @@ module m_mem_pool
       procedure, private :: free_bool => mem_pool_free_bool
       ! Add a new shape to the memory pool
       procedure :: new_shape => mem_pool_new_shape
+      ! Return the size of the memory pool
+      procedure :: get_size => mem_pool_get_size
       ! Resize the memory pool
       procedure :: resize => mem_pool_resize
       ! Print the setup of the memory pool
@@ -859,6 +861,19 @@ contains
       end if
 
    end subroutine mem_pool_new_shape
+
+   !
+   ! Return the size of the memory blocks
+   !
+   integer(c_size_t) function mem_pool_get_size(self)
+
+      implicit none
+
+      class(mem_pool), intent(in) :: self
+
+      mem_pool_get_size = self%size
+
+   end function mem_pool_get_size
 
    !
    ! Resize the memory pool and all the blocks

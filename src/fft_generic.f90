@@ -10,6 +10,7 @@ module decomp_2d_fft
    use decomp_2d_mpi
    use decomp_2d_profiler
    use glassman
+   use m_decomp_pool
 
    implicit none
 

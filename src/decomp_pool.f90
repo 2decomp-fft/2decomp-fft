@@ -7,6 +7,8 @@
 !
 module m_decomp_pool
 
+   use iso_fortran_env, only : real32
+   use iso_c_binding, only : c_size_t, c_loc, c_f_pointer
    use decomp_2d_constants, only : mytype, real_type
    use decomp_2d_mpi, only : decomp_2d_abort
    use m_info
@@ -16,6 +18,9 @@ module m_decomp_pool
 
    ! Main memory pool for the library 2decomp
    type(mem_pool), target, save :: decomp_pool
+
+   ! true when the memory pool is ready
+   logical, protected, save :: decomp_pool_ready = .false.
 
    ! Default type in the memory pool module
    integer, save :: decomp_pool_default_type = real_type
@@ -27,17 +32,22 @@ module m_decomp_pool
              decomp_pool_fin, &
              decomp_pool_get, &
              decomp_pool_free, &
+             decomp_pool_ready, &
              decomp_pool_default_type, &
              decomp_pool_set_default_type
 
    interface decomp_pool_get
       module procedure decomp_pool_get_real
+      module procedure decomp_pool_get_real1D
       module procedure decomp_pool_get_cplx
+      module procedure decomp_pool_get_cplx1D
    end interface decomp_pool_get
 
    interface decomp_pool_free
       module procedure decomp_pool_free_real                                                 
+      module procedure decomp_pool_free_real1D
       module procedure decomp_pool_free_cplx                                                 
+      module procedure decomp_pool_free_cplx1D
    end interface decomp_pool_free
 
 contains
@@ -66,6 +76,8 @@ contains
          call decomp_pool%new_shape(decomp_pool_default_type, decomp)
       end if
 
+      decomp_pool_ready = .true.
+
    end subroutine decomp_pool_init
 
    !
@@ -76,6 +88,8 @@ contains
       implicit none
 
       call decomp_pool%fin()
+
+      decomp_pool_ready = .false.
 
    end subroutine decomp_pool_fin
 
@@ -107,6 +121,26 @@ contains
 
    end subroutine decomp_pool_get_real
 
+   subroutine decomp_pool_get_real1D(ptr)
+
+      implicit none
+
+      ! Arguments
+      real(mytype), intent(out), dimension(:), pointer :: ptr
+
+      ! Local variable
+      real(mytype), dimension(:, :, :), pointer :: ptr3D
+
+      call decomp_pool%get(ptr3D)
+      if (mytype == KIND(0._real32)) then
+         call c_f_pointer(c_loc(ptr3D), ptr, (/decomp_pool%get_size()/))
+      else
+         call c_f_pointer(c_loc(ptr3D), ptr, (/decomp_pool%get_size()/2_c_size_t/))
+      end if
+      nullify(ptr3D)
+
+   end subroutine decomp_pool_get_real1D
+
    subroutine decomp_pool_get_cplx(ptr, shape)
 
       implicit none
@@ -118,6 +152,26 @@ contains
       call decomp_pool%get(ptr, shape)
 
    end subroutine decomp_pool_get_cplx
+
+   subroutine decomp_pool_get_cplx1D(ptr)                                                  
+      
+      implicit none                                                                        
+      
+      ! Arguments
+      complex(mytype), intent(out), dimension(:), pointer :: ptr                              
+      
+      ! Local variable
+      complex(mytype), dimension(:, :, :), pointer :: ptr3D                      
+      
+      call decomp_pool%get(ptr3D)
+      if (mytype == KIND(0._real32)) then
+         call c_f_pointer(c_loc(ptr3D), ptr, (/decomp_pool%get_size()/2_c_size_t/))                         
+      else
+         call c_f_pointer(c_loc(ptr3D), ptr, (/decomp_pool%get_size()/4_c_size_t/))              
+      end if
+      nullify(ptr3D)                                                                       
+   
+   end subroutine decomp_pool_get_cplx1D
 
    !
    ! Return the provided array to the free memory pool
@@ -135,6 +189,18 @@ contains
 
    end subroutine decomp_pool_free_real
 
+   subroutine decomp_pool_free_real1D(ptr)
+
+      implicit none
+
+      ! Arguments
+      real(mytype), intent(inout), dimension(:), pointer :: ptr
+
+      call decomp_pool%free(c_loc(ptr))
+      nullify(ptr)
+
+   end subroutine decomp_pool_free_real1D
+
    subroutine decomp_pool_free_cplx(ptr)
 
       implicit none
@@ -145,6 +211,18 @@ contains
       call decomp_pool%free(ptr)
 
    end subroutine decomp_pool_free_cplx
+
+   subroutine decomp_pool_free_cplx1D(ptr)
+
+      implicit none
+
+      ! Arguments
+      complex(mytype), intent(inout), dimension(:), pointer :: ptr
+
+      call decomp_pool%free(c_loc(ptr))
+      nullify(ptr)
+
+   end subroutine decomp_pool_free_cplx1D
 
    !
    ! Update the default type in the module

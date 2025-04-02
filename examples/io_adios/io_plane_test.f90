@@ -81,7 +81,7 @@ program io_plane_test
    xst3 = xstart(3); xen3 = xend(3)
 
    !$acc data copyin(data1) copy(u1,u2,u3)
-   ! original X-pensil based data
+   ! original X-pencil based data
    !$acc parallel loop default(present)
    do k = xst3, xen3
       do j = xst2, xen2

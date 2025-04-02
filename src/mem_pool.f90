@@ -170,7 +170,7 @@ contains
             end do
          else
             do i = 1, blk_n
-               call self%new(init=.true.)
+               call self%new(init=.false.)
             end do
          end if
       end if
@@ -324,7 +324,7 @@ contains
       end if
 
       ! Get a block and associate it
-      call c_f_pointer(self%get_raw(.true.), ptr, shp)
+      call c_f_pointer(self%get_raw(.false.), ptr, shp)
 
       ! Free memory
       deallocate (shp)
@@ -359,7 +359,7 @@ contains
       end if
 
       ! Get a block and associate it
-      call c_f_pointer(self%get_raw(.true.), ptr, shp)
+      call c_f_pointer(self%get_raw(.false.), ptr, shp)
 
       ! Free memory
       deallocate (shp)
@@ -394,7 +394,7 @@ contains
       end if
 
       ! Get a block and associate it
-      call c_f_pointer(self%get_raw(.true.), ptr, shp)
+      call c_f_pointer(self%get_raw(.false.), ptr, shp)
 
       ! Free memory
       deallocate (shp)
@@ -429,7 +429,7 @@ contains
       end if
 
       ! Output is ready
-      call c_f_pointer(self%get_raw(.true.), ptr, shp)
+      call c_f_pointer(self%get_raw(.false.), ptr, shp)
 
       ! Free memory
       deallocate (shp)

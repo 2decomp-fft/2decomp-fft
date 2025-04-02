@@ -315,10 +315,8 @@ contains
       ! Use the provided shape, or the default one
       if (present(shape)) then
          shp = shape
-         if (product(int(shp, c_size_t)) > self%size) then
-            write (*, *) "mem_pool_get_freal. Invalid shape."
-            error stop 2
-         end if
+         if (product(int(shp, c_size_t)) > self%size) &
+            call decomp_2d_abort(__FILE__, __LINE__, 2, "Invalid shape")
       else if (self%shapes(1, 1) /= mem_pool_none) then
          shp = self%shapes(:, 1)
       else
@@ -352,10 +350,8 @@ contains
       ! Use the provided shape, or the default one
       if (present(shape)) then
          shp = shape
-         if (2_c_size_t*product(int(shp, c_size_t)) > self%size) then
-            write (*, *) "mem_pool_get_dreal. Invalid shape."
-            error stop 2
-         end if
+         if (2_c_size_t*product(int(shp, c_size_t)) > self%size) &
+            call decomp_2d_abort(__FILE__, __LINE__, 2, "Invalid shape")
       else if (self%shapes(1, 2) /= mem_pool_none) then
          shp = self%shapes(:, 2)
       else
@@ -389,10 +385,8 @@ contains
       ! Use the provided shape, or the default one
       if (present(shape)) then
          shp = shape
-         if (2_c_size_t*product(int(shp, c_size_t)) > self%size) then
-            write (*, *) "mem_pool_get_fcplx. Invalid shape."
-            error stop 2
-         end if
+         if (2_c_size_t*product(int(shp, c_size_t)) > self%size) &
+            call decomp_2d_abort(__FILE__, __LINE__, 2, "Invalid shape")
       else if (self%shapes(1, 3) /= mem_pool_none) then
          shp = self%shapes(:, 3)
       else
@@ -426,10 +420,8 @@ contains
       ! Use the provided shape, or the default one
       if (present(shape)) then
          shp = shape
-         if (4_c_size_t*product(int(shp, c_size_t)) > self%size) then
-            write (*, *) "mem_pool_get_dcplx. Invalid shape."
-            error stop 2
-         end if
+         if (4_c_size_t*product(int(shp, c_size_t)) > self%size) &
+            call decomp_2d_abort(__FILE__, __LINE__, 2, "Invalid shape")
       else if (self%shapes(1, 4) /= mem_pool_none) then
          shp = self%shapes(:, 4)
       else

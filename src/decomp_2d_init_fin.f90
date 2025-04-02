@@ -188,7 +188,7 @@
 
      if (decomp_profiler_d2d) call decomp_profiler_start("decomp_2d_fin")
 
-     call decomp_pool_fin()
+     if (use_pool) call decomp_pool_fin()
 
      call decomp_2d_mpi_comm_free(DECOMP_2D_COMM_ROW)
      call decomp_2d_mpi_comm_free(DECOMP_2D_COMM_COL)

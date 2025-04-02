@@ -244,7 +244,7 @@ contains
    !
    ! Find the block using the address
    !
-   !   - hself is the beginning of the list
+   !   - self is the beginning of the list
    !   - ref is the address of the memory block
    !   - ptr is a pointer to the block located
    !

@@ -1,3 +1,5 @@
+!! SPDX-License-Identifier: BSD-3-Clause
+
 !
 ! Provide a memory pool without exposing the underlying object
 !

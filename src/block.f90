@@ -1,3 +1,5 @@
+!! SPDX-License-Identifier: BSD-3-Clause
+
 !
 ! Low-level module for a list of memory blocks
 !

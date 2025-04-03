@@ -160,6 +160,7 @@
      if (use_pool.and.present(complex_pool)) then
         if (complex_pool) then
            decomp_pool_default_type = complex_type
+           call mem_pool_set_default_type(complex_type)
            call decomp_pool%new_shape(complex_type, decomp_main)
         end if
      end if

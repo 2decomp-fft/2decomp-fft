@@ -20,6 +20,7 @@ module decomp_2d
 #endif
    use m_info
    use m_decomp_pool
+   use m_mem_pool
 
    implicit none
 

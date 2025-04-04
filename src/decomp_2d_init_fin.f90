@@ -44,7 +44,7 @@
      if (nz <= 0) call decomp_2d_abort(__FILE__, __LINE__, nz, "Invalid value for nz")
 
      ! Check if the memory pool is available
-#if defined(_GPU) || defined(EVEN)
+#if defined(_GPU)
      use_pool = .false.
 #else
      use_pool = .true.

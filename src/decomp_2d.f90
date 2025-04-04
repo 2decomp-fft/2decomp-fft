@@ -81,11 +81,7 @@ module decomp_2d
 
    ! derived type to store decomposition info for a given global data size
    TYPE, extends(info), public :: DECOMP_INFO
-      ! starting/ending index and size of data held by current processor
-      ! this is defined in the parent type
-      !integer, dimension(3) :: xst, xen, xsz
-      !integer, dimension(3) :: yst, yen, ysz
-      !integer, dimension(3) :: zst, zen, zsz
+      ! starting/ending index and size are defined in the parent type, see info.f90
 
       ! in addition to local information, processors also need to know
       ! some global information for global communications to work

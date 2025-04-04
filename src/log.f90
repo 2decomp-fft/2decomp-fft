@@ -297,9 +297,9 @@ contains
       write (io_unit, *) '   y1count : ', d2d%y1count
       write (io_unit, *) '   y2count : ', d2d%y2count
       write (io_unit, *) '   z2count : ', d2d%z2count
+#endif
+#endif
       write (io_unit, *) '   even : ', d2d%even
-#endif
-#endif
 
    end subroutine decomp_info_print
 

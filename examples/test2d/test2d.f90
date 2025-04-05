@@ -69,7 +69,7 @@ program test2d
    call alloc_z(u3, opt_global=.true.)
 
    !$acc data copy(u1,u2,u3)
-   ! original x-pensil based data
+   ! original x-pencil based data
    !$acc parallel loop default(present) collapse(3) private(m)
    do k = xst3, xen3
       do j = xst2, xen2
@@ -96,7 +96,7 @@ program test2d
    ! call decomp_2d_write_one(1,u1,'u1.dat')
 
   !!!!!!!!!!!!!!!!!!!!!!!
-   ! x-pensil ==> y-pensil
+   ! x-pencil ==> y-pencil
    call transpose_x_to_y(u1, u2)
 
 #ifdef DEBUG
@@ -126,8 +126,8 @@ program test2d
    if (ierror /= 0) call decomp_2d_abort(ierror, "MPI_ALLREDUCE")
    if (error_flag) call decomp_2d_abort(1, "error swaping x->y")
 
-  !!!!!!!!!!!!!!!!!!!!!!!
-   ! y-pensil ==> z-pensil
+   !!!!!!!!!!!!!!!!!!!!!!!
+   ! y-pencil ==> z-pencil
    call transpose_y_to_z(u2, u3)
 
 #ifdef DEBUG
@@ -157,7 +157,7 @@ program test2d
    if (error_flag) call decomp_2d_abort(2, "error swaping y->z")
 
   !!!!!!!!!!!!!!!!!!!!!!!
-   ! z-pensil ==> y-pensil
+   ! z-pencil ==> y-pencil
    call transpose_z_to_y(u3, u2)
    ! call decomp_2d_write_one(2,u2,'u2b.dat')
 
@@ -176,7 +176,7 @@ program test2d
    if (error_flag) call decomp_2d_abort(3, "error swaping z->y")
 
    !!!!!!!!!!!!!!!!!!!!!!!
-   ! y-pensil ==> x-pensil
+   ! y-pencil ==> x-pencil
    call transpose_y_to_x(u2, u1)
    ! call decomp_2d_write_one(1,u1,'u1b.dat')
 

@@ -167,6 +167,11 @@ contains
       write (io_unit, *) 'p_row, p_col : ', dims(1), dims(2)
       write (io_unit, *) 'Periodicity : ', periodic_x, periodic_y, periodic_z
       write (io_unit, *) 'Number of bytes / float number : ', mytype_bytes
+      if (use_pool) then
+         write (io_unit, *) 'Memory pool is available'
+      else
+         write (io_unit, *) 'Memory pool is not available'
+      end if
       write (io_unit, *) '==========================================================='
 
       ! Show detected flags, compiler options, version of the MPI library

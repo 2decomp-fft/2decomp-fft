@@ -48,7 +48,15 @@ contains
 #if defined(_GPU)
          call transpose_z_to_y_real(src, dst, decomp, work1_r_d, work2_r_d)
 #else
+         if (use_pool) then
+            call decomp_pool_get(work1_r)
+            call decomp_pool_get(work2_r)
+         end if
          call transpose_z_to_y_real(src, dst, decomp, work1_r, work2_r)
+         if (use_pool) then
+            call decomp_pool_free(work1_r)
+            call decomp_pool_free(work2_r)
+         end if
 #endif
       end if
 
@@ -180,7 +188,15 @@ contains
 #if defined(_GPU)
          call transpose_z_to_y_complex(src, dst, decomp, work1_c_d, work2_c_d)
 #else
+         if (use_pool) then
+            call decomp_pool_get(work1_c)
+            call decomp_pool_get(work2_c)
+         end if
          call transpose_z_to_y_complex(src, dst, decomp, work1_c, work2_c)
+         if (use_pool) then
+            call decomp_pool_free(work1_c)
+            call decomp_pool_free(work2_c)
+         end if
 #endif
       end if
 

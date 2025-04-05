@@ -11,7 +11,10 @@
   !     all internal data structures initialised properly
   !     library ready to use
   !======================================================================
-  subroutine decomp_2d_init_ref(nx, ny, nz, p_row, p_col, periodic_bc, comm)
+  subroutine decomp_2d_init_ref(nx, ny, nz, p_row, p_col, &
+                                periodic_bc, &
+                                comm, &
+                                complex_pool)
 
      use mpi
      use iso_fortran_env, only: output_unit
@@ -22,6 +25,7 @@
      integer, intent(INOUT) :: p_row, p_col
      logical, dimension(3), intent(IN), optional :: periodic_bc
      integer, intent(in), optional :: comm
+     logical, intent(in), optional :: complex_pool
 
      integer :: errorcode, ierror, row, col, iounit
      logical, dimension(2) :: periodic
@@ -38,6 +42,13 @@
      if (nx <= 0) call decomp_2d_abort(__FILE__, __LINE__, nx, "Invalid value for nx")
      if (ny <= 0) call decomp_2d_abort(__FILE__, __LINE__, ny, "Invalid value for ny")
      if (nz <= 0) call decomp_2d_abort(__FILE__, __LINE__, nz, "Invalid value for nz")
+
+     ! Check if the memory pool is available
+#if defined(_GPU)
+     use_pool = .false.
+#else
+     use_pool = .true.
+#endif
 
 #ifdef DEBUG
      ! Check if a modification of the debug level is needed
@@ -144,6 +155,19 @@
 #endif
 
      !
+     ! Extend the main memory pool to store complex numbers
+     !
+     if (use_pool.and.present(complex_pool)) then
+        if (complex_pool) then
+           decomp_pool_default_type = complex_type
+           call mem_pool_set_default_type(complex_type)
+           call decomp_pool%new_shape(complex_type, decomp_main)
+           ! The line below is needed for EVEN cases
+           call decomp_pool%new_shape(decomp_pool_default_type, shp=(/decomp_buf_size/))
+        end if
+     end if
+
+     !
      ! Get the IO unit for decomp_2d setup
      !
      iounit = d2d_log_get_unit()
@@ -166,6 +190,8 @@
      implicit none
 
      if (decomp_profiler_d2d) call decomp_profiler_start("decomp_2d_fin")
+
+     if (use_pool) call decomp_pool_fin()
 
      call decomp_2d_mpi_comm_free(DECOMP_2D_COMM_ROW)
      call decomp_2d_mpi_comm_free(DECOMP_2D_COMM_COL)

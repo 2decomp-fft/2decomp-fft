@@ -9,6 +9,7 @@ module decomp_2d_fft
    use decomp_2d_mpi
    use decomp_2d_profiler
    use iso_c_binding
+   use m_decomp_pool
 
    implicit none
 

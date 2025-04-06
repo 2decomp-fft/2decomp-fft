@@ -391,7 +391,7 @@ contains
       integer, intent(IN) :: nx, ny, nz
       TYPE(DECOMP_INFO), intent(INOUT) :: decomp
 
-      integer :: buf_size, status, errorcode
+      integer :: buf_size, errorcode
 
       ! verify the global size can actually be distributed as pencils
       if (nx_global < dims(1) .or. ny_global < dims(1) .or. ny_global < dims(2) .or. nz_global < dims(2)) then

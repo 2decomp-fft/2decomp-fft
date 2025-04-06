@@ -231,7 +231,7 @@ contains
       class(mem_pool), target, intent(inout) :: self
       logical, intent(in) :: init
 #ifdef _GPU
-      attributes(device) :: self, self%free_head
+      attributes(device) :: self
 #endif
 
       ! Safety check
@@ -293,7 +293,7 @@ contains
       logical, intent(in) :: init
       type(c_ptr) :: ptr
 #ifdef _GPU
-      attributes(device) :: self, self%free_head, self%free_head%next
+      attributes(device) :: self
 #endif
 
       ! Local variable
@@ -609,7 +609,7 @@ contains
       class(mem_pool), intent(inout) :: self
       type(c_ptr), intent(in) :: raw
 #ifdef _GPU
-      attributes(device) :: self, self%free_head, self%busy_head
+      attributes(device) :: self
 #endif
 
       ! Local variables

@@ -323,7 +323,7 @@ contains
       ! In case of r2c / c2r : assume 2decomp is initialized with complex_pool = .false.
       !                        the line below will make sure complex arrays fit in the memory pool
       !
-      if (use_pool) call decomp_pool%new_shape(complex_type, engine%sp)
+      call decomp_pool%new_shape(complex_type, engine%sp)
 
       !
       ! Allocate the workspace for intermediate y-pencil data

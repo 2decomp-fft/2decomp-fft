@@ -22,6 +22,9 @@ module m_blk
    type :: blk
       ! Memory block
       real(real32), allocatable, dimension(:), private :: dat
+#ifdef _GPU
+      attributes(device) :: dat
+#endif
       ! Address of the memory block
       type(c_ptr), public :: ref = c_null_ptr
       ! True when the block is allocated
@@ -94,11 +97,13 @@ contains
 
       ! Initialize the memory if needed
       if (init) then
+         !$acc parallel loop default(present)
          !$omp parallel do
          do i = 1_c_size_t, size
             self%next%dat(i) = 0._real32
          end do
          !$omp end parallel do
+         !$acc end loop
       end if
 
       ! Tag the block
@@ -234,11 +239,13 @@ contains
 
       ! Initialize the memory if needed
       if (init) then
+         !$acc parallel loop default(present)
          !$omp parallel do
          do i = 1_c_size_t, size
             self%dat(i) = 0._real32
          end do
          !$omp end parallel do
+         !$acc end loop
       end if
 
    end subroutine blk_resize

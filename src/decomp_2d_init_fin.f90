@@ -43,13 +43,6 @@
      if (ny <= 0) call decomp_2d_abort(__FILE__, __LINE__, ny, "Invalid value for ny")
      if (nz <= 0) call decomp_2d_abort(__FILE__, __LINE__, nz, "Invalid value for nz")
 
-     ! Check if the memory pool is available
-#if defined(_GPU)
-     use_pool = .false.
-#else
-     use_pool = .true.
-#endif
-
 #ifdef DEBUG
      ! Check if a modification of the debug level is needed
      call decomp_2d_debug()
@@ -157,13 +150,13 @@
      !
      ! Extend the main memory pool to store complex numbers
      !
-     if (use_pool.and.present(complex_pool)) then
+     if (present(complex_pool)) then
         if (complex_pool) then
            decomp_pool_default_type = complex_type
            call mem_pool_set_default_type(complex_type)
            call decomp_pool%new_shape(complex_type, decomp_main)
            ! The line below is needed for EVEN cases
-           call decomp_pool%new_shape(decomp_pool_default_type, shp=(/decomp_buf_size/))
+           call decomp_pool%new_shape(complex_type, shp=(/decomp_buf_size/))
         end if
      end if
 
@@ -191,7 +184,7 @@
 
      if (decomp_profiler_d2d) call decomp_profiler_start("decomp_2d_fin")
 
-     if (use_pool) call decomp_pool_fin()
+     call decomp_pool_fin()
 
      call decomp_2d_mpi_comm_free(DECOMP_2D_COMM_ROW)
      call decomp_2d_mpi_comm_free(DECOMP_2D_COMM_COL)
@@ -206,14 +199,8 @@
      if (associated(work2_r)) nullify (work2_r)
      if (associated(work1_c)) nullify (work1_c)
      if (associated(work2_c)) nullify (work2_c)
-     if (allocated(work1)) deallocate (work1)
-     if (allocated(work2)) deallocate (work2)
-#if defined(_GPU)
-     call decomp_2d_cumpi_fin()
-#if defined(_NCCL)
-     call decomp_2d_nccl_mem_fin()
+#if defined(_GPU) && defined(_NCCL)
      call decomp_2d_nccl_fin()
-#endif
 #endif
 
      call decomp_2d_mpi_fin()

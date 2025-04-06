@@ -7,7 +7,6 @@ module decomp_2d_nccl
    use mpi
    use decomp_2d_constants
    use decomp_2d_mpi
-   use decomp_2d_cumpi
    use cudafor 
    use nccl
 
@@ -29,14 +28,8 @@ module decomp_2d_nccl
    type(ncclComm), save, public :: nccl_comm_2decomp
    integer(kind=cuda_stream_kind), save, public :: cuda_stream_2decomp
 
-   ! Extra pointers for nccl complex transpose
-   real(mytype), target, device, allocatable, dimension(:) :: work3, work4
-   real(mytype), dimension(:), device, pointer, contiguous :: work3_r_d, work4_r_d
-
    public :: decomp_2d_nccl_init, &
              decomp_2d_nccl_fin, &
-             decomp_2d_nccl_mem_init, &
-             decomp_2d_nccl_mem_fin, &
              decomp_2d_nccl_send_recv_col, &
              decomp_2d_nccl_send_recv_row
 
@@ -114,49 +107,8 @@ contains
       if (cuda_stat /= 0) call decomp_2d_abort(__FILE__, __LINE__, cuda_stat, "cudaStreamDestroy")
 
    end subroutine decomp_2d_nccl_fin
-   ! init of the arrays
+
    !
-   subroutine decomp_2d_nccl_mem_init(buf_size)
-
-      use, intrinsic:: iso_c_binding, only: c_f_pointer, c_loc
-
-      implicit none
-
-      integer, intent(in) :: buf_size
-      integer :: status, errorcode
-      real(mytype), target, dimension(:), device :: wk3, wk4
-
-      allocate (work3(buf_size), STAT=status)
-      if (status /= 0) then
-         errorcode = 2
-         call decomp_2d_abort(__FILE__, __LINE__, errorcode, &
-                              'Out of memory when allocating 2DECOMP workspace')
-      end if
-      allocate (work4(buf_size), STAT=status)
-      if (status /= 0) then
-         errorcode = 2
-         call decomp_2d_abort(__FILE__, __LINE__, errorcode, &
-                              'Out of memory when allocating 2DECOMP workspace')
-      end if
-      if (associated(work3_r_d)) nullify (work3_r_d)
-      if (associated(work4_r_d)) nullify (work4_r_d)
-      call c_f_pointer(c_loc(work3), work3_r_d, [buf_size])
-      call c_f_pointer(c_loc(work4), work4_r_d, [buf_size])
-
-   end subroutine decomp_2d_nccl_mem_init
-   !
-   ! init of the arrays
-   !
-   subroutine decomp_2d_nccl_mem_fin
-
-      implicit none
-
-      if (associated(work3_r_d)) nullify (work3_r_d)
-      if (associated(work4_r_d)) nullify (work4_r_d)
-      if (allocated(work3)) deallocate (work3)
-      if (allocated(work4)) deallocate (work4)
-
-   end subroutine decomp_2d_nccl_mem_fin
    ! Send-Recv Real Col
    !
    subroutine decomp_2d_nccl_send_recv_real_col(dst_d, &
@@ -215,6 +167,13 @@ contains
       integer, dimension(0:dime - 1), intent(in) :: disp_r, cnts_r
 
       integer :: ii
+      real(mytype), dimension(:), device, pointer, contiguous :: work3_r_d, work4_r_d
+
+      ! Get buffers
+      ! TODO save memory
+      ! TODO one memory block should be large enough to store two real arrays
+      call decomp_pool_get(work3_r_d)
+      call decomp_pool_get(work4_r_d)
 
       ! Send-Recv Real part
       !$acc kernels default(present)
@@ -252,6 +211,11 @@ contains
          dst_d(ii) = cmplx(real(dst_d(ii), mytype), work4_r_d(ii), mytype)
       end do
       !$acc end kernels
+
+      ! Free blocks
+      call decomp_pool_free(work3_r_d)
+      call decomp_pool_free(work4_r_d)
+
    end subroutine decomp_2d_nccl_send_recv_cmplx_col
    !
    ! Send-Recv Real Row
@@ -312,6 +276,13 @@ contains
       integer, dimension(0:dime - 1), intent(in) :: disp_r, cnts_r
 
       integer :: ii
+      real(mytype), dimension(:), device, pointer, contiguous :: work3_r_d, work4_r_d
+
+      ! Get buffers
+      ! TODO save memory
+      ! TODO one memory block should be large enough to store two real arrays
+      call decomp_pool_get(work3_r_d)
+      call decomp_pool_get(work4_r_d)
 
       ! Send-Recv Real part
       !$acc kernels default(present)
@@ -349,6 +320,11 @@ contains
          dst_d(ii) = cmplx(real(dst_d(ii), mytype), work4_r_d(ii), mytype)
       end do
       !$acc end kernels
+
+      ! Free blocks                               
+      call decomp_pool_free(work3_r_d)       
+      call decomp_pool_free(work4_r_d)
+
    end subroutine decomp_2d_nccl_send_recv_cmplx_row
 
 end module decomp_2d_nccl

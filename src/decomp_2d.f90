@@ -13,7 +13,6 @@ module decomp_2d
    use decomp_2d_profiler
 #if defined(_GPU)
    use cudafor
-   use decomp_2d_cumpi
 #if defined(_NCCL)
    use nccl
    use decomp_2d_nccl
@@ -32,7 +31,6 @@ module decomp_2d
 
    ! some key global variables
    integer, save, public :: nx_global, ny_global, nz_global  ! global size
-   logical, save, public, protected :: use_pool
 
    ! parameters for 2D Cartesian topology
    integer, save, dimension(2) :: dims, coord
@@ -114,17 +112,15 @@ module decomp_2d
    integer, save, dimension(3), public :: ystart, yend, ysize  ! y-pencil
    integer, save, dimension(3), public :: zstart, zend, zsize  ! z-pencil
 
-   ! These are the buffers used by MPI_ALLTOALL(V) calls
+   ! Number of elements in the memory blocks
    integer, save :: decomp_buf_size = 0
-   ! Shared real/complex buffers
-#if defined(_GPU)
-   real(mytype), target, device, allocatable, dimension(:) :: work1, work2
-#else
-   real(mytype), target, allocatable, dimension(:) :: work1, work2
-#endif
-   ! Real/complex pointers to CPU buffers
+
+   ! Real/complex pointers to buffers for MPI_ALLTOALL(V) calls
    real(mytype), pointer, contiguous, dimension(:) :: work1_r, work2_r
    complex(mytype), pointer, contiguous, dimension(:) :: work1_c, work2_c
+#ifdef _GPU
+   attributes(device) :: work1_r, work2_r, work1_c, work2_c
+#endif
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
    ! To define smaller arrays using every several mesh points
@@ -427,12 +423,10 @@ contains
       call prepare_buffer(decomp)
 
       ! Update the shared memory pool
-      if (use_pool) then
-         if (decomp_pool_ready) then
-            call decomp_pool%new_shape(decomp_pool_default_type, decomp)
-         else
-            call decomp_pool_init(decomp, decomp_pool_default_type)
-         end if
+      if (decomp_pool_ready) then
+         call decomp_pool%new_shape(decomp_pool_default_type, decomp)
+      else
+         call decomp_pool_init(decomp, decomp_pool_default_type)
       end if
 
       ! allocate memory for the MPI_ALLTOALL(V) buffers
@@ -458,38 +452,7 @@ contains
       ! check if additional memory is required
       if (buf_size > decomp_buf_size) then
          decomp_buf_size = buf_size
-         if (use_pool) then
-            call decomp_pool%new_shape(decomp_pool_default_type, shp=(/buf_size/))
-         else
-            if (associated(work1_r)) nullify (work1_r)
-            if (associated(work2_r)) nullify (work2_r)
-            if (associated(work1_c)) nullify (work1_c)
-            if (associated(work2_c)) nullify (work2_c)
-            if (allocated(work1)) deallocate (work1)
-            if (allocated(work2)) deallocate (work2)
-            allocate (work1(2 * buf_size), STAT=status)
-            if (status /= 0) then
-               errorcode = 2
-               call decomp_2d_abort(__FILE__, __LINE__, errorcode, &
-                                    'Out of memory when allocating 2DECOMP workspace')
-            end if
-            allocate (work2(2 * buf_size), STAT=status)
-            if (status /= 0) then
-               errorcode = 2
-               call decomp_2d_abort(__FILE__, __LINE__, errorcode, &
-                                    'Out of memory when allocating 2DECOMP workspace')
-            end if
-            call c_f_pointer(c_loc(work1), work1_r, [buf_size])
-            call c_f_pointer(c_loc(work2), work2_r, [buf_size])
-            call c_f_pointer(c_loc(work1), work1_c, [buf_size])
-            call c_f_pointer(c_loc(work2), work2_c, [buf_size])
-#if defined(_GPU)
-            call decomp_2d_cumpi_init(buf_size, work1, work2)
-#if defined(_NCCL)
-            call decomp_2d_nccl_mem_init(buf_size)
-#endif
-#endif
-         end if
+         call decomp_pool%new_shape(decomp_pool_default_type, shp=(/buf_size/))
       end if
 
    end subroutine decomp_info_init

@@ -116,8 +116,11 @@ contains
       implicit none
 
       ! Arguments
-      real(mytype), intent(out), dimension(:, :, :), pointer :: ptr
+      real(mytype), intent(out), dimension(:, :, :), contiguous, pointer :: ptr
       integer, intent(in), optional :: shape(:)
+#ifdef _GPU
+      attributes(device) :: ptr
+#endif
 
       call decomp_pool%get(ptr, shape)
 
@@ -128,10 +131,16 @@ contains
       implicit none
 
       ! Arguments
-      real(mytype), intent(out), dimension(:), pointer :: ptr
+      real(mytype), intent(out), dimension(:), contiguous, pointer :: ptr
+#ifdef _GPU
+      attributes(device) :: ptr
+#endif
 
       ! Local variable
-      real(mytype), dimension(:, :, :), pointer :: ptr3D
+      real(mytype), dimension(:, :, :), contiguous, pointer :: ptr3D
+#ifdef _GPU
+      attributes(device) :: ptr3D
+#endif
 
       call decomp_pool%get(ptr3D)
       if (mytype == KIND(0._real32)) then
@@ -148,8 +157,11 @@ contains
       implicit none
 
       ! Arguments
-      complex(mytype), intent(out), dimension(:, :, :), pointer :: ptr
+      complex(mytype), intent(out), dimension(:, :, :), contiguous, pointer :: ptr
       integer, intent(in), optional :: shape(:)
+#ifdef _GPU
+      attributes(device) :: ptr
+#endif
 
       call decomp_pool%get(ptr, shape)
 
@@ -160,10 +172,16 @@ contains
       implicit none                                                                        
       
       ! Arguments
-      complex(mytype), intent(out), dimension(:), pointer :: ptr                              
-      
+      complex(mytype), intent(out), dimension(:), contiguous, pointer :: ptr
+#ifdef _GPU
+      attributes(device) :: ptr
+#endif
+
       ! Local variable
-      complex(mytype), dimension(:, :, :), pointer :: ptr3D                      
+      complex(mytype), dimension(:, :, :), contiguous, pointer :: ptr3D
+#ifdef _GPU
+      attributes(device) :: ptr3D
+#endif
       
       call decomp_pool%get(ptr3D)
       if (mytype == KIND(0._real32)) then
@@ -185,7 +203,10 @@ contains
       implicit none
 
       ! Arguments
-      real(mytype), intent(inout), dimension(:, :, :), pointer :: ptr
+      real(mytype), intent(inout), dimension(:, :, :), contiguous, pointer :: ptr
+#ifdef _GPU
+      attributes(device) :: ptr
+#endif
 
       call decomp_pool%free(ptr)
 
@@ -196,7 +217,10 @@ contains
       implicit none
 
       ! Arguments
-      real(mytype), intent(inout), dimension(:), pointer :: ptr
+      real(mytype), intent(inout), dimension(:), contiguous, pointer :: ptr
+#ifdef _GPU
+      attributes(device) :: ptr
+#endif
 
       call decomp_pool%free(c_loc(ptr))
       nullify(ptr)
@@ -208,7 +232,10 @@ contains
       implicit none
 
       ! Arguments
-      complex(mytype), intent(inout), dimension(:, :, :), pointer :: ptr
+      complex(mytype), intent(inout), dimension(:, :, :), contiguous, pointer :: ptr
+#ifdef _GPU
+      attributes(device) :: ptr
+#endif
 
       call decomp_pool%free(ptr)
 
@@ -219,7 +246,10 @@ contains
       implicit none
 
       ! Arguments
-      complex(mytype), intent(inout), dimension(:), pointer :: ptr
+      complex(mytype), intent(inout), dimension(:), contiguous, pointer :: ptr
+#ifdef _GPU
+      attributes(device) :: ptr
+#endif
 
       call decomp_pool%free(c_loc(ptr))
       nullify(ptr)

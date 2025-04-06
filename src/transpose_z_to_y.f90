@@ -45,19 +45,11 @@ contains
          dst = src
 #endif
       else
-#if defined(_GPU)
-         call transpose_z_to_y_real(src, dst, decomp, work1_r_d, work2_r_d)
-#else
-         if (use_pool) then
-            call decomp_pool_get(work1_r)
-            call decomp_pool_get(work2_r)
-         end if
+         call decomp_pool_get(work1_r)
+         call decomp_pool_get(work2_r)
          call transpose_z_to_y_real(src, dst, decomp, work1_r, work2_r)
-         if (use_pool) then
-            call decomp_pool_free(work1_r)
-            call decomp_pool_free(work2_r)
-         end if
-#endif
+         call decomp_pool_free(work1_r)
+         call decomp_pool_free(work2_r)
       end if
 
       if (decomp_profiler_transpose) call decomp_profiler_end("transp_z_y_r")
@@ -185,19 +177,11 @@ contains
          dst = src
 #endif
       else
-#if defined(_GPU)
-         call transpose_z_to_y_complex(src, dst, decomp, work1_c_d, work2_c_d)
-#else
-         if (use_pool) then
-            call decomp_pool_get(work1_c)
-            call decomp_pool_get(work2_c)
-         end if
+         call decomp_pool_get(work1_c)
+         call decomp_pool_get(work2_c)
          call transpose_z_to_y_complex(src, dst, decomp, work1_c, work2_c)
-         if (use_pool) then
-            call decomp_pool_free(work1_c)
-            call decomp_pool_free(work2_c)
-         end if
-#endif
+         call decomp_pool_free(work1_c)
+         call decomp_pool_free(work2_c)
       end if
 
       if (decomp_profiler_transpose) call decomp_profiler_end("transp_z_y_c")

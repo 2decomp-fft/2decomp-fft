@@ -100,13 +100,13 @@ contains
 
       ! Initialize the memory if needed
       if (init) then
+#ifndef _GPU
          !$omp parallel do
-         !$acc parallel loop default(present)
          do i = 1_c_size_t, size
             self%next%dat(i) = 0._real32
          end do
-         !$acc end parallel loop
          !$omp end parallel do
+#endif
       end if
 
       ! Tag the block
@@ -254,13 +254,13 @@ contains
 
       ! Initialize the memory if needed
       if (init) then
+#ifndef _GPU
          !$omp parallel do
-         !$acc parallel loop default(present)
          do i = 1_c_size_t, size
             self%dat(i) = 0._real32
          end do
-         !$acc end parallel loop
          !$omp end parallel do
+#endif
       end if
 
    end subroutine blk_resize

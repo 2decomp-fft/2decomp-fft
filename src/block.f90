@@ -105,7 +105,7 @@ contains
          do i = 1_c_size_t, size
             self%next%dat(i) = 0._real32
          end do
-         !$acc end loop
+         !$acc end parallel loop
          !$omp end parallel do
       end if
 
@@ -259,7 +259,7 @@ contains
          do i = 1_c_size_t, size
             self%dat(i) = 0._real32
          end do
-         !$acc end loop
+         !$acc end parallel loop
          !$omp end parallel do
       end if
 

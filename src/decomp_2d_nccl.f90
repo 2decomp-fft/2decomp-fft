@@ -9,6 +9,7 @@ module decomp_2d_nccl
    use decomp_2d_mpi
    use cudafor 
    use nccl
+   use m_decomp_pool
 
    implicit none
 

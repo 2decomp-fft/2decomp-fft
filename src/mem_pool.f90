@@ -234,12 +234,23 @@ contains
       attributes(device) :: self
 #endif
 
+      ! Local variable
+#ifdef _GPU
+      type(blk), pointer, device :: ptr
+#endif
+
       ! Safety check
       if (.not. self%available) &
          call decomp_2d_abort(__FILE__, __LINE__, 2, "Memory pool must be initialized")
 
       ! Add a block at the beginning of the free list
+#ifdef _GPU
+      ptr => self%free_head
+      call ptr%new(self%size, init)
+      nullify(ptr)
+#else
       call self%free_head%new(self%size, init)
+#endif
 
    end subroutine mem_pool_new
 

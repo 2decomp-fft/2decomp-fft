@@ -311,6 +311,7 @@ contains
       type(blk), pointer :: blk_ptr
 #ifdef _GPU
       attributes(device) :: blk_ptr
+      type(blk), pointer, device :: blk_ptr2
 #endif
 
       ! Safety check
@@ -322,7 +323,13 @@ contains
 
       blk_ptr => self%free_head%next
       call blk_ptr%get()
+#ifdef _GPU
+      blk_ptr2 => self%busy_head
+      call blk_ptr%put(blk_ptr2)
+      nullify(blk_ptr2)
+#else
       call blk_ptr%put(self%busy_head)
+#endif
       nullify (blk_ptr)
 
       ! Done
@@ -627,6 +634,7 @@ contains
       type(blk), pointer :: block
 #ifdef _GPU
       attributes(device) :: block
+      type(blk), pointer, device :: ptr
 #endif
 
       ! Safety check
@@ -636,11 +644,23 @@ contains
          call decomp_2d_abort(__FILE__, __LINE__, 2, "Invalid argument")
 
       ! Locate and extract the block in the busy list
+#ifdef _GPU
+      ptr => self%busy_head
+      call ptr%find(raw, block)
+      nullify(ptr)
+#else
       call self%busy_head%find(raw, block)
+#endif
       call block%get()
 
       ! Put it in the free list
+#ifdef _GPU
+      ptr => self%free_head
+      call block%put(ptr)
+      nullify(ptr)
+#else
       call block%put(self%free_head)
+#endif
 
       ! Free memory
       nullify (block)

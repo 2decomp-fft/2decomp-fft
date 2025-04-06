@@ -124,6 +124,9 @@ contains
       integer, intent(in), optional :: shape(:)
       integer, intent(in), optional :: blk_n
       logical, intent(in), optional :: blk_init
+#ifdef _GPU
+      attributes(device) :: self
+#endif
 
       ! Local variables
       integer :: i
@@ -188,6 +191,9 @@ contains
 
       ! Arguments
       class(mem_pool), target, intent(inout) :: self
+#ifdef _GPU
+      attributes(device) :: self
+#endif
 
       ! Safety check
       if (.not. self%available) &
@@ -224,6 +230,9 @@ contains
       ! Arguments
       class(mem_pool), target, intent(inout) :: self
       logical, intent(in) :: init
+#ifdef _GPU
+      attributes(device) :: self
+#endif
 
       ! Safety check
       if (.not. self%available) &
@@ -243,6 +252,9 @@ contains
 
       ! Argument
       class(mem_pool), intent(inout) :: self
+#ifdef _GPU
+      attributes(device) :: self
+#endif
 
       ! Local variable
       type(blk), pointer :: ptr
@@ -277,9 +289,15 @@ contains
       class(mem_pool), intent(inout) :: self
       logical, intent(in) :: init
       type(c_ptr) :: ptr
+#ifdef _GPU
+      attributes(device) :: self
+#endif
 
       ! Local variable
       type(blk), pointer :: blk_ptr
+#ifdef _GPU
+      attributes(device) :: blk_ptr
+#endif
 
       ! Safety check
       if (.not. self%available) &
@@ -307,7 +325,7 @@ contains
       real(real32), intent(out), dimension(:, :, :), contiguous, pointer :: ptr
       integer, intent(in), optional :: shape(:)
 #ifdef _GPU
-      attributes(device) :: ptr
+      attributes(device) :: self, ptr
 #endif
 
       ! Local variables
@@ -345,7 +363,7 @@ contains
       real(real64), intent(out), dimension(:, :, :), contiguous, pointer :: ptr
       integer, intent(in), optional :: shape(:)
 #ifdef _GPU
-      attributes(device) :: ptr
+      attributes(device) :: self, ptr
 #endif
 
       ! Local variables
@@ -383,7 +401,7 @@ contains
       complex(real32), intent(out), dimension(:, :, :), contiguous, pointer :: ptr
       integer, intent(in), optional :: shape(:)
 #ifdef _GPU
-      attributes(device) :: ptr
+      attributes(device) :: self, ptr
 #endif
 
       ! Local variables
@@ -421,7 +439,7 @@ contains
       complex(real64), intent(out), dimension(:, :, :), contiguous, pointer :: ptr
       integer, intent(in), optional :: shape(:)
 #ifdef _GPU
-      attributes(device) :: ptr
+      attributes(device) :: self, ptr
 #endif
 
       ! Local variables
@@ -459,7 +477,7 @@ contains
       integer(int64), intent(out), dimension(:, :, :), contiguous, pointer :: ptr
       integer, intent(in) :: shape(:)
 #ifdef _GPU
-      attributes(device) :: ptr
+      attributes(device) :: self, ptr
 #endif
 
       ! Safety check
@@ -484,7 +502,7 @@ contains
       integer(int32), intent(out), dimension(:, :, :), contiguous, pointer :: ptr
       integer, intent(in) :: shape(:)
 #ifdef _GPU
-      attributes(device) :: ptr
+      attributes(device) :: self, ptr
 #endif
 
       ! Safety check
@@ -509,7 +527,7 @@ contains
       integer(int16), intent(out), dimension(:, :, :), contiguous, pointer :: ptr
       integer, intent(in) :: shape(:)
 #ifdef _GPU
-      attributes(device) :: ptr
+      attributes(device) :: self, ptr
 #endif
 
       ! Safety check
@@ -534,7 +552,7 @@ contains
       integer(int8), intent(out), dimension(:, :, :), contiguous, pointer :: ptr
       integer, intent(in) :: shape(:)
 #ifdef _GPU
-      attributes(device) :: ptr
+      attributes(device) :: self, ptr
 #endif
 
       ! Safety check
@@ -559,7 +577,7 @@ contains
       logical, intent(out), dimension(:, :, :), contiguous, pointer :: ptr
       integer, intent(in) :: shape(:)
 #ifdef _GPU
-      attributes(device) :: ptr
+      attributes(device) :: self, ptr
 #endif
 
       ! Safety check
@@ -587,9 +605,15 @@ contains
       ! Arguments
       class(mem_pool), intent(inout) :: self
       type(c_ptr), intent(in) :: raw
+#ifdef _GPU
+      attributes(device) :: self
+#endif
 
       ! Local variables
       type(blk), pointer :: block
+#ifdef _GPU
+      attributes(device) :: block
+#endif
 
       ! Safety check
       if (.not. self%available) &
@@ -617,7 +641,7 @@ contains
       class(mem_pool), intent(inout) :: self
       real(real32), intent(inout), dimension(:, :, :), contiguous, pointer :: freal
 #ifdef _GPU
-      attributes(device) :: ptr
+      attributes(device) :: self, freal
 #endif
 
       ! Safety check
@@ -642,7 +666,7 @@ contains
       class(mem_pool), intent(inout) :: self
       real(real64), intent(inout), dimension(:, :, :), contiguous, pointer :: dreal
 #ifdef _GPU
-      attributes(device) :: ptr
+      attributes(device) :: self, dreal
 #endif
 
       ! Safety check
@@ -667,7 +691,7 @@ contains
       class(mem_pool), intent(inout) :: self
       complex(real32), intent(inout), dimension(:, :, :), contiguous, pointer :: fcplx
 #ifdef _GPU
-      attributes(device) :: ptr
+      attributes(device) :: self, fcplx
 #endif
 
       ! Safety check
@@ -692,7 +716,7 @@ contains
       class(mem_pool), intent(inout) :: self
       complex(real64), intent(inout), dimension(:, :, :), contiguous, pointer :: dcplx
 #ifdef _GPU
-      attributes(device) :: ptr
+      attributes(device) :: self, dcplx
 #endif
 
       ! Safety check
@@ -717,7 +741,7 @@ contains
       class(mem_pool), intent(inout) :: self
       integer(int64), intent(inout), dimension(:, :, :), contiguous, pointer :: ptr
 #ifdef _GPU
-      attributes(device) :: ptr
+      attributes(device) :: self, ptr
 #endif
 
       ! Safety check
@@ -742,7 +766,7 @@ contains
       class(mem_pool), intent(inout) :: self
       integer(int32), intent(inout), dimension(:, :, :), contiguous, pointer :: ptr
 #ifdef _GPU
-      attributes(device) :: ptr
+      attributes(device) :: self, ptr
 #endif
 
       ! Safety check
@@ -767,7 +791,7 @@ contains
       class(mem_pool), intent(inout) :: self
       integer(int16), intent(inout), dimension(:, :, :), contiguous, pointer :: ptr
 #ifdef _GPU
-      attributes(device) :: ptr
+      attributes(device) :: self, ptr
 #endif
 
       ! Safety check
@@ -792,7 +816,7 @@ contains
       class(mem_pool), intent(inout) :: self
       integer(int8), intent(inout), dimension(:, :, :), contiguous, pointer :: ptr
 #ifdef _GPU
-      attributes(device) :: ptr
+      attributes(device) :: self, ptr
 #endif
 
       ! Safety check
@@ -817,7 +841,7 @@ contains
       class(mem_pool), intent(inout) :: self
       logical, intent(inout), dimension(:, :, :), contiguous, pointer :: ptr
 #ifdef _GPU
-      attributes(device) :: ptr
+      attributes(device) :: self, ptr
 #endif
 
       ! Safety check
@@ -846,6 +870,9 @@ contains
       integer, intent(in) :: type
       class(info), intent(in), optional :: decomp
       integer, intent(in), optional :: shp(:)
+#ifdef _GPU
+      attributes(device) :: self
+#endif
 
       ! Local variables
       integer(c_size_t) :: new_size, fact
@@ -918,6 +945,9 @@ contains
       implicit none
 
       class(mem_pool), intent(in) :: self
+#ifdef _GPU
+      attributes(device) :: self
+#endif
 
       mem_pool_get_size = self%size
 
@@ -933,9 +963,15 @@ contains
       ! Arguments
       class(mem_pool), target, intent(inout) :: self
       integer(c_size_t), intent(in) :: size
+#ifdef _GPU
+      attributes(device) :: self
+#endif
 
       ! Local variable
       type(blk), pointer :: tmp
+#ifdef _GPU
+      attributes(device) :: tmp
+#endif
 
       ! Safety check
       if (.not. self%available) &
@@ -968,10 +1004,16 @@ contains
       class(mem_pool), intent(in) :: self
       integer, optional, intent(in) :: opt_unit
       character(*), optional, intent(in) :: name
+#ifdef _GPU
+      attributes(device) :: self
+#endif
 
       ! Local variable
       integer :: output
       type(blk), pointer :: tmp
+#ifdef _GPU
+      attributes(device) :: tmp
+#endif
 
       ! If possible, use the given IO unit
       if (present(opt_unit)) then

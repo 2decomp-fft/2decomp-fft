@@ -22,9 +22,6 @@ module m_blk
    type :: blk
       ! Memory block
       real(real32), allocatable, dimension(:), private :: dat
-#ifdef _GPU
-      attributes(device) :: dat
-#endif
       ! Address of the memory block
       type(c_ptr), public :: ref = c_null_ptr
       ! True when the block is allocated
@@ -70,11 +67,17 @@ contains
       class(blk), target, intent(inout) :: self
       integer(c_size_t), intent(in) :: size
       logical, intent(in) :: init
+#ifdef _GPU
+      attributes(device) :: self
+#endif
 
       ! Local variables
       integer :: ierr
       integer(c_size_t) :: i
       type(blk), pointer :: ptr
+#ifdef _GPU
+      attributes(device) :: ptr
+#endif
 
       ! Save a pointer to the next block if needed
       if (associated(self%next)) then
@@ -131,6 +134,9 @@ contains
       implicit none
 
       class(blk), target, intent(inout) :: self
+#ifdef _GPU
+      attributes(device) :: self
+#endif
 
       ! Local variable
       integer :: ierr
@@ -161,6 +167,9 @@ contains
       implicit none
 
       class(blk), target, intent(inout) :: self
+#ifdef _GPU
+      attributes(device) :: self
+#endif
 
       ! Safety check
       if (.not. self%allocated) &
@@ -189,6 +198,9 @@ contains
 
       class(blk), target, intent(inout) :: self
       type(blk), pointer, intent(inout) :: head
+#ifdef _GPU
+      attributes(device) :: self, head
+#endif
 
       ! If needed, move head%next to self%next
       if (associated(head%next)) then
@@ -215,6 +227,9 @@ contains
       class(blk), target, intent(inout) :: self
       integer(c_size_t), intent(in) :: size
       logical, intent(in) :: init
+#ifdef _GPU
+      attributes(device) :: self
+#endif
 
       ! Local variable
       integer :: ierr
@@ -265,6 +280,9 @@ contains
       class(blk), target, intent(in) :: self
       type(c_ptr), intent(in) :: ref
       type(blk), pointer, intent(out) :: ptr
+#ifdef _GPU
+      attributes(device) :: self, ptr
+#endif
 
       ! Start at head
       ptr => self
@@ -296,6 +314,9 @@ contains
       class(blk), intent(in) :: self
       integer, optional, intent(in) :: opt_unit
       character(*), optional, intent(in) :: name
+#ifdef _GPU
+      attributes(device) :: self
+#endif
 
       ! Local variable
       integer :: output

@@ -305,6 +305,11 @@ contains
       attributes(device) :: self, ptr
 #endif
 
+      ! Local variables
+#ifdef _GPU
+      real(real32), dimension(:), pointer, device :: array_ref
+#endif
+
       ! Start at head
       ptr => self
 
@@ -312,7 +317,11 @@ contains
       do
          ! It is a match !
 #ifdef _GPU
-         if (ptr%ref == ref) return ! TODO FIXME check this is working
+         call c_f_pointer(ref, array_ref, (/size(self%dat)/))
+         if (associated(array_ref, self%dat)) then
+            nullify(array_ref)
+            return
+         end if
 #else
          if (c_associated(ptr%ref, ref)) return
 #endif

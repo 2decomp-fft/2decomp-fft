@@ -11,6 +11,9 @@ module m_blk
    use iso_c_binding, only: c_ptr, c_null_ptr, c_size_t, c_associated, c_loc
    use decomp_2d_constants
    use decomp_2d_mpi, only : nrank, decomp_2d_abort
+#ifdef _GPU
+   use cudafor
+#endif
 
    implicit none
 
@@ -23,7 +26,11 @@ module m_blk
       ! Memory block
       real(real32), allocatable, dimension(:), private :: dat
       ! Address of the memory block
+#ifdef _GPU
+      type(c_devptr), public :: ref = c_null_ptr
+#else
       type(c_ptr), public :: ref = c_null_ptr
+#endif
       ! True when the block is allocated
       logical, private :: allocated = .false.
       ! Previous block in the list
@@ -96,7 +103,11 @@ contains
       allocate (self%next%dat(size), stat=ierr)
       if (ierr /= 0) &
          call decomp_2d_abort(__FILE__, __LINE__, ierr, "Allocation failed")
+#ifdef _GPU
+      self%next%ref = c_devloc(self%next%dat)
+#else
       self%next%ref = c_loc(self%next%dat)
+#endif
 
       ! Initialize the memory if needed
       if (init) then
@@ -250,7 +261,11 @@ contains
          call decomp_2d_abort(__FILE__, __LINE__, ierr, "Allocation failed")
 
       ! Update the address
+#ifdef _GPU
+      self%ref = c_devloc(self%dat)
+#else
       self%ref = c_loc(self%dat)
+#endif
 
       ! Initialize the memory if needed
       if (init) then
@@ -278,7 +293,11 @@ contains
 
       ! Arguments
       class(blk), target, intent(in) :: self
+#ifdef _GPU
+      type(c_devptr), intent(in) :: ref
+#else
       type(c_ptr), intent(in) :: ref
+#endif
       type(blk), pointer, intent(out) :: ptr
 #ifdef _GPU
       attributes(device) :: self, ptr

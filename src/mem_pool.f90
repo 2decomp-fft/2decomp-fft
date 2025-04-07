@@ -13,6 +13,9 @@ module m_mem_pool
    use m_blk
    use m_info
    use mpi
+#ifdef _GPU
+   use cudafor
+#endif
 
    implicit none
 
@@ -302,9 +305,11 @@ contains
       ! Arguments
       class(mem_pool), intent(inout) :: self
       logical, intent(in) :: init
-      type(c_ptr) :: ptr
 #ifdef _GPU
+      type(c_devptr) :: ptr
       attributes(device) :: self
+#else
+      type(c_ptr) :: ptr
 #endif
 
       ! Local variable
@@ -625,9 +630,11 @@ contains
 
       ! Arguments
       class(mem_pool), intent(inout) :: self
-      type(c_ptr), intent(in) :: raw
 #ifdef _GPU
+      type(c_devptr), intent(in) :: raw
       attributes(device) :: self
+#else
+      type(c_ptr), intent(in) :: raw
 #endif
 
       ! Local variables
@@ -685,7 +692,11 @@ contains
          call decomp_2d_abort(__FILE__, __LINE__, 2, "Invalid argument")
 
       ! Release the block
+#ifdef _GPU
+      call self%free_raw(c_devloc(freal))
+#else
       call self%free_raw(c_loc(freal))
+#endif
 
       ! Free memory
       nullify (freal)
@@ -710,7 +721,11 @@ contains
          call decomp_2d_abort(__FILE__, __LINE__, 2, "Invalid argument")
 
       ! Release the block
+#ifdef _GPU
+      call self%free_raw(c_devloc(dreal))
+#else
       call self%free_raw(c_loc(dreal))
+#endif
 
       ! Free memory
       nullify (dreal)
@@ -735,7 +750,11 @@ contains
          call decomp_2d_abort(__FILE__, __LINE__, 2, "Invalid argument")
 
       ! Release the block
+#ifdef _GPU
+      call self%free_raw(c_devloc(fcplx))
+#else
       call self%free_raw(c_loc(fcplx))
+#endif
 
       ! Free memory
       nullify (fcplx)
@@ -760,7 +779,11 @@ contains
          call decomp_2d_abort(__FILE__, __LINE__, 2, "Invalid argument")
 
       ! Release the block
+#ifdef _GPU
+      call self%free_raw(c_devloc(dcplx))
+#else
       call self%free_raw(c_loc(dcplx))
+#endif
 
       ! Free memory
       nullify (dcplx)
@@ -785,7 +808,11 @@ contains
          call decomp_2d_abort(__FILE__, __LINE__, 2, "Invalid argument")
 
       ! Release the block
+#ifdef _GPU
+      call self%free_raw(c_devloc(ptr))
+#else
       call self%free_raw(c_loc(ptr))
+#endif
 
       ! Free memory
       nullify (ptr)
@@ -810,7 +837,11 @@ contains
          call decomp_2d_abort(__FILE__, __LINE__, 2, "Invalid argument")
 
       ! Release the block
+#ifdef _GPU
+      call self%free_raw(c_devloc(ptr))
+#else
       call self%free_raw(c_loc(ptr))
+#endif
 
       ! Free memory
       nullify (ptr)
@@ -835,7 +866,11 @@ contains
          call decomp_2d_abort(__FILE__, __LINE__, 2, "Invalid argument")
 
       ! Release the block
+#ifdef _GPU
+      call self%free_raw(c_devloc(ptr))
+#else
       call self%free_raw(c_loc(ptr))
+#endif
 
       ! Free memory
       nullify (ptr)
@@ -860,7 +895,11 @@ contains
          call decomp_2d_abort(__FILE__, __LINE__, 2, "Invalid argument")
 
       ! Release the block
+#ifdef _GPU
+      call self%free_raw(c_devloc(ptr))
+#else
       call self%free_raw(c_loc(ptr))
+#endif
 
       ! Free memory
       nullify (ptr)
@@ -885,7 +924,11 @@ contains
          call decomp_2d_abort(__FILE__, __LINE__, 2, "Invalid argument")
 
       ! Release the block
+#ifdef _GPU
+      call self%free_raw(c_devloc(ptr))
+#else
       call self%free_raw(c_loc(ptr))
+#endif
 
       ! Free memory
       nullify (ptr)

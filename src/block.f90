@@ -27,7 +27,7 @@ module m_blk
       real(real32), allocatable, dimension(:), private :: dat
       ! Address of the memory block
 #ifdef _GPU
-      type(c_devptr), public :: ref = c_null_ptr
+      type(c_devptr), public :: ref
 #else
       type(c_ptr), public :: ref = c_null_ptr
 #endif
@@ -166,7 +166,9 @@ contains
       deallocate (self%dat, stat=ierr)
       if (ierr /= 0) &
          call decomp_2d_abort(__FILE__, __LINE__, 1, "Deallocation failed")
+#ifndef _GPU
       self%ref = c_null_ptr
+#endif
 
    end subroutine blk_fin
 
@@ -309,7 +311,11 @@ contains
       ! Process the list
       do
          ! It is a match !
+#ifdef _GPU
+         if (ptr%ref == ref) return ! TODO FIXME check this is working
+#else
          if (c_associated(ptr%ref, ref)) return
+#endif
          ! Next
          if (associated(ptr%next)) then
             ptr => ptr%next
@@ -352,6 +358,9 @@ contains
       if (output == error_unit) return
 
       if (present(name)) write (output, *) name
+#ifdef _GPU
+      write (output, *) "c_associated intrinsic is not compatible with device pointers"
+#else
       if (c_associated(self%ref)) write (output, *) "  Data at ", transfer(self%ref, 0_c_size_t)
       if (associated(self%prev)) then
          if (c_associated(self%prev%ref)) then
@@ -371,6 +380,7 @@ contains
       else
          write (output, *) "  Next is null"
       end if
+#endif
 
    end subroutine blk_print
 

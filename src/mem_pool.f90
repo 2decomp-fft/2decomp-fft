@@ -647,10 +647,10 @@ contains
       ! Safety check
       if (.not. self%available) &
          call decomp_2d_abort(__FILE__, __LINE__, 2, "Memory pool must be initialized")
- #ifndef _GPU
+#ifndef _GPU
       if (.not. c_associated(raw)) &
          call decomp_2d_abort(__FILE__, __LINE__, 2, "Invalid argument")
- #endif
+#endif
 
       ! Locate and extract the block in the busy list
 #ifdef _GPU

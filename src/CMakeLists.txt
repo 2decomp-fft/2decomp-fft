@@ -67,10 +67,9 @@ if (MPI_FOUND)
   target_link_libraries(decomp2d PRIVATE MPI::MPI_Fortran)
 endif (MPI_FOUND)
 
-find_package(OpenMP)
-if (OPENMP_FOUND)
+if (OPENMP_FOUND AND ENABLE_OMP)
   target_link_libraries(decomp2d PRIVATE OpenMP::OpenMP_Fortran)
-endif (OPENMP_FOUND)
+endif ()
 
 if(FFTW_FOUND)
   if (FFTW_DOUBLE_LIB_FOUND)

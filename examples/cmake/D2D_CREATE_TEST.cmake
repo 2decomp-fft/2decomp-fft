@@ -1,0 +1,22 @@
+macro(CreateMPITest test_dir
+                    case
+		    app_src
+                    OMP_THREADS)
+  message(STATUS "Add Verification Test (MPI run) ${case}")
+  set(run_dir "${test_dir}/${case}")
+  file(MAKE_DIRECTORY ${run_dir})
+  include_directories(${CMAKE_SOURCE_DIR}/src)
+  add_executable(${case} ${app_src})
+  target_link_libraries(${case} PRIVATE decomp2d examples_utils)
+  if (OPENMP_FOUND AND ENABLE_OMP)
+    target_link_libraries(${case} PRIVATE OpenMP::OpenMP_Fortran)
+  endif ()
+  install(TARGETS ${case} DESTINATION ${run_dir})
+  if (BUILD_TARGET MATCHES "gpu")
+    file(COPY bind.sh DESTINATION ${run_dir})
+    add_test(NAME ${case} COMMAND ${MPIEXEC_EXECUTABLE} ${MPIEXEC_NUMPROC_FLAG} ${MPI_NUMPROCS} ./bind.sh $<TARGET_FILE:${case}> ${TEST_ARGUMENTS} WORKING_DIRECTORY ${run_dir})
+  else ()  
+	  add_test(NAME ${case} COMMAND ${MPIEXEC_EXECUTABLE} ${MPIEXEC_NUMPROC_FLAG} ${MPI_NUMPROCS} $<TARGET_FILE:${case}> ${TEST_ARGUMENTS} WORKING_DIRECTORY ${run_dir})
+    set_tests_properties(${case} PROPERTIES ENVIRONMENT "OMP_NUM_THREADS=${OMP_THREADS}")
+  endif()
+endmacro()

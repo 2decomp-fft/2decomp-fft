@@ -6,6 +6,8 @@ macro(CreateMPITest run_dir
 		    files
                     OMP_THREADS)
   message(STATUS "Add Verification Test (MPI run) ${case}")
+  # Create working directory
+  file(MAKE_DIRECTORY ${run_dir})
   # Copy additional files
   set(loc_files "")
   list(APPEND loc_files ${files})
@@ -15,8 +17,7 @@ macro(CreateMPITest run_dir
   foreach(ff IN LISTS loc_files)
     file(COPY ${ff} DESTINATION ${run_dir})
   endforeach()
-  # Create run dir and add exe
-  file(MAKE_DIRECTORY ${run_dir})
+  # Add includes directories and create executable
   include_directories(${CMAKE_SOURCE_DIR}/src)
   if (FFT_Choice MATCHES "fftw_f03")
     include_directories(${FFTW_INCLUDE_DIRS})

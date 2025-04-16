@@ -8,5 +8,3 @@ set(case "dtt_z")
 set(case_dir "${test_dir}/${case}")
 CreateMPITest("${case_dir}" "${case}" "${files_dtt_z}" "" "" "" "1")
 
-#include_directories(${FFTW_INCLUDE_DIRS})
-

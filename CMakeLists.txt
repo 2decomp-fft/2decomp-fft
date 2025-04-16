@@ -36,7 +36,7 @@ set (IO_BACKEND "mpi" CACHE STRING "Default IO backend (mpi (default) or adios2)
 set_property(CACHE IO_BACKEND PROPERTY STRINGS mpi adios2)
 
 set(AUTHOR "The 2DECOMP&FFT team")
-set(AUTHOR_DETAILS "stefano.rolfo@stfc.ac.uk;charles.moulinec@stfc.ac.uk;p.bartholomew@epcc.ed.ac.uk")
+set(AUTHOR_DETAILS "see https://github.com/2decomp-fft/2decomp-fft/blob/dev/CONTRIBUTORS")
 set(DESCRIPTION "CMake build system for 2DECOMP&FFT")
 
 

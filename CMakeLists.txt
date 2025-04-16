@@ -10,7 +10,6 @@ if (IO_BACKEND MATCHES "adios2")
   enable_language(C CXX)
 endif (IO_BACKEND MATCHES "adios2")
 
-
 set(BUILD_TARGET "mpi" CACHE STRING "Target for acceleration (mpi (default) or gpu)")
 set_property(CACHE BUILD_TARGET PROPERTY STRINGS mpi gpu)
 
@@ -25,7 +24,7 @@ if (BUILD_TARGET MATCHES "gpu")
 endif(BUILD_TARGET MATCHES "gpu")
 
 include(CMakeDependentOption)
-cmake_dependent_option(ENABLE_OMP "Use OpenMP with pure MPI" ON "NOT ENABLE_CUDA" OFF)
+cmake_dependent_option(ENABLE_OMP "Use OpenMP with pure MPI" OFF "NOT ENABLE_CUDA" OFF)
 
 set (ENABLE_PROFILER "OFF" CACHE STRING "Activate/select the profiler")
 set_property(CACHE ENABLE_PROFILER PROPERTY STRINGS OFF caliper)

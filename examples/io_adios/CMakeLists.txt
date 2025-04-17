@@ -7,7 +7,6 @@ endif()
 file(GLOB files_adios_test io_test.f90)
 set(case "io_adios_write")
 set(case_dir "${test_dir}/io_adios_write_read")
-#set(file_list "${CMAKE_SOURCE_DIR}/examples/io_adios/adios2_config.xml" )
 set(file_list "adios2_config.xml" )
 CreateMPITest("${case_dir}" "${case}" "${files_adios_test}" "" "${def_clmpx}" "${file_list}" "1")
 

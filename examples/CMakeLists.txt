@@ -2,6 +2,7 @@
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/examples/cmake")
 include(D2D_Set_Decomposition)
 include(D2D_Set_Resolution)
+include(D2D_CREATE_TEST)
 
 # Create a folder directory for testing
 set(test_dir "${PROJECT_BINARY_DIR}/RunTests")

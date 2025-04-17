@@ -246,7 +246,7 @@ This variable is valid only for GPU builds. The NVIDIA Collective Communication 
 
 #### FFTW_omp
 
-This variable is automatically added if the FFTW library was compiled with OpenMP support and the cmake variable `ENABLE_OMP` is set to true. This is used only in the `fftw3_f03` backend. OpenMP comments are present in the transpose subroutines.
+This variable is automatically added if the FFTW library was compiled with OpenMP support and the cmake variable `ENABLE_OMP` is set to true. This is used only in the `fftw_f03` backend.
 
 ## Optional dependencies
 

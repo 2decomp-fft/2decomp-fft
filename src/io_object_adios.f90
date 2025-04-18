@@ -505,6 +505,10 @@ contains
             call adios2_open(writer%engine, family%io, &
                              trim(writer%family%label)//".bp4", &
                              access_mode, ierror)
+         else if (writer%family%io%engine_type == "BP5") then
+            call adios2_open(writer%engine, family%io, &
+                             trim(writer%family%label)//".bp5", &
+                             access_mode, ierror)
          else if (writer%family%io%engine_type == "HDF5") then
             call adios2_open(writer%engine, family%io, &
                              trim(writer%family%label)//".hdf5", &

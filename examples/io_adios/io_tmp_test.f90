@@ -194,7 +194,6 @@ program io_test
    call decomp_2d_adios_write_var(io, tmp3, 'v3.dat', opt_mode=decomp_2d_io_sync)
    call io%end_close()
 
-
    call MPI_Barrier(MPI_COMM_WORLD, ierr)
 
    ! Close all the IO modules
@@ -204,7 +203,6 @@ program io_test
    ! Open IO again
    call decomp_2d_io_init()
    call io_family_restart%init(io_restart)
-
 
    ! read back to different arrays
    !

@@ -285,7 +285,7 @@ contains
 
       ! Perform IO with ADIOS2
       ! Starting index is 0-based
-      call io%read(varname, sel_start-1, sel_count, freal, dreal, fcplx, dcplx)
+      call io%read(varname, sel_start - 1, sel_count, freal, dreal, fcplx, dcplx)
 
    end subroutine adios_read
 
@@ -623,12 +623,12 @@ contains
       end if
 
       if (reduce) then
-         allocate(tmp(size(var, 1), size(var, 2), size(var, 3)))
+         allocate (tmp(size(var, 1), size(var, 2), size(var, 3)))
          call adios_read(io, varname, sel_start, sel_count, &
                          opt_family=opt_family, &
                          freal=tmp)
          var = real(tmp, kind=real64)
-         deallocate(tmp)
+         deallocate (tmp)
       else
          call adios_read(io, varname, sel_start, sel_count, &
                          opt_family=opt_family, &
@@ -698,12 +698,12 @@ contains
       end if
 
       if (reduce) then
-         allocate(tmp(size(var, 1), size(var, 2), size(var, 3)))
+         allocate (tmp(size(var, 1), size(var, 2), size(var, 3)))
          call adios_read(io, varname, sel_start, sel_count, &
                          opt_family=opt_family, &
                          fcplx=tmp)
          var = cmplx(tmp, kind=real64)
-         deallocate(tmp)
+         deallocate (tmp)
       else
          call adios_read(io, varname, sel_start, sel_count, &
                          opt_family=opt_family, &

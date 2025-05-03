@@ -22,8 +22,6 @@ program io_test
    integer :: resize_domain
    integer :: nranks_tot
 
-   integer :: ierr
-
 #ifdef COMPLEX_TEST
    complex(mytype), allocatable, dimension(:, :, :) :: data1
 
@@ -39,8 +37,7 @@ program io_test
    real(mytype), parameter :: eps = 1.0E-7_mytype
 
    character(len=*), parameter :: io_name = "test-io"
-   character(len=*), parameter :: io_restart = "restart-io"
-   type(d2d_io_family), save :: io_family, io_family_restart
+   type(d2d_io_family), save :: io_family
    type(d2d_io_adios), save :: io
 
    integer :: i, j, k, m, ierror
@@ -78,16 +75,6 @@ program io_test
 #else
    call io_family%register_var("u2.dat", 2, real_type)
    call io_family%register_var("u3.dat", 3, real_type)
-#endif
-   call io_family_restart%init(io_restart)
-#ifdef COMPLEX_TEST
-   call io_family_restart%register_var("u1.dat", 1, complex_type)
-   call io_family_restart%register_var("u2.dat", 2, complex_type)
-   call io_family_restart%register_var("u3.dat", 3, complex_type)
-#else
-   call io_family_restart%register_var("u1.dat", 1, real_type)
-   call io_family_restart%register_var("u2.dat", 2, real_type)
-   call io_family_restart%register_var("u3.dat", 3, real_type)
 #endif
 
    ! ***** global data *****
@@ -151,49 +138,34 @@ program io_test
    call decomp_2d_adios_write_var(io, u3, 'u3.dat')
    call io%end_close
 
+   ! Close all the IO modules
+   ! Reading after writing is not possible
+   call io_family%fin
+   call decomp_2d_io_fin
+   ! Open IO again
+   call decomp_2d_io_init()
+   call io_family%init(io_name)
+
    ! read back to different arrays
    !
    ! Using the default IO family without providing any object
-   call decomp_2d_adios_read_var(io, u1b, 'u1.dat')
-   call decomp_2d_adios_read_var(io, u2b, 'u2.dat')
+   call decomp_2d_adios_read_var(io, u1b, 'u1.dat', 1)
+   call decomp_2d_adios_read_var(io, u2b, 'u2.dat', 2)
    call io%end_close
    !
    ! Using a dedicated IO family
    call io%open_start(decomp_2d_read_mode, opt_family=io_family)
-   call decomp_2d_adios_read_var(io, u2c, 'u2.dat')
-   call decomp_2d_adios_read_var(io, u3b, 'u3.dat')
+   call decomp_2d_adios_read_var(io, u2c, 'u2.dat', 2)
+   call decomp_2d_adios_read_var(io, u3b, 'u3.dat', 3)
    call io%end_close
 
    ! compare
    call check("file per field")
-   !
-   ! Using adios2 objects
-   call io%open_start(decomp_2d_write_mode, opt_family=io_family_restart)
-   call decomp_2d_adios_write_var(io, u1, 'u1.dat')
-   call decomp_2d_adios_write_var(io, u2, 'u2.dat')
-   call decomp_2d_adios_write_var(io, u3, 'u3.dat')
-   call io%end_close()
-
-   call MPI_Barrier(MPI_COMM_WORLD, ierr)
-
-   ! read back to different arrays
-   u1b = 0; u2b = 0; u3b = 0
-   call io%open_start(decomp_2d_read_mode, opt_family=io_family_restart)
-   call decomp_2d_adios_read_var(io, u1b, 'u1.dat')
-   call decomp_2d_adios_read_var(io, u2b, 'u2.dat')
-   call decomp_2d_adios_read_var(io, u3b, 'u3.dat')
-   call io%end_close
-
-   call MPI_Barrier(MPI_COMM_WORLD, ierr)
-
-   ! compare
-   call check("one file, multiple fields")
 
    deallocate (u1, u2, u3)
    deallocate (u1b, u2b, u2c, u3b)
    deallocate (data1)
 
-   call io_family_restart%fin
    call io_family%fin
    call decomp_2d_io_fin
    call decomp_2d_finalize

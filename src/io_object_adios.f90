@@ -754,12 +754,13 @@ contains
    !
    ! Read the provided array
    !
-   subroutine d2d_io_adios_read(writer, varname, freal, dreal, fcplx, dcplx)
+   subroutine d2d_io_adios_read(writer, varname, sel_start, sel_count, freal, dreal, fcplx, dcplx)
 
       implicit none
 
       class(d2d_io_adios), intent(inout) :: writer
       character(len=*), intent(in) :: varname
+      integer, intent(in), dimension(3) :: sel_start, sel_count
       real(real32), contiguous, dimension(:, :, :), intent(out), optional :: freal
       real(real64), contiguous, dimension(:, :, :), intent(out), optional :: dreal
       complex(real32), contiguous, dimension(:, :, :), intent(out), optional :: fcplx
@@ -787,6 +788,11 @@ contains
                               "ERROR: trying to read variable without registering first! "//trim(varname))
       end if
 
+      ! Select a subset of the file
+      call adios2_set_selection(var_handle, 3, int(sel_start, kind=8), int(sel_count, kind=8), ierror)
+      if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "adios2_set_selection")
+
+      ! Read (deferred)
       if (present(freal)) then
          call adios2_get(writer%engine, var_handle, freal, read_mode, ierror)
       else if (present(dreal)) then

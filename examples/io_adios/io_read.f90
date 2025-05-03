@@ -55,21 +55,7 @@ program io_read
    call decomp_2d_testing_log()
 
    call decomp_2d_io_init()
-#ifdef COMPLEX_TEST
-   call decomp_2d_register_var("u1.dat", 1, complex_type)
-   call decomp_2d_register_var("u2.dat", 2, complex_type)
-#else
-   call decomp_2d_register_var("u1.dat", 1, real_type)
-   call decomp_2d_register_var("u2.dat", 2, real_type)
-#endif
    call io_family%init(io_name)
-#ifdef COMPLEX_TEST
-   call io_family%register_var("u2.dat", 2, complex_type)
-   call io_family%register_var("u3.dat", 3, complex_type)
-#else
-   call io_family%register_var("u2.dat", 2, real_type)
-   call io_family%register_var("u3.dat", 3, real_type)
-#endif
 
    ! ***** global data *****
    allocate (data1(nx, ny, nz))
@@ -93,12 +79,12 @@ program io_read
    call alloc_z(u3b, .true.)
 
    ! read back to different arrays
-   call decomp_2d_adios_read_var(io, u1b, 'u1.dat')
-   call decomp_2d_adios_read_var(io, u2b, 'u2.dat')
+   call decomp_2d_adios_read_var(io, u1b, 'u1.dat', 1)
+   call decomp_2d_adios_read_var(io, u2b, 'u2.dat', 2)
    call io%end_close
    call io%open_start(decomp_2d_read_mode, opt_family=io_family)
-   call decomp_2d_adios_read_var(io, u2c, 'u2.dat')
-   call decomp_2d_adios_read_var(io, u3b, 'u3.dat')
+   call decomp_2d_adios_read_var(io, u2c, 'u2.dat', 2)
+   call decomp_2d_adios_read_var(io, u3b, 'u3.dat', 3)
    call io%end_close
 
    ! Check against the global data array

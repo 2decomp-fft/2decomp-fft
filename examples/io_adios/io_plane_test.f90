@@ -118,6 +118,7 @@ program io_plane_test
 
    deallocate (u1, u2, u3)
    deallocate (data1)
+   call decomp_2d_io_fin
    call decomp_2d_finalize
    call MPI_FINALIZE(ierror)
 

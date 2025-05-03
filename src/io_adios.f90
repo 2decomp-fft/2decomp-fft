@@ -52,6 +52,7 @@ module decomp_2d_io_adios
    use decomp_2d_io_utilities
    use decomp_2d_mpi
    use decomp_2d_profiler
+   use m_info
    use MPI
    use, intrinsic :: iso_fortran_env, only: real32, real64
    use adios2
@@ -256,7 +257,7 @@ contains
    !   - opt_family : family of IO readers / writers
    !   - freal / dreal / fcplx / dcplx : array
    !
-   subroutine adios_read(io, varname, &
+   subroutine adios_read(io, varname, sel_start, sel_count, &
                          opt_family, &
                          freal, dreal, fcplx, dcplx)
 
@@ -264,6 +265,7 @@ contains
 
       type(d2d_io_adios), intent(inout) :: io
       character(len=*), intent(in) :: varname
+      integer, intent(in), dimension(3) :: sel_start, sel_count
       type(d2d_io_family), target, intent(inout), optional :: opt_family
       real(real32), contiguous, dimension(:, :, :), intent(out), optional :: freal
       real(real64), contiguous, dimension(:, :, :), intent(out), optional :: dreal
@@ -282,7 +284,8 @@ contains
       end if
 
       ! Perform IO with ADIOS2
-      call io%read(varname, freal, dreal, fcplx, dcplx)
+      ! Starting index is 0-based
+      call io%read(varname, sel_start-1, sel_count, freal, dreal, fcplx, dcplx)
 
    end subroutine adios_read
 
@@ -443,7 +446,8 @@ contains
    !
    !
    !
-   subroutine read_var_freal(io, var, varname, &
+   subroutine read_var_freal(io, var, varname, ipencil, &
+                             opt_decomp, &
                              opt_family, &
                              opt_reduce_prec)
 
@@ -453,12 +457,45 @@ contains
       type(d2d_io_adios), intent(inout) :: io
       real(real32), contiguous, dimension(:, :, :), intent(OUT) :: var
       character(len=*), intent(in) :: varname
+      integer, intent(in) :: ipencil
+      class(info), intent(in), optional :: opt_decomp
       type(d2d_io_family), intent(inout), optional :: opt_family
       logical, intent(in), optional :: opt_reduce_prec
 
+      ! Local variable(s)
+      integer, dimension(3) :: sel_start, sel_count
+
       if (decomp_profiler_io) call decomp_profiler_start("adios_read_var")
 
-      call adios_read(io, varname, &
+      if (present(opt_decomp)) then
+         if (ipencil == 1) then
+            sel_start = opt_decomp%xst
+            sel_count = opt_decomp%xsz
+         else if (ipencil == 2) then
+            sel_start = opt_decomp%yst
+            sel_count = opt_decomp%ysz
+         else if (ipencil == 3) then
+            sel_start = opt_decomp%zst
+            sel_count = opt_decomp%zsz
+         else
+            call decomp_2d_abort(__FILE__, __LINE__, ipencil, "Invalid value")
+         end if
+      else
+         if (ipencil == 1) then
+            sel_start = decomp_main%xst
+            sel_count = decomp_main%xsz
+         else if (ipencil == 2) then
+            sel_start = decomp_main%yst
+            sel_count = decomp_main%ysz
+         else if (ipencil == 3) then
+            sel_start = decomp_main%zst
+            sel_count = decomp_main%zsz
+         else
+            call decomp_2d_abort(__FILE__, __LINE__, ipencil, "Invalid value")
+         end if
+      end if
+
+      call adios_read(io, varname, sel_start, sel_count, &
                       opt_family=opt_family, &
                       freal=var)
 
@@ -468,7 +505,8 @@ contains
 
    end subroutine read_var_freal
    !
-   subroutine read_var_fcplx(io, var, varname, &
+   subroutine read_var_fcplx(io, var, varname, ipencil, &
+                             opt_decomp, &
                              opt_family, &
                              opt_reduce_prec)
 
@@ -478,12 +516,45 @@ contains
       type(d2d_io_adios), intent(inout) :: io
       complex(real32), contiguous, dimension(:, :, :), intent(OUT) :: var
       character(len=*), intent(in) :: varname
+      integer, intent(in) :: ipencil
+      class(info), intent(in), optional :: opt_decomp
       type(d2d_io_family), intent(inout), optional :: opt_family
       logical, intent(in), optional :: opt_reduce_prec
 
+      ! Local variable(s)
+      integer, dimension(3) :: sel_start, sel_count
+
       if (decomp_profiler_io) call decomp_profiler_start("adios_read_var")
 
-      call adios_read(io, varname, &
+      if (present(opt_decomp)) then
+         if (ipencil == 1) then
+            sel_start = opt_decomp%xst
+            sel_count = opt_decomp%xsz
+         else if (ipencil == 2) then
+            sel_start = opt_decomp%yst
+            sel_count = opt_decomp%ysz
+         else if (ipencil == 3) then
+            sel_start = opt_decomp%zst
+            sel_count = opt_decomp%zsz
+         else
+            call decomp_2d_abort(__FILE__, __LINE__, ipencil, "Invalid value")
+         end if
+      else
+         if (ipencil == 1) then
+            sel_start = decomp_main%xst
+            sel_count = decomp_main%xsz
+         else if (ipencil == 2) then
+            sel_start = decomp_main%yst
+            sel_count = decomp_main%ysz
+         else if (ipencil == 3) then
+            sel_start = decomp_main%zst
+            sel_count = decomp_main%zsz
+         else
+            call decomp_2d_abort(__FILE__, __LINE__, ipencil, "Invalid value")
+         end if
+      end if
+
+      call adios_read(io, varname, sel_start, sel_count, &
                       opt_family=opt_family, &
                       fcplx=var)
 
@@ -493,7 +564,8 @@ contains
 
    end subroutine read_var_fcplx
    !
-   subroutine read_var_dreal(io, var, varname, &
+   subroutine read_var_dreal(io, var, varname, ipencil, &
+                             opt_decomp, &
                              opt_family, &
                              opt_reduce_prec)
 
@@ -503,14 +575,45 @@ contains
       type(d2d_io_adios), intent(inout) :: io
       real(real64), contiguous, dimension(:, :, :), intent(OUT) :: var
       character(len=*), intent(in) :: varname
+      integer, intent(in) :: ipencil
+      class(info), intent(in), optional :: opt_decomp
       type(d2d_io_family), intent(inout), optional :: opt_family
       logical, intent(in), optional :: opt_reduce_prec
 
       ! Local variable(s)
+      integer, dimension(3) :: sel_start, sel_count
       logical :: reduce
       real(real32), dimension(:, :, :), allocatable :: tmp
 
       if (decomp_profiler_io) call decomp_profiler_start("adios_read_var")
+
+      if (present(opt_decomp)) then
+         if (ipencil == 1) then
+            sel_start = opt_decomp%xst
+            sel_count = opt_decomp%xsz
+         else if (ipencil == 2) then
+            sel_start = opt_decomp%yst
+            sel_count = opt_decomp%ysz
+         else if (ipencil == 3) then
+            sel_start = opt_decomp%zst
+            sel_count = opt_decomp%zsz
+         else
+            call decomp_2d_abort(__FILE__, __LINE__, ipencil, "Invalid value")
+         end if
+      else
+         if (ipencil == 1) then
+            sel_start = decomp_main%xst
+            sel_count = decomp_main%xsz
+         else if (ipencil == 2) then
+            sel_start = decomp_main%yst
+            sel_count = decomp_main%ysz
+         else if (ipencil == 3) then
+            sel_start = decomp_main%zst
+            sel_count = decomp_main%zsz
+         else
+            call decomp_2d_abort(__FILE__, __LINE__, ipencil, "Invalid value")
+         end if
+      end if
 
       ! One can write to single precision using opt_reduce_prec
       if (present(opt_reduce_prec)) then
@@ -520,14 +623,14 @@ contains
       end if
 
       if (reduce) then
-         allocate (tmp(size(var, 1), size(var, 2), size(var, 3)))
-         call adios_read(io, varname, &
+         allocate(tmp(size(var, 1), size(var, 2), size(var, 3)))
+         call adios_read(io, varname, sel_start, sel_count, &
                          opt_family=opt_family, &
                          freal=tmp)
          var = real(tmp, kind=real64)
-         deallocate (tmp)
+         deallocate(tmp)
       else
-         call adios_read(io, varname, &
+         call adios_read(io, varname, sel_start, sel_count, &
                          opt_family=opt_family, &
                          dreal=var)
       end if
@@ -536,7 +639,8 @@ contains
 
    end subroutine read_var_dreal
    !
-   subroutine read_var_dcplx(io, var, varname, &
+   subroutine read_var_dcplx(io, var, varname, ipencil, &
+                             opt_decomp, &
                              opt_family, &
                              opt_reduce_prec)
 
@@ -546,14 +650,45 @@ contains
       type(d2d_io_adios), intent(inout) :: io
       complex(real64), contiguous, dimension(:, :, :), intent(OUT) :: var
       character(len=*), intent(in) :: varname
+      integer, intent(in) :: ipencil
+      class(info), intent(in), optional :: opt_decomp
       type(d2d_io_family), intent(inout), optional :: opt_family
       logical, intent(in), optional :: opt_reduce_prec
 
       ! Local variable(s)
+      integer, dimension(3) :: sel_start, sel_count
       logical :: reduce
       complex(real32), dimension(:, :, :), allocatable :: tmp
 
       if (decomp_profiler_io) call decomp_profiler_start("adios_read_var")
+
+      if (present(opt_decomp)) then
+         if (ipencil == 1) then
+            sel_start = opt_decomp%xst
+            sel_count = opt_decomp%xsz
+         else if (ipencil == 2) then
+            sel_start = opt_decomp%yst
+            sel_count = opt_decomp%ysz
+         else if (ipencil == 3) then
+            sel_start = opt_decomp%zst
+            sel_count = opt_decomp%zsz
+         else
+            call decomp_2d_abort(__FILE__, __LINE__, ipencil, "Invalid value")
+         end if
+      else
+         if (ipencil == 1) then
+            sel_start = decomp_main%xst
+            sel_count = decomp_main%xsz
+         else if (ipencil == 2) then
+            sel_start = decomp_main%yst
+            sel_count = decomp_main%ysz
+         else if (ipencil == 3) then
+            sel_start = decomp_main%zst
+            sel_count = decomp_main%zsz
+         else
+            call decomp_2d_abort(__FILE__, __LINE__, ipencil, "Invalid value")
+         end if
+      end if
 
       ! One can write to single precision using opt_reduce_prec
       if (present(opt_reduce_prec)) then
@@ -563,14 +698,14 @@ contains
       end if
 
       if (reduce) then
-         allocate (tmp(size(var, 1), size(var, 2), size(var, 3)))
-         call adios_read(io, varname, &
+         allocate(tmp(size(var, 1), size(var, 2), size(var, 3)))
+         call adios_read(io, varname, sel_start, sel_count, &
                          opt_family=opt_family, &
                          fcplx=tmp)
          var = cmplx(tmp, kind=real64)
-         deallocate (tmp)
+         deallocate(tmp)
       else
-         call adios_read(io, varname, &
+         call adios_read(io, varname, sel_start, sel_count, &
                          opt_family=opt_family, &
                          dcplx=var)
       end if
@@ -1013,7 +1148,8 @@ contains
    !
    !
    !
-   subroutine read_plane_freal(io, var, varname, &
+   subroutine read_plane_freal(io, var, varname, ipencil, &
+                               opt_decomp, &
                                opt_family, &
                                opt_reduce_prec)
 
@@ -1023,12 +1159,44 @@ contains
       type(d2d_io_adios), intent(inout) :: io
       real(real32), contiguous, dimension(:, :, :), intent(OUT) :: var
       character(len=*), intent(in) :: varname
+      integer, intent(in) :: ipencil
+      class(info), intent(in), optional :: opt_decomp
       type(d2d_io_family), intent(inout), optional :: opt_family
       logical, intent(in), optional :: opt_reduce_prec
 
+      ! Local variable(s)
+      integer, dimension(3) :: sel_start, sel_count
       if (decomp_profiler_io) call decomp_profiler_start("adios_read_plane")
 
-      call adios_read(io, varname, &
+      if (present(opt_decomp)) then
+         if (ipencil == 1) then
+            sel_start = opt_decomp%xst
+            sel_count = opt_decomp%xsz
+         else if (ipencil == 2) then
+            sel_start = opt_decomp%yst
+            sel_count = opt_decomp%ysz
+         else if (ipencil == 3) then
+            sel_start = opt_decomp%zst
+            sel_count = opt_decomp%zsz
+         else
+            call decomp_2d_abort(__FILE__, __LINE__, ipencil, "Invalid value")
+         end if
+      else
+         if (ipencil == 1) then
+            sel_start = decomp_main%xst
+            sel_count = decomp_main%xsz
+         else if (ipencil == 2) then
+            sel_start = decomp_main%yst
+            sel_count = decomp_main%ysz
+         else if (ipencil == 3) then
+            sel_start = decomp_main%zst
+            sel_count = decomp_main%zsz
+         else
+            call decomp_2d_abort(__FILE__, __LINE__, ipencil, "Invalid value")
+         end if
+      end if
+
+      call adios_read(io, varname, sel_start, sel_count, &
                       opt_family=opt_family, &
                       freal=var)
       associate (p => opt_reduce_prec)
@@ -1038,7 +1206,8 @@ contains
 
    end subroutine read_plane_freal
    !
-   subroutine read_plane_fcplx(io, var, varname, &
+   subroutine read_plane_fcplx(io, var, varname, ipencil, &
+                               opt_decomp, &
                                opt_family, &
                                opt_reduce_prec)
 
@@ -1048,12 +1217,44 @@ contains
       type(d2d_io_adios), intent(inout) :: io
       complex(real32), contiguous, dimension(:, :, :), intent(OUT) :: var
       character(len=*), intent(in) :: varname
+      integer, intent(in) :: ipencil
+      class(info), intent(in), optional :: opt_decomp
       type(d2d_io_family), intent(inout), optional :: opt_family
       logical, intent(in), optional :: opt_reduce_prec
 
+      ! Local variable(s)
+      integer, dimension(3) :: sel_start, sel_count
       if (decomp_profiler_io) call decomp_profiler_start("adios_read_plane")
 
-      call adios_read(io, varname, &
+      if (present(opt_decomp)) then
+         if (ipencil == 1) then
+            sel_start = opt_decomp%xst
+            sel_count = opt_decomp%xsz
+         else if (ipencil == 2) then
+            sel_start = opt_decomp%yst
+            sel_count = opt_decomp%ysz
+         else if (ipencil == 3) then
+            sel_start = opt_decomp%zst
+            sel_count = opt_decomp%zsz
+         else
+            call decomp_2d_abort(__FILE__, __LINE__, ipencil, "Invalid value")
+         end if
+      else
+         if (ipencil == 1) then
+            sel_start = decomp_main%xst
+            sel_count = decomp_main%xsz
+         else if (ipencil == 2) then
+            sel_start = decomp_main%yst
+            sel_count = decomp_main%ysz
+         else if (ipencil == 3) then
+            sel_start = decomp_main%zst
+            sel_count = decomp_main%zsz
+         else
+            call decomp_2d_abort(__FILE__, __LINE__, ipencil, "Invalid value")
+         end if
+      end if
+
+      call adios_read(io, varname, sel_start, sel_count, &
                       opt_family=opt_family, &
                       fcplx=var)
       associate (p => opt_reduce_prec)
@@ -1063,7 +1264,8 @@ contains
 
    end subroutine read_plane_fcplx
    !
-   subroutine read_plane_dreal(io, var, varname, &
+   subroutine read_plane_dreal(io, var, varname, ipencil, &
+                               opt_decomp, &
                                opt_family, &
                                opt_reduce_prec)
 
@@ -1073,14 +1275,45 @@ contains
       type(d2d_io_adios), intent(inout) :: io
       real(real64), contiguous, dimension(:, :, :), intent(OUT) :: var
       character(len=*), intent(in) :: varname
+      integer, intent(in) :: ipencil
+      class(info), intent(in), optional :: opt_decomp
       type(d2d_io_family), intent(inout), optional :: opt_family
       logical, intent(in), optional :: opt_reduce_prec
 
-      ! Local variables
+      ! Local variable(s)
+      integer, dimension(3) :: sel_start, sel_count
       logical :: reduce
       real(real32), allocatable, dimension(:, :, :) :: tmp
 
       if (decomp_profiler_io) call decomp_profiler_start("adios_read_plane")
+
+      if (present(opt_decomp)) then
+         if (ipencil == 1) then
+            sel_start = opt_decomp%xst
+            sel_count = opt_decomp%xsz
+         else if (ipencil == 2) then
+            sel_start = opt_decomp%yst
+            sel_count = opt_decomp%ysz
+         else if (ipencil == 3) then
+            sel_start = opt_decomp%zst
+            sel_count = opt_decomp%zsz
+         else
+            call decomp_2d_abort(__FILE__, __LINE__, ipencil, "Invalid value")
+         end if
+      else
+         if (ipencil == 1) then
+            sel_start = decomp_main%xst
+            sel_count = decomp_main%xsz
+         else if (ipencil == 2) then
+            sel_start = decomp_main%yst
+            sel_count = decomp_main%ysz
+         else if (ipencil == 3) then
+            sel_start = decomp_main%zst
+            sel_count = decomp_main%zsz
+         else
+            call decomp_2d_abort(__FILE__, __LINE__, ipencil, "Invalid value")
+         end if
+      end if
 
       ! One can write to single precision using opt_reduce_prec
       if (present(opt_reduce_prec)) then
@@ -1094,13 +1327,13 @@ contains
          allocate (tmp(size(var, 1), &
                        size(var, 2), &
                        size(var, 3)))
-         call adios_read(io, varname, &
+         call adios_read(io, varname, sel_start, sel_count, &
                          opt_family=opt_family, &
                          freal=tmp)
          var = real(tmp, kind=real64)
          deallocate (tmp)
       else
-         call adios_read(io, varname, &
+         call adios_read(io, varname, sel_start, sel_count, &
                          opt_family=opt_family, &
                          dreal=var)
       end if
@@ -1108,7 +1341,8 @@ contains
 
    end subroutine read_plane_dreal
    !
-   subroutine read_plane_dcplx(io, var, varname, &
+   subroutine read_plane_dcplx(io, var, varname, ipencil, &
+                               opt_decomp, &
                                opt_family, &
                                opt_reduce_prec)
 
@@ -1118,14 +1352,45 @@ contains
       type(d2d_io_adios), intent(inout) :: io
       complex(real64), contiguous, dimension(:, :, :), intent(OUT) :: var
       character(len=*), intent(in) :: varname
+      integer, intent(in) :: ipencil
+      class(info), intent(in), optional :: opt_decomp
       type(d2d_io_family), intent(inout), optional :: opt_family
       logical, intent(in), optional :: opt_reduce_prec
 
-      ! Local variables
+      ! Local variable(s)
+      integer, dimension(3) :: sel_start, sel_count
       logical :: reduce
       complex(real32), allocatable, dimension(:, :, :) :: tmp
 
       if (decomp_profiler_io) call decomp_profiler_start("adios_read_plane")
+
+      if (present(opt_decomp)) then
+         if (ipencil == 1) then
+            sel_start = opt_decomp%xst
+            sel_count = opt_decomp%xsz
+         else if (ipencil == 2) then
+            sel_start = opt_decomp%yst
+            sel_count = opt_decomp%ysz
+         else if (ipencil == 3) then
+            sel_start = opt_decomp%zst
+            sel_count = opt_decomp%zsz
+         else
+            call decomp_2d_abort(__FILE__, __LINE__, ipencil, "Invalid value")
+         end if
+      else
+         if (ipencil == 1) then
+            sel_start = decomp_main%xst
+            sel_count = decomp_main%xsz
+         else if (ipencil == 2) then
+            sel_start = decomp_main%yst
+            sel_count = decomp_main%ysz
+         else if (ipencil == 3) then
+            sel_start = decomp_main%zst
+            sel_count = decomp_main%zsz
+         else
+            call decomp_2d_abort(__FILE__, __LINE__, ipencil, "Invalid value")
+         end if
+      end if
 
       ! One can write to single precision using opt_reduce_prec
       if (present(opt_reduce_prec)) then
@@ -1139,13 +1404,13 @@ contains
          allocate (tmp(size(var, 1), &
                        size(var, 2), &
                        size(var, 3)))
-         call adios_read(io, varname, &
+         call adios_read(io, varname, sel_start, sel_count, &
                          opt_family=opt_family, &
                          fcplx=tmp)
          var = cmplx(tmp, kind=real64)
          deallocate (tmp)
       else
-         call adios_read(io, varname, &
+         call adios_read(io, varname, sel_start, sel_count, &
                          opt_family=opt_family, &
                          dcplx=var)
       end if

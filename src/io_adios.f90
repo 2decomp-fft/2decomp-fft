@@ -19,7 +19,15 @@
 !
 ! The external code reading a 3D array will call decomp_2d_adios_read_var
 !
-! Same arguments (except opt_mode, not available)
+! Arguments :
+!    - io : d2d_io_adios object. It will be opened / started if it was not open / active.
+!                                The external code should call io%end_close when the IO is complete
+!    - ipencil : pencil orientation of the 3D array
+!    - var : 3D array
+!    - varname : name provided when the array was registered and written
+!    - opt_decomp : optional, decomp_info for the variable. decomp_main is used if not provided
+!    - opt_family : optional, family of IO readers / writers. Used only if io needs to be opened.
+!    - opt_reduce_prec : optional, file in single precision. default_opt_reduce_prec is used if not provided
 !
 
 !
@@ -41,7 +49,16 @@
 !
 ! The external code reading planes will call decomp_2d_read_planes
 !
-! Same arguments (except opt_mode, opt_nplanes, opt_iplane, opt_ipencil, not available)
+! Arguments :
+!    - io : d2d_io_adios object. It will be opened / started if it was not open / active.
+!                                The external code should call io%end_close when the IO is complete
+!    - ipencil : pencil orientation of the planes
+!    - var : stacked planes
+!    - varname : name provided when the array was registered and written
+!    - nplanes : number of planes stacked in the file
+!    - opt_decomp : optional, decomp_info object for the stacked planes
+!    - opt_family : optional, family of IO readers / writers. Used only if io needs to be opened.
+!    - opt_reduce_prec : optiona, file in single precision. default_opt_reduce_prec is used if not provided
 !
 
 module decomp_2d_io_adios
@@ -123,7 +140,7 @@ contains
       integer, intent(in) :: ipencil ! (x-pencil=1; y-pencil=2; z-pencil=3)
       integer, intent(in) :: type
       logical, intent(in), optional :: opt_reduce_prec
-      type(decomp_info), intent(in), optional :: opt_decomp
+      class(info), intent(in), optional :: opt_decomp
 
       call default_family%register_var(varname, ipencil, type, &
                                        opt_reduce_prec=opt_reduce_prec, &
@@ -147,7 +164,7 @@ contains
       integer, intent(in) :: ipencil ! (x-pencil=1; y-pencil=2; z-pencil=3)
       integer, intent(in) :: type
       logical, intent(in), optional :: opt_reduce_prec
-      type(decomp_info), intent(in), optional :: opt_decomp
+      class(info), intent(in), optional :: opt_decomp
       integer, intent(in), optional :: opt_nplanes
 
       call default_family%register_plane(varname, ipencil, type, &
@@ -446,7 +463,7 @@ contains
    !
    !
    !
-   subroutine read_var_freal(io, var, varname, ipencil, &
+   subroutine read_var_freal(io, ipencil, var, varname, &
                              opt_decomp, &
                              opt_family, &
                              opt_reduce_prec)
@@ -455,9 +472,9 @@ contains
 
       ! Arguments
       type(d2d_io_adios), intent(inout) :: io
+      integer, intent(in) :: ipencil
       real(real32), contiguous, dimension(:, :, :), intent(OUT) :: var
       character(len=*), intent(in) :: varname
-      integer, intent(in) :: ipencil
       class(info), intent(in), optional :: opt_decomp
       type(d2d_io_family), intent(inout), optional :: opt_family
       logical, intent(in), optional :: opt_reduce_prec
@@ -505,7 +522,7 @@ contains
 
    end subroutine read_var_freal
    !
-   subroutine read_var_fcplx(io, var, varname, ipencil, &
+   subroutine read_var_fcplx(io, ipencil, var, varname, &
                              opt_decomp, &
                              opt_family, &
                              opt_reduce_prec)
@@ -514,9 +531,9 @@ contains
 
       ! Arguments
       type(d2d_io_adios), intent(inout) :: io
+      integer, intent(in) :: ipencil
       complex(real32), contiguous, dimension(:, :, :), intent(OUT) :: var
       character(len=*), intent(in) :: varname
-      integer, intent(in) :: ipencil
       class(info), intent(in), optional :: opt_decomp
       type(d2d_io_family), intent(inout), optional :: opt_family
       logical, intent(in), optional :: opt_reduce_prec
@@ -564,7 +581,7 @@ contains
 
    end subroutine read_var_fcplx
    !
-   subroutine read_var_dreal(io, var, varname, ipencil, &
+   subroutine read_var_dreal(io, ipencil, var, varname, &
                              opt_decomp, &
                              opt_family, &
                              opt_reduce_prec)
@@ -573,9 +590,9 @@ contains
 
       ! Arguments
       type(d2d_io_adios), intent(inout) :: io
+      integer, intent(in) :: ipencil
       real(real64), contiguous, dimension(:, :, :), intent(OUT) :: var
       character(len=*), intent(in) :: varname
-      integer, intent(in) :: ipencil
       class(info), intent(in), optional :: opt_decomp
       type(d2d_io_family), intent(inout), optional :: opt_family
       logical, intent(in), optional :: opt_reduce_prec
@@ -639,7 +656,7 @@ contains
 
    end subroutine read_var_dreal
    !
-   subroutine read_var_dcplx(io, var, varname, ipencil, &
+   subroutine read_var_dcplx(io, ipencil, var, varname, &
                              opt_decomp, &
                              opt_family, &
                              opt_reduce_prec)
@@ -648,9 +665,9 @@ contains
 
       ! Arguments
       type(d2d_io_adios), intent(inout) :: io
+      integer, intent(in) :: ipencil
       complex(real64), contiguous, dimension(:, :, :), intent(OUT) :: var
       character(len=*), intent(in) :: varname
-      integer, intent(in) :: ipencil
       class(info), intent(in), optional :: opt_decomp
       type(d2d_io_family), intent(inout), optional :: opt_family
       logical, intent(in), optional :: opt_reduce_prec
@@ -1148,7 +1165,7 @@ contains
    !
    !
    !
-   subroutine read_plane_freal(io, var, varname, ipencil, &
+   subroutine read_plane_freal(io, ipencil, var, varname, nplanes, &
                                opt_decomp, &
                                opt_family, &
                                opt_reduce_prec)
@@ -1157,9 +1174,10 @@ contains
 
       ! Arguments
       type(d2d_io_adios), intent(inout) :: io
+      integer, intent(in) :: ipencil
       real(real32), contiguous, dimension(:, :, :), intent(OUT) :: var
       character(len=*), intent(in) :: varname
-      integer, intent(in) :: ipencil
+      integer, intent(in) :: nplanes
       class(info), intent(in), optional :: opt_decomp
       type(d2d_io_family), intent(inout), optional :: opt_family
       logical, intent(in), optional :: opt_reduce_prec
@@ -1195,6 +1213,7 @@ contains
             call decomp_2d_abort(__FILE__, __LINE__, ipencil, "Invalid value")
          end if
       end if
+      sel_count(ipencil) = nplanes
 
       call adios_read(io, varname, sel_start, sel_count, &
                       opt_family=opt_family, &
@@ -1206,7 +1225,7 @@ contains
 
    end subroutine read_plane_freal
    !
-   subroutine read_plane_fcplx(io, var, varname, ipencil, &
+   subroutine read_plane_fcplx(io, ipencil, var, varname, nplanes, &
                                opt_decomp, &
                                opt_family, &
                                opt_reduce_prec)
@@ -1215,9 +1234,10 @@ contains
 
       ! Arguments
       type(d2d_io_adios), intent(inout) :: io
+      integer, intent(in) :: ipencil
       complex(real32), contiguous, dimension(:, :, :), intent(OUT) :: var
       character(len=*), intent(in) :: varname
-      integer, intent(in) :: ipencil
+      integer, intent(in) :: nplanes
       class(info), intent(in), optional :: opt_decomp
       type(d2d_io_family), intent(inout), optional :: opt_family
       logical, intent(in), optional :: opt_reduce_prec
@@ -1253,6 +1273,7 @@ contains
             call decomp_2d_abort(__FILE__, __LINE__, ipencil, "Invalid value")
          end if
       end if
+      sel_count(ipencil) = nplanes
 
       call adios_read(io, varname, sel_start, sel_count, &
                       opt_family=opt_family, &
@@ -1264,7 +1285,7 @@ contains
 
    end subroutine read_plane_fcplx
    !
-   subroutine read_plane_dreal(io, var, varname, ipencil, &
+   subroutine read_plane_dreal(io, ipencil, var, varname, nplanes, &
                                opt_decomp, &
                                opt_family, &
                                opt_reduce_prec)
@@ -1273,9 +1294,10 @@ contains
 
       ! Arguments
       type(d2d_io_adios), intent(inout) :: io
+      integer, intent(in) :: ipencil
       real(real64), contiguous, dimension(:, :, :), intent(OUT) :: var
       character(len=*), intent(in) :: varname
-      integer, intent(in) :: ipencil
+      integer, intent(in) :: nplanes
       class(info), intent(in), optional :: opt_decomp
       type(d2d_io_family), intent(inout), optional :: opt_family
       logical, intent(in), optional :: opt_reduce_prec
@@ -1314,6 +1336,7 @@ contains
             call decomp_2d_abort(__FILE__, __LINE__, ipencil, "Invalid value")
          end if
       end if
+      sel_count(ipencil) = nplanes
 
       ! One can write to single precision using opt_reduce_prec
       if (present(opt_reduce_prec)) then
@@ -1341,7 +1364,7 @@ contains
 
    end subroutine read_plane_dreal
    !
-   subroutine read_plane_dcplx(io, var, varname, ipencil, &
+   subroutine read_plane_dcplx(io, ipencil, var, varname, nplanes, &
                                opt_decomp, &
                                opt_family, &
                                opt_reduce_prec)
@@ -1350,9 +1373,10 @@ contains
 
       ! Arguments
       type(d2d_io_adios), intent(inout) :: io
+      integer, intent(in) :: ipencil
       complex(real64), contiguous, dimension(:, :, :), intent(OUT) :: var
       character(len=*), intent(in) :: varname
-      integer, intent(in) :: ipencil
+      integer, intent(in) :: nplanes
       class(info), intent(in), optional :: opt_decomp
       type(d2d_io_family), intent(inout), optional :: opt_family
       logical, intent(in), optional :: opt_reduce_prec
@@ -1391,6 +1415,7 @@ contains
             call decomp_2d_abort(__FILE__, __LINE__, ipencil, "Invalid value")
          end if
       end if
+      sel_count(ipencil) = nplanes
 
       ! One can write to single precision using opt_reduce_prec
       if (present(opt_reduce_prec)) then

@@ -9,6 +9,7 @@ module decomp_2d_io_utilities
    use decomp_2d
    use decomp_2d_constants
    use decomp_2d_mpi
+   use m_info
    use MPI
 
    implicit none
@@ -27,7 +28,7 @@ contains
       implicit none
 
       integer, intent(in) :: ipencil
-      type(decomp_info), intent(in) :: decomp
+      class(info), intent(in) :: decomp
       integer, dimension(3), intent(out) :: sizes, subsizes, starts
       integer, intent(in), optional :: nplanes
 

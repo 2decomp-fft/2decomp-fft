@@ -52,6 +52,7 @@ module decomp_2d_io_object_adios
    use decomp_2d_mpi
    use decomp_2d_io_utilities, only: io_get_size
    use decomp_2d_profiler
+   use m_info
    use MPI
    use, intrinsic :: iso_fortran_env, only: real32, real64
 
@@ -217,7 +218,7 @@ contains
       integer, intent(in) :: ipencil ! (x-pencil=1; y-pencil=2; z-pencil=3)
       integer, intent(in) :: type
       logical, intent(in), optional :: opt_reduce_prec
-      type(decomp_info), intent(in), optional :: opt_decomp
+      class(info), intent(in), optional :: opt_decomp
 
       logical :: reduce_prec
 
@@ -263,7 +264,7 @@ contains
       integer, intent(in) :: ipencil ! (x-pencil=1; y-pencil=2; z-pencil=3)
       integer, intent(in) :: type
       logical, intent(in), optional :: opt_reduce_prec
-      type(decomp_info), intent(in), optional :: opt_decomp
+      class(info), intent(in), optional :: opt_decomp
       integer, intent(in), optional :: opt_nplanes
 
       logical :: reduce_prec
@@ -305,7 +306,7 @@ contains
       integer, intent(in) :: ipencil
       integer, intent(in) :: typex
       logical, intent(in) :: reduce_prec
-      type(decomp_info), intent(in) :: decomp
+      class(info), intent(in) :: decomp
       integer, intent(in) :: nplanes
 
       type(adios2_variable) :: var_handle

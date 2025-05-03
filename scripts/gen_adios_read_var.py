@@ -29,7 +29,7 @@ for i in range(nformat):
     #
     # Header
     #
-    f.write("   subroutine read_var_"+ext[i]+"(io, var, varname, ipencil, &\n")
+    f.write("   subroutine read_var_"+ext[i]+"(io, ipencil, var, varname, &\n")
     f.write("                             opt_decomp, &\n")
     f.write("                             opt_family, &\n")
     f.write("                             opt_reduce_prec)\n")
@@ -41,6 +41,7 @@ for i in range(nformat):
     #
     f.write("      ! Arguments\n")
     f.write("      type(d2d_io_adios), intent(inout) :: io\n")
+    f.write("      integer, intent(in) :: ipencil\n")
     if (i==0):
         f.write("      real(real32), contiguous, dimension(:, :, :), intent(OUT) :: var\n")
     elif (i==2):
@@ -51,7 +52,6 @@ for i in range(nformat):
         f.write("      complex(real64), contiguous, dimension(:, :, :), intent(OUT) :: var\n")
     #
     f.write("      character(len=*), intent(in) :: varname\n")
-    f.write("      integer, intent(in) :: ipencil\n")
     f.write("      class(info), intent(in), optional :: opt_decomp\n")
     f.write("      type(d2d_io_family), intent(inout), optional :: opt_family\n")
     f.write("      logical, intent(in), optional :: opt_reduce_prec\n")

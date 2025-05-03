@@ -79,12 +79,12 @@ program io_read
    call alloc_z(u3b, .true.)
 
    ! read back to different arrays
-   call decomp_2d_adios_read_var(io, u1b, 'u1.dat', 1)
-   call decomp_2d_adios_read_var(io, u2b, 'u2.dat', 2)
+   call decomp_2d_adios_read_var(io, 1, u1b, 'u1.dat')
+   call decomp_2d_adios_read_var(io, 2, u2b, 'u2.dat')
    call io%end_close
    call io%open_start(decomp_2d_read_mode, opt_family=io_family)
-   call decomp_2d_adios_read_var(io, u2c, 'u2.dat', 2)
-   call decomp_2d_adios_read_var(io, u3b, 'u3.dat', 3)
+   call decomp_2d_adios_read_var(io, 2, u2c, 'u2.dat')
+   call decomp_2d_adios_read_var(io, 3, u3b, 'u3.dat')
    call io%end_close
 
    ! Check against the global data array

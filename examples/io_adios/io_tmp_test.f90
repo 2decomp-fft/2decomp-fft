@@ -208,12 +208,12 @@ program io_test
    !
    ! Using the default IO family
    call io%open_start(decomp_2d_read_mode)
-   call decomp_2d_adios_read_var(io, u1b, 'u1.dat', 1)
-   call decomp_2d_adios_read_var(io, u2b, 'u2.dat', 2)
-   call decomp_2d_adios_read_var(io, u3b, 'u3.dat', 3)
-   call decomp_2d_adios_read_var(io, v1b, 'v1.dat', 1)
-   call decomp_2d_adios_read_var(io, v2b, 'v2.dat', 2)
-   call decomp_2d_adios_read_var(io, v3b, 'v3.dat', 3)
+   call decomp_2d_adios_read_var(io, 1, u1b, 'u1.dat')
+   call decomp_2d_adios_read_var(io, 2, u2b, 'u2.dat')
+   call decomp_2d_adios_read_var(io, 3, u3b, 'u3.dat')
+   call decomp_2d_adios_read_var(io, 1, v1b, 'v1.dat')
+   call decomp_2d_adios_read_var(io, 2, v2b, 'v2.dat')
+   call decomp_2d_adios_read_var(io, 3, v3b, 'v3.dat')
    call io%end_close
    call MPI_Barrier(MPI_COMM_WORLD, ierr)
 
@@ -225,12 +225,12 @@ program io_test
    u1b = 0; u2b = 0; u3b = 0
    v1b = 0; v2b = 0; v3b = 0
    call io%open_start(decomp_2d_read_mode, opt_family=io_family_restart)
-   call decomp_2d_adios_read_var(io, u1b, 'u1.dat', 1)
-   call decomp_2d_adios_read_var(io, v1b, 'v1.dat', 1)
-   call decomp_2d_adios_read_var(io, u2b, 'u2.dat', 2)
-   call decomp_2d_adios_read_var(io, v2b, 'v2.dat', 2)
-   call decomp_2d_adios_read_var(io, u3b, 'u3.dat', 3)
-   call decomp_2d_adios_read_var(io, v3b, 'v3.dat', 3)
+   call decomp_2d_adios_read_var(io, 1, u1b, 'u1.dat')
+   call decomp_2d_adios_read_var(io, 1, v1b, 'v1.dat')
+   call decomp_2d_adios_read_var(io, 2, u2b, 'u2.dat')
+   call decomp_2d_adios_read_var(io, 2, v2b, 'v2.dat')
+   call decomp_2d_adios_read_var(io, 3, u3b, 'u3.dat')
+   call decomp_2d_adios_read_var(io, 3, v3b, 'v3.dat')
    call io%end_close
    call MPI_Barrier(MPI_COMM_WORLD, ierr)
 

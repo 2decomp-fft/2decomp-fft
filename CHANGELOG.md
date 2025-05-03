@@ -30,7 +30,7 @@ _e.g._ vX.Y - YYYY-MM-DD and a new "Unreleased" section started above.
 
 ### Changed
 
-- Major update in the IO routines. The new IO interface is not backward compatible. The examples are updated accordingly. See [PR 344](https://github.com/2decomp-fft/2decomp-fft/pull/344) and [PR 357](https://github.com/2decomp-fft/2decomp-fft/pull/357).
+- Major update in the IO routines. The new IO interface is not backward compatible. The examples are updated accordingly. See [PR 344](https://github.com/2decomp-fft/2decomp-fft/pull/344), [PR 357](https://github.com/2decomp-fft/2decomp-fft/pull/357) and [PR 380](https://github.com/2decomp-fft/2decomp-fft/pull/380).
 - The transpose subroutines have been moved into submodules rather than `#include` files. See [PR #206](https://github.com/2decomp-fft/2decomp-fft/pull/206)
 
 ### Deprecated

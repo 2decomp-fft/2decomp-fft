@@ -32,6 +32,7 @@ for i in range(nformat):
     f.write("   subroutine read_var_"+ext[i]+"(io, ipencil, var, varname, &\n")
     f.write("                             opt_decomp, &\n")
     f.write("                             opt_family, &\n")
+    f.write("                             opt_step_start, &\n")
     f.write("                             opt_reduce_prec)\n")
     f.write("\n")
     f.write("      implicit none\n")
@@ -54,13 +55,14 @@ for i in range(nformat):
     f.write("      character(len=*), intent(in) :: varname\n")
     f.write("      class(info), intent(in), optional :: opt_decomp\n")
     f.write("      type(d2d_io_family), intent(inout), optional :: opt_family\n")
+    f.write("      integer, intent(in), optional :: opt_step_start\n")
     f.write("      logical, intent(in), optional :: opt_reduce_prec\n")
     f.write("\n")
     #
     # Local variables
     #
     f.write("      ! Local variable(s)\n")
-    f.write("      integer, dimension(3) :: sel_start, sel_count\n")
+    f.write("      integer, dimension(3) :: sel, sel_start, sel_count\n")
     if (i==2 or i==3):
         f.write("      logical :: reduce\n")
         if (i==2):
@@ -77,31 +79,9 @@ for i in range(nformat):
     # Deal with optional arguments
     #
     f.write("      if (present(opt_decomp)) then\n")
-    f.write("         if (ipencil == 1) then\n")
-    f.write("            sel_start = opt_decomp%xst\n")
-    f.write("            sel_count = opt_decomp%xsz\n")
-    f.write("         else if (ipencil == 2) then\n")
-    f.write("            sel_start = opt_decomp%yst\n")                                                    
-    f.write("            sel_count = opt_decomp%ysz\n")
-    f.write("         else if (ipencil == 3) then\n")
-    f.write("            sel_start = opt_decomp%zst\n")
-    f.write("            sel_count = opt_decomp%zsz\n")
-    f.write("         else\n")
-    f.write("            call decomp_2d_abort(__FILE__, __LINE__, ipencil, \"Invalid value\")\n")
-    f.write("         end if\n")
+    f.write("         call io_get_size(ipencil, opt_decomp, sel, sel_start, sel_count)\n")
     f.write("      else\n")
-    f.write("         if (ipencil == 1) then\n")
-    f.write("            sel_start = decomp_main%xst\n")          
-    f.write("            sel_count = decomp_main%xsz\n")
-    f.write("         else if (ipencil == 2) then\n")
-    f.write("            sel_start = decomp_main%yst\n")
-    f.write("            sel_count = decomp_main%ysz\n")
-    f.write("         else if (ipencil == 3) then\n")
-    f.write("            sel_start = decomp_main%zst\n")
-    f.write("            sel_count = decomp_main%zsz\n")
-    f.write("         else\n")
-    f.write("            call decomp_2d_abort(__FILE__, __LINE__, ipencil, \"Invalid value\")\n")
-    f.write("         end if\n")
+    f.write("         call io_get_size(ipencil, decomp_main, sel, sel_start, sel_count)\n")
     f.write("      end if\n")
     f.write("\n")
     if (i==2 or i==3):
@@ -118,6 +98,7 @@ for i in range(nformat):
     if (i==0 or i==1):
         f.write("      call adios_read(io, varname, sel_start, sel_count, &\n")
         f.write("                      opt_family=opt_family, &\n")
+        f.write("                      opt_step_start=opt_step_start, &\n")
         if (i==0):
             f.write("                      freal=var)\n")
         elif (i==1):
@@ -128,6 +109,7 @@ for i in range(nformat):
         f.write("         allocate(tmp(size(var, 1), size(var, 2), size(var, 3)))\n")
         f.write("         call adios_read(io, varname, sel_start, sel_count, &\n")
         f.write("                         opt_family=opt_family, &\n")
+        f.write("                         opt_step_start=opt_step_start, &\n")
         if (i==2):
             f.write("                         freal=tmp)\n")
             f.write("         var = real(tmp, kind=real64)\n")
@@ -138,6 +120,7 @@ for i in range(nformat):
         f.write("      else\n")
         f.write("         call adios_read(io, varname, sel_start, sel_count, &\n")
         f.write("                         opt_family=opt_family, &\n")
+        f.write("                         opt_step_start=opt_step_start, &\n")
         if (i==2):
             f.write("                         dreal=var)\n")
         elif (i==3):

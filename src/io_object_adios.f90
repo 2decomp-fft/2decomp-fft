@@ -755,13 +755,16 @@ contains
    !
    ! Read the provided array
    !
-   subroutine d2d_io_adios_read(writer, varname, sel_start, sel_count, freal, dreal, fcplx, dcplx)
+   subroutine d2d_io_adios_read(writer, varname, sel_start, sel_count, &
+                                opt_step_start, &
+                                freal, dreal, fcplx, dcplx)
 
       implicit none
 
       class(d2d_io_adios), intent(inout) :: writer
       character(len=*), intent(in) :: varname
       integer, intent(in), dimension(3) :: sel_start, sel_count
+      integer, intent(in), optional :: opt_step_start
       real(real32), contiguous, dimension(:, :, :), intent(out), optional :: freal
       real(real64), contiguous, dimension(:, :, :), intent(out), optional :: dreal
       complex(real32), contiguous, dimension(:, :, :), intent(out), optional :: fcplx
@@ -783,15 +786,22 @@ contains
 
       ! Get the variable handle
       call adios2_inquire_variable(var_handle, writer%family%io, varname, ierror)
-      if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "adios2_inquire_variable "//trim(varname))
-      if (.not. var_handle%valid) then
-         call decomp_2d_abort(__FILE__, __LINE__, -1, &
-                              "ERROR: trying to read variable without registering first! "//trim(varname))
+      if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, &
+                                            "adios2_inquire_variable "//trim(varname))
+      if (.not. var_handle%valid) call decomp_2d_abort(__FILE__, __LINE__, -1, &
+                                                       "IO reader : impossible to read variable. "//trim(varname))
+
+      ! Set the step if needed
+      if (present(opt_step_start)) then
+         call adios2_set_step_selection(var_handle, int(opt_step_start, kind=8), int(1, kind=8), ierror)
+         if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, &
+                                               "adios2_set_step_selection"//trim(varname))
       end if
 
       ! Select a subset of the file
       call adios2_set_selection(var_handle, 3, int(sel_start, kind=8), int(sel_count, kind=8), ierror)
-      if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "adios2_set_selection")
+      if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, &
+                                            "adios2_set_selection "//trim(varname))
 
       ! Read (deferred)
       if (present(freal)) then
@@ -803,7 +813,8 @@ contains
       else if (present(dcplx)) then
          call adios2_get(writer%engine, var_handle, dcplx, read_mode, ierror)
       end if
-      if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "adios2_get")
+      if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, &
+                                            "adios2_get "//trim(varname))
 
    end subroutine d2d_io_adios_read
 

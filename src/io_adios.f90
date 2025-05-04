@@ -27,6 +27,7 @@
 !    - varname : name provided when the array was registered and written
 !    - opt_decomp : optional, decomp_info for the variable. decomp_main is used if not provided
 !    - opt_family : optional, family of IO readers / writers. Used only if io needs to be opened.
+!    - opt_step_start : optional, specify the step to read (index starts at 0)
 !    - opt_reduce_prec : optional, file in single precision. default_opt_reduce_prec is used if not provided
 !
 
@@ -58,6 +59,7 @@
 !    - nplanes : number of planes stacked in the file
 !    - opt_decomp : optional, decomp_info object for the stacked planes
 !    - opt_family : optional, family of IO readers / writers. Used only if io needs to be opened.
+!    - opt_step_start : optional, specify the step to read (index starts at 0)
 !    - opt_reduce_prec : optiona, file in single precision. default_opt_reduce_prec is used if not provided
 !
 
@@ -272,10 +274,12 @@ contains
    !   - io : IO reader / writer
    !   - varname : name of the variable
    !   - opt_family : family of IO readers / writers
+   !   - opt_step_start : starting step for the provided variable
    !   - freal / dreal / fcplx / dcplx : array
    !
    subroutine adios_read(io, varname, sel_start, sel_count, &
                          opt_family, &
+                         opt_step_start, &
                          freal, dreal, fcplx, dcplx)
 
       implicit none
@@ -284,6 +288,7 @@ contains
       character(len=*), intent(in) :: varname
       integer, intent(in), dimension(3) :: sel_start, sel_count
       type(d2d_io_family), target, intent(inout), optional :: opt_family
+      integer, intent(in), optional :: opt_step_start
       real(real32), contiguous, dimension(:, :, :), intent(out), optional :: freal
       real(real64), contiguous, dimension(:, :, :), intent(out), optional :: dreal
       complex(real32), contiguous, dimension(:, :, :), intent(out), optional :: fcplx
@@ -302,7 +307,9 @@ contains
 
       ! Perform IO with ADIOS2
       ! Starting index is 0-based
-      call io%read(varname, sel_start - 1, sel_count, freal, dreal, fcplx, dcplx)
+      call io%read(varname, sel_start, sel_count, &
+                   opt_step_start, &
+                   freal, dreal, fcplx, dcplx)
 
    end subroutine adios_read
 
@@ -466,6 +473,7 @@ contains
    subroutine read_var_freal(io, ipencil, var, varname, &
                              opt_decomp, &
                              opt_family, &
+                             opt_step_start, &
                              opt_reduce_prec)
 
       implicit none
@@ -477,43 +485,23 @@ contains
       character(len=*), intent(in) :: varname
       class(info), intent(in), optional :: opt_decomp
       type(d2d_io_family), intent(inout), optional :: opt_family
+      integer, intent(in), optional :: opt_step_start
       logical, intent(in), optional :: opt_reduce_prec
 
       ! Local variable(s)
-      integer, dimension(3) :: sel_start, sel_count
+      integer, dimension(3) :: sel, sel_start, sel_count
 
       if (decomp_profiler_io) call decomp_profiler_start("adios_read_var")
 
       if (present(opt_decomp)) then
-         if (ipencil == 1) then
-            sel_start = opt_decomp%xst
-            sel_count = opt_decomp%xsz
-         else if (ipencil == 2) then
-            sel_start = opt_decomp%yst
-            sel_count = opt_decomp%ysz
-         else if (ipencil == 3) then
-            sel_start = opt_decomp%zst
-            sel_count = opt_decomp%zsz
-         else
-            call decomp_2d_abort(__FILE__, __LINE__, ipencil, "Invalid value")
-         end if
+         call io_get_size(ipencil, opt_decomp, sel, sel_start, sel_count)
       else
-         if (ipencil == 1) then
-            sel_start = decomp_main%xst
-            sel_count = decomp_main%xsz
-         else if (ipencil == 2) then
-            sel_start = decomp_main%yst
-            sel_count = decomp_main%ysz
-         else if (ipencil == 3) then
-            sel_start = decomp_main%zst
-            sel_count = decomp_main%zsz
-         else
-            call decomp_2d_abort(__FILE__, __LINE__, ipencil, "Invalid value")
-         end if
+         call io_get_size(ipencil, decomp_main, sel, sel_start, sel_count)
       end if
 
       call adios_read(io, varname, sel_start, sel_count, &
                       opt_family=opt_family, &
+                      opt_step_start=opt_step_start, &
                       freal=var)
 
       associate (p => opt_reduce_prec); end associate
@@ -525,6 +513,7 @@ contains
    subroutine read_var_fcplx(io, ipencil, var, varname, &
                              opt_decomp, &
                              opt_family, &
+                             opt_step_start, &
                              opt_reduce_prec)
 
       implicit none
@@ -536,43 +525,23 @@ contains
       character(len=*), intent(in) :: varname
       class(info), intent(in), optional :: opt_decomp
       type(d2d_io_family), intent(inout), optional :: opt_family
+      integer, intent(in), optional :: opt_step_start
       logical, intent(in), optional :: opt_reduce_prec
 
       ! Local variable(s)
-      integer, dimension(3) :: sel_start, sel_count
+      integer, dimension(3) :: sel, sel_start, sel_count
 
       if (decomp_profiler_io) call decomp_profiler_start("adios_read_var")
 
       if (present(opt_decomp)) then
-         if (ipencil == 1) then
-            sel_start = opt_decomp%xst
-            sel_count = opt_decomp%xsz
-         else if (ipencil == 2) then
-            sel_start = opt_decomp%yst
-            sel_count = opt_decomp%ysz
-         else if (ipencil == 3) then
-            sel_start = opt_decomp%zst
-            sel_count = opt_decomp%zsz
-         else
-            call decomp_2d_abort(__FILE__, __LINE__, ipencil, "Invalid value")
-         end if
+         call io_get_size(ipencil, opt_decomp, sel, sel_start, sel_count)
       else
-         if (ipencil == 1) then
-            sel_start = decomp_main%xst
-            sel_count = decomp_main%xsz
-         else if (ipencil == 2) then
-            sel_start = decomp_main%yst
-            sel_count = decomp_main%ysz
-         else if (ipencil == 3) then
-            sel_start = decomp_main%zst
-            sel_count = decomp_main%zsz
-         else
-            call decomp_2d_abort(__FILE__, __LINE__, ipencil, "Invalid value")
-         end if
+         call io_get_size(ipencil, decomp_main, sel, sel_start, sel_count)
       end if
 
       call adios_read(io, varname, sel_start, sel_count, &
                       opt_family=opt_family, &
+                      opt_step_start=opt_step_start, &
                       fcplx=var)
 
       associate (p => opt_reduce_prec); end associate
@@ -584,6 +553,7 @@ contains
    subroutine read_var_dreal(io, ipencil, var, varname, &
                              opt_decomp, &
                              opt_family, &
+                             opt_step_start, &
                              opt_reduce_prec)
 
       implicit none
@@ -595,41 +565,20 @@ contains
       character(len=*), intent(in) :: varname
       class(info), intent(in), optional :: opt_decomp
       type(d2d_io_family), intent(inout), optional :: opt_family
+      integer, intent(in), optional :: opt_step_start
       logical, intent(in), optional :: opt_reduce_prec
 
       ! Local variable(s)
-      integer, dimension(3) :: sel_start, sel_count
+      integer, dimension(3) :: sel, sel_start, sel_count
       logical :: reduce
       real(real32), dimension(:, :, :), allocatable :: tmp
 
       if (decomp_profiler_io) call decomp_profiler_start("adios_read_var")
 
       if (present(opt_decomp)) then
-         if (ipencil == 1) then
-            sel_start = opt_decomp%xst
-            sel_count = opt_decomp%xsz
-         else if (ipencil == 2) then
-            sel_start = opt_decomp%yst
-            sel_count = opt_decomp%ysz
-         else if (ipencil == 3) then
-            sel_start = opt_decomp%zst
-            sel_count = opt_decomp%zsz
-         else
-            call decomp_2d_abort(__FILE__, __LINE__, ipencil, "Invalid value")
-         end if
+         call io_get_size(ipencil, opt_decomp, sel, sel_start, sel_count)
       else
-         if (ipencil == 1) then
-            sel_start = decomp_main%xst
-            sel_count = decomp_main%xsz
-         else if (ipencil == 2) then
-            sel_start = decomp_main%yst
-            sel_count = decomp_main%ysz
-         else if (ipencil == 3) then
-            sel_start = decomp_main%zst
-            sel_count = decomp_main%zsz
-         else
-            call decomp_2d_abort(__FILE__, __LINE__, ipencil, "Invalid value")
-         end if
+         call io_get_size(ipencil, decomp_main, sel, sel_start, sel_count)
       end if
 
       ! One can write to single precision using opt_reduce_prec
@@ -643,12 +592,14 @@ contains
          allocate (tmp(size(var, 1), size(var, 2), size(var, 3)))
          call adios_read(io, varname, sel_start, sel_count, &
                          opt_family=opt_family, &
+                         opt_step_start=opt_step_start, &
                          freal=tmp)
          var = real(tmp, kind=real64)
          deallocate (tmp)
       else
          call adios_read(io, varname, sel_start, sel_count, &
                          opt_family=opt_family, &
+                         opt_step_start=opt_step_start, &
                          dreal=var)
       end if
 
@@ -659,6 +610,7 @@ contains
    subroutine read_var_dcplx(io, ipencil, var, varname, &
                              opt_decomp, &
                              opt_family, &
+                             opt_step_start, &
                              opt_reduce_prec)
 
       implicit none
@@ -670,41 +622,20 @@ contains
       character(len=*), intent(in) :: varname
       class(info), intent(in), optional :: opt_decomp
       type(d2d_io_family), intent(inout), optional :: opt_family
+      integer, intent(in), optional :: opt_step_start
       logical, intent(in), optional :: opt_reduce_prec
 
       ! Local variable(s)
-      integer, dimension(3) :: sel_start, sel_count
+      integer, dimension(3) :: sel, sel_start, sel_count
       logical :: reduce
       complex(real32), dimension(:, :, :), allocatable :: tmp
 
       if (decomp_profiler_io) call decomp_profiler_start("adios_read_var")
 
       if (present(opt_decomp)) then
-         if (ipencil == 1) then
-            sel_start = opt_decomp%xst
-            sel_count = opt_decomp%xsz
-         else if (ipencil == 2) then
-            sel_start = opt_decomp%yst
-            sel_count = opt_decomp%ysz
-         else if (ipencil == 3) then
-            sel_start = opt_decomp%zst
-            sel_count = opt_decomp%zsz
-         else
-            call decomp_2d_abort(__FILE__, __LINE__, ipencil, "Invalid value")
-         end if
+         call io_get_size(ipencil, opt_decomp, sel, sel_start, sel_count)
       else
-         if (ipencil == 1) then
-            sel_start = decomp_main%xst
-            sel_count = decomp_main%xsz
-         else if (ipencil == 2) then
-            sel_start = decomp_main%yst
-            sel_count = decomp_main%ysz
-         else if (ipencil == 3) then
-            sel_start = decomp_main%zst
-            sel_count = decomp_main%zsz
-         else
-            call decomp_2d_abort(__FILE__, __LINE__, ipencil, "Invalid value")
-         end if
+         call io_get_size(ipencil, decomp_main, sel, sel_start, sel_count)
       end if
 
       ! One can write to single precision using opt_reduce_prec
@@ -718,12 +649,14 @@ contains
          allocate (tmp(size(var, 1), size(var, 2), size(var, 3)))
          call adios_read(io, varname, sel_start, sel_count, &
                          opt_family=opt_family, &
+                         opt_step_start=opt_step_start, &
                          fcplx=tmp)
          var = cmplx(tmp, kind=real64)
          deallocate (tmp)
       else
          call adios_read(io, varname, sel_start, sel_count, &
                          opt_family=opt_family, &
+                         opt_step_start=opt_step_start, &
                          dcplx=var)
       end if
 
@@ -1168,6 +1101,7 @@ contains
    subroutine read_plane_freal(io, ipencil, var, varname, nplanes, &
                                opt_decomp, &
                                opt_family, &
+                               opt_step_start, &
                                opt_reduce_prec)
 
       implicit none
@@ -1180,43 +1114,22 @@ contains
       integer, intent(in) :: nplanes
       class(info), intent(in), optional :: opt_decomp
       type(d2d_io_family), intent(inout), optional :: opt_family
+      integer, intent(in), optional :: opt_step_start
       logical, intent(in), optional :: opt_reduce_prec
 
       ! Local variable(s)
-      integer, dimension(3) :: sel_start, sel_count
+      integer, dimension(3) :: sel, sel_start, sel_count
       if (decomp_profiler_io) call decomp_profiler_start("adios_read_plane")
 
       if (present(opt_decomp)) then
-         if (ipencil == 1) then
-            sel_start = opt_decomp%xst
-            sel_count = opt_decomp%xsz
-         else if (ipencil == 2) then
-            sel_start = opt_decomp%yst
-            sel_count = opt_decomp%ysz
-         else if (ipencil == 3) then
-            sel_start = opt_decomp%zst
-            sel_count = opt_decomp%zsz
-         else
-            call decomp_2d_abort(__FILE__, __LINE__, ipencil, "Invalid value")
-         end if
+         call io_get_size(ipencil, opt_decomp, sel, sel_start, sel_count, nplanes)
       else
-         if (ipencil == 1) then
-            sel_start = decomp_main%xst
-            sel_count = decomp_main%xsz
-         else if (ipencil == 2) then
-            sel_start = decomp_main%yst
-            sel_count = decomp_main%ysz
-         else if (ipencil == 3) then
-            sel_start = decomp_main%zst
-            sel_count = decomp_main%zsz
-         else
-            call decomp_2d_abort(__FILE__, __LINE__, ipencil, "Invalid value")
-         end if
+         call io_get_size(ipencil, decomp_main, sel, sel_start, sel_count, nplanes)
       end if
-      sel_count(ipencil) = nplanes
 
       call adios_read(io, varname, sel_start, sel_count, &
                       opt_family=opt_family, &
+                      opt_step_start=opt_step_start, &
                       freal=var)
       associate (p => opt_reduce_prec)
       end associate
@@ -1228,6 +1141,7 @@ contains
    subroutine read_plane_fcplx(io, ipencil, var, varname, nplanes, &
                                opt_decomp, &
                                opt_family, &
+                               opt_step_start, &
                                opt_reduce_prec)
 
       implicit none
@@ -1240,43 +1154,22 @@ contains
       integer, intent(in) :: nplanes
       class(info), intent(in), optional :: opt_decomp
       type(d2d_io_family), intent(inout), optional :: opt_family
+      integer, intent(in), optional :: opt_step_start
       logical, intent(in), optional :: opt_reduce_prec
 
       ! Local variable(s)
-      integer, dimension(3) :: sel_start, sel_count
+      integer, dimension(3) :: sel, sel_start, sel_count
       if (decomp_profiler_io) call decomp_profiler_start("adios_read_plane")
 
       if (present(opt_decomp)) then
-         if (ipencil == 1) then
-            sel_start = opt_decomp%xst
-            sel_count = opt_decomp%xsz
-         else if (ipencil == 2) then
-            sel_start = opt_decomp%yst
-            sel_count = opt_decomp%ysz
-         else if (ipencil == 3) then
-            sel_start = opt_decomp%zst
-            sel_count = opt_decomp%zsz
-         else
-            call decomp_2d_abort(__FILE__, __LINE__, ipencil, "Invalid value")
-         end if
+         call io_get_size(ipencil, opt_decomp, sel, sel_start, sel_count, nplanes)
       else
-         if (ipencil == 1) then
-            sel_start = decomp_main%xst
-            sel_count = decomp_main%xsz
-         else if (ipencil == 2) then
-            sel_start = decomp_main%yst
-            sel_count = decomp_main%ysz
-         else if (ipencil == 3) then
-            sel_start = decomp_main%zst
-            sel_count = decomp_main%zsz
-         else
-            call decomp_2d_abort(__FILE__, __LINE__, ipencil, "Invalid value")
-         end if
+         call io_get_size(ipencil, decomp_main, sel, sel_start, sel_count, nplanes)
       end if
-      sel_count(ipencil) = nplanes
 
       call adios_read(io, varname, sel_start, sel_count, &
                       opt_family=opt_family, &
+                      opt_step_start=opt_step_start, &
                       fcplx=var)
       associate (p => opt_reduce_prec)
       end associate
@@ -1288,6 +1181,7 @@ contains
    subroutine read_plane_dreal(io, ipencil, var, varname, nplanes, &
                                opt_decomp, &
                                opt_family, &
+                               opt_step_start, &
                                opt_reduce_prec)
 
       implicit none
@@ -1300,43 +1194,21 @@ contains
       integer, intent(in) :: nplanes
       class(info), intent(in), optional :: opt_decomp
       type(d2d_io_family), intent(inout), optional :: opt_family
+      integer, intent(in), optional :: opt_step_start
       logical, intent(in), optional :: opt_reduce_prec
 
       ! Local variable(s)
-      integer, dimension(3) :: sel_start, sel_count
+      integer, dimension(3) :: sel, sel_start, sel_count
       logical :: reduce
       real(real32), allocatable, dimension(:, :, :) :: tmp
 
       if (decomp_profiler_io) call decomp_profiler_start("adios_read_plane")
 
       if (present(opt_decomp)) then
-         if (ipencil == 1) then
-            sel_start = opt_decomp%xst
-            sel_count = opt_decomp%xsz
-         else if (ipencil == 2) then
-            sel_start = opt_decomp%yst
-            sel_count = opt_decomp%ysz
-         else if (ipencil == 3) then
-            sel_start = opt_decomp%zst
-            sel_count = opt_decomp%zsz
-         else
-            call decomp_2d_abort(__FILE__, __LINE__, ipencil, "Invalid value")
-         end if
+         call io_get_size(ipencil, opt_decomp, sel, sel_start, sel_count, nplanes)
       else
-         if (ipencil == 1) then
-            sel_start = decomp_main%xst
-            sel_count = decomp_main%xsz
-         else if (ipencil == 2) then
-            sel_start = decomp_main%yst
-            sel_count = decomp_main%ysz
-         else if (ipencil == 3) then
-            sel_start = decomp_main%zst
-            sel_count = decomp_main%zsz
-         else
-            call decomp_2d_abort(__FILE__, __LINE__, ipencil, "Invalid value")
-         end if
+         call io_get_size(ipencil, decomp_main, sel, sel_start, sel_count, nplanes)
       end if
-      sel_count(ipencil) = nplanes
 
       ! One can write to single precision using opt_reduce_prec
       if (present(opt_reduce_prec)) then
@@ -1352,12 +1224,14 @@ contains
                        size(var, 3)))
          call adios_read(io, varname, sel_start, sel_count, &
                          opt_family=opt_family, &
+                         opt_step_start=opt_step_start, &
                          freal=tmp)
          var = real(tmp, kind=real64)
          deallocate (tmp)
       else
          call adios_read(io, varname, sel_start, sel_count, &
                          opt_family=opt_family, &
+                         opt_step_start=opt_step_start, &
                          dreal=var)
       end if
       if (decomp_profiler_io) call decomp_profiler_end("adios_read_plane")
@@ -1367,6 +1241,7 @@ contains
    subroutine read_plane_dcplx(io, ipencil, var, varname, nplanes, &
                                opt_decomp, &
                                opt_family, &
+                               opt_step_start, &
                                opt_reduce_prec)
 
       implicit none
@@ -1379,43 +1254,21 @@ contains
       integer, intent(in) :: nplanes
       class(info), intent(in), optional :: opt_decomp
       type(d2d_io_family), intent(inout), optional :: opt_family
+      integer, intent(in), optional :: opt_step_start
       logical, intent(in), optional :: opt_reduce_prec
 
       ! Local variable(s)
-      integer, dimension(3) :: sel_start, sel_count
+      integer, dimension(3) :: sel, sel_start, sel_count
       logical :: reduce
       complex(real32), allocatable, dimension(:, :, :) :: tmp
 
       if (decomp_profiler_io) call decomp_profiler_start("adios_read_plane")
 
       if (present(opt_decomp)) then
-         if (ipencil == 1) then
-            sel_start = opt_decomp%xst
-            sel_count = opt_decomp%xsz
-         else if (ipencil == 2) then
-            sel_start = opt_decomp%yst
-            sel_count = opt_decomp%ysz
-         else if (ipencil == 3) then
-            sel_start = opt_decomp%zst
-            sel_count = opt_decomp%zsz
-         else
-            call decomp_2d_abort(__FILE__, __LINE__, ipencil, "Invalid value")
-         end if
+         call io_get_size(ipencil, opt_decomp, sel, sel_start, sel_count, nplanes)
       else
-         if (ipencil == 1) then
-            sel_start = decomp_main%xst
-            sel_count = decomp_main%xsz
-         else if (ipencil == 2) then
-            sel_start = decomp_main%yst
-            sel_count = decomp_main%ysz
-         else if (ipencil == 3) then
-            sel_start = decomp_main%zst
-            sel_count = decomp_main%zsz
-         else
-            call decomp_2d_abort(__FILE__, __LINE__, ipencil, "Invalid value")
-         end if
+         call io_get_size(ipencil, decomp_main, sel, sel_start, sel_count, nplanes)
       end if
-      sel_count(ipencil) = nplanes
 
       ! One can write to single precision using opt_reduce_prec
       if (present(opt_reduce_prec)) then
@@ -1431,12 +1284,14 @@ contains
                        size(var, 3)))
          call adios_read(io, varname, sel_start, sel_count, &
                          opt_family=opt_family, &
+                         opt_step_start=opt_step_start, &
                          fcplx=tmp)
          var = cmplx(tmp, kind=real64)
          deallocate (tmp)
       else
          call adios_read(io, varname, sel_start, sel_count, &
                          opt_family=opt_family, &
+                         opt_step_start=opt_step_start, &
                          dcplx=var)
       end if
       if (decomp_profiler_io) call decomp_profiler_end("adios_read_plane")

@@ -83,8 +83,8 @@ program io_read
    call decomp_2d_adios_read_var(io, 2, u2b, 'u2.dat')
    call io%end_close
    call io%open_start(decomp_2d_read_mode, opt_family=io_family)
-   call decomp_2d_adios_read_var(io, 2, u2c, 'u2.dat')
-   call decomp_2d_adios_read_var(io, 3, u3b, 'u3.dat')
+   call decomp_2d_adios_read_var(io, 2, u2c, 'u2.dat', opt_step_start=0)
+   call decomp_2d_adios_read_var(io, 3, u3b, 'u3.dat', opt_step_start=0)
    call io%end_close
 
    ! Check against the global data array

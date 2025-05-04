@@ -34,8 +34,6 @@ program io_test
    real(mytype), allocatable, dimension(:, :, :) :: u1b, u2b, u2c, u3b
 #endif
 
-   real(mytype), parameter :: eps = 1.0E-7_mytype
-
    character(len=*), parameter :: io_name = "test-io"
    type(d2d_io_family), save :: io_family
    type(d2d_io_adios), save :: io
@@ -136,7 +134,15 @@ program io_test
    call io%open_start(decomp_2d_write_mode, opt_family=io_family)
    call decomp_2d_adios_write_var(io, u2, 'u2.dat')
    call decomp_2d_adios_write_var(io, u3, 'u3.dat')
+   call io%end
+   u2 = u2 + 1
+   u3 = u3 + 1
+   call io%start
+   call decomp_2d_adios_write_var(io, u2, 'u2.dat')
+   call decomp_2d_adios_write_var(io, u3, 'u3.dat')
    call io%end_close
+   u2 = u2 - 1
+   u3 = u3 - 1
 
    ! Close all the IO modules
    ! Reading after writing is not possible
@@ -155,8 +161,8 @@ program io_test
    !
    ! Using a dedicated IO family
    call io%open_start(decomp_2d_read_mode, opt_family=io_family)
-   call decomp_2d_adios_read_var(io, 2, u2c, 'u2.dat')
-   call decomp_2d_adios_read_var(io, 3, u3b, 'u3.dat')
+   call decomp_2d_adios_read_var(io, 2, u2c, 'u2.dat', opt_step_start=0)
+   call decomp_2d_adios_read_var(io, 3, u3b, 'u3.dat', opt_step_start=0)
    call io%end_close
 
    ! compare
@@ -187,7 +193,7 @@ contains
       do k = xstart(3), xend(3)
          do j = xstart(2), xend(2)
             do i = xstart(1), xend(1)
-               if (abs((u1(i, j, k) - u1b(i, j, k))) > eps) then
+               if (abs((u1(i, j, k) - u1b(i, j, k))) > epsilon(data1(1,1,1))) then
                   print *, u1(i, j, k), u1b(i, j, k)
                   stop 1
                end if
@@ -198,7 +204,7 @@ contains
       do k = ystart(3), yend(3)
          do j = ystart(2), yend(2)
             do i = ystart(1), yend(1)
-               if (abs((u2(i, j, k) - u2b(i, j, k))) > eps) stop 2
+               if (abs((u2(i, j, k) - u2b(i, j, k))) > epsilon(data1(1,1,1))) stop 2
             end do
          end do
       end do
@@ -206,7 +212,7 @@ contains
       do k = ystart(3), yend(3)
          do j = ystart(2), yend(2)
             do i = ystart(1), yend(1)
-               if (abs((u2(i, j, k) - u2c(i, j, k))) > eps) stop 2
+               if (abs((u2(i, j, k) - u2c(i, j, k))) > epsilon(data1(1,1,1))) stop 2
             end do
          end do
       end do
@@ -214,7 +220,7 @@ contains
       do k = zstart(3), zend(3)
          do j = zstart(2), zend(2)
             do i = zstart(1), zend(1)
-               if (abs((u3(i, j, k) - u3b(i, j, k))) > eps) stop 3
+               if (abs((u3(i, j, k) - u3b(i, j, k))) > epsilon(data1(1,1,1))) stop 3
             end do
          end do
       end do
@@ -223,7 +229,7 @@ contains
       do k = xstart(3), xend(3)
          do j = xstart(2), xend(2)
             do i = xstart(1), xend(1)
-               if (abs(data1(i, j, k) - u1b(i, j, k)) > eps) stop 4
+               if (abs(data1(i, j, k) - u1b(i, j, k)) > epsilon(data1(1,1,1))) stop 4
             end do
          end do
       end do
@@ -231,7 +237,7 @@ contains
       do k = ystart(3), yend(3)
          do j = ystart(2), yend(2)
             do i = ystart(1), yend(1)
-               if (abs((data1(i, j, k) - u2b(i, j, k))) > eps) stop 5
+               if (abs((data1(i, j, k) - u2b(i, j, k))) > epsilon(data1(1,1,1))) stop 5
             end do
          end do
       end do
@@ -239,7 +245,7 @@ contains
       do k = ystart(3), yend(3)
          do j = ystart(2), yend(2)
             do i = ystart(1), yend(1)
-               if (abs((data1(i, j, k) - u2c(i, j, k))) > eps) stop 5
+               if (abs((data1(i, j, k) - u2c(i, j, k))) > epsilon(data1(1,1,1))) stop 5
             end do
          end do
       end do
@@ -247,7 +253,7 @@ contains
       do k = zstart(3), zend(3)
          do j = zstart(2), zend(2)
             do i = zstart(1), zend(1)
-               if (abs((data1(i, j, k) - u3b(i, j, k))) > eps) stop 6
+               if (abs((data1(i, j, k) - u3b(i, j, k))) > epsilon(data1(1,1,1))) stop 6
             end do
          end do
       end do

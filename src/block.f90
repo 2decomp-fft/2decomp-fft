@@ -286,11 +286,10 @@ contains
       class(blk), target, intent(in) :: self
 #ifdef _GPU
       type(c_devptr), intent(in) :: ref
-      type(blk), pointer, device, intent(out) :: ptr
 #else
       type(c_ptr), intent(in) :: ref
-      type(blk), pointer, intent(out) :: ptr
 #endif
+      type(blk), pointer, intent(out) :: ptr
 
       ! Local variables
 #ifdef _GPU

@@ -230,7 +230,7 @@ contains
 
       ! Local variable
 #ifdef _GPU
-      type(blk), pointer, device :: ptr
+      type(blk), pointer :: ptr
 #endif
 
       ! Safety check
@@ -260,9 +260,6 @@ contains
 
       ! Local variable
       type(blk), pointer :: ptr
-#ifdef _GPU
-      attributes(device) :: ptr
-#endif
 
       ! Return if the memory pool was not initialized
       if (.not. self%available) return
@@ -302,8 +299,7 @@ contains
       ! Local variable
       type(blk), pointer :: blk_ptr
 #ifdef _GPU
-      attributes(device) :: blk_ptr
-      type(blk), pointer, device :: blk_ptr2
+      type(blk), pointer :: blk_ptr2
 #endif
 
       ! Safety check
@@ -626,8 +622,7 @@ contains
       ! Local variables
       type(blk), pointer :: block
 #ifdef _GPU
-      attributes(device) :: block
-      type(blk), pointer, device :: ptr
+      type(blk), pointer :: ptr
 #endif
 
       ! Safety check
@@ -1025,9 +1020,6 @@ contains
 
       ! Local variable
       type(blk), pointer :: tmp
-#ifdef _GPU
-      attributes(device) :: tmp
-#endif
 
       ! Safety check
       if (.not. self%available) &
@@ -1064,9 +1056,6 @@ contains
       ! Local variable
       integer :: output
       type(blk), pointer :: tmp
-#ifdef _GPU
-      attributes(device) :: tmp
-#endif
 
       ! If possible, use the given IO unit
       if (present(opt_unit)) then

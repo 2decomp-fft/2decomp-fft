@@ -23,9 +23,6 @@ module m_decomp_pool
 
    ! Main memory pool for the library 2decomp
    type(mem_pool), target, save :: decomp_pool
-#ifdef _GPU
-   attributes(device) :: decomp_pool
-#endif
 
    ! true when the memory pool is ready
    logical, protected, save :: decomp_pool_ready = .false.

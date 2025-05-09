@@ -329,11 +329,21 @@ contains
 #endif
 
 #if defined(_GPU)
-         write(*,*) "This is not working yet"
+         write(*,*) "This is not working yet mem_split_zy_real"
          !! To be fixed with proper data
-         !$acc host_data use_device(out)
-         istat = cudaMemcpy2D(out(init_pos), n1 * n2, in(1,1,n1), n1 * (i2 - i1 + 1), n1 * (i2 - i1 + 1), n3, cudaMemcpyDeviceToDevice)
+         !$acc host_data use_device(in)
+         istat = cudaMemcpy2D(out(init_pos),      &        !dst_addr
+                              n1 ,                &       !dst_pitch
+                              in(1,1,i1),         &        !src_addr
+                              n1 ,                 &        !src_pitch
+                              n1 ,                 &        !width
+                              n2 * (i2 - i1 + 1), & !height
+                              cudaMemcpyDeviceToDevice)
          !$acc end host_data
+         print *, "Error in cudaMemcpy mem_split_zy_real :", cudaGetErrorString(istat)
+         if (istat /= 0) then
+          print *, "Error in cudaMemcpy:", cudaGetErrorString(istat)
+         end if
          if (istat /= 0) call decomp_2d_abort(__FILE__, __LINE__, istat, "cudaMemcpy2D")
 #else
          !$omp parallel do private(pos) collapse(3)
@@ -384,9 +394,15 @@ contains
 #endif
 
 #if defined(_GPU)
-         write(*,*) "This is not working yet"
-         !$acc host_data use_device(out)
-         istat = cudaMemcpy2D(out(init_pos), n1 * n2, in(1,1,n1), n1 * (i2 - i1 + 1), n1 * (i2 - i1 + 1), n3, cudaMemcpyDeviceToDevice)
+         write(*,*) "This is not working yet mem_split_zy_complex"
+         !$acc host_data use_device(in)
+         istat = cudaMemcpy2D(out(init_pos),      &        !dst_addr
+                              n1 ,                &       !dst_pitch
+                              in(1,1,i1),         &        !src_addr
+                              n1,                 &        !src_pitch
+                              n1,                 &        !width
+                              n2 * (i2 - i1 + 1), & !height
+                              cudaMemcpyDeviceToDevice)
          !$acc end host_data
          if (istat /= 0) call decomp_2d_abort(__FILE__, __LINE__, istat, "cudaMemcpy2D")
 #else
@@ -438,8 +454,15 @@ contains
 #endif
 
 #if defined(_GPU)
+         write(*,*) "Mem Merge ZY real"
          !$acc host_data use_device(out)
-         istat = cudaMemcpy2D(out(1, i1, 1), n1 * n2, in(init_pos), n1 * (i2 - i1 + 1), n1 * (i2 - i1 + 1), n3, cudaMemcpyDeviceToDevice)
+         istat = cudaMemcpy2D(out(1, i1, 1), &
+                              n1 * n2,       & 
+                              in(init_pos),  &
+                              n1 * (i2 - i1 + 1), &
+                              n1 * (i2 - i1 + 1), &
+                              n3,                 &
+                              cudaMemcpyDeviceToDevice)
          !$acc end host_data
          if (istat /= 0) call decomp_2d_abort(__FILE__, __LINE__, istat, "cudaMemcpy2D")
 #else

@@ -143,6 +143,7 @@ contains
 #   endif
       ! if not GPU data are already in dst
       else
+         write(*,*) "Call to mem_merge_yz_real ", nrank 
          call mem_merge_yz_real(wk2, d1, d2, d3, dst, dims(2), &
                                 decomp%z2dist, decomp)
       end if
@@ -343,8 +344,15 @@ contains
 #endif
 
 #if defined(_GPU)
+         write(*,*) "We use mem_split_YZ_real"
          !$acc host_data use_device(in)
-         istat = cudaMemcpy2D(out(init_pos), n1 * (i2 - i1 + 1), in(1, i1, 1), n1 * n2, n1 * (i2 - i1 + 1), n3, cudaMemcpyDeviceToDevice)
+         istat = cudaMemcpy2D(out(init_pos), &
+                              n1 * (i2 - i1 + 1), &
+                              in(1, i1, 1),       &
+                              n1 * n2,            &
+                              n1 * (i2 - i1 + 1), &
+                              n3,                 &
+                              cudaMemcpyDeviceToDevice)
          !$acc end host_data
          if (istat /= 0) call decomp_2d_abort(__FILE__, __LINE__, istat, "cudaMemcpy2D")
 #else
@@ -398,7 +406,13 @@ contains
 
 #if defined(_GPU)
          !$acc host_data use_device(in)
-         istat = cudaMemcpy2D(out(init_pos), n1 * (i2 - i1 + 1), in(1, i1, 1), n1 * n2, n1 * (i2 - i1 + 1), n3, cudaMemcpyDeviceToDevice)
+         istat = cudaMemcpy2D(out(init_pos), &
+                              n1 * (i2 - i1 + 1), &
+                              in(1, i1, 1),       &
+                              n1 * n2,            &
+                              n1 * (i2 - i1 + 1), &
+                              n3,                 &
+                              cudaMemcpyDeviceToDevice)
          !$acc end host_data
          if (istat /= 0) call decomp_2d_abort(__FILE__, __LINE__, istat, "cudaMemcpy2D")
 #else
@@ -451,12 +465,13 @@ contains
 #endif
 
 #if defined(_GPU)
+         write(*,*) "Mem Merge YZ real"
          !$acc host_data use_device(out)
          istat = cudaMemcpy2D(out(1,1,i1), &        !dst_addr
-                              n1,          &        !dst_pitch
+                              n1 ,          &        !dst_pitch
                               in(init_pos),&        !src_addr
-                              n1,          &        !src_pitch
-                              n1,          &        !width
+                              n1 ,          &        !src_pitch
+                              n1 ,          &        !width
                               n2 * (i2 - i1 + 1), & !height
                               cudaMemcpyDeviceToDevice)
          !$acc end host_data
@@ -472,8 +487,8 @@ contains
             end do
          end do
          !$omp end parallel do
-      end do
 #endif
+      end do
 
       return
    end subroutine mem_merge_yz_real
@@ -510,6 +525,7 @@ contains
 #endif
 
 #if defined(_GPU)
+         write(*,*) "Mem Merge YZ complex"
          !$acc host_data use_device(out)
          istat = cudaMemcpy2D(out(1,1,i1), &        !dst_addr
                               n1,          &        !dst_pitch
@@ -531,8 +547,8 @@ contains
             end do
          end do
          !$omp end parallel do
-      end do
 #endif
+      end do
       return
    end subroutine mem_merge_yz_complex
 

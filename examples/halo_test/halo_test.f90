@@ -339,10 +339,15 @@ contains
       integer :: jfirst, jlast ! J loop start/end
       integer :: kfirst, klast ! K loop start/end
 
-      call alloc_x(div2, global)
+      ! Get the shape for the temporary array
+      call alloc_y(div2, global)
       allocate(uh(lbound(div2,1)-1:ubound(div2,1)+1, lbound(div2,2):ubound(div2,2), lbound(div2,3)-1:ubound(div2,3)+1))
       allocate(wh(lbound(div2,1)-1:ubound(div2,1)+1, lbound(div2,2):ubound(div2,2), lbound(div2,3)-1:ubound(div2,3)+1))
       !$acc enter data create(uh, wh)
+
+      ! div2 output will be in x
+      deallocate(div2)
+      call alloc_x(div2, global)
 
       ! Expected sizes
       nx_expected = ysize(1) + 2
@@ -414,10 +419,15 @@ contains
       integer :: jfirst, jlast ! J loop start/end
       integer :: kfirst, klast ! K loop start/end
 
-      call alloc_x(div3, global)
+      ! Get te shape for the temporary array
+      call alloc_z(div3, global)
       allocate(uh(lbound(div3,1)-1:ubound(div3,1)+1, lbound(div3,2)-1:ubound(div3,2)+1, lbound(div3,3):ubound(div3,3)))
       allocate(vh(lbound(div3,1)-1:ubound(div3,1)+1, lbound(div3,2)-1:ubound(div3,2)+1, lbound(div3,3):ubound(div3,3)))
       !$acc enter data create(uh, vh)
+
+      ! div3 output will be in x
+      deallocate(div3)
+      call alloc_x(div3, global)
 
       ! Expected sizes
       nx_expected = zsize(1) + 2

@@ -9,7 +9,7 @@
 
      integer, intent(IN) :: level      ! levels of halo cells required
      real(mytype), dimension(:, :, :), intent(IN) :: in
-     real(mytype), dimension(:, :, :), intent(OUT) :: out
+     real(mytype), allocatable, dimension(:, :, :), intent(OUT) :: out
      logical, optional :: opt_global
      integer, intent(in), optional :: opt_pencil
 
@@ -23,7 +23,7 @@
 
      integer, intent(IN) :: level      ! levels of halo cells required
      real(mytype), dimension(:, :, :), intent(IN) :: in
-     real(mytype), dimension(:, :, :), intent(OUT) :: out
+     real(mytype), allocatable, dimension(:, :, :), intent(OUT) :: out
      TYPE(DECOMP_INFO), intent(in) :: decomp
      logical, optional :: opt_global
      integer, intent(in), optional :: opt_pencil
@@ -60,7 +60,7 @@
 
      integer, intent(IN) :: level      ! levels of halo cells required
      complex(mytype), dimension(:, :, :), intent(IN) :: in
-     complex(mytype), dimension(:, :, :), intent(OUT) :: out
+     complex(mytype), allocatable, dimension(:, :, :), intent(OUT) :: out
      logical, optional :: opt_global
      integer, intent(in), optional :: opt_pencil
 
@@ -74,7 +74,7 @@
 
      integer, intent(IN) :: level      ! levels of halo cells required
      complex(mytype), dimension(:, :, :), intent(IN) :: in
-     complex(mytype), dimension(:, :, :), intent(OUT) :: out
+     complex(mytype), allocatable, dimension(:, :, :), intent(OUT) :: out
      TYPE(DECOMP_INFO), intent(in) :: decomp
      logical, optional :: opt_global
      integer, intent(in), optional :: opt_pencil

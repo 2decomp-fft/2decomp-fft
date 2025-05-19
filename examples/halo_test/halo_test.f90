@@ -499,7 +499,7 @@ contains
       !      array seems to be OK
       allocate (tmp(size(divh, 1), size(divh, 2), size(divh, 3)))
 
-      !$acc host_data use_device(divref)
+      !$acc host_data use_device(divref, divh)
       !$acc kernels default(present)
       tmp(2:xlast, 2:ylast, 2:zlast) = divh(2:xlast, 2:ylast, 2:zlast) - divref(2:xlast, 2:ylast, 2:zlast)
       !$acc end kernels

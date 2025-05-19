@@ -499,6 +499,7 @@ contains
       !      array seems to be OK
       allocate (tmp(size(divh, 1), size(divh, 2), size(divh, 3)))
 
+      !$acc host_data use_device(divref)
       !$acc kernels default(present)
       tmp(2:xlast, 2:ylast, 2:zlast) = divh(2:xlast, 2:ylast, 2:zlast) - divref(2:xlast, 2:ylast, 2:zlast)
       !$acc end kernels
@@ -506,6 +507,7 @@ contains
       !$acc kernels default(present)
       tmp(2:xlast, 2:ylast, 2:zlast) = divref(2:xlast, 2:ylast, 2:zlast)
       !$acc end kernels
+      !$acc end host_data
       divmag = mag(tmp)
 
       if (error < real(2.0, mytype) * epsilon(divmag) * divmag) then
@@ -567,9 +569,6 @@ contains
    subroutine test_halo_size(arrh, nx_expected, ny_expected, nz_expected, tag)
 
       real(mytype), dimension(:, :, :), intent(in) :: arrh
-#if defined(_GPU)
-      attributes(device) :: arrh
-#endif
       integer, intent(in) :: nx_expected, ny_expected, nz_expected
       character(len=*), intent(in) :: tag
 

@@ -143,7 +143,6 @@ contains
 #   endif
       ! if not GPU data are already in dst
       else
-         write(*,*) "Call to mem_merge_yz_real ", nrank 
          call mem_merge_yz_real(wk2, d1, d2, d3, dst, dims(2), &
                                 decomp%z2dist, decomp)
       end if
@@ -344,7 +343,6 @@ contains
 #endif
 
 #if defined(_GPU)
-         write(*,*) "We use mem_split_YZ_real"
          !$acc host_data use_device(in)
          istat = cudaMemcpy2D(out(init_pos), &
                               n1 * (i2 - i1 + 1), &
@@ -465,7 +463,6 @@ contains
 #endif
 
 #if defined(_GPU)
-         write(*,*) "Mem Merge YZ real"
          !$acc host_data use_device(out)
          istat = cudaMemcpy2D(out(1,1,i1), &        !dst_addr
                               n1 ,          &        !dst_pitch
@@ -525,7 +522,6 @@ contains
 #endif
 
 #if defined(_GPU)
-         write(*,*) "Mem Merge YZ complex"
          !$acc host_data use_device(out)
          istat = cudaMemcpy2D(out(1,1,i1), &        !dst_addr
                               n1,          &        !dst_pitch

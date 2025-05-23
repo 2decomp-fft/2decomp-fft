@@ -86,15 +86,25 @@ contains
       if (.not. decomp%even) then
          call mem_split_zy_real(src, s1, s2, s3, wk1, dims(2), &
                                 decomp%z2dist, decomp)
+      else
+         ! For PURE EVEN we don't have to do anything, only for GPU the below is needed      
+#   if defined(_GPU)
+         ! For GPU we need always to use a device array for comumnication
+         !$acc host_data use_device(src)
+         istat = cudaMemcpy(wk1, src, s1 * s2 * s3, cudaMemcpyDeviceToDevice)
+         !$acc end host_data
+         if (istat /= 0) call decomp_2d_abort(__FILE__, __LINE__, istat, "cudaMemcpy2D")
+#   endif
       end if
-#endif
-
-#if defined(_GPU)
-      ! FOr GPU we need always to use a device array for comumnication
+# else
+    ! Not EVEN branch
+#   if defined(_GPU)
+      ! For GPU we need always to use a device array for comumnication
       !$acc host_data use_device(src)
       istat = cudaMemcpy(wk1, src, s1 * s2 * s3, cudaMemcpyDeviceToDevice)
       !$acc end host_data
       if (istat /= 0) call decomp_2d_abort(__FILE__, __LINE__, istat, "cudaMemcpy2D")
+#   endif
 #endif
 
 
@@ -226,17 +236,25 @@ contains
       if (.not. decomp%even) then
          call mem_split_zy_complex(src, s1, s2, s3, wk1, dims(2), &
                                    decomp%z2dist, decomp)
-      end if
-#endif
+      else 
       ! note the src array is suitable to be a send buffer
-      ! so no split operation needed
-
-#if defined(_GPU)
+      ! so no split operation needed only memcopy is needed for GPU
+#        if defined(_GPU)
+           ! For GPU we need to use always a device array for comunication
+           !$acc host_data use_device(src)
+           istat = cudaMemcpy(wk1, src, s1 * s2 * s3, cudaMemcpyDeviceToDevice)
+           !$acc end host_data
+           if (istat /= 0) call decomp_2d_abort(__FILE__, __LINE__, istat, "cudaMemcpy2D")
+#        endif
+      end if
+#else
+#   if defined(_GPU)
       ! For GPU we need to use always a device array for comunication
       !$acc host_data use_device(src)
       istat = cudaMemcpy(wk1, src, s1 * s2 * s3, cudaMemcpyDeviceToDevice)
       !$acc end host_data
       if (istat /= 0) call decomp_2d_abort(__FILE__, __LINE__, istat, "cudaMemcpy2D")
+#   endif
 #endif
 
 
@@ -312,6 +330,7 @@ contains
 #endif
 
       integer :: i, j, k, m, i1, i2, pos, init_pos
+      real(mytype) :: aa
 
       do m = 0, iproc - 1
          if (m == 0) then
@@ -329,8 +348,6 @@ contains
 #endif
 
 #if defined(_GPU)
-         write(*,*) "This is not working yet mem_split_zy_real"
-         !! To be fixed with proper data
          !$acc host_data use_device(in)
          istat = cudaMemcpy2D(out(init_pos),      &        !dst_addr
                               n1 ,                &       !dst_pitch
@@ -340,7 +357,6 @@ contains
                               n2 * (i2 - i1 + 1), & !height
                               cudaMemcpyDeviceToDevice)
          !$acc end host_data
-         print *, "Error in cudaMemcpy mem_split_zy_real :", cudaGetErrorString(istat)
          if (istat /= 0) then
           print *, "Error in cudaMemcpy:", cudaGetErrorString(istat)
          end if
@@ -358,6 +374,11 @@ contains
          !$omp end parallel do
 #endif
       end do
+
+      do i=1,decomp_buf_size
+        aa = out(i)
+        write(*,*) "OUT Rank ", nrank, " elem ", i,aa
+      enddo
 
    end subroutine mem_split_zy_real
 
@@ -394,7 +415,6 @@ contains
 #endif
 
 #if defined(_GPU)
-         write(*,*) "This is not working yet mem_split_zy_complex"
          !$acc host_data use_device(in)
          istat = cudaMemcpy2D(out(init_pos),      &        !dst_addr
                               n1 ,                &       !dst_pitch
@@ -437,7 +457,7 @@ contains
 #endif
 
       integer :: i, j, k, m, i1, i2, pos, init_pos
-
+      
       do m = 0, iproc - 1
          if (m == 0) then
             i1 = 1
@@ -454,7 +474,6 @@ contains
 #endif
 
 #if defined(_GPU)
-         write(*,*) "Mem Merge ZY real"
          !$acc host_data use_device(out)
          istat = cudaMemcpy2D(out(1, i1, 1), &
                               n1 * n2,       & 
@@ -516,7 +535,13 @@ contains
 
 #if defined(_GPU)
          !$acc host_data use_device(out)
-         istat = cudaMemcpy2D(out(1, i1, 1), n1 * n2, in(init_pos), n1 * (i2 - i1 + 1), n1 * (i2 - i1 + 1), n3, cudaMemcpyDeviceToDevice)
+         istat = cudaMemcpy2D(out(1, i1, 1), &
+                              n1 * n2,       &
+                              in(init_pos),  &
+                              n1 * (i2 - i1 + 1), &
+                              n1 * (i2 - i1 + 1), &
+                              n3,                 &
+                              cudaMemcpyDeviceToDevice)
          !$acc end host_data
          if (istat /= 0) call decomp_2d_abort(__FILE__, __LINE__, istat, "cudaMemcpy2D")
 #else

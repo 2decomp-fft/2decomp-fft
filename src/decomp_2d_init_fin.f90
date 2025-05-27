@@ -7,6 +7,7 @@
   !     p_row, p_col - 2D processor grid
   !     periodic_bc  - optional, periodicity flag for halo operations
   !     comm         - optional, MPI communicator, default MPI_COMM_WORLD
+  !     complex_pool - optional, flag to use a complex memory pool
   !   OUTPUT:
   !     all internal data structures initialised properly
   !     library ready to use
@@ -157,7 +158,7 @@
      !
      ! Extend the main memory pool to store complex numbers
      !
-     if (use_pool.and.present(complex_pool)) then
+     if (use_pool .and. present(complex_pool)) then
         if (complex_pool) then
            decomp_pool_default_type = complex_type
            call mem_pool_set_default_type(complex_type)

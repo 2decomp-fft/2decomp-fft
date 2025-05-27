@@ -9,10 +9,10 @@
 !
 module m_decomp_pool
 
-   use iso_fortran_env, only : real32
-   use iso_c_binding, only : c_size_t, c_loc, c_f_pointer
-   use decomp_2d_constants, only : mytype, real_type
-   use decomp_2d_mpi, only : decomp_2d_abort
+   use iso_fortran_env, only: real32
+   use iso_c_binding, only: c_size_t, c_loc, c_f_pointer
+   use decomp_2d_constants, only: mytype, real_type
+   use decomp_2d_mpi, only: decomp_2d_abort
    use m_info
    use m_mem_pool
 
@@ -27,6 +27,9 @@ module m_decomp_pool
    ! Default type in the memory pool module
    integer, save :: decomp_pool_default_type = real_type
 
+   ! Number of blocks created at the init stage
+   integer, save :: decomp_pool_nblk = 2
+
    ! Default : private
    private
    public :: decomp_pool, &
@@ -36,6 +39,7 @@ module m_decomp_pool
              decomp_pool_free, &
              decomp_pool_ready, &
              decomp_pool_default_type, &
+             decomp_pool_nblk, &
              decomp_pool_set_default_type
 
    interface decomp_pool_get
@@ -46,9 +50,9 @@ module m_decomp_pool
    end interface decomp_pool_get
 
    interface decomp_pool_free
-      module procedure decomp_pool_free_real                                                 
+      module procedure decomp_pool_free_real
       module procedure decomp_pool_free_real1D
-      module procedure decomp_pool_free_cplx                                                 
+      module procedure decomp_pool_free_cplx
       module procedure decomp_pool_free_cplx1D
    end interface decomp_pool_free
 
@@ -61,20 +65,19 @@ contains
    !   - type provides the type of the 3D arrays
    !   - blk_n provides the number of blocks to allocate
    !
-   subroutine decomp_pool_init(decomp, type, blk_n)
+   subroutine decomp_pool_init(decomp, type)
 
       implicit none
 
       ! Arguments
       class(info), intent(in) :: decomp
       integer, intent(in), optional :: type
-      integer, intent(in), optional :: blk_n
 
       if (present(type)) then
-         call decomp_pool%init(shape = (/type, decomp%xsz/), blk_n = blk_n)
+         call decomp_pool%init(shape=(/type, decomp%xsz/), blk_n=decomp_pool_nblk)
          call decomp_pool%new_shape(type, decomp)
       else
-         call decomp_pool%init(shape = (/decomp_pool_default_type, decomp%xsz/), blk_n = blk_n)
+         call decomp_pool%init(shape=(/decomp_pool_default_type, decomp%xsz/), blk_n=decomp_pool_nblk)
          call decomp_pool%new_shape(decomp_pool_default_type, decomp)
       end if
 
@@ -111,15 +114,22 @@ contains
    !
    ! If no block is available, a new one is created
    !
-   subroutine decomp_pool_get_real(ptr, shape)
+   subroutine decomp_pool_get_real(ptr, shape, start)
 
       implicit none
 
       ! Arguments
-      real(mytype), intent(out), dimension(:, :, :), pointer :: ptr
-      integer, intent(in), optional :: shape(:)
+      real(mytype), intent(out), dimension(:, :, :), contiguous, pointer :: ptr
+      integer, intent(in), optional :: shape(:), start(:)
 
       call decomp_pool%get(ptr, shape)
+
+      ! Change the bounds if start is provided
+      if (present(start)) then
+         ptr(start(1):start(1) + shape(1), &
+             start(2):start(2) + shape(2), &
+             start(3):start(3) + shape(3)) => ptr
+      end if
 
    end subroutine decomp_pool_get_real
 
@@ -128,51 +138,58 @@ contains
       implicit none
 
       ! Arguments
-      real(mytype), intent(out), dimension(:), pointer :: ptr
+      real(mytype), intent(out), dimension(:), contiguous, pointer :: ptr
 
       ! Local variable
-      real(mytype), dimension(:, :, :), pointer :: ptr3D
+      real(mytype), dimension(:, :, :), contiguous, pointer :: ptr3D
 
       call decomp_pool%get(ptr3D)
       if (mytype == KIND(0._real32)) then
          call c_f_pointer(c_loc(ptr3D), ptr, (/decomp_pool%get_size()/))
       else
-         call c_f_pointer(c_loc(ptr3D), ptr, (/decomp_pool%get_size()/2_c_size_t/))
+         call c_f_pointer(c_loc(ptr3D), ptr, (/decomp_pool%get_size() / 2_c_size_t/))
       end if
-      nullify(ptr3D)
+      nullify (ptr3D)
 
    end subroutine decomp_pool_get_real1D
 
-   subroutine decomp_pool_get_cplx(ptr, shape)
+   subroutine decomp_pool_get_cplx(ptr, shape, start)
 
       implicit none
 
       ! Arguments
-      complex(mytype), intent(out), dimension(:, :, :), pointer :: ptr
-      integer, intent(in), optional :: shape(:)
+      complex(mytype), intent(out), dimension(:, :, :), contiguous, pointer :: ptr
+      integer, intent(in), optional :: shape(:), start(:)
 
       call decomp_pool%get(ptr, shape)
 
+      ! Change the bounds if start is provided
+      if (present(start)) then
+         ptr(start(1):start(1) + shape(1), &
+             start(2):start(2) + shape(2), &
+             start(3):start(3) + shape(3)) => ptr
+      end if
+
    end subroutine decomp_pool_get_cplx
 
-   subroutine decomp_pool_get_cplx1D(ptr)                                                  
-      
-      implicit none                                                                        
-      
+   subroutine decomp_pool_get_cplx1D(ptr)
+
+      implicit none
+
       ! Arguments
-      complex(mytype), intent(out), dimension(:), pointer :: ptr                              
-      
+      complex(mytype), intent(out), dimension(:), contiguous, pointer :: ptr
+
       ! Local variable
-      complex(mytype), dimension(:, :, :), pointer :: ptr3D                      
-      
+      complex(mytype), dimension(:, :, :), contiguous, pointer :: ptr3D
+
       call decomp_pool%get(ptr3D)
       if (mytype == KIND(0._real32)) then
-         call c_f_pointer(c_loc(ptr3D), ptr, (/decomp_pool%get_size()/2_c_size_t/))                         
+         call c_f_pointer(c_loc(ptr3D), ptr, (/decomp_pool%get_size() / 2_c_size_t/))
       else
-         call c_f_pointer(c_loc(ptr3D), ptr, (/decomp_pool%get_size()/4_c_size_t/))              
+         call c_f_pointer(c_loc(ptr3D), ptr, (/decomp_pool%get_size() / 4_c_size_t/))
       end if
-      nullify(ptr3D)                                                                       
-   
+      nullify (ptr3D)
+
    end subroutine decomp_pool_get_cplx1D
 
    !
@@ -185,7 +202,7 @@ contains
       implicit none
 
       ! Arguments
-      real(mytype), intent(inout), dimension(:, :, :), pointer :: ptr
+      real(mytype), intent(inout), dimension(:, :, :), contiguous, pointer :: ptr
 
       call decomp_pool%free(ptr)
 
@@ -196,10 +213,10 @@ contains
       implicit none
 
       ! Arguments
-      real(mytype), intent(inout), dimension(:), pointer :: ptr
+      real(mytype), intent(inout), dimension(:), contiguous, pointer :: ptr
 
       call decomp_pool%free(c_loc(ptr))
-      nullify(ptr)
+      nullify (ptr)
 
    end subroutine decomp_pool_free_real1D
 
@@ -208,7 +225,7 @@ contains
       implicit none
 
       ! Arguments
-      complex(mytype), intent(inout), dimension(:, :, :), pointer :: ptr
+      complex(mytype), intent(inout), dimension(:, :, :), contiguous, pointer :: ptr
 
       call decomp_pool%free(ptr)
 
@@ -219,10 +236,10 @@ contains
       implicit none
 
       ! Arguments
-      complex(mytype), intent(inout), dimension(:), pointer :: ptr
+      complex(mytype), intent(inout), dimension(:), contiguous, pointer :: ptr
 
       call decomp_pool%free(c_loc(ptr))
-      nullify(ptr)
+      nullify (ptr)
 
    end subroutine decomp_pool_free_cplx1D
 

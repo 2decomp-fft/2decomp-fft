@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <adios-config>
   <io name="default">
-    <engine type="BP4">
+    <engine type="BP5">
     </engine>
     <transport type="File">
       <parameter key="Library" value="fstream"/>

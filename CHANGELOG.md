@@ -19,7 +19,7 @@ _e.g._ vX.Y - YYYY-MM-DD and a new "Unreleased" section started above.
 - Add the possibility to perform r2r DCT and DST transforms when using the backend `fftw_f03` [PR #350](https://github.com/2decomp-fft/2decomp-fft/pull/350)
 - Add the possibility to average data in one direction when writing a plane. See [PR #368](https://github.com/2decomp-fft/2decomp-fft/pull/368), [PR #369](https://github.com/2decomp-fft/2decomp-fft/pull/369) and [PR #370](https://github.com/2decomp-fft/2decomp-fft/pull/370).
 - The backend `fftw_f03` is now compatible with OpenMP [PR #364](https://github.com/2decomp-fft/2decomp-fft/pull/364).
-- Add a memory pool to reduce memory usage. See [PR #376](https://github.com/2decomp-fft/2decomp-fft/pull/376).
+- Add a memory pool to reduce memory usage on CPU. See [PR #376](https://github.com/2decomp-fft/2decomp-fft/pull/376) and [PR #383](https://github.com/2decomp-fft/2decomp-fft/pull/383).
 - Add support for ADIOS2 BP5. See [PR #380](https://github.com/2decomp-fft/2decomp-fft/pull/380)
 
 ### Fixed

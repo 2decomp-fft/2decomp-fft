@@ -126,9 +126,9 @@ contains
 
       ! Change the bounds if start is provided
       if (present(start)) then
-         ptr(start(1):start(1) + shape(1), &
-             start(2):start(2) + shape(2), &
-             start(3):start(3) + shape(3)) => ptr
+         ptr(start(1):start(1) + shape(1) - 1, &
+             start(2):start(2) + shape(2) - 1, &
+             start(3):start(3) + shape(3) - 1) => ptr
       end if
 
    end subroutine decomp_pool_get_real
@@ -165,9 +165,9 @@ contains
 
       ! Change the bounds if start is provided
       if (present(start)) then
-         ptr(start(1):start(1) + shape(1), &
-             start(2):start(2) + shape(2), &
-             start(3):start(3) + shape(3)) => ptr
+         ptr(start(1):start(1) + shape(1) - 1, &
+             start(2):start(2) + shape(2) - 1, &
+             start(3):start(3) + shape(3) - 1) => ptr
       end if
 
    end subroutine decomp_pool_get_cplx

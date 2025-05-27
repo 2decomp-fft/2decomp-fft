@@ -126,9 +126,9 @@ program io_plane_test
    allocate (u1(1, xsize(2), xsize(3)))
    allocate (u2(ysize(1), 1, ysize(3)))
    allocate (u3(zsize(1), zsize(2), 1))
-   u1 = 0.
-   u2 = 0.
-   u3 = 0.
+   u1 = 0._mytype
+   u2 = 0._mytype
+   u3 = 0._mytype
 
    ! Read planes
    call decomp_2d_adios_read_plane(io, 1, u1, 'x_pencil-x_plane.dat', 1)

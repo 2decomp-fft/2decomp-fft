@@ -1,5 +1,5 @@
 !! SPDX-License-Identifier: BSD-3-Clause
-program decomp_pool
+program prog_decomp_pool
 
    use iso_fortran_env, only: output_unit, error_unit
    use mpi
@@ -98,4 +98,4 @@ program decomp_pool
    call decomp_2d_finalize
    call MPI_FINALIZE(ierror)
 
-end program decomp_pool
+end program prog_decomp_pool

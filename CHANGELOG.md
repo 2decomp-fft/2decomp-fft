@@ -20,6 +20,7 @@ _e.g._ vX.Y - YYYY-MM-DD and a new "Unreleased" section started above.
 - Add the possibility to average data in one direction when writing a plane. See [PR #368](https://github.com/2decomp-fft/2decomp-fft/pull/368), [PR #369](https://github.com/2decomp-fft/2decomp-fft/pull/369) and [PR #370](https://github.com/2decomp-fft/2decomp-fft/pull/370).
 - The backend `fftw_f03` is now compatible with OpenMP [PR #364](https://github.com/2decomp-fft/2decomp-fft/pull/364).
 - Add a memory pool to reduce memory usage. See [PR #376](https://github.com/2decomp-fft/2decomp-fft/pull/376).
+- Add support for ADIOS2 BP5. See [PR #380](https://github.com/2decomp-fft/2decomp-fft/pull/380)
 
 ### Fixed
 
@@ -29,7 +30,7 @@ _e.g._ vX.Y - YYYY-MM-DD and a new "Unreleased" section started above.
 
 ### Changed
 
-- Major update in the IO routines. The new IO interface is not backward compatible. The examples are updated accordingly. See [PR 344](https://github.com/2decomp-fft/2decomp-fft/pull/344) and [PR 357](https://github.com/2decomp-fft/2decomp-fft/pull/357).
+- Major update in the IO routines. The new IO interface is not backward compatible. The examples are updated accordingly. See [PR 344](https://github.com/2decomp-fft/2decomp-fft/pull/344), [PR 357](https://github.com/2decomp-fft/2decomp-fft/pull/357) and [PR 380](https://github.com/2decomp-fft/2decomp-fft/pull/380).
 - The transpose subroutines have been moved into submodules rather than `#include` files. See [PR #206](https://github.com/2decomp-fft/2decomp-fft/pull/206)
 
 ### Deprecated

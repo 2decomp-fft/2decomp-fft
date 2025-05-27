@@ -116,6 +116,52 @@ program io_plane_test
                                     opt_reduce_prec=.false.)
    call io%end_close
 
+   ! Close IO and open again
+   ! Reading after writing is not possible
+   call decomp_2d_io_fin
+   call decomp_2d_io_init
+
+   ! Resize the arrays to read a plane
+   deallocate (u1, u2, u3)
+   allocate (u1(1, xsize(2), xsize(3)))
+   allocate (u2(ysize(1), 1, ysize(3)))
+   allocate (u3(zsize(1), zsize(2), 1))
+   u1 = 0._mytype
+   u2 = 0._mytype
+   u3 = 0._mytype
+
+   ! Read planes
+   call decomp_2d_adios_read_plane(io, 1, u1, 'x_pencil-x_plane.dat', 1)
+   call decomp_2d_adios_read_plane(io, 2, u2, 'y_pencil-y_plane.dat', 1)
+   call decomp_2d_adios_read_plane(io, 3, u3, 'z_pencil-z_plane.dat', 1)
+   call io%end_close
+   call MPI_Barrier(MPI_COMM_WORLD, i)
+   call decomp_2d_io_fin
+
+   ! Check u1
+   i = 1
+   do k = 1, xsize(3)
+      do j = 1, xsize(2)
+         if (abs(u1(i, j, k) - data1(nx / 2, j + xstart(2) - 1, k + xstart(3) - 1)) > epsilon(u1(1, 1, 1))) stop 1
+      end do
+   end do
+
+   ! Check u2
+   j = 1
+   do k = 1, ysize(3)
+      do i = 1, ysize(1)
+         if (abs(u2(i, j, k) - data1(i + ystart(1) - 1, ny / 2, k + ystart(3) - 1)) > epsilon(u2(1, 1, 1))) stop 2
+      end do
+   end do
+
+   ! Check u3
+   k = 1
+   do j = 1, zsize(2)
+      do i = 1, zsize(1)
+         if (abs(u3(i, j, k) - data1(i + zstart(1) - 1, j + zstart(2) - 1, nz / 2)) > epsilon(u3(1, 1, 1))) stop 2
+      end do
+   end do
+
    deallocate (u1, u2, u3)
    deallocate (data1)
    call decomp_2d_finalize

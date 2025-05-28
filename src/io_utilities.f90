@@ -6,9 +6,9 @@
 
 module decomp_2d_io_utilities
 
-   use decomp_2d
    use decomp_2d_constants
    use decomp_2d_mpi
+   use m_info
    use MPI
 
    implicit none
@@ -27,7 +27,7 @@ contains
       implicit none
 
       integer, intent(in) :: ipencil
-      type(decomp_info), intent(in) :: decomp
+      class(info), intent(in) :: decomp
       integer, dimension(3), intent(out) :: sizes, subsizes, starts
       integer, intent(in), optional :: nplanes
 
@@ -56,16 +56,8 @@ contains
       end if
 
       if (present(nplanes)) then
-         if (ipencil == 1) then
-            sizes(1) = nplanes
-            subsizes(1) = nplanes
-         else if (ipencil == 2) then
-            sizes(2) = nplanes
-            subsizes(2) = nplanes
-         else
-            sizes(3) = nplanes
-            subsizes(3) = nplanes
-         end if
+         sizes(ipencil) = nplanes
+         subsizes(ipencil) = nplanes
       end if
 
    end subroutine io_get_size

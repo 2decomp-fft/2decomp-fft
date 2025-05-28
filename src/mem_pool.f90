@@ -9,7 +9,7 @@ module m_mem_pool
                               output_unit, error_unit
    use iso_c_binding, only: c_size_t, c_loc, c_associated, c_f_pointer, c_ptr, c_null_ptr
    use decomp_2d_constants
-   use decomp_2d_mpi, only : nrank, decomp_2d_abort
+   use decomp_2d_mpi, only: nrank, decomp_2d_abort
    use m_blk
    use m_info
    use mpi
@@ -44,7 +44,7 @@ module m_mem_pool
       ! Get a block from the free memory pool
       procedure :: get_raw => mem_pool_get_raw
       generic :: get => get_freal, get_dreal, get_fcplx, get_dcplx, &
-                        get_int64, get_int32, get_int16, get_int8, get_bool
+         get_int64, get_int32, get_int16, get_int8, get_bool
       procedure, private :: get_freal => mem_pool_get_freal
       procedure, private :: get_dreal => mem_pool_get_dreal
       procedure, private :: get_fcplx => mem_pool_get_fcplx
@@ -56,7 +56,7 @@ module m_mem_pool
       procedure, private :: get_bool => mem_pool_get_bool
       ! Return a block to the free memory pool
       generic :: free => free_raw, free_freal, free_dreal, free_fcplx, free_dcplx, &
-                         free_int64, free_int32, free_int16, free_int8, free_bool
+         free_int64, free_int32, free_int16, free_int8, free_bool
       procedure, private :: free_raw => mem_pool_free_raw
       procedure, private :: free_freal => mem_pool_free_freal
       procedure, private :: free_dreal => mem_pool_free_dreal
@@ -385,7 +385,7 @@ contains
       ! Use the provided shape, or the default one
       if (present(shape)) then
          shp = shape
-         if (2_c_size_t*product(int(shp, c_size_t)) > self%size) &
+         if (2_c_size_t * product(int(shp, c_size_t)) > self%size) &
             call decomp_2d_abort(__FILE__, __LINE__, 2, "Invalid shape")
       else if (self%shapes(1, 2) /= mem_pool_none) then
          shp = self%shapes(:, 2)
@@ -423,7 +423,7 @@ contains
       ! Use the provided shape, or the default one
       if (present(shape)) then
          shp = shape
-         if (2_c_size_t*product(int(shp, c_size_t)) > self%size) &
+         if (2_c_size_t * product(int(shp, c_size_t)) > self%size) &
             call decomp_2d_abort(__FILE__, __LINE__, 2, "Invalid shape")
       else if (self%shapes(1, 3) /= mem_pool_none) then
          shp = self%shapes(:, 3)
@@ -461,7 +461,7 @@ contains
       ! Use the provided shape, or the default one
       if (present(shape)) then
          shp = shape
-         if (4_c_size_t*product(int(shp, c_size_t)) > self%size) &
+         if (4_c_size_t * product(int(shp, c_size_t)) > self%size) &
             call decomp_2d_abort(__FILE__, __LINE__, 2, "Invalid shape")
       else if (self%shapes(1, 4) /= mem_pool_none) then
          shp = self%shapes(:, 4)
@@ -494,7 +494,7 @@ contains
          call decomp_2d_abort(__FILE__, __LINE__, 2, "Memory pool must be initialized")
 
       ! Use the provided shape
-      if (2_c_size_t*product(int(shape, c_size_t)) > self%size) &
+      if (2_c_size_t * product(int(shape, c_size_t)) > self%size) &
          call decomp_2d_abort(__FILE__, __LINE__, 2, "Invalid shape.")
 
       ! Output is ready
@@ -958,11 +958,11 @@ contains
 
       ! Resize if needed
       if (present(decomp)) then
-         new_size = fact*product(int(decomp%xsz, kind=c_size_t))
-         new_size = max(new_size, fact*product(int(decomp%ysz, kind=c_size_t)))
-         new_size = max(new_size, fact*product(int(decomp%zsz, kind=c_size_t)))
+         new_size = fact * product(int(decomp%xsz, kind=c_size_t))
+         new_size = max(new_size, fact * product(int(decomp%ysz, kind=c_size_t)))
+         new_size = max(new_size, fact * product(int(decomp%zsz, kind=c_size_t)))
       else if (present(shp)) then
-         new_size = fact*product(int(shp, kind=c_size_t))
+         new_size = fact * product(int(shp, kind=c_size_t))
       else
          call decomp_2d_abort(__FILE__, __LINE__, 2, "Invalid arguments")
       end if
@@ -1198,7 +1198,7 @@ contains
          fact = 0_c_size_t
          call decomp_2d_abort(__FILE__, __LINE__, type, "Invalid argument type")
       end if
-      new_size = fact*product(int(shape, kind=c_size_t))
+      new_size = fact * product(int(shape, kind=c_size_t))
 
       ! Update size
       if (new_size > size) size = new_size

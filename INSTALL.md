@@ -246,7 +246,7 @@ This variable is valid only for GPU builds. The NVIDIA Collective Communication 
 
 #### FFTW_omp
 
-This variable is automatically added if the FFTW library was compiled with OpenMP support. This is used only in the `fftw3_f03` backend. OpenMP comments are present in the transpose subroutines.
+This variable is automatically added if the FFTW library was compiled with OpenMP support and the cmake variable `ENABLE_OMP` is set to true. This is used only in the `fftw_f03` backend.
 
 ## Optional dependencies
 
@@ -357,3 +357,7 @@ Following this the `2decomp-fft` build can be configured to use Caliper profilin
 $ cmake -S . -B -DENABLE_PROFILER=caliper
 ```
 or by modifying the configuration to set `ENABLE_PROFILER=caliper` via `ccmake`.
+
+### OpenMP
+
+The 2decomp library can be used in a pure MPI or MPI + OpenMP framework. The OpenMP extension is disabled by default. The CMake variable `ENABLE_OMP` can be used to activate OpenMP parallelism. Currently, OpenMP parallelism is used only in the transpose subroutines and in the `fftw_f03` FFT backend.

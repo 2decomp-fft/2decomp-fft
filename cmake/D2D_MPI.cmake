@@ -1,3 +1,13 @@
+function(closest_power_of_2 number result )
+  set(value ${number}) 
+  set(power 1) 
+  while(${power} LESS_EQUAL ${value})
+    math(EXPR power "${power} * 2")
+  endwhile()
+  math(EXPR power "${power} / 2")
+  set(${result} ${power} PARENT_SCOPE)                                                                          
+endfunction()
+
 # MPI CMakeLists
 find_package(MPI REQUIRED COMPONENTS Fortran)
 set(D2D_MPI_FAMILY "Unknown")
@@ -50,10 +60,17 @@ if (MPI_FOUND)
   message(STATUS "MPI INCL ALSO FOUND: ${MPI_INCLUDE_PATH}")
   if (NOT MPI_NUMPROCS_SET)
     # Save the Maximim number of MPI ranks on the system
-    set(MAX_NUMPROCS ${MPIEXEC_MAX_NUMPROCS} CACHE STRING "SAVE NRANKS MAX" FORCE)
-    message(STATUS "Reset the number of ranks to 1")
-    set(MPIEXEC_MAX_NUMPROCS "1" CACHE STRING
-        "Set the initial value to 1 rank" FORCE)
+    if (ENABLE_CUDA) 
+       set(NP ${GPU_NUMBER})
+    else ()
+       set(NP ${MPIEXEC_MAX_NUMPROCS})
+    endif()
+    # For even we'll test with a power of 2 number of MPI RANKS
+    if (EVEN)
+      closest_power_of_2(${NP} NP)
+    endif()
+    message(STATUS "NUMBER OF PROCS USED FOR TESTING ${NP}")
+    set(MPI_NUMPROCS ${NP} CACHE STRING "SAVE NRANKS FOR MPIRUN" FORCE)
     set(MPI_NUMPROCS_SET 1 CACHE INTERNAL "MPI Ranks set" FORCE)
     # Force the mpirun to be coherent with the mpifortran
     string(REGEX REPLACE "mpif90" "mpirun" PATH_TO_MPIRUN "${MPI_Fortran_COMPILER}")
@@ -66,7 +83,5 @@ if (MPI_FOUND)
 else (MPI_FOUND)
   message(STATUS "NO MPI include have been found. The executable won't be targeted with MPI include")
   message(STATUS "Code will compile but performaces can be compromised")
-  message(STATUS "Using a CMake vers > 3.10 should solve the problem")
   message(STATUS "Alternatively use ccmake to manually set the include if available")
 endif (MPI_FOUND)
-

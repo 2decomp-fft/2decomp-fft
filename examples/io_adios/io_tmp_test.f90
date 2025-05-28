@@ -175,24 +175,9 @@ program io_test
    call decomp_2d_adios_write_var(io, tmp3, 'v3.dat', opt_mode=decomp_2d_io_sync)
    call io%end_close
 
-   ! read back to different arrays
-   !
-   ! Using the default IO family
-   call io%open_start(decomp_2d_read_mode)
-   call decomp_2d_adios_read_var(io, u1b, 'u1.dat')
-   call decomp_2d_adios_read_var(io, u2b, 'u2.dat')
-   call decomp_2d_adios_read_var(io, u3b, 'u3.dat')
-   call decomp_2d_adios_read_var(io, v1b, 'v1.dat')
-   call decomp_2d_adios_read_var(io, v2b, 'v2.dat')
-   call decomp_2d_adios_read_var(io, v3b, 'v3.dat')
-   call io%end_close
-
-   ! compare
-   call check("file per field")
-
-   ! Checkpoint I/O pattern - multiple fields per file
+   ! Using a dedicated IO family
    call io%open_start(decomp_2d_write_mode, opt_family=io_family_restart)
-
+   ! Copy data to temporary memory and write from the temporary memory
    tmp1(:, :, :) = u1(:, :, :)
    call decomp_2d_adios_write_var(io, tmp1, 'u1.dat', opt_mode=decomp_2d_io_sync)
    tmp1(:, :, :) = v1(:, :, :)
@@ -207,24 +192,46 @@ program io_test
    call decomp_2d_adios_write_var(io, tmp3, 'u3.dat', opt_mode=decomp_2d_io_sync)
    tmp3(:, :, :) = v3(:, :, :)
    call decomp_2d_adios_write_var(io, tmp3, 'v3.dat', opt_mode=decomp_2d_io_sync)
-
    call io%end_close()
 
    call MPI_Barrier(MPI_COMM_WORLD, ierr)
+
+   ! Close all the IO modules
+   ! Reading after writing is not possible
+   call io_family_restart%fin
+   call decomp_2d_io_fin
+   ! Open IO again
+   call decomp_2d_io_init()
+   call io_family_restart%init(io_restart)
+
+   ! read back to different arrays
+   !
+   ! Using the default IO family
+   call io%open_start(decomp_2d_read_mode)
+   call decomp_2d_adios_read_var(io, 1, u1b, 'u1.dat')
+   call decomp_2d_adios_read_var(io, 2, u2b, 'u2.dat')
+   call decomp_2d_adios_read_var(io, 3, u3b, 'u3.dat')
+   call decomp_2d_adios_read_var(io, 1, v1b, 'v1.dat')
+   call decomp_2d_adios_read_var(io, 2, v2b, 'v2.dat')
+   call decomp_2d_adios_read_var(io, 3, v3b, 'v3.dat')
+   call io%end_close
+   call MPI_Barrier(MPI_COMM_WORLD, ierr)
+
+   ! compare
+   call check("file per field")
 
    ! read back to different arrays
    ! XXX: For the MPI-IO backend the order of reading must match the order of writing!
    u1b = 0; u2b = 0; u3b = 0
    v1b = 0; v2b = 0; v3b = 0
    call io%open_start(decomp_2d_read_mode, opt_family=io_family_restart)
-   call decomp_2d_adios_read_var(io, u1b, 'u1.dat')
-   call decomp_2d_adios_read_var(io, v1b, 'v1.dat')
-   call decomp_2d_adios_read_var(io, u2b, 'u2.dat')
-   call decomp_2d_adios_read_var(io, v2b, 'v2.dat')
-   call decomp_2d_adios_read_var(io, u3b, 'u3.dat')
-   call decomp_2d_adios_read_var(io, v3b, 'v3.dat')
+   call decomp_2d_adios_read_var(io, 1, u1b, 'u1.dat')
+   call decomp_2d_adios_read_var(io, 1, v1b, 'v1.dat')
+   call decomp_2d_adios_read_var(io, 2, u2b, 'u2.dat')
+   call decomp_2d_adios_read_var(io, 2, v2b, 'v2.dat')
+   call decomp_2d_adios_read_var(io, 3, u3b, 'u3.dat')
+   call decomp_2d_adios_read_var(io, 3, v3b, 'v3.dat')
    call io%end_close
-
    call MPI_Barrier(MPI_COMM_WORLD, ierr)
 
    ! compare
@@ -235,6 +242,8 @@ program io_test
    deallocate (v1, v2, v3)
    deallocate (v1b, v2b, v3b)
    deallocate (data1)
+   call io_family_restart%fin
+   call decomp_2d_io_fin
    call decomp_2d_finalize
    call MPI_FINALIZE(ierror)
 

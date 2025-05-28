@@ -139,11 +139,15 @@ contains
 
       ! Scalar field
       !$acc kernels default(present)
-      do concurrent(k=1:xe3, j=1:xe2, i=1:xe1)
-         z = (k + xs3 - 2) * dz
-         y = (j + xs2 - 2) * dy
-         x = (i + xs1 - 2) * dx
-         phi1(i, j, k) = -2._mytype * cos(twopi * (x / lx)) * cos(twopi * (y / ly)) * sin(twopi * (z / lz))
+      do k= 1, xe3
+         do j= 1, xe2
+            do i= 1, xe1
+               z = (k + xs3 - 2) * dz
+               y = (j + xs2 - 2) * dy
+               x = (i + xs1 - 2) * dx
+               phi1(i, j, k) = -2._mytype * cos(twopi * (x / lx)) * cos(twopi * (y / ly)) * sin(twopi * (z / lz))
+            end do
+         end do
       end do
       !$acc end kernels
 
@@ -202,12 +206,14 @@ contains
       coeff = coeff / delta
 
       !$acc kernels default(present)
-      do concurrent(k=1:nz, j=1:ny)
-         df(1, j, k) = coeff * (ff(2, j, k) - ff(nx, j, k))
-         do concurrent(i=2:nx - 1)
-            df(i, j, k) = coeff * (ff(i + 1, j, k) - ff(i - 1, j, k))
+      do k = 1, nz
+         do j = 1, ny
+            df(1, j, k) = coeff * (ff(2, j, k) - ff(nx, j, k))
+            do i = 2, nx - 1
+               df(i, j, k) = coeff * (ff(i + 1, j, k) - ff(i - 1, j, k))
+            end do
+            df(nx, j, k) = coeff * (ff(1, j, k) - ff(nx - 1, j, k))
          end do
-         df(nx, j, k) = coeff * (ff(1, j, k) - ff(nx - 1, j, k))
       end do
       !$acc end kernels
 
@@ -232,14 +238,16 @@ contains
       coeff = coeff / delta
 
       !$acc kernels default(present)
-      do concurrent(k=1:nz)
-         do concurrent(i=1:nx)
+      do k = 1,nz
+         do i = 1,nx
             df(i, 1, k) = coeff * (ff(i, 2, k) - ff(i, ny, k))
          end do
-         do concurrent(j=2:ny - 1, i=1:nx)
-            df(i, j, k) = coeff * (ff(i, j + 1, k) - ff(i, j - 1, k))
+         do j = 2, ny - 1
+            do i = 1, nx
+               df(i, j, k) = coeff * (ff(i, j + 1, k) - ff(i, j - 1, k))
+            end do
          end do
-         do concurrent(i=1:nx)
+         do i = 1, nx
             df(i, ny, k) = coeff * (ff(i, 1, k) - ff(i, ny - 1, k))
          end do
       end do
@@ -266,14 +274,22 @@ contains
       coeff = coeff / delta
 
       !$acc kernels default(present)
-      do concurrent(j=1:ny, i=1:nx)
-         df(i, j, 1) = coeff * (ff(i, j, 2) - ff(i, j, nz))
+      do j = 1, ny
+         do i = 1, nx
+            df(i, j, 1) = coeff * (ff(i, j, 2) - ff(i, j, nz))
+         end do
       end do
-      do concurrent(k=2:nz - 1, j=1:ny, i=1:nx)
-         df(i, j, k) = coeff * (ff(i, j, k + 1) - ff(i, j, k - 1))
+      do k = 2, nz - 1
+         do j = 1, ny
+            do i = 1, nx
+               df(i, j, k) = coeff * (ff(i, j, k + 1) - ff(i, j, k - 1))
+            end do
+         end do
       end do
-      do concurrent(j=1:ny, i=1:nx)
-         df(i, j, nz) = coeff * (ff(i, j, 1) - ff(i, j, nz - 1))
+      do j = 1, ny
+         do i = 1,nx
+            df(i, j, nz) = coeff * (ff(i, j, 1) - ff(i, j, nz - 1))
+         end do
       end do
       !$acc end kernels
 

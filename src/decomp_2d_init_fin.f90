@@ -7,6 +7,7 @@
   !     p_row, p_col - 2D processor grid
   !     periodic_bc  - optional, periodicity flag for halo operations
   !     comm         - optional, MPI communicator, default MPI_COMM_WORLD
+  !     complex_pool - optional, flag to use a complex memory pool
   !   OUTPUT:
   !     all internal data structures initialised properly
   !     library ready to use

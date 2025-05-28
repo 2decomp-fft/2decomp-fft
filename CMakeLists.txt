@@ -10,7 +10,6 @@ if (IO_BACKEND MATCHES "adios2")
   enable_language(C CXX)
 endif (IO_BACKEND MATCHES "adios2")
 
-
 set(BUILD_TARGET "mpi" CACHE STRING "Target for acceleration (mpi (default) or gpu)")
 set_property(CACHE BUILD_TARGET PROPERTY STRINGS mpi gpu)
 
@@ -19,14 +18,13 @@ if (BUILD_TARGET MATCHES "gpu")
   option(ENABLE_CUDA "Allow user to activate/deactivate CUDA support" ON)
   option(ENABLE_MANAGED "Allow user to activate/deactivate automatic memory managment from NVHPC" OFF)
   option(ENABLE_NCCL "Allow user to activate/deactivate Collective Comunication NCCL" OFF)
-
   if (ENABLE_CUDA)
-    message(STATUS "Before enable CUDA")
     enable_language(CUDA)
-    message(STATUS "After enable CUDA")
   endif()
-
 endif(BUILD_TARGET MATCHES "gpu")
+
+include(CMakeDependentOption)
+cmake_dependent_option(ENABLE_OMP "Use OpenMP with pure MPI" OFF "NOT ENABLE_CUDA" OFF)
 
 set (ENABLE_PROFILER "OFF" CACHE STRING "Activate/select the profiler")
 set_property(CACHE ENABLE_PROFILER PROPERTY STRINGS OFF caliper)
@@ -37,11 +35,10 @@ option(BUILD_SHARED_LIBS "Set ON to build a shared library" OFF)
 set (IO_BACKEND "mpi" CACHE STRING "Default IO backend (mpi (default) or adios2)")
 set_property(CACHE IO_BACKEND PROPERTY STRINGS mpi adios2)
 
-set(AUTHOR "Stefano Rolfo;Charles Moulinec;Paul Bartholomew")
-set(AUTHOR_DETAILS "stefano.rolfo@stfc.ac.uk;charles.moulinec@stfc.ac.uk;p.bartholomew@epcc.ed.ac.uk")
-set(DESCRIPTION "Building 2decomp&fft using cmake")
+set(AUTHOR "The 2DECOMP&FFT team")
+set(AUTHOR_DETAILS "see https://github.com/2decomp-fft/2decomp-fft/blob/dev/CONTRIBUTORS")
+set(DESCRIPTION "CMake build system for 2DECOMP&FFT")
 
-message(STATUS "building ${PROJECT_NAME}")
 
 include(GNUInstallDirs)
 set(LIBRARY_OUTPUT_PATH ${PROJECT_BINARY_DIR}/${CMAKE_INSTALL_LIBDIR})
@@ -96,3 +93,18 @@ endif (${BUILD_TESTING})
 add_custom_target(format sh ${CMAKE_SOURCE_DIR}/scripts/format.sh
   WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
 
+# Write the summary 
+message(STATUS "Building of  ${PROJECT_NAME} with the following options")
+message( "   * BUILD TARGET   : ${BUILD_TARGET}")
+if (BUILD_TARGET MATCHES "gpu")
+  message( "   * NCCL           : ${ENABLE_NCCL}")
+  message( "   * MANAGED MEMORY : ${ENABLE_MANAGED}")
+  message( "   * CUDA ARCH      : ${CMAKE_CUDA_ARCHITECTURES}")
+  message( "   * Number GPUs    : ${GPU_NUMBER}")
+endif()
+message( "   * BUILD EVEN     : ${EVEN}")
+message( "   * PROFILER       : ${ENABLE_PROFILER}")
+message( "   * OpenMP         : ${ENABLE_OMP}")
+message( "   * FFT Choice     : ${FFT_Choice}")
+message( "   * IO Backend     : ${IO_BACKEND}")
+message( "   * IO SINGLE      : ${SINGLE_PRECISION_OUTPUT}")

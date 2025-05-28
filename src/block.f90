@@ -83,9 +83,6 @@ contains
       integer :: ierr
       integer(c_size_t) :: i
       type(blk), pointer :: ptr
-#ifdef _GPU
-      attributes(device) :: ptr
-#endif
 
       ! Save a pointer to the next block if needed
       if (associated(self%next)) then
@@ -112,7 +109,13 @@ contains
 
       ! Initialize the memory if needed
       if (init) then
-#ifndef _GPU
+#ifdef _GPU
+         !$acc kernels default(present)
+         do i = 1_c_size_t, size
+            self%next%dat(i) = 0._real32
+         end do
+         !$acc end kernels
+#else
          !$omp parallel do
          do i = 1_c_size_t, size
             self%next%dat(i) = 0._real32
@@ -260,7 +263,13 @@ contains
 
       ! Initialize the memory if needed
       if (init) then
-#ifndef _GPU
+#ifdef _GPU
+         !$acc kernels default(present)
+         do i = 1_c_size_t, size
+            self%next%dat(i) = 0._real32
+         end do
+         !$acc end kernels
+#else
          !$omp parallel do
          do i = 1_c_size_t, size
             self%dat(i) = 0._real32
@@ -293,7 +302,7 @@ contains
 
       ! Local variables
 #ifdef _GPU
-      real(real32), dimension(:), pointer, device :: array_ref
+      real(real32), dimension(:), contiguous, pointer, device :: array_ref
 #endif
 
       ! Start at head

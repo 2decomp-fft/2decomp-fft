@@ -157,7 +157,7 @@
            call mem_pool_set_default_type(complex_type)
            call decomp_pool%new_shape(complex_type, decomp_main)
            ! The line below is needed for EVEN cases
-           call decomp_pool%new_shape(complex_type, shp=(/decomp_buf_size/))
+           call decomp_pool%new_shape(decomp_pool_default_type, shp=(/decomp_buf_size/))
         end if
      end if
 

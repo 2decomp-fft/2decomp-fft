@@ -15,9 +15,6 @@ module m_decomp_pool
    use decomp_2d_mpi, only: decomp_2d_abort
    use m_info
    use m_mem_pool
-#ifdef _GPU
-   use cudafor
-#endif
 
    implicit none
 
@@ -123,9 +120,6 @@ contains
 
       ! Arguments
       real(mytype), intent(out), dimension(:, :, :), contiguous, pointer :: ptr
-#ifdef _GPU
-      attributes(device) :: ptr
-#endif
       integer, intent(in), optional :: shape(:), start(:)
 
       call decomp_pool%get(ptr, shape)
@@ -145,29 +139,15 @@ contains
 
       ! Arguments
       real(mytype), intent(out), dimension(:), contiguous, pointer :: ptr
-#ifdef _GPU
-      attributes(device) :: ptr
-#endif
 
       ! Local variable
       real(mytype), dimension(:, :, :), contiguous, pointer :: ptr3D
-#ifdef _GPU
-      attributes(device) :: ptr3D
-#endif
 
       call decomp_pool%get(ptr3D)
       if (mytype == KIND(0._real32)) then
-#ifdef _GPU
-         call c_f_pointer(c_devloc(ptr3D), ptr, (/decomp_pool%get_size()/))
-#else
          call c_f_pointer(c_loc(ptr3D), ptr, (/decomp_pool%get_size()/))
-#endif
       else
-#ifdef _GPU
-         call c_f_pointer(c_devloc(ptr3D), ptr, (/decomp_pool%get_size() / 2_c_size_t/))
-#else
          call c_f_pointer(c_loc(ptr3D), ptr, (/decomp_pool%get_size() / 2_c_size_t/))
-#endif
       end if
       nullify (ptr3D)
 
@@ -179,9 +159,6 @@ contains
 
       ! Arguments
       complex(mytype), intent(out), dimension(:, :, :), contiguous, pointer :: ptr
-#ifdef _GPU
-      attributes(device) :: ptr
-#endif
       integer, intent(in), optional :: shape(:), start(:)
 
       call decomp_pool%get(ptr, shape)
@@ -201,29 +178,15 @@ contains
 
       ! Arguments
       complex(mytype), intent(out), dimension(:), contiguous, pointer :: ptr
-#ifdef _GPU
-      attributes(device) :: ptr
-#endif
 
       ! Local variable
       complex(mytype), dimension(:, :, :), contiguous, pointer :: ptr3D
-#ifdef _GPU
-      attributes(device) :: ptr3D
-#endif
       
       call decomp_pool%get(ptr3D)
       if (mytype == KIND(0._real32)) then
-#ifdef _GPU
-         call c_f_pointer(c_devloc(ptr3D), ptr, (/decomp_pool%get_size() / 2_c_size_t/))
-#else
          call c_f_pointer(c_loc(ptr3D), ptr, (/decomp_pool%get_size() / 2_c_size_t/))                         
-#endif
       else
-#ifdef _GPU
-         call c_f_pointer(c_devloc(ptr3D), ptr, (/decomp_pool%get_size() / 4_c_size_t/))
-#else
          call c_f_pointer(c_loc(ptr3D), ptr, (/decomp_pool%get_size() / 4_c_size_t/))
-#endif
       end if
       nullify (ptr3D)
 
@@ -240,9 +203,6 @@ contains
 
       ! Arguments
       real(mytype), intent(inout), dimension(:, :, :), contiguous, pointer :: ptr
-#ifdef _GPU
-      attributes(device) :: ptr
-#endif
 
       call decomp_pool%free(ptr)
 
@@ -254,15 +214,8 @@ contains
 
       ! Arguments
       real(mytype), intent(inout), dimension(:), contiguous, pointer :: ptr
-#ifdef _GPU
-      attributes(device) :: ptr
-#endif
 
-#ifdef _GPU
-      call decomp_pool%free(c_devloc(ptr))
-#else
       call decomp_pool%free(c_loc(ptr))
-#endif
       nullify (ptr)
 
    end subroutine decomp_pool_free_real1D
@@ -273,9 +226,6 @@ contains
 
       ! Arguments
       complex(mytype), intent(inout), dimension(:, :, :), contiguous, pointer :: ptr
-#ifdef _GPU
-      attributes(device) :: ptr
-#endif
 
       call decomp_pool%free(ptr)
 
@@ -287,15 +237,8 @@ contains
 
       ! Arguments
       complex(mytype), intent(inout), dimension(:), contiguous, pointer :: ptr
-#ifdef _GPU
-      attributes(device) :: ptr
-#endif
 
-#ifdef _GPU
-      call decomp_pool%free(c_devloc(ptr))
-#else
       call decomp_pool%free(c_loc(ptr))
-#endif
       nullify (ptr)
 
    end subroutine decomp_pool_free_cplx1D

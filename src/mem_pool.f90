@@ -13,9 +13,6 @@ module m_mem_pool
    use m_blk
    use m_info
    use mpi
-#ifdef _GPU
-   use cudafor
-#endif
 
    implicit none
 
@@ -228,23 +225,12 @@ contains
       class(mem_pool), target, intent(inout) :: self
       logical, intent(in) :: init
 
-      ! Local variable
-#ifdef _GPU
-      type(blk), pointer :: ptr
-#endif
-
       ! Safety check
       if (.not. self%available) &
          call decomp_2d_abort(__FILE__, __LINE__, 2, "Memory pool must be initialized")
 
       ! Add a block at the beginning of the free list
-#ifdef _GPU
-      ptr => self%free_head
-      call ptr%new(self%size, init)
-      nullify(ptr)
-#else
       call self%free_head%new(self%size, init)
-#endif
 
    end subroutine mem_pool_new
 
@@ -290,17 +276,10 @@ contains
       ! Arguments
       class(mem_pool), intent(inout) :: self
       logical, intent(in) :: init
-#ifdef _GPU
-      type(c_devptr) :: ptr
-#else
       type(c_ptr) :: ptr
-#endif
 
       ! Local variable
       type(blk), pointer :: blk_ptr
-#ifdef _GPU
-      type(blk), pointer :: blk_ptr2
-#endif
 
       ! Safety check
       if (.not. self%available) &
@@ -311,13 +290,7 @@ contains
 
       blk_ptr => self%free_head%next
       call blk_ptr%get()
-#ifdef _GPU
-      blk_ptr2 => self%busy_head
-      call blk_ptr%put(blk_ptr2)
-      nullify(blk_ptr2)
-#else
       call blk_ptr%put(self%busy_head)
-#endif
       nullify (blk_ptr)
 
       ! Done
@@ -333,9 +306,6 @@ contains
       class(mem_pool), intent(inout) :: self
       real(real32), intent(out), dimension(:, :, :), contiguous, pointer :: ptr
       integer, intent(in), optional :: shape(:)
-#ifdef _GPU
-      attributes(device) :: ptr
-#endif
 
       ! Local variables
       integer, dimension(:), allocatable :: shp
@@ -371,9 +341,6 @@ contains
       class(mem_pool), intent(inout) :: self
       real(real64), intent(out), dimension(:, :, :), contiguous, pointer :: ptr
       integer, intent(in), optional :: shape(:)
-#ifdef _GPU
-      attributes(device) :: ptr
-#endif
 
       ! Local variables
       integer, dimension(:), allocatable :: shp
@@ -409,9 +376,6 @@ contains
       class(mem_pool), intent(inout) :: self
       complex(real32), intent(out), dimension(:, :, :), contiguous, pointer :: ptr
       integer, intent(in), optional :: shape(:)
-#ifdef _GPU
-      attributes(device) :: ptr
-#endif
 
       ! Local variables
       integer, dimension(:), allocatable :: shp
@@ -447,9 +411,6 @@ contains
       class(mem_pool), intent(inout) :: self
       complex(real64), intent(out), dimension(:, :, :), contiguous, pointer :: ptr
       integer, intent(in), optional :: shape(:)
-#ifdef _GPU
-      attributes(device) :: ptr
-#endif
 
       ! Local variables
       integer, dimension(:), allocatable :: shp
@@ -485,9 +446,6 @@ contains
       class(mem_pool), intent(inout) :: self
       integer(int64), intent(out), dimension(:, :, :), contiguous, pointer :: ptr
       integer, intent(in) :: shape(:)
-#ifdef _GPU
-      attributes(device) :: ptr
-#endif
 
       ! Safety check
       if (.not. self%available) &
@@ -510,9 +468,6 @@ contains
       class(mem_pool), intent(inout) :: self
       integer(int32), intent(out), dimension(:, :, :), contiguous, pointer :: ptr
       integer, intent(in) :: shape(:)
-#ifdef _GPU
-      attributes(device) :: ptr
-#endif
 
       ! Safety check
       if (.not. self%available) &
@@ -535,9 +490,6 @@ contains
       class(mem_pool), intent(inout) :: self
       integer(int16), intent(out), dimension(:, :, :), contiguous, pointer :: ptr
       integer, intent(in) :: shape(:)
-#ifdef _GPU
-      attributes(device) :: ptr
-#endif
 
       ! Safety check
       if (.not. self%available) &
@@ -560,9 +512,6 @@ contains
       class(mem_pool), intent(inout) :: self
       integer(int8), intent(out), dimension(:, :, :), contiguous, pointer :: ptr
       integer, intent(in) :: shape(:)
-#ifdef _GPU
-      attributes(device) :: ptr
-#endif
 
       ! Safety check
       if (.not. self%available) &
@@ -585,9 +534,6 @@ contains
       class(mem_pool), intent(inout) :: self
       logical, intent(out), dimension(:, :, :), contiguous, pointer :: ptr
       integer, intent(in) :: shape(:)
-#ifdef _GPU
-      attributes(device) :: ptr
-#endif
 
       ! Safety check
       if (.not. self%available) &
@@ -613,44 +559,23 @@ contains
 
       ! Arguments
       class(mem_pool), intent(inout) :: self
-#ifdef _GPU
-      type(c_devptr), intent(in) :: raw
-#else
       type(c_ptr), intent(in) :: raw
-#endif
 
       ! Local variables
       type(blk), pointer :: block
-#ifdef _GPU
-      type(blk), pointer :: ptr
-#endif
 
       ! Safety check
       if (.not. self%available) &
          call decomp_2d_abort(__FILE__, __LINE__, 2, "Memory pool must be initialized")
-#ifndef _GPU
       if (.not. c_associated(raw)) &
          call decomp_2d_abort(__FILE__, __LINE__, 2, "Invalid argument")
-#endif
 
       ! Locate and extract the block in the busy list
-#ifdef _GPU
-      ptr => self%busy_head
-      call ptr%find(raw, block)
-      nullify(ptr)
-#else
       call self%busy_head%find(raw, block)
-#endif
       call block%get()
 
       ! Put it in the free list
-#ifdef _GPU
-      ptr => self%free_head
-      call block%put(ptr)
-      nullify(ptr)
-#else
       call block%put(self%free_head)
-#endif
 
       ! Free memory
       nullify (block)
@@ -664,9 +589,6 @@ contains
       ! Arguments
       class(mem_pool), intent(inout) :: self
       real(real32), intent(inout), dimension(:, :, :), contiguous, pointer :: freal
-#ifdef _GPU
-      attributes(device) :: freal
-#endif
 
       ! Safety check
       if (.not. self%available) &
@@ -675,11 +597,7 @@ contains
          call decomp_2d_abort(__FILE__, __LINE__, 2, "Invalid argument")
 
       ! Release the block
-#ifdef _GPU
-      call self%free_raw(c_devloc(freal))
-#else
       call self%free_raw(c_loc(freal))
-#endif
 
       ! Free memory
       nullify (freal)
@@ -693,9 +611,6 @@ contains
       ! Arguments
       class(mem_pool), intent(inout) :: self
       real(real64), intent(inout), dimension(:, :, :), contiguous, pointer :: dreal
-#ifdef _GPU
-      attributes(device) :: dreal
-#endif
 
       ! Safety check
       if (.not. self%available) &
@@ -704,11 +619,7 @@ contains
          call decomp_2d_abort(__FILE__, __LINE__, 2, "Invalid argument")
 
       ! Release the block
-#ifdef _GPU
-      call self%free_raw(c_devloc(dreal))
-#else
       call self%free_raw(c_loc(dreal))
-#endif
 
       ! Free memory
       nullify (dreal)
@@ -722,9 +633,6 @@ contains
       ! Arguments
       class(mem_pool), intent(inout) :: self
       complex(real32), intent(inout), dimension(:, :, :), contiguous, pointer :: fcplx
-#ifdef _GPU
-      attributes(device) :: fcplx
-#endif
 
       ! Safety check
       if (.not. self%available) &
@@ -733,11 +641,7 @@ contains
          call decomp_2d_abort(__FILE__, __LINE__, 2, "Invalid argument")
 
       ! Release the block
-#ifdef _GPU
-      call self%free_raw(c_devloc(fcplx))
-#else
       call self%free_raw(c_loc(fcplx))
-#endif
 
       ! Free memory
       nullify (fcplx)
@@ -751,9 +655,6 @@ contains
       ! Arguments
       class(mem_pool), intent(inout) :: self
       complex(real64), intent(inout), dimension(:, :, :), contiguous, pointer :: dcplx
-#ifdef _GPU
-      attributes(device) :: dcplx
-#endif
 
       ! Safety check
       if (.not. self%available) &
@@ -762,11 +663,7 @@ contains
          call decomp_2d_abort(__FILE__, __LINE__, 2, "Invalid argument")
 
       ! Release the block
-#ifdef _GPU
-      call self%free_raw(c_devloc(dcplx))
-#else
       call self%free_raw(c_loc(dcplx))
-#endif
 
       ! Free memory
       nullify (dcplx)
@@ -780,9 +677,6 @@ contains
       ! Arguments
       class(mem_pool), intent(inout) :: self
       integer(int64), intent(inout), dimension(:, :, :), contiguous, pointer :: ptr
-#ifdef _GPU
-      attributes(device) :: ptr
-#endif
 
       ! Safety check
       if (.not. self%available) &
@@ -791,11 +685,7 @@ contains
          call decomp_2d_abort(__FILE__, __LINE__, 2, "Invalid argument")
 
       ! Release the block
-#ifdef _GPU
-      call self%free_raw(c_devloc(ptr))
-#else
       call self%free_raw(c_loc(ptr))
-#endif
 
       ! Free memory
       nullify (ptr)
@@ -809,9 +699,6 @@ contains
       ! Arguments
       class(mem_pool), intent(inout) :: self
       integer(int32), intent(inout), dimension(:, :, :), contiguous, pointer :: ptr
-#ifdef _GPU
-      attributes(device) :: ptr
-#endif
 
       ! Safety check
       if (.not. self%available) &
@@ -820,11 +707,7 @@ contains
          call decomp_2d_abort(__FILE__, __LINE__, 2, "Invalid argument")
 
       ! Release the block
-#ifdef _GPU
-      call self%free_raw(c_devloc(ptr))
-#else
       call self%free_raw(c_loc(ptr))
-#endif
 
       ! Free memory
       nullify (ptr)
@@ -838,9 +721,6 @@ contains
       ! Arguments
       class(mem_pool), intent(inout) :: self
       integer(int16), intent(inout), dimension(:, :, :), contiguous, pointer :: ptr
-#ifdef _GPU
-      attributes(device) :: ptr
-#endif
 
       ! Safety check
       if (.not. self%available) &
@@ -849,11 +729,7 @@ contains
          call decomp_2d_abort(__FILE__, __LINE__, 2, "Invalid argument")
 
       ! Release the block
-#ifdef _GPU
-      call self%free_raw(c_devloc(ptr))
-#else
       call self%free_raw(c_loc(ptr))
-#endif
 
       ! Free memory
       nullify (ptr)
@@ -867,9 +743,6 @@ contains
       ! Arguments
       class(mem_pool), intent(inout) :: self
       integer(int8), intent(inout), dimension(:, :, :), contiguous, pointer :: ptr
-#ifdef _GPU
-      attributes(device) :: ptr
-#endif
 
       ! Safety check
       if (.not. self%available) &
@@ -878,11 +751,7 @@ contains
          call decomp_2d_abort(__FILE__, __LINE__, 2, "Invalid argument")
 
       ! Release the block
-#ifdef _GPU
-      call self%free_raw(c_devloc(ptr))
-#else
       call self%free_raw(c_loc(ptr))
-#endif
 
       ! Free memory
       nullify (ptr)
@@ -896,9 +765,6 @@ contains
       ! Arguments
       class(mem_pool), intent(inout) :: self
       logical, intent(inout), dimension(:, :, :), contiguous, pointer :: ptr
-#ifdef _GPU
-      attributes(device) :: ptr
-#endif
 
       ! Safety check
       if (.not. self%available) &
@@ -907,11 +773,7 @@ contains
          call decomp_2d_abort(__FILE__, __LINE__, 2, "Invalid argument")
 
       ! Release the block
-#ifdef _GPU
-      call self%free_raw(c_devloc(ptr))
-#else
       call self%free_raw(c_loc(ptr))
-#endif
 
       ! Free memory
       nullify (ptr)

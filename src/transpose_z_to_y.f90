@@ -64,14 +64,14 @@ contains
       real(mytype), dimension(:, :, :), intent(OUT) :: dst
       TYPE(DECOMP_INFO), intent(IN) :: decomp
       real(mytype), dimension(:), intent(out) :: wk1, wk2
-#if defined(_GPU)
-      attributes(device) :: wk1, wk2
 
+#if defined(_GPU)
       integer :: istat
 #endif
-
       integer :: s1, s2, s3, d1, d2, d3
       integer :: ierror
+
+      !$acc host_data use_device(wk1, wk2)
 
       s1 = SIZE(src, 1)
       s2 = SIZE(src, 2)
@@ -140,6 +140,8 @@ contains
       call mem_merge_zy_real(wk2, d1, d2, d3, dst, dims(2), &
                              decomp%y2dist, decomp)
 
+      !$acc end host_data
+
    end subroutine transpose_z_to_y_real
 
    module subroutine transpose_z_to_y_complex_short(src, dst)
@@ -196,14 +198,14 @@ contains
       complex(mytype), dimension(:, :, :), intent(OUT) :: dst
       TYPE(DECOMP_INFO), intent(IN) :: decomp
       complex(mytype), dimension(:), intent(out) :: wk1, wk2
-#if defined(_GPU)
-      attributes(device) :: wk1, wk2
 
+#if defined(_GPU)
       integer :: istat
 #endif
-
       integer :: s1, s2, s3, d1, d2, d3
       integer :: ierror
+
+      !$acc host_data use_device(wk1, wk2)
 
       s1 = SIZE(src, 1)
       s2 = SIZE(src, 2)
@@ -272,6 +274,8 @@ contains
       ! rearrange receive buffer
       call mem_merge_zy_complex(wk2, d1, d2, d3, dst, dims(2), &
                                 decomp%y2dist, decomp)
+
+      !$acc end host_data
 
    end subroutine transpose_z_to_y_complex
 
@@ -372,7 +376,6 @@ contains
       integer, dimension(0:iproc - 1), intent(IN) :: dist
       TYPE(DECOMP_INFO), intent(IN) :: decomp
 #if defined(_GPU)
-      attributes(device) :: in
       integer :: istat
 #endif
 
@@ -394,7 +397,7 @@ contains
 #endif
 
 #if defined(_GPU)
-         !$acc host_data use_device(out)
+         !$acc host_data use_device(in, out)
          istat = cudaMemcpy2D(out(1, i1, 1), n1 * n2, in(init_pos), n1 * (i2 - i1 + 1), n1 * (i2 - i1 + 1), n3, cudaMemcpyDeviceToDevice)
          !$acc end host_data
          if (istat /= 0) call decomp_2d_abort(__FILE__, __LINE__, istat, "cudaMemcpy2D")
@@ -426,7 +429,6 @@ contains
       TYPE(DECOMP_INFO), intent(IN) :: decomp
 
 #if defined(_GPU)
-      attributes(device) :: in
       integer :: istat
 #endif
 
@@ -448,7 +450,7 @@ contains
 #endif
 
 #if defined(_GPU)
-         !$acc host_data use_device(out)
+         !$acc host_data use_device(in, out)
          istat = cudaMemcpy2D(out(1, i1, 1), n1 * n2, in(init_pos), n1 * (i2 - i1 + 1), n1 * (i2 - i1 + 1), n3, cudaMemcpyDeviceToDevice)
          !$acc end host_data
          if (istat /= 0) call decomp_2d_abort(__FILE__, __LINE__, istat, "cudaMemcpy2D")

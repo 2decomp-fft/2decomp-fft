@@ -11,12 +11,9 @@ module decomp_2d
    use decomp_2d_constants
    use decomp_2d_mpi
    use decomp_2d_profiler
-#if defined(_GPU)
-   use cudafor
-#if defined(_NCCL)
+#if defined(_GPU) &&  defined(_NCCL)
    use nccl
    use decomp_2d_nccl
-#endif
 #endif
    use m_info
    use m_decomp_pool
@@ -118,9 +115,6 @@ module decomp_2d
    ! Real/complex pointers to buffers for MPI_ALLTOALL(V) calls
    real(mytype), pointer, contiguous, dimension(:) :: work1_r, work2_r
    complex(mytype), pointer, contiguous, dimension(:) :: work1_c, work2_c
-#ifdef _GPU
-   attributes(device) :: work1_r, work2_r, work1_c, work2_c
-#endif
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
    ! To define smaller arrays using every several mesh points

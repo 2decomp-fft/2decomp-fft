@@ -11,9 +11,6 @@ module m_blk
    use iso_c_binding, only: c_ptr, c_null_ptr, c_size_t, c_associated, c_loc
    use decomp_2d_constants
    use decomp_2d_mpi, only : nrank, decomp_2d_abort
-#ifdef _GPU
-   use cudafor
-#endif
 
    implicit none
 
@@ -24,17 +21,9 @@ module m_blk
    !
    type :: blk
       ! Memory block
-#ifdef _GPU
-      real(real32), allocatable, dimension(:), private, device :: dat
-#else
       real(real32), allocatable, dimension(:), private :: dat
-#endif
       ! Address of the memory block
-#ifdef _GPU
-      type(c_devptr), public :: ref
-#else
       type(c_ptr), public :: ref = c_null_ptr
-#endif
       ! True when the block is allocated
       logical, private :: allocated = .false.
       ! Previous block in the list
@@ -101,11 +90,8 @@ contains
       allocate (self%next%dat(size), stat=ierr)
       if (ierr /= 0) &
          call decomp_2d_abort(__FILE__, __LINE__, ierr, "Allocation failed")
-#ifdef _GPU
-      self%next%ref = c_devloc(self%next%dat)
-#else
+      !$acc enter data create(self%next%dat)
       self%next%ref = c_loc(self%next%dat)
-#endif
 
       ! Initialize the memory if needed
       if (init) then
@@ -164,12 +150,11 @@ contains
       self%allocated = .false.
 
       ! Free memory
+      !$acc exit data delete(self%dat)
       deallocate (self%dat, stat=ierr)
       if (ierr /= 0) &
          call decomp_2d_abort(__FILE__, __LINE__, 1, "Deallocation failed")
-#ifndef _GPU
       self%ref = c_null_ptr
-#endif
 
    end subroutine blk_fin
 
@@ -245,6 +230,7 @@ contains
          call decomp_2d_abort(__FILE__, __LINE__, 1, "Block must be allocated")
 
       ! Free memory
+      !$acc exit data delete(self%dat)
       deallocate (self%dat, stat=ierr)
       if (ierr /= 0) &
          call decomp_2d_abort(__FILE__, __LINE__, ierr, "Deallocation failed")
@@ -253,13 +239,10 @@ contains
       allocate (self%dat(size), stat=ierr)
       if (ierr /= 0) &
          call decomp_2d_abort(__FILE__, __LINE__, ierr, "Allocation failed")
+      !$acc enter data create(self%dat)
 
       ! Update the address
-#ifdef _GPU
-      self%ref = c_devloc(self%dat)
-#else
       self%ref = c_loc(self%dat)
-#endif
 
       ! Initialize the memory if needed
       if (init) then
@@ -293,17 +276,8 @@ contains
 
       ! Arguments
       class(blk), target, intent(in) :: self
-#ifdef _GPU
-      type(c_devptr), intent(in) :: ref
-#else
       type(c_ptr), intent(in) :: ref
-#endif
       type(blk), pointer, intent(out) :: ptr
-
-      ! Local variables
-#ifdef _GPU
-      real(real32), dimension(:), contiguous, pointer, device :: array_ref
-#endif
 
       ! Start at head
       ptr => self
@@ -311,15 +285,7 @@ contains
       ! Process the list
       do
          ! It is a match !
-#ifdef _GPU
-         call c_f_pointer(ref, array_ref, (/size(self%dat)/))
-         if (associated(array_ref, self%dat)) then
-            nullify(array_ref)
-            return
-         end if
-#else
          if (c_associated(ptr%ref, ref)) return
-#endif
          ! Next
          if (associated(ptr%next)) then
             ptr => ptr%next
@@ -359,9 +325,6 @@ contains
       if (output == error_unit) return
 
       if (present(name)) write (output, *) name
-#ifdef _GPU
-      write (output, *) "c_associated intrinsic is not compatible with device pointers"
-#else
       if (c_associated(self%ref)) write (output, *) "  Data at ", transfer(self%ref, 0_c_size_t)
       if (associated(self%prev)) then
          if (c_associated(self%prev%ref)) then
@@ -381,7 +344,6 @@ contains
       else
          write (output, *) "  Next is null"
       end if
-#endif
 
    end subroutine blk_print
 

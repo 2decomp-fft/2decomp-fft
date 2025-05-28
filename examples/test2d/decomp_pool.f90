@@ -18,6 +18,9 @@ program prog_decomp_pool
    integer :: nranks_tot
    integer :: iounit, ierror
    real(mytype), pointer, contiguous, dimension(:, :, :) :: a, b, c, d
+#ifdef _GPU
+   attributes(device) :: a, b, c, d
+#endif
 
    ! Init
    call MPI_INIT(ierror)

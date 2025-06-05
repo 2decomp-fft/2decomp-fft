@@ -5,6 +5,7 @@
 module decomp_2d
 
    use MPI
+   use iso_c_binding, only: c_size_t
    use, intrinsic :: iso_fortran_env, only: real32, real64
    use factor
    use decomp_2d_constants
@@ -18,6 +19,9 @@ module decomp_2d
    use decomp_2d_nccl
 #endif
 #endif
+   use m_info
+   use m_decomp_pool
+   use m_mem_pool
 
    implicit none
 
@@ -28,6 +32,7 @@ module decomp_2d
 
    ! some key global variables
    integer, save, public :: nx_global, ny_global, nz_global  ! global size
+   logical, save, public, protected :: use_pool
 
    ! parameters for 2D Cartesian topology
    integer, save, dimension(2) :: dims, coord
@@ -75,11 +80,8 @@ module decomp_2d
 #endif
 
    ! derived type to store decomposition info for a given global data size
-   TYPE, public :: DECOMP_INFO
-      ! staring/ending index and size of data held by current processor
-      integer, dimension(3) :: xst, xen, xsz  ! x-pencil
-      integer, dimension(3) :: yst, yen, ysz  ! y-pencil
-      integer, dimension(3) :: zst, zen, zsz  ! z-pencil
+   TYPE, extends(info), public :: DECOMP_INFO
+      ! starting/ending index and size are defined in the parent type, see info.f90
 
       ! in addition to local information, processors also need to know
       ! some global information for global communications to work
@@ -424,6 +426,15 @@ contains
                 decomp%y2disp(0:dims(2) - 1), decomp%z2disp(0:dims(2) - 1))
       call prepare_buffer(decomp)
 
+      ! Update the shared memory pool
+      if (use_pool) then
+         if (decomp_pool_ready) then
+            call decomp_pool%new_shape(decomp_pool_default_type, decomp)
+         else
+            call decomp_pool_init(decomp, decomp_pool_default_type)
+         end if
+      end if
+
       ! allocate memory for the MPI_ALLTOALL(V) buffers
       ! define the buffers globally for performance reason
 
@@ -447,34 +458,38 @@ contains
       ! check if additional memory is required
       if (buf_size > decomp_buf_size) then
          decomp_buf_size = buf_size
-         if (associated(work1_r)) nullify (work1_r)
-         if (associated(work2_r)) nullify (work2_r)
-         if (associated(work1_c)) nullify (work1_c)
-         if (associated(work2_c)) nullify (work2_c)
-         if (allocated(work1)) deallocate (work1)
-         if (allocated(work2)) deallocate (work2)
-         allocate (work1(2 * buf_size), STAT=status)
-         if (status /= 0) then
-            errorcode = 2
-            call decomp_2d_abort(__FILE__, __LINE__, errorcode, &
-                                 'Out of memory when allocating 2DECOMP workspace')
-         end if
-         allocate (work2(2 * buf_size), STAT=status)
-         if (status /= 0) then
-            errorcode = 2
-            call decomp_2d_abort(__FILE__, __LINE__, errorcode, &
-                                 'Out of memory when allocating 2DECOMP workspace')
-         end if
-         call c_f_pointer(c_loc(work1), work1_r, [buf_size])
-         call c_f_pointer(c_loc(work2), work2_r, [buf_size])
-         call c_f_pointer(c_loc(work1), work1_c, [buf_size])
-         call c_f_pointer(c_loc(work2), work2_c, [buf_size])
+         if (use_pool) then
+            call decomp_pool%new_shape(decomp_pool_default_type, shp=(/buf_size/))
+         else
+            if (associated(work1_r)) nullify (work1_r)
+            if (associated(work2_r)) nullify (work2_r)
+            if (associated(work1_c)) nullify (work1_c)
+            if (associated(work2_c)) nullify (work2_c)
+            if (allocated(work1)) deallocate (work1)
+            if (allocated(work2)) deallocate (work2)
+            allocate (work1(2 * buf_size), STAT=status)
+            if (status /= 0) then
+               errorcode = 2
+               call decomp_2d_abort(__FILE__, __LINE__, errorcode, &
+                                    'Out of memory when allocating 2DECOMP workspace')
+            end if
+            allocate (work2(2 * buf_size), STAT=status)
+            if (status /= 0) then
+               errorcode = 2
+               call decomp_2d_abort(__FILE__, __LINE__, errorcode, &
+                                    'Out of memory when allocating 2DECOMP workspace')
+            end if
+            call c_f_pointer(c_loc(work1), work1_r, [buf_size])
+            call c_f_pointer(c_loc(work2), work2_r, [buf_size])
+            call c_f_pointer(c_loc(work1), work1_c, [buf_size])
+            call c_f_pointer(c_loc(work2), work2_c, [buf_size])
 #if defined(_GPU)
-         call decomp_2d_cumpi_init(buf_size, work1, work2)
+            call decomp_2d_cumpi_init(buf_size, work1, work2)
 #if defined(_NCCL)
-         call decomp_2d_nccl_mem_init(buf_size)
+            call decomp_2d_nccl_mem_init(buf_size)
 #endif
 #endif
+         end if
       end if
 
    end subroutine decomp_info_init

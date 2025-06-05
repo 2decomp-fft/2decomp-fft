@@ -9,6 +9,7 @@ module decomp_2d_fft
    use decomp_2d_constants
    use decomp_2d_mpi
    use decomp_2d_profiler
+   use m_decomp_pool
    use MKL_DFTI   ! MKL FFT module
 
    implicit none

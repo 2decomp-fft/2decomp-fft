@@ -84,7 +84,7 @@ program timing2d_real
    call alloc_z(u3, opt_global=.true.)
 
    !$acc data copy(u1,u2,u3)
-   ! original x-pensil based data
+   ! original x-pencil based data
    !$acc parallel loop default(present) private(m)
    do k = xst3, xen3
       do j = xst2, xen2
@@ -127,7 +127,7 @@ program timing2d_real
    end if
    do iter = 1, niter
       !!!!!!!!!!!!!!!!!!!!!!!
-      ! x-pensil ==> y-pensil
+      ! x-pencil ==> y-pencil
       t1 = MPI_WTIME()
       call transpose_x_to_y(u1, u2)
       t2 = t2 + MPI_WTIME() - t1
@@ -157,7 +157,7 @@ program timing2d_real
       if (error_flag) call decomp_2d_abort(1, "error swaping x->y")
 
       !!!!!!!!!!!!!!!!!!!!!!!
-      ! y-pensil ==> z-pensil
+      ! y-pencil ==> z-pencil
       t3 = MPI_WTIME()
       call transpose_y_to_z(u2, u3)
       t4 = t4 + MPI_WTIME() - t3
@@ -186,7 +186,7 @@ program timing2d_real
       if (error_flag) call decomp_2d_abort(2, "error swaping y->z")
 
       !!!!!!!!!!!!!!!!!!!!!!!
-      ! z-pensil ==> y-pensil
+      ! z-pencil ==> y-pencil
       t5 = MPI_WTIME()
       call transpose_z_to_y(u3, u2)
       t6 = t6 + MPI_WTIME() - t5
@@ -206,7 +206,7 @@ program timing2d_real
       if (error_flag) call decomp_2d_abort(3, "error swaping z->y")
 
       !!!!!!!!!!!!!!!!!!!!!!!
-      ! y-pensil ==> x-pensil
+      ! y-pencil ==> x-pencil
       t7 = MPI_WTIME()
       call transpose_y_to_x(u2, u1)
       t8 = t8 + MPI_WTIME() - t7

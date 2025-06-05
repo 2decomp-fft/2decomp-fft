@@ -19,7 +19,16 @@
 !
 ! The external code reading a 3D array will call decomp_2d_adios_read_var
 !
-! Same arguments (except opt_mode, not available)
+! Arguments :
+!    - io : d2d_io_adios object. It will be opened / started if it was not open / active.
+!                                The external code should call io%end_close when the IO is complete
+!    - ipencil : pencil orientation of the 3D array
+!    - var : 3D array
+!    - varname : name provided when the array was registered and written
+!    - opt_decomp : optional, decomp_info for the variable. decomp_main is used if not provided
+!    - opt_family : optional, family of IO readers / writers. Used only if io needs to be opened.
+!    - opt_step_start : optional, specify the step to read (index starts at 0)
+!    - opt_reduce_prec : optional, file in single precision. default_opt_reduce_prec is used if not provided
 !
 
 !
@@ -41,7 +50,17 @@
 !
 ! The external code reading planes will call decomp_2d_read_planes
 !
-! Same arguments (except opt_mode, opt_nplanes, opt_iplane, opt_ipencil, not available)
+! Arguments :
+!    - io : d2d_io_adios object. It will be opened / started if it was not open / active.
+!                                The external code should call io%end_close when the IO is complete
+!    - ipencil : pencil orientation of the planes
+!    - var : stacked planes
+!    - varname : name provided when the array was registered and written
+!    - nplanes : number of planes stacked in the file
+!    - opt_decomp : optional, decomp_info object for the stacked planes
+!    - opt_family : optional, family of IO readers / writers. Used only if io needs to be opened.
+!    - opt_step_start : optional, specify the step to read (index starts at 0)
+!    - opt_reduce_prec : optiona, file in single precision. default_opt_reduce_prec is used if not provided
 !
 
 module decomp_2d_io_adios
@@ -52,6 +71,7 @@ module decomp_2d_io_adios
    use decomp_2d_io_utilities
    use decomp_2d_mpi
    use decomp_2d_profiler
+   use m_info
    use MPI
    use, intrinsic :: iso_fortran_env, only: real32, real64
    use adios2
@@ -122,7 +142,7 @@ contains
       integer, intent(in) :: ipencil ! (x-pencil=1; y-pencil=2; z-pencil=3)
       integer, intent(in) :: type
       logical, intent(in), optional :: opt_reduce_prec
-      type(decomp_info), intent(in), optional :: opt_decomp
+      class(info), intent(in), optional :: opt_decomp
 
       call default_family%register_var(varname, ipencil, type, &
                                        opt_reduce_prec=opt_reduce_prec, &
@@ -146,7 +166,7 @@ contains
       integer, intent(in) :: ipencil ! (x-pencil=1; y-pencil=2; z-pencil=3)
       integer, intent(in) :: type
       logical, intent(in), optional :: opt_reduce_prec
-      type(decomp_info), intent(in), optional :: opt_decomp
+      class(info), intent(in), optional :: opt_decomp
       integer, intent(in), optional :: opt_nplanes
 
       call default_family%register_plane(varname, ipencil, type, &
@@ -254,17 +274,21 @@ contains
    !   - io : IO reader / writer
    !   - varname : name of the variable
    !   - opt_family : family of IO readers / writers
+   !   - opt_step_start : starting step for the provided variable
    !   - freal / dreal / fcplx / dcplx : array
    !
-   subroutine adios_read(io, varname, &
+   subroutine adios_read(io, varname, sel_start, sel_count, &
                          opt_family, &
+                         opt_step_start, &
                          freal, dreal, fcplx, dcplx)
 
       implicit none
 
       type(d2d_io_adios), intent(inout) :: io
       character(len=*), intent(in) :: varname
+      integer, intent(in), dimension(3) :: sel_start, sel_count
       type(d2d_io_family), target, intent(inout), optional :: opt_family
+      integer, intent(in), optional :: opt_step_start
       real(real32), contiguous, dimension(:, :, :), intent(out), optional :: freal
       real(real64), contiguous, dimension(:, :, :), intent(out), optional :: dreal
       complex(real32), contiguous, dimension(:, :, :), intent(out), optional :: fcplx
@@ -282,7 +306,10 @@ contains
       end if
 
       ! Perform IO with ADIOS2
-      call io%read(varname, freal, dreal, fcplx, dcplx)
+      ! Starting index is 0-based
+      call io%read(varname, sel_start, sel_count, &
+                   opt_step_start, &
+                   freal, dreal, fcplx, dcplx)
 
    end subroutine adios_read
 
@@ -443,23 +470,38 @@ contains
    !
    !
    !
-   subroutine read_var_freal(io, var, varname, &
+   subroutine read_var_freal(io, ipencil, var, varname, &
+                             opt_decomp, &
                              opt_family, &
+                             opt_step_start, &
                              opt_reduce_prec)
 
       implicit none
 
       ! Arguments
       type(d2d_io_adios), intent(inout) :: io
+      integer, intent(in) :: ipencil
       real(real32), contiguous, dimension(:, :, :), intent(OUT) :: var
       character(len=*), intent(in) :: varname
+      class(info), intent(in), optional :: opt_decomp
       type(d2d_io_family), intent(inout), optional :: opt_family
+      integer, intent(in), optional :: opt_step_start
       logical, intent(in), optional :: opt_reduce_prec
+
+      ! Local variable(s)
+      integer, dimension(3) :: sel, sel_start, sel_count
 
       if (decomp_profiler_io) call decomp_profiler_start("adios_read_var")
 
-      call adios_read(io, varname, &
+      if (present(opt_decomp)) then
+         call io_get_size(ipencil, opt_decomp, sel, sel_start, sel_count)
+      else
+         call io_get_size(ipencil, decomp_main, sel, sel_start, sel_count)
+      end if
+
+      call adios_read(io, varname, sel_start, sel_count, &
                       opt_family=opt_family, &
+                      opt_step_start=opt_step_start, &
                       freal=var)
 
       associate (p => opt_reduce_prec); end associate
@@ -468,23 +510,38 @@ contains
 
    end subroutine read_var_freal
    !
-   subroutine read_var_fcplx(io, var, varname, &
+   subroutine read_var_fcplx(io, ipencil, var, varname, &
+                             opt_decomp, &
                              opt_family, &
+                             opt_step_start, &
                              opt_reduce_prec)
 
       implicit none
 
       ! Arguments
       type(d2d_io_adios), intent(inout) :: io
+      integer, intent(in) :: ipencil
       complex(real32), contiguous, dimension(:, :, :), intent(OUT) :: var
       character(len=*), intent(in) :: varname
+      class(info), intent(in), optional :: opt_decomp
       type(d2d_io_family), intent(inout), optional :: opt_family
+      integer, intent(in), optional :: opt_step_start
       logical, intent(in), optional :: opt_reduce_prec
+
+      ! Local variable(s)
+      integer, dimension(3) :: sel, sel_start, sel_count
 
       if (decomp_profiler_io) call decomp_profiler_start("adios_read_var")
 
-      call adios_read(io, varname, &
+      if (present(opt_decomp)) then
+         call io_get_size(ipencil, opt_decomp, sel, sel_start, sel_count)
+      else
+         call io_get_size(ipencil, decomp_main, sel, sel_start, sel_count)
+      end if
+
+      call adios_read(io, varname, sel_start, sel_count, &
                       opt_family=opt_family, &
+                      opt_step_start=opt_step_start, &
                       fcplx=var)
 
       associate (p => opt_reduce_prec); end associate
@@ -493,24 +550,36 @@ contains
 
    end subroutine read_var_fcplx
    !
-   subroutine read_var_dreal(io, var, varname, &
+   subroutine read_var_dreal(io, ipencil, var, varname, &
+                             opt_decomp, &
                              opt_family, &
+                             opt_step_start, &
                              opt_reduce_prec)
 
       implicit none
 
       ! Arguments
       type(d2d_io_adios), intent(inout) :: io
+      integer, intent(in) :: ipencil
       real(real64), contiguous, dimension(:, :, :), intent(OUT) :: var
       character(len=*), intent(in) :: varname
+      class(info), intent(in), optional :: opt_decomp
       type(d2d_io_family), intent(inout), optional :: opt_family
+      integer, intent(in), optional :: opt_step_start
       logical, intent(in), optional :: opt_reduce_prec
 
       ! Local variable(s)
+      integer, dimension(3) :: sel, sel_start, sel_count
       logical :: reduce
       real(real32), dimension(:, :, :), allocatable :: tmp
 
       if (decomp_profiler_io) call decomp_profiler_start("adios_read_var")
+
+      if (present(opt_decomp)) then
+         call io_get_size(ipencil, opt_decomp, sel, sel_start, sel_count)
+      else
+         call io_get_size(ipencil, decomp_main, sel, sel_start, sel_count)
+      end if
 
       ! One can write to single precision using opt_reduce_prec
       if (present(opt_reduce_prec)) then
@@ -521,14 +590,16 @@ contains
 
       if (reduce) then
          allocate (tmp(size(var, 1), size(var, 2), size(var, 3)))
-         call adios_read(io, varname, &
+         call adios_read(io, varname, sel_start, sel_count, &
                          opt_family=opt_family, &
+                         opt_step_start=opt_step_start, &
                          freal=tmp)
          var = real(tmp, kind=real64)
          deallocate (tmp)
       else
-         call adios_read(io, varname, &
+         call adios_read(io, varname, sel_start, sel_count, &
                          opt_family=opt_family, &
+                         opt_step_start=opt_step_start, &
                          dreal=var)
       end if
 
@@ -536,24 +607,36 @@ contains
 
    end subroutine read_var_dreal
    !
-   subroutine read_var_dcplx(io, var, varname, &
+   subroutine read_var_dcplx(io, ipencil, var, varname, &
+                             opt_decomp, &
                              opt_family, &
+                             opt_step_start, &
                              opt_reduce_prec)
 
       implicit none
 
       ! Arguments
       type(d2d_io_adios), intent(inout) :: io
+      integer, intent(in) :: ipencil
       complex(real64), contiguous, dimension(:, :, :), intent(OUT) :: var
       character(len=*), intent(in) :: varname
+      class(info), intent(in), optional :: opt_decomp
       type(d2d_io_family), intent(inout), optional :: opt_family
+      integer, intent(in), optional :: opt_step_start
       logical, intent(in), optional :: opt_reduce_prec
 
       ! Local variable(s)
+      integer, dimension(3) :: sel, sel_start, sel_count
       logical :: reduce
       complex(real32), dimension(:, :, :), allocatable :: tmp
 
       if (decomp_profiler_io) call decomp_profiler_start("adios_read_var")
+
+      if (present(opt_decomp)) then
+         call io_get_size(ipencil, opt_decomp, sel, sel_start, sel_count)
+      else
+         call io_get_size(ipencil, decomp_main, sel, sel_start, sel_count)
+      end if
 
       ! One can write to single precision using opt_reduce_prec
       if (present(opt_reduce_prec)) then
@@ -564,14 +647,16 @@ contains
 
       if (reduce) then
          allocate (tmp(size(var, 1), size(var, 2), size(var, 3)))
-         call adios_read(io, varname, &
+         call adios_read(io, varname, sel_start, sel_count, &
                          opt_family=opt_family, &
+                         opt_step_start=opt_step_start, &
                          fcplx=tmp)
          var = cmplx(tmp, kind=real64)
          deallocate (tmp)
       else
-         call adios_read(io, varname, &
+         call adios_read(io, varname, sel_start, sel_count, &
                          opt_family=opt_family, &
+                         opt_step_start=opt_step_start, &
                          dcplx=var)
       end if
 
@@ -1013,23 +1098,38 @@ contains
    !
    !
    !
-   subroutine read_plane_freal(io, var, varname, &
+   subroutine read_plane_freal(io, ipencil, var, varname, nplanes, &
+                               opt_decomp, &
                                opt_family, &
+                               opt_step_start, &
                                opt_reduce_prec)
 
       implicit none
 
       ! Arguments
       type(d2d_io_adios), intent(inout) :: io
+      integer, intent(in) :: ipencil
       real(real32), contiguous, dimension(:, :, :), intent(OUT) :: var
       character(len=*), intent(in) :: varname
+      integer, intent(in) :: nplanes
+      class(info), intent(in), optional :: opt_decomp
       type(d2d_io_family), intent(inout), optional :: opt_family
+      integer, intent(in), optional :: opt_step_start
       logical, intent(in), optional :: opt_reduce_prec
 
+      ! Local variable(s)
+      integer, dimension(3) :: sel, sel_start, sel_count
       if (decomp_profiler_io) call decomp_profiler_start("adios_read_plane")
 
-      call adios_read(io, varname, &
+      if (present(opt_decomp)) then
+         call io_get_size(ipencil, opt_decomp, sel, sel_start, sel_count, nplanes)
+      else
+         call io_get_size(ipencil, decomp_main, sel, sel_start, sel_count, nplanes)
+      end if
+
+      call adios_read(io, varname, sel_start, sel_count, &
                       opt_family=opt_family, &
+                      opt_step_start=opt_step_start, &
                       freal=var)
       associate (p => opt_reduce_prec)
       end associate
@@ -1038,23 +1138,38 @@ contains
 
    end subroutine read_plane_freal
    !
-   subroutine read_plane_fcplx(io, var, varname, &
+   subroutine read_plane_fcplx(io, ipencil, var, varname, nplanes, &
+                               opt_decomp, &
                                opt_family, &
+                               opt_step_start, &
                                opt_reduce_prec)
 
       implicit none
 
       ! Arguments
       type(d2d_io_adios), intent(inout) :: io
+      integer, intent(in) :: ipencil
       complex(real32), contiguous, dimension(:, :, :), intent(OUT) :: var
       character(len=*), intent(in) :: varname
+      integer, intent(in) :: nplanes
+      class(info), intent(in), optional :: opt_decomp
       type(d2d_io_family), intent(inout), optional :: opt_family
+      integer, intent(in), optional :: opt_step_start
       logical, intent(in), optional :: opt_reduce_prec
 
+      ! Local variable(s)
+      integer, dimension(3) :: sel, sel_start, sel_count
       if (decomp_profiler_io) call decomp_profiler_start("adios_read_plane")
 
-      call adios_read(io, varname, &
+      if (present(opt_decomp)) then
+         call io_get_size(ipencil, opt_decomp, sel, sel_start, sel_count, nplanes)
+      else
+         call io_get_size(ipencil, decomp_main, sel, sel_start, sel_count, nplanes)
+      end if
+
+      call adios_read(io, varname, sel_start, sel_count, &
                       opt_family=opt_family, &
+                      opt_step_start=opt_step_start, &
                       fcplx=var)
       associate (p => opt_reduce_prec)
       end associate
@@ -1063,24 +1178,37 @@ contains
 
    end subroutine read_plane_fcplx
    !
-   subroutine read_plane_dreal(io, var, varname, &
+   subroutine read_plane_dreal(io, ipencil, var, varname, nplanes, &
+                               opt_decomp, &
                                opt_family, &
+                               opt_step_start, &
                                opt_reduce_prec)
 
       implicit none
 
       ! Arguments
       type(d2d_io_adios), intent(inout) :: io
+      integer, intent(in) :: ipencil
       real(real64), contiguous, dimension(:, :, :), intent(OUT) :: var
       character(len=*), intent(in) :: varname
+      integer, intent(in) :: nplanes
+      class(info), intent(in), optional :: opt_decomp
       type(d2d_io_family), intent(inout), optional :: opt_family
+      integer, intent(in), optional :: opt_step_start
       logical, intent(in), optional :: opt_reduce_prec
 
-      ! Local variables
+      ! Local variable(s)
+      integer, dimension(3) :: sel, sel_start, sel_count
       logical :: reduce
       real(real32), allocatable, dimension(:, :, :) :: tmp
 
       if (decomp_profiler_io) call decomp_profiler_start("adios_read_plane")
+
+      if (present(opt_decomp)) then
+         call io_get_size(ipencil, opt_decomp, sel, sel_start, sel_count, nplanes)
+      else
+         call io_get_size(ipencil, decomp_main, sel, sel_start, sel_count, nplanes)
+      end if
 
       ! One can write to single precision using opt_reduce_prec
       if (present(opt_reduce_prec)) then
@@ -1094,38 +1222,53 @@ contains
          allocate (tmp(size(var, 1), &
                        size(var, 2), &
                        size(var, 3)))
-         call adios_read(io, varname, &
+         call adios_read(io, varname, sel_start, sel_count, &
                          opt_family=opt_family, &
+                         opt_step_start=opt_step_start, &
                          freal=tmp)
          var = real(tmp, kind=real64)
          deallocate (tmp)
       else
-         call adios_read(io, varname, &
+         call adios_read(io, varname, sel_start, sel_count, &
                          opt_family=opt_family, &
+                         opt_step_start=opt_step_start, &
                          dreal=var)
       end if
       if (decomp_profiler_io) call decomp_profiler_end("adios_read_plane")
 
    end subroutine read_plane_dreal
    !
-   subroutine read_plane_dcplx(io, var, varname, &
+   subroutine read_plane_dcplx(io, ipencil, var, varname, nplanes, &
+                               opt_decomp, &
                                opt_family, &
+                               opt_step_start, &
                                opt_reduce_prec)
 
       implicit none
 
       ! Arguments
       type(d2d_io_adios), intent(inout) :: io
+      integer, intent(in) :: ipencil
       complex(real64), contiguous, dimension(:, :, :), intent(OUT) :: var
       character(len=*), intent(in) :: varname
+      integer, intent(in) :: nplanes
+      class(info), intent(in), optional :: opt_decomp
       type(d2d_io_family), intent(inout), optional :: opt_family
+      integer, intent(in), optional :: opt_step_start
       logical, intent(in), optional :: opt_reduce_prec
 
-      ! Local variables
+      ! Local variable(s)
+      integer, dimension(3) :: sel, sel_start, sel_count
       logical :: reduce
       complex(real32), allocatable, dimension(:, :, :) :: tmp
 
       if (decomp_profiler_io) call decomp_profiler_start("adios_read_plane")
+
+      if (present(opt_decomp)) then
+         call io_get_size(ipencil, opt_decomp, sel, sel_start, sel_count, nplanes)
+      else
+         call io_get_size(ipencil, decomp_main, sel, sel_start, sel_count, nplanes)
+      end if
 
       ! One can write to single precision using opt_reduce_prec
       if (present(opt_reduce_prec)) then
@@ -1139,14 +1282,16 @@ contains
          allocate (tmp(size(var, 1), &
                        size(var, 2), &
                        size(var, 3)))
-         call adios_read(io, varname, &
+         call adios_read(io, varname, sel_start, sel_count, &
                          opt_family=opt_family, &
+                         opt_step_start=opt_step_start, &
                          fcplx=tmp)
          var = cmplx(tmp, kind=real64)
          deallocate (tmp)
       else
-         call adios_read(io, varname, &
+         call adios_read(io, varname, sel_start, sel_count, &
                          opt_family=opt_family, &
+                         opt_step_start=opt_step_start, &
                          dcplx=var)
       end if
       if (decomp_profiler_io) call decomp_profiler_end("adios_read_plane")

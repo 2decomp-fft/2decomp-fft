@@ -38,7 +38,7 @@ program fft_multiple_grids_inplace
    ! Now we can check if user put some inputs
    call decomp_2d_testing_init(p_row, p_col, nx, ny, nz, ntest)
 
-   call decomp_2d_init(nx + 1, ny + 1, nz + 1, p_row, p_col)
+   call decomp_2d_init(nx + 1, ny + 1, nz + 1, p_row, p_col, complex_pool = .true.)
 
    call decomp_2d_testing_log()
 

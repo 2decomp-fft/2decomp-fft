@@ -11,6 +11,7 @@ module decomp_2d_fft
    use iso_c_binding
    use cudafor
    use cufft
+   use m_decomp_pool
 
    implicit none
 

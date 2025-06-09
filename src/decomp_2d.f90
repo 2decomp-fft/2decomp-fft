@@ -115,7 +115,7 @@ module decomp_2d
    integer, save, dimension(3), public :: zstart, zend, zsize  ! z-pencil
 
    ! These are the buffers used by MPI_ALLTOALL(V) calls
-   integer, save :: decomp_buf_size = 0
+   integer, public, protected, save :: decomp_buf_size = 0
    ! Shared real/complex buffers
 #if defined(_GPU)
    real(mytype), target, device, allocatable, dimension(:) :: work1, work2

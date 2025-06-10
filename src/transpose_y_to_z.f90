@@ -297,7 +297,7 @@ contains
 
       integer, intent(IN) :: n1, n2, n3
       real(mytype), dimension(n1, n2, n3), intent(IN) :: in
-      real(mytype), dimension(*), intent(OUT) :: out
+      real(mytype), dimension(:), intent(OUT) :: out
       integer, intent(IN) :: iproc
       integer, dimension(0:iproc - 1), intent(IN) :: dist
       TYPE(DECOMP_INFO), intent(IN) :: decomp
@@ -351,7 +351,7 @@ contains
 
       integer, intent(IN) :: n1, n2, n3
       complex(mytype), dimension(n1, n2, n3), intent(IN) :: in
-      complex(mytype), dimension(*), intent(OUT) :: out
+      complex(mytype), dimension(:), intent(OUT) :: out
       integer, intent(IN) :: iproc
       integer, dimension(0:iproc - 1), intent(IN) :: dist
       TYPE(DECOMP_INFO), intent(IN) :: decomp
@@ -404,7 +404,7 @@ contains
       implicit none
 
       integer, intent(IN) :: n1, n2, n3
-      real(mytype), dimension(*), intent(IN) :: in
+      real(mytype), dimension(:), intent(IN) :: in
       real(mytype), dimension(n1, n2, n3), intent(OUT) :: out
       integer, intent(IN) :: iproc
       integer, dimension(0:iproc - 1), intent(IN) :: dist
@@ -447,7 +447,7 @@ contains
       implicit none
 
       integer, intent(IN) :: n1, n2, n3
-      complex(mytype), dimension(*), intent(IN) :: in
+      complex(mytype), dimension(:), intent(IN) :: in
       complex(mytype), dimension(n1, n2, n3), intent(OUT) :: out
       integer, intent(IN) :: iproc
       integer, dimension(0:iproc - 1), intent(IN) :: dist

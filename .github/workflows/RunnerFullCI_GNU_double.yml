@@ -52,6 +52,24 @@ jobs:
         cmake --install build 
         ctest --test-dir build --output-on-failure
         rm -rf build
+    
+    # Configure-Build-Run-Run on 4 cores 
+    - name: Test EVEN Compile GNU openMPI FFTW_F03 CPU
+      run: |
+        ls -ltr ~/.bashrc
+        source /etc/profile.d/lmod.sh
+        source ~/.bash_aliases
+        module load foss
+        export FC=mpif90
+        cmake -S . -B build -DBUILD_TESTING=ON -DEVEN=on -DFFT_Choice=fftw_f03
+        cmake -S . -B build -DMPIEXEC_MAX_NUMPROCS=4
+        cmake --build build -j 4
+        cmake --install build 
+        ctest --test-dir build --output-on-failure
+        cmake -S . -B build -DNX=128 -DNY=128 -DNX=128 
+        cmake --install build 
+        ctest --test-dir build --output-on-failure
+        rm -rf build
 
     # Configure-Build-Run-Run on 4 cores 
     - name: Compile GNU openMPI FFTW_F03 Caliper CPU

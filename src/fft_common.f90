@@ -231,7 +231,7 @@ subroutine decomp_2d_fft_engine_init(engine, pencil, nx, ny, nz, &
    !
    if (use_pool) call decomp_pool%new_shape(complex_type, engine%sp)
 #ifdef EVEN
-   if (use_pool) call decomp_pool%new_shape(complex_type, shp=(/decomp_buf_size/))
+   if (use_pool) call decomp_pool%new_shape(complex_type, shp=(/max(engine%sp%x1count * dims(1), engine%sp%y2count * dims(2))/))
 #endif
 
    !

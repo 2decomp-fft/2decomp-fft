@@ -24,7 +24,7 @@ jobs:
         clean: true
     
     # Configure-Build-Run-Run on 4 cores 
-    - name: Compile Intel MKL CPU
+    - name: Compile IntelLLVM MKL CPU
       run: |
         ls -ltr ~/.bashrc
         source /etc/profile.d/lmod.sh
@@ -45,7 +45,7 @@ jobs:
         rm -rf build  
     
     # Configure-Build-Run-Run on 4 cores 
-    - name: Compile IntelLLVM MKL CPU
+    - name: Test EVEN Compile IntelLLVM MKL CPU
       run: |
         ls -ltr ~/.bashrc
         source /etc/profile.d/lmod.sh
@@ -58,9 +58,12 @@ jobs:
         ml mkl
         export FC=mpiifx
         export MKL_DIR=${MKLROOT}/lib/cmake/mkl
-        cmake -S . -B build -DCMAKE_BUILD_TYPE=Dev -DBUILD_TESTING=ON -DFFT_Choice=mkl
-        cmake -S . -B build -DNX=128 -DNY=128 -DNX=128 -DMPIEXEC_MAX_NUMPROCS=4
+        cmake -S . -B build -DCMAKE_BUILD_TYPE=Dev DEVEN=on -DBUILD_TESTING=ON -DFFT_Choice=mkl
+        cmake -S . -B build -DMPIEXEC_MAX_NUMPROCS=4
         cmake --build build -j 4
+        cmake --install build 
+        ctest --test-dir build --output-on-failure
+        cmake -S . -B build -DNX=128 -DNY=128 -DNX=128 -DMPIEXEC_MAX_NUMPROCS=4
         cmake --install build 
         ctest --test-dir build --output-on-failure
         rm -rf build 

@@ -21,6 +21,7 @@ _e.g._ vX.Y - YYYY-MM-DD and a new "Unreleased" section started above.
 - The backend `fftw_f03` is now compatible with OpenMP [PR #364](https://github.com/2decomp-fft/2decomp-fft/pull/364).
 - Add a memory pool to reduce memory usage on CPU. See [PR #376](https://github.com/2decomp-fft/2decomp-fft/pull/376) and [PR #383](https://github.com/2decomp-fft/2decomp-fft/pull/383).
 - Add support for ADIOS2 BP5. See [PR #380](https://github.com/2decomp-fft/2decomp-fft/pull/380)
+- Add padded all-to-all communications in the CI. See [PR #384](https://github.com/2decomp-fft/2decomp-fft/pull/384/)
 
 ### Fixed
 

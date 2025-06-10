@@ -70,9 +70,6 @@ endif ()
 
 # Padded MPI alltoall transpose operations (invalid for GPU)
 if (EVEN)
-	#if (BUILD_TARGET MATCHES "gpu")
-  	#  message(FATAL_ERROR "The GPU build is not compatible with padded alltoall")
-  	#endif ()
   add_definitions("-DEVEN")
 endif ()
 

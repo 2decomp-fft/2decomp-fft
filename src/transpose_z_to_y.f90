@@ -304,7 +304,6 @@ contains
 #endif
 
       integer :: i, j, k, m, i1, i2, pos, init_pos
-      real(mytype) :: aa
 
       do m = 0, iproc - 1
          if (m == 0) then

@@ -124,11 +124,8 @@ program test2d
    !$acc end loop
    call MPI_ALLREDUCE(MPI_IN_PLACE, error_flag, 1, MPI_LOGICAL, MPI_LOR, MPI_COMM_WORLD, ierror)
    if (ierror /= 0) call decomp_2d_abort(ierror, "MPI_ALLREDUCE")
-   if (error_flag) then 
-     call decomp_2d_abort(1, "error swaping x->y")
-   else 
-     if (nrank == 0) write (*, *) 'SWAPPING X->Y OK'
-   endif
+   if (error_flag) call decomp_2d_abort(1, "error swaping x->y")
+   if (nrank == 0) write (*, *) 'SWAPPING X->Y OK'
 
    !!!!!!!!!!!!!!!!!!!!!!!
    ! y-pencil ==> z-pencil
@@ -158,11 +155,8 @@ program test2d
    !$acc end loop
    call MPI_ALLREDUCE(MPI_IN_PLACE, error_flag, 1, MPI_LOGICAL, MPI_LOR, MPI_COMM_WORLD, ierror)
    if (ierror /= 0) call decomp_2d_abort(ierror, "MPI_ALLREDUCE")
-   if (error_flag) then 
-     call decomp_2d_abort(2, "error swaping y->z")
-   else 
-     if (nrank == 0) write (*, *) 'SWAPPING Y->Z OK'
-   endif
+   if (error_flag) call decomp_2d_abort(2, "error swaping y->z")
+   if (nrank == 0) write (*, *) 'SWAPPING Y->Z OK'
 
   !!!!!!!!!!!!!!!!!!!!!!!
    ! z-pencil ==> y-pencil
@@ -181,11 +175,8 @@ program test2d
    !$acc end loop
    call MPI_ALLREDUCE(MPI_IN_PLACE, error_flag, 1, MPI_LOGICAL, MPI_LOR, MPI_COMM_WORLD, ierror)
    if (ierror /= 0) call decomp_2d_abort(ierror, "MPI_ALLREDUCE")
-   if (error_flag) then 
-     call decomp_2d_abort(3, "error swaping z->y")
-   else 
-     if (nrank == 0) write (*, *) 'SWAPPING Z->Y OK'
-   endif
+   if (error_flag) call decomp_2d_abort(3, "error swaping z->y")
+   if (nrank == 0) write (*, *) 'SWAPPING Z->Y OK'
 
    !!!!!!!!!!!!!!!!!!!!!!!
    ! y-pencil ==> x-pencil
@@ -204,11 +195,8 @@ program test2d
    !$acc end loop
    call MPI_ALLREDUCE(MPI_IN_PLACE, error_flag, 1, MPI_LOGICAL, MPI_LOR, MPI_COMM_WORLD, ierror)
    if (ierror /= 0) call decomp_2d_abort(ierror, "MPI_ALLREDUCE")
-   if (error_flag) then 
-     call decomp_2d_abort(4, "error swaping y->x")
-   else 
-     if (nrank == 0) write (*, *) 'SWAPPING Y->Z OK'
-   endif
+   if (error_flag) call decomp_2d_abort(4, "error swaping y->x")
+   if (nrank == 0) write (*, *) 'SWAPPING Y->Z OK'
 
    if (nrank == 0) then
       write (*, *) " "

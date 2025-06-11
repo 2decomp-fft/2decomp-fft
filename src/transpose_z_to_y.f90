@@ -132,8 +132,7 @@ contains
                                         decomp%y2cnts, &
                                         dims(2))
 #  else
-      associate (wk => wk1)
-      end associate
+      associate (wk => wk1); end associate
       !$acc host_data use_device(src)
       call MPI_ALLTOALLV(src, decomp%z2cnts, decomp%z2disp, real_type, &
                          wk2, decomp%y2cnts, decomp%y2disp, real_type, &
@@ -271,8 +270,7 @@ contains
                                         decomp_buf_size)
 #   else
       ! MPI
-      associate (wk => wk1)
-      end associate
+      associate (wk => wk1); end associate
       !$acc host_data use_device(src)
       call MPI_ALLTOALLV(src, decomp%z2cnts, decomp%z2disp, complex_type, &
                          wk2, decomp%y2cnts, decomp%y2disp, complex_type, &
@@ -325,17 +323,14 @@ contains
 
 #if defined(_GPU)
          !$acc host_data use_device(in)
-         istat = cudaMemcpy2D(out(init_pos),      &        !dst_addr
-                              n1 ,                &       !dst_pitch
-                              in(1,1,i1),         &        !src_addr
-                              n1 ,                 &        !src_pitch
-                              n1 ,                 &        !width
+         istat = cudaMemcpy2D(out(init_pos),      & !dst_addr
+                              n1,                 & !dst_pitch
+                              in(1,1,i1),         & !src_addr
+                              n1,                 & !src_pitch
+                              n1,                 & !width
                               n2 * (i2 - i1 + 1), & !height
                               cudaMemcpyDeviceToDevice)
          !$acc end host_data
-         if (istat /= 0) then
-          print *, "Error in cudaMemcpy:", cudaGetErrorString(istat)
-         end if
          if (istat /= 0) call decomp_2d_abort(__FILE__, __LINE__, istat, "cudaMemcpy2D")
 #else
          !$omp parallel do private(pos) collapse(3)
@@ -350,11 +345,6 @@ contains
          !$omp end parallel do
 #endif
       end do
-
-      do i=1,decomp_buf_size
-        aa = out(i)
-        write(*,*) "OUT Rank ", nrank, " elem ", i,aa
-      enddo
 
    end subroutine mem_split_zy_real
 
@@ -392,11 +382,11 @@ contains
 
 #if defined(_GPU)
          !$acc host_data use_device(in)
-         istat = cudaMemcpy2D(out(init_pos),      &        !dst_addr
-                              n1 ,                &       !dst_pitch
-                              in(1,1,i1),         &        !src_addr
-                              n1,                 &        !src_pitch
-                              n1,                 &        !width
+         istat = cudaMemcpy2D(out(init_pos),      & !dst_addr
+                              n1,                 & !dst_pitch
+                              in(1,1,i1),         & !src_addr
+                              n1,                 & !src_pitch
+                              n1,                 & !width
                               n2 * (i2 - i1 + 1), & !height
                               cudaMemcpyDeviceToDevice)
          !$acc end host_data
@@ -451,9 +441,9 @@ contains
 
 #if defined(_GPU)
          !$acc host_data use_device(out)
-         istat = cudaMemcpy2D(out(1, i1, 1), &
-                              n1 * n2,       & 
-                              in(init_pos),  &
+         istat = cudaMemcpy2D(out(1, i1, 1),      &
+                              n1 * n2,            &
+                              in(init_pos),       &
                               n1 * (i2 - i1 + 1), &
                               n1 * (i2 - i1 + 1), &
                               n3,                 &
@@ -511,9 +501,9 @@ contains
 
 #if defined(_GPU)
          !$acc host_data use_device(out)
-         istat = cudaMemcpy2D(out(1, i1, 1), &
-                              n1 * n2,       &
-                              in(init_pos),  &
+         istat = cudaMemcpy2D(out(1, i1, 1),      &
+                              n1 * n2,            &
+                              in(init_pos),       &
                               n1 * (i2 - i1 + 1), &
                               n1 * (i2 - i1 + 1), &
                               n3,                 &

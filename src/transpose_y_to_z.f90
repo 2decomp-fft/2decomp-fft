@@ -116,14 +116,13 @@ contains
                                         dims(2))
 #   else
       ! Pure MPI => direct to DST
-      associate (wk => wk2)
-      end associate
+      associate (wk => wk2); end associate
       !$acc host_data use_device(dst)
       call MPI_ALLTOALLV(wk1, decomp%y2cnts, decomp%y2disp, real_type, &
                          dst, decomp%z2cnts, decomp%z2disp, real_type, &
                          DECOMP_2D_COMM_ROW, ierror)
-      if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_ALLTOALLV")
       !$acc end host_data
+      if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_ALLTOALLV")
 #   endif
 #endif
 
@@ -255,8 +254,7 @@ contains
                                         dims(2), &
                                         decomp_buf_size)
 #   else
-      associate (wk => wk2)
-      end associate
+      associate (wk => wk2); end associate
       !$acc host_data use_device(dst)
       call MPI_ALLTOALLV(wk1, decomp%y2cnts, decomp%y2disp, complex_type, &
                          dst, decomp%z2cnts, decomp%z2disp, complex_type, &
@@ -441,11 +439,11 @@ contains
 
 #if defined(_GPU)
          !$acc host_data use_device(out)
-         istat = cudaMemcpy2D(out(1,1,i1), &        !dst_addr
-                              n1 ,          &        !dst_pitch
-                              in(init_pos),&        !src_addr
-                              n1 ,          &        !src_pitch
-                              n1 ,          &        !width
+         istat = cudaMemcpy2D(out(1,1,i1),        & !dst_addr
+                              n1,                 & !dst_pitch
+                              in(init_pos),       & !src_addr
+                              n1,                 & !src_pitch
+                              n1,                 & !width
                               n2 * (i2 - i1 + 1), & !height
                               cudaMemcpyDeviceToDevice)
          !$acc end host_data
@@ -500,11 +498,11 @@ contains
 
 #if defined(_GPU)
          !$acc host_data use_device(out)
-         istat = cudaMemcpy2D(out(1,1,i1), &        !dst_addr
-                              n1,          &        !dst_pitch
-                              in(init_pos),&        !src_addr
-                              n1,          &        !src_pitch
-                              n1,          &        !width
+         istat = cudaMemcpy2D(out(1,1,i1),        & !dst_addr
+                              n1,                 & !dst_pitch
+                              in(init_pos),       & !src_addr
+                              n1,                 & !src_pitch
+                              n1,                 & !width
                               n2 * (i2 - i1 + 1), & !height
                               cudaMemcpyDeviceToDevice)
          !$acc end host_data

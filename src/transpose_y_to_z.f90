@@ -93,15 +93,11 @@ contains
       ! define receive buffer
 #ifdef EVEN
       if (decomp%even) then
-#   if defined(_GPU)
-         call MPI_ALLTOALL(wk1, decomp%y2count, real_type, &
-                           wk2, decomp%z2count, real_type, &
-                           DECOMP_2D_COMM_ROW, ierror)
-#   else
+         !$acc host_data use_device(dst)
          call MPI_ALLTOALL(wk1, decomp%y2count, real_type, &
                            dst, decomp%z2count, real_type, &
                            DECOMP_2D_COMM_ROW, ierror)
-#   endif
+         !$acc end host_data
       else
          call MPI_ALLTOALL(wk1, decomp%y2count, real_type, &
                            wk2, decomp%z2count, real_type, &
@@ -110,8 +106,7 @@ contains
       if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_ALLTOALL")
 #else
     ! MPI_ALLTOALLV branch => NO EVEN
-#   if defined(_GPU)
-#     if defined(_NCCL)
+#   if defined(_NCCL)
       call decomp_2d_nccl_send_recv_row(wk2, &
                                         wk1, &
                                         decomp%y2disp, &
@@ -119,45 +114,29 @@ contains
                                         decomp%z2disp, &
                                         decomp%z2cnts, &
                                         dims(2))
-#     else 
-      ! CUDA aware MPI
-      call MPI_ALLTOALLV(wk1, decomp%y2cnts, decomp%y2disp, real_type, &
-                         wk2, decomp%z2cnts, decomp%z2disp, real_type, &
-                         DECOMP_2D_COMM_ROW, ierror)
-      if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_ALLTOALLV")
-
-#     endif
 #   else
       ! Pure MPI => direct to DST
       associate (wk => wk2)
       end associate
+      !$acc host_data use_device(dst)
       call MPI_ALLTOALLV(wk1, decomp%y2cnts, decomp%y2disp, real_type, &
                          dst, decomp%z2cnts, decomp%z2disp, real_type, &
                          DECOMP_2D_COMM_ROW, ierror)
       if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_ALLTOALLV")
-
+      !$acc end host_data
 #   endif
 #endif
 
       ! rearrange receive buffer
 #ifdef EVEN
-      if (decomp%even) then
-#   if defined(_GPU)
-        !If one of the array in cuda call is not device we need to add acc host_data
-        !$acc host_data use_device(dst)
-        istat = cudaMemcpy(dst, wk2, d1 * d2 * d3, cudaMemcpyDeviceToDevice)
-        !$acc end host_data
-        if (istat /= 0) call decomp_2d_abort(__FILE__, __LINE__, istat, "cudaMemcpy2D")
-#   endif
-      ! if not GPU data are already in dst
-      else
+      if (.not. decomp%even) then
          call mem_merge_yz_real(wk2, d1, d2, d3, dst, dims(2), &
                                 decomp%z2dist, decomp)
       end if
 #else
       ! note the receive buffer is already in natural (i,j,k) order
       ! so no merge operation needed
-#   if defined(_GPU)
+#   if defined(_NCCL)
       !If one of the array in cuda call is not device we need to add acc host_data
       !$acc host_data use_device(dst)
       istat = cudaMemcpy(dst, wk2, d1 * d2 * d3, cudaMemcpyDeviceToDevice)

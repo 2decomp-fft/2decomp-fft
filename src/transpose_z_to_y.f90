@@ -94,6 +94,15 @@ contains
       if (.not. decomp%even) then
          call mem_split_zy_real(src, s1, s2, s3, wk1, dims(2), &
                                 decomp%z2dist, decomp)
+      else
+         ! for decomp%even and NCCL we need to move into wk1
+#   if defined(_NCCL)
+         ! For NCCL comms we need to use a device array
+         !$acc host_data use_device(src)
+         istat = cudaMemcpy(wk1, src, s1 * s2 * s3, cudaMemcpyDeviceToDevice)
+         !$acc end host_data
+         if (istat /= 0) call decomp_2d_abort(__FILE__, __LINE__, istat, "cudaMemcpy")
+#   endif
       end if
 # else
     ! Not EVEN branch
@@ -109,6 +118,13 @@ contains
 
       ! define receive buffer
 #ifdef EVEN
+#  if defined(_NCCL)
+      call decomp_2d_nccl_send_recv_row(wk2, &
+                                        wk1, &
+                                        decomp%z2count, &
+                                        decomp%y2count, &
+                                        dims(2))
+#  else
       if (decomp%even) then
          !$acc host_data use_device(src)
          call MPI_ALLTOALL(src, decomp%z2count, real_type, &
@@ -121,7 +137,7 @@ contains
                            DECOMP_2D_COMM_ROW, ierror)
       end if
       if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_ALLTOALL")
-
+#  endif
 #else
 #  if defined(_NCCL)
       call decomp_2d_nccl_send_recv_row(wk2, &

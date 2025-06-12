@@ -92,6 +92,13 @@ contains
 
       ! define receive buffer
 #ifdef EVEN
+#   if defined(_NCCL)
+      call decomp_2d_nccl_send_recv_row(wk2, &
+                                        wk1, &
+                                        decomp%y2count, &
+                                        decomp%z2count, &
+                                        dims(2))
+#   else
       if (decomp%even) then
          !$acc host_data use_device(dst)
          call MPI_ALLTOALL(wk1, decomp%y2count, real_type, &
@@ -104,6 +111,7 @@ contains
                            DECOMP_2D_COMM_ROW, ierror)
       end if
       if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_ALLTOALL")
+#   endif
 #else
     ! MPI_ALLTOALLV branch => NO EVEN
 #   if defined(_NCCL)
@@ -131,12 +139,22 @@ contains
       if (.not. decomp%even) then
          call mem_merge_yz_real(wk2, d1, d2, d3, dst, dims(2), &
                                 decomp%z2dist, decomp)
+      else
+#   if defined(_NCCL)
+         ! In case of NCCL results are in wk2 and have to be moved back in dst
+         ! Potentially a different ifdef can reduce the code duplication
+         ! However this is potentially clearer  
+         !$acc host_data use_device(dst)
+         istat = cudaMemcpy(dst, wk2, d1 * d2 * d3, cudaMemcpyDeviceToDevice)
+         !$acc end host_data
+         if (istat /= 0) call decomp_2d_abort(__FILE__, __LINE__, istat, "cudaMemcpy2D")
+#   endif
       end if
 #else
       ! note the receive buffer is already in natural (i,j,k) order
       ! so no merge operation needed
 #   if defined(_NCCL)
-      !If one of the array in cuda call is not device we need to add acc host_data
+      ! With NCCL we need to move wk2 to dst
       !$acc host_data use_device(dst)
       istat = cudaMemcpy(dst, wk2, d1 * d2 * d3, cudaMemcpyDeviceToDevice)
       !$acc end host_data

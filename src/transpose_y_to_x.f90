@@ -98,7 +98,10 @@ contains
                         DECOMP_2D_COMM_COL, ierror)
       if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_ALLTOALL")
 
-#elif defined(_NCCL)
+
+#else
+#     if defined(_NCCL)
+      ! NCCL equivalent of MPI_ALLTOALLV
       call decomp_2d_nccl_send_recv_col(wk2, &
                                         wk1, &
                                         decomp%y1disp, &
@@ -106,12 +109,13 @@ contains
                                         decomp%x1disp, &
                                         decomp%x1cnts, &
                                         dims(1))
-
-#else
+#     else
+      ! MPI and CUDA aware MPI
       call MPI_ALLTOALLV(wk1, decomp%y1cnts, decomp%y1disp, real_type, &
                          wk2, decomp%x1cnts, decomp%x1disp, real_type, &
                          DECOMP_2D_COMM_COL, ierror)
       if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_ALLTOALLV")
+#     endif
 #endif
 
       ! rearrange receive buffer
@@ -208,8 +212,9 @@ contains
                         wk2, decomp%x1count, complex_type, &
                         DECOMP_2D_COMM_COL, ierror)
       if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_ALLTOALL")
-
-#elif defined(_NCCL)
+#else
+#     if defined(_NCCL)
+      ! NCCL equavalent to MPI_ALLTOALLV
       call decomp_2d_nccl_send_recv_col(wk2, &
                                         wk1, &
                                         decomp%y1disp, &
@@ -218,12 +223,13 @@ contains
                                         decomp%x1cnts, &
                                         dims(1), &
                                         decomp_buf_size)
-
-#else
+#     else
+      ! MPI and CUDA aware MPI
       call MPI_ALLTOALLV(wk1, decomp%y1cnts, decomp%y1disp, complex_type, &
                          wk2, decomp%x1cnts, decomp%x1disp, complex_type, &
                          DECOMP_2D_COMM_COL, ierror)
       if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_ALLTOALLV")
+#     endif
 #endif
 
       ! rearrange receive buffer
@@ -266,7 +272,13 @@ contains
 
 #if defined(_GPU)
          !$acc host_data use_device(in)
-         istat = cudaMemcpy2D(out(init_pos), n1 * (i2 - i1 + 1), in(1, i1, 1), n1 * n2, n1 * (i2 - i1 + 1), n3, cudaMemcpyDeviceToDevice)
+         istat = cudaMemcpy2D(out(init_pos),      &
+                              n1 * (i2 - i1 + 1), &
+                              in(1, i1, 1),       & 
+                              n1 * n2,            &
+                              n1 * (i2 - i1 + 1), &
+                              n3,                 &
+                              cudaMemcpyDeviceToDevice)
          !$acc end host_data
          if (istat /= 0) call decomp_2d_abort(__FILE__, __LINE__, istat, "cudaMemcpy2D")
 #else
@@ -319,7 +331,13 @@ contains
 
 #if defined(_GPU)
          !$acc host_data use_device(in)
-         istat = cudaMemcpy2D(out(init_pos), n1 * (i2 - i1 + 1), in(1, i1, 1), n1 * n2, n1 * (i2 - i1 + 1), n3, cudaMemcpyDeviceToDevice)
+         istat = cudaMemcpy2D(out(init_pos),         &
+                              n1 * (i2 - i1 + 1),    &
+                              in(1, i1, 1),          &
+                              n1 * n2,               &
+                              n1 * (i2 - i1 + 1),    &
+                              n3,                    &
+                              cudaMemcpyDeviceToDevice)
          !$acc end host_data
          if (istat /= 0) call decomp_2d_abort(__FILE__, __LINE__, istat, "cudaMemcpy2D")
 #else
@@ -372,7 +390,13 @@ contains
 
 #if defined(_GPU)
          !$acc host_data use_device(out)
-         istat = cudaMemcpy2D(out(i1, 1, 1), n1, in(init_pos), i2 - i1 + 1, i2 - i1 + 1, n2 * n3, cudaMemcpyDeviceToDevice)
+         istat = cudaMemcpy2D(out(i1, 1, 1), & 
+                              n1,            & 
+                              in(init_pos),  &
+                              i2 - i1 + 1,   &
+                              i2 - i1 + 1,   &
+                              n2 * n3,       &
+                              cudaMemcpyDeviceToDevice)
          !$acc end host_data
          if (istat /= 0) call decomp_2d_abort(__FILE__, __LINE__, istat, "cudaMemcpy2D")
 #else
@@ -425,7 +449,13 @@ contains
 
 #if defined(_GPU)
          !$acc host_data use_device(out)
-         istat = cudaMemcpy2D(out(i1, 1, 1), n1, in(init_pos), i2 - i1 + 1, i2 - i1 + 1, n2 * n3, cudaMemcpyDeviceToDevice)
+         istat = cudaMemcpy2D(out(i1, 1, 1), &
+                              n1,            &
+                              in(init_pos),  &
+                              i2 - i1 + 1,   &
+                              i2 - i1 + 1,   &
+                              n2 * n3,       &
+                              cudaMemcpyDeviceToDevice)
          !$acc end host_data
          if (istat /= 0) call decomp_2d_abort(__FILE__, __LINE__, istat, "cudaMemcpy2D")
 #else

@@ -5,6 +5,7 @@
 module decomp_2d_nccl
 
    use mpi
+   use, intrinsic:: iso_c_binding, only: c_double, c_float
    use decomp_2d_constants
    use decomp_2d_mpi
    use decomp_2d_cumpi
@@ -17,9 +18,15 @@ module decomp_2d_nccl
 
 #ifdef DOUBLE_PREC
    type(ncclDataType), parameter, public :: ncclType = ncclDouble
+   integer, parameter, public :: mytype_c = c_double
 #else
    type(ncclDataType), parameter, public :: ncclType = ncclFloat
+   integer, parameter, public :: mytype_c = c_float
 #endif
+
+   type :: complex_type_c
+    real(mytype_c) :: real, imag
+   end type complex_type_c
 
    integer, save, public :: row_rank, col_rank
 
@@ -32,6 +39,7 @@ module decomp_2d_nccl
    ! Extra pointers for nccl complex transpose
    real(mytype), target, device, allocatable, dimension(:) :: work3, work4
    real(mytype), dimension(:), device, pointer, contiguous :: work3_r_d, work4_r_d
+   type(complex_type_c), dimension(:), device, public, pointer, contiguous :: work1_cc_d, work2_cc_d
 
    public :: decomp_2d_nccl_init, &
              decomp_2d_nccl_fin, &
@@ -191,13 +199,15 @@ contains
    !
    ! Allocate the arrays
    !
-   subroutine decomp_2d_nccl_mem_init(buf_size)
+   subroutine decomp_2d_nccl_mem_init(buf_size,wk1,wk2)
 
       use, intrinsic:: iso_c_binding, only: c_f_pointer, c_loc
 
       implicit none
 
       integer, intent(in) :: buf_size
+      real(mytype), target, dimension(:), device :: wk1, wk2
+      
       integer :: status, errorcode
 
       allocate (work3(buf_size), STAT=status)
@@ -217,6 +227,12 @@ contains
       call c_f_pointer(c_loc(work3), work3_r_d, [buf_size])
       call c_f_pointer(c_loc(work4), work4_r_d, [buf_size])
 
+      ! Assign pointers for new wk arrays for complex of c_type
+      if (associated(work1_cc_d)) nullify (work1_cc_d)
+      if (associated(work2_cc_d)) nullify (work2_cc_d)
+      call c_f_pointer(c_loc(wk1), work1_cc_d, [buf_size])
+      call c_f_pointer(c_loc(wk2), work2_cc_d, [buf_size])
+
    end subroutine decomp_2d_nccl_mem_init
    !
    ! Free the arrays
@@ -229,6 +245,9 @@ contains
       if (associated(work4_r_d)) nullify (work4_r_d)
       if (allocated(work3)) deallocate (work3)
       if (allocated(work4)) deallocate (work4)
+      
+      if (associated(work1_cc_d)) nullify (work1_cc_d)
+      if (associated(work2_cc_d)) nullify (work2_cc_d)
 
    end subroutine decomp_2d_nccl_mem_fin
    !

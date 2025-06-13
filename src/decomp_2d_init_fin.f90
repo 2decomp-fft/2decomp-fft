@@ -203,13 +203,13 @@
      call decomp_info_finalize(decomp_main)
 
      decomp_buf_size = 0
+#if defined(_GPU)
      if (associated(work1_r)) nullify (work1_r)
      if (associated(work2_r)) nullify (work2_r)
      if (associated(work1_c)) nullify (work1_c)
      if (associated(work2_c)) nullify (work2_c)
      if (allocated(work1)) deallocate (work1)
      if (allocated(work2)) deallocate (work2)
-#if defined(_GPU)
      call decomp_2d_cumpi_fin()
 #if defined(_NCCL)
      call decomp_2d_nccl_mem_fin()

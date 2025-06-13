@@ -291,7 +291,7 @@ module decomp_2d_fft
       !
       if (engine%format == PHYSICAL_IN_X) then
          call alloc_x(engine%wk13, engine%sp)
-      else if (pencil == PHYSICAL_IN_Z) then
+      else if (engine%format == PHYSICAL_IN_Z) then
          call alloc_z(engine%wk13, engine%sp)
       end if
 

@@ -470,7 +470,7 @@ module decomp_2d_fft
                !          else if (isign==DECOMP_2D_FFT_BACKWARD) then
                !             status = DftiComputeBackward(c2c_y, wk2(:,1,k), wk2b(:,1,k))
                !          end if
-               status = wrapper_c2c(c2c_y, wk2_c2c(:, :, k), wk2b(1, 1, k), isign)
+               status = wrapper_c2c(c2c_y, wk2_c2c(:, :, k), wk2b(:, :, k), isign)
                if (status /= 0) call decomp_2d_abort(__FILE__, __LINE__, status, "wrapper_c2c")
             end do
          end if
@@ -535,7 +535,7 @@ module decomp_2d_fft
                !          else if (isign==DECOMP_2D_FFT_BACKWARD) then
                !             status = DftiComputeBackward(c2c_y, wk2(:,1,k), wk2b(:,1,k))
                !          end if
-               status = wrapper_c2c(c2c_y, wk2_c2c(:, :, k), wk2b(1, 1, k), isign)
+               status = wrapper_c2c(c2c_y, wk2_c2c(:, :, k), wk2b(:, :, k), isign)
                if (status /= 0) call decomp_2d_abort(__FILE__, __LINE__, status, "wrapper_c2c")
             end do
          end if
@@ -622,7 +622,7 @@ module decomp_2d_fft
             call decomp_pool_get(wk2b, sp%ysz)
             do k = 1, sp%ysz(3)
                !          status = DftiComputeForward(c2c_y2, wk2(:,1,k), wk2b(:,1,k))
-               status = wrapper_c2c(c2c_y2, wk2_r2c(:, :, k), wk2b(1, 1, k), isign)
+               status = wrapper_c2c(c2c_y2, wk2_r2c(:, :, k), wk2b(:, :, k), isign)
                if (status /= 0) call decomp_2d_abort(__FILE__, __LINE__, status, "wrapper_c2c")
             end do
          end if
@@ -664,7 +664,7 @@ module decomp_2d_fft
             call decomp_pool_get(wk2b, sp%ysz)
             do k = 1, sp%ysz(3)
                !          status = DftiComputeForward(c2c_y2, wk2(:,1,k), wk2b(:,1,k))
-               status = wrapper_c2c(c2c_y2, wk2_r2c(:, :, k), wk2b(1, 1, k), isign)
+               status = wrapper_c2c(c2c_y2, wk2_r2c(:, :, k), wk2b(:, :, k), isign)
                if (status /= 0) call decomp_2d_abort(__FILE__, __LINE__, status, "wrapper_c2c")
             end do
          end if
@@ -757,7 +757,7 @@ module decomp_2d_fft
             call decomp_pool_get(wk2b, sp%ysz)
             do k = 1, sp%ysz(3)
                !          status = DftiComputeBackward(c2c_y2, wk2(:,1,k), wk2b(:,1,k))
-               status = wrapper_c2c(c2c_y2, wk2_r2c(:, :, k), wk2b(1, 1, k), isign)
+               status = wrapper_c2c(c2c_y2, wk2_r2c(:, :, k), wk2b(:, :, k), isign)
                if (status /= 0) call decomp_2d_abort(__FILE__, __LINE__, status, "wrapper_c2c")
             end do
          end if
@@ -803,7 +803,7 @@ module decomp_2d_fft
             call decomp_pool_get(wk2b, sp%ysz)
             do k = 1, sp%ysz(3)
                !          status = DftiComputeBackward(c2c_y2, wk2(:,1,k), wk2b(:,1,k))
-               status = wrapper_c2c(c2c_y2, wk2_r2c(:, :, k), wk2b(1, 1, k), isign)
+               status = wrapper_c2c(c2c_y2, wk2_r2c(:, :, k), wk2b(:, :, k), isign)
                if (status /= 0) call decomp_2d_abort(__FILE__, __LINE__, status, "wrapper_c2c")
             end do
          end if

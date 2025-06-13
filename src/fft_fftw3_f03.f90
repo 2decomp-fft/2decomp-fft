@@ -1305,16 +1305,14 @@ contains
 
       ! Local variables
 #ifdef DOUBLE_PREC
-      real(C_DOUBLE), allocatable, target :: a1(:, :, :)
-      real(C_DOUBLE), contiguous, pointer :: a2(:, :, :)
+      real(C_DOUBLE), contiguous, pointer :: a1(:, :, :), a2(:, :, :)
 #else
-      real(C_FLOAT), allocatable, target :: a1(:, :, :)
-      real(C_FLOAT), contiguous, pointer :: a2(:, :, :)
+      real(C_FLOAT), contiguous, pointer :: a1(:, :, :), a2(:, :, :)
 #endif
       integer(C_INT) :: ntmp(1)
       integer(C_FFTW_R2R_KIND) :: tmp(1)
 
-      call alloc_x(a1, decomp)
+      call decomp_pool_get(a1, decomp%xsz)
       a2 => a1
 
       ntmp(1) = decomp%xsz(1) - ndismiss
@@ -1328,7 +1326,7 @@ contains
                                  a2, decomp%xsz(1), 1, decomp%xsz(1), &
                                  tmp(1), plan_type_dtt)
 
-      deallocate (a1)
+      call decomp_pool_free(a1)
       nullify (a2)
       if (.not. c_associated(plan)) call decomp_2d_abort(__FILE__, __LINE__, 17, "Plan creation failed")
 
@@ -1346,16 +1344,14 @@ contains
 
       ! Local variables
 #ifdef DOUBLE_PREC
-      real(C_DOUBLE), allocatable, target :: a1(:, :, :)
-      real(C_DOUBLE), contiguous, pointer :: a2(:, :, :)
+      real(C_DOUBLE), contiguous, pointer :: a1(:, :, :), a2(:, :, :)
 #else
-      real(C_FLOAT), allocatable, target :: a1(:, :, :)
-      real(C_FLOAT), contiguous, pointer :: a2(:, :, :)
+      real(C_FLOAT), contiguous, pointer :: a1(:, :, :), a2(:, :, :)
 #endif
       integer(C_INT) :: ntmp(1)
       integer(C_FFTW_R2R_KIND) :: tmp(1)
 
-      allocate (a1(decomp%ysz(1), decomp%ysz(2), 1))
+      call decomp_pool_get(a1, (/decomp%ysz(1), decomp%ysz(2), 1/))
       a2 => a1
 
       ntmp(1) = decomp%ysz(2) - ndismiss
@@ -1369,7 +1365,7 @@ contains
                                  a2, decomp%ysz(2), decomp%ysz(1), 1, &
                                  tmp(1), plan_type_dtt)
 
-      deallocate (a1)
+      call decomp_pool_free(a1)
       nullify (a2)
       if (.not. c_associated(plan)) call decomp_2d_abort(__FILE__, __LINE__, 18, "Plan creation failed")
 
@@ -1387,16 +1383,14 @@ contains
 
       ! Local variables
 #ifdef DOUBLE_PREC
-      real(C_DOUBLE), allocatable, target :: a1(:, :, :)
-      real(C_DOUBLE), contiguous, pointer :: a2(:, :, :)
+      real(C_DOUBLE), contiguous, pointer :: a1(:, :, :), a2(:, :, :)
 #else
-      real(C_FLOAT), allocatable, target :: a1(:, :, :)
-      real(C_FLOAT), contiguous, pointer :: a2(:, :, :)
+      real(C_FLOAT), contiguous, pointer :: a1(:, :, :), a2(:, :, :)
 #endif
       integer(C_INT) :: ntmp(1)
       integer(C_FFTW_R2R_KIND) :: tmp(1)
 
-      call alloc_z(a1, decomp)
+      call decomp_pool_get(a1, decomp%zsz)
       a2 => a1
 
       ntmp(1) = decomp%zsz(3) - ndismiss
@@ -1410,7 +1404,7 @@ contains
                                  a2, decomp%zsz(3), decomp%zsz(1) * decomp%zsz(2), 1, &
                                  tmp(1), plan_type_dtt)
 
-      deallocate (a1)
+      call decomp_pool_free(a1)
       nullify (a2)
       if (.not. c_associated(plan)) call decomp_2d_abort(__FILE__, __LINE__, 19, "Plan creation failed")
 

@@ -1,5 +1,4 @@
-file(GLOB files_decomp block.f90
-	               factor.f90
+file(GLOB files_decomp factor.f90
 	               decomp_2d_constants.f90
 		       decomp_2d_mpi.f90
 	               decomp_2d.f90
@@ -24,6 +23,11 @@ if(${BUILD_TARGET} MATCHES "gpu")
     list(APPEND files_decomp decomp_2d_nccl.f90)
   endif()
 endif(${BUILD_TARGET} MATCHES "gpu")
+if (${FFT_Choice} MATCHES "fftw_f03")
+  list(APPEND files_decomp block_fftw3_f03.f90)
+else()
+  list(APPEND files_decomp block.f90)
+endif()
 
 if(FFTW_FOUND)
   if (${FFT_Choice} MATCHES "fftw_f03")

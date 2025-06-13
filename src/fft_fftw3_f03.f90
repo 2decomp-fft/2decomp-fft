@@ -47,12 +47,6 @@ module decomp_2d_fft
    TYPE(DECOMP_INFO), pointer, save :: ph => null()  ! physical space
    TYPE(DECOMP_INFO), pointer, save :: sp => null()  ! spectral space
 
-   ! Workspace to store the intermediate Y-pencil data
-   ! *** TODO: investigate how to use only one workspace array
-   complex(mytype), contiguous, pointer :: wk2_c2c(:, :, :) => null(), &
-                                           wk2_r2c(:, :, :) => null(), &
-                                           wk13(:, :, :) => null()
-
    ! In-place FFT
    logical, pointer, save :: inplace => null(), &
                              inplace_r2c => null(), &
@@ -76,16 +70,13 @@ module decomp_2d_fft
 
    ! Derived type with all the quantities needed to perform FFT
    type decomp_2d_fft_engine
-      type(c_ptr), private :: plan(-1:2, 3), wk2_c2c_p, wk13_p
+      type(c_ptr), private :: plan(-1:2, 3)
       integer, private :: format
       logical, private :: initialised = .false.
       integer, private :: nx_fft, ny_fft, nz_fft
       type(decomp_info), pointer, public :: ph => null()
       type(decomp_info), private :: ph_target ! ph => ph_target or ph => decomp_main
       type(decomp_info), public :: sp
-      complex(mytype), contiguous, pointer, private :: wk2_c2c(:, :, :) => null()
-      complex(mytype), contiguous, pointer, private :: wk2_r2c(:, :, :) => null()
-      complex(mytype), contiguous, pointer, private :: wk13(:, :, :) => null()
       logical, private :: inplace, inplace_r2c, inplace_c2r
       logical, private :: skip_x_c2c, skip_y_c2c, skip_z_c2c
       ! Below is specific to DTT
@@ -246,8 +237,6 @@ contains
       logical, dimension(3), intent(in), optional :: opt_skip_XYZ_c2c
       integer, dimension(:), intent(in), optional :: opt_DTT
 
-      integer(C_SIZE_T) :: sz
-
       if (decomp_profiler_fft) call decomp_profiler_start("fft_init")
 
       ! Safety checks
@@ -327,40 +316,6 @@ contains
 #ifdef EVEN
       if (use_pool) call decomp_pool%new_shape(complex_type, shp=(/max(engine%sp%x1count * dims(1), engine%sp%y2count * dims(2))/))
 #endif
-
-      !
-      ! Allocate the workspace for intermediate y-pencil data
-      ! The largest memory block needed is the one for c2c transforms
-      !
-      sz = product(engine%ph%ysz)
-      engine%wk2_c2c_p = fftw_alloc_complex(sz)
-      call c_f_pointer(engine%wk2_c2c_p, engine%wk2_c2c, engine%ph%ysz)
-      !
-      ! A smaller memory block is needed for r2c and c2r transforms
-      ! wk2_c2c and wk2_r2c start at the same location
-      !
-      !    Size of wk2_c2c : ph%ysz(1), ph%ysz(2), ph%ysz(3)
-      !    Size of wk2_r2c : sp%ysz(1), sp%ysz(2), sp%ysz(3)
-      !
-      call c_f_pointer(engine%wk2_c2c_p, engine%wk2_r2c, engine%sp%ysz)
-      !
-      ! Allocate the workspace for r2c and c2r transforms
-      !
-      ! wk13 can not be easily fused with wk2_*2c due to statements such as
-      ! transpose_y_to_x(wk2_r2c, wk13, sp)
-      ! transpose_y_to_z(wk2_r2c, wk13, sp)
-      !
-      if (.not. (engine%inplace_r2c .and. engine%inplace_c2r)) then
-         if (pencil == PHYSICAL_IN_X) then
-            sz = product(engine%sp%xsz)
-            engine%wk13_p = fftw_alloc_complex(sz)
-            call c_f_pointer(engine%wk13_p, engine%wk13, engine%sp%xsz)
-         else if (pencil == PHYSICAL_IN_Z) then
-            sz = product(engine%sp%zsz)
-            engine%wk13_p = fftw_alloc_complex(sz)
-            call c_f_pointer(engine%wk13_p, engine%wk13, engine%sp%zsz)
-         end if
-      end if
 
       ! Prepare the DTT components
       if (present(opt_DTT)) then
@@ -597,9 +552,6 @@ contains
       nullify (nz_fft)
       nullify (ph)
       nullify (sp)
-      nullify (wk2_c2c)
-      nullify (wk2_r2c)
-      nullify (wk13)
       nullify (inplace)
       nullify (inplace_r2c)
       nullify (inplace_c2r)
@@ -638,15 +590,6 @@ contains
       end if
       nullify (engine%ph)
       call decomp_info_finalize(engine%sp)
-
-      call fftw_free(engine%wk2_c2c_p)
-      nullify (engine%wk2_c2c)
-      nullify (engine%wk2_r2c)
-
-      if (associated(wk13)) then
-         call fftw_free(engine%wk13_p)
-         nullify (engine%wk13)
-      end if
 
       call finalize_fft_engine(engine%plan)
 
@@ -885,9 +828,6 @@ contains
       nz_fft => engine%nz_fft
       ph => engine%ph
       sp => engine%sp
-      wk2_c2c => engine%wk2_c2c
-      wk2_r2c => engine%wk2_r2c
-      wk13 => engine%wk13
       inplace => engine%inplace
       inplace_r2c => engine%inplace_r2c
       inplace_c2r => engine%inplace_c2r
@@ -1757,15 +1697,13 @@ contains
       integer, intent(IN) :: isign
 
       ! Local variables
-      complex(mytype), contiguous, pointer :: wk1(:, :, :)
-      integer(C_SIZE_T) :: sz
-      type(C_PTR) :: wk1_p
+      complex(mytype), contiguous, pointer :: wk2_c2c(:, :, :), wk1(:, :, :)
 
       if (decomp_profiler_fft) call decomp_profiler_start("fft_c2c")
 
-      ! Initialise to NULL pointer
+      ! Init pointers
+      call decomp_pool_get(wk2_c2c, ph%ysz)
       nullify (wk1)
-      wk1_p = c_null_ptr
 
       if (format == PHYSICAL_IN_X .AND. isign == DECOMP_2D_FFT_FORWARD .OR. &
           format == PHYSICAL_IN_Z .AND. isign == DECOMP_2D_FFT_BACKWARD) then
@@ -1774,9 +1712,7 @@ contains
          if (inplace) then
             call c2c_1m_x(in, plan(isign, 1))
          else
-            sz = product(ph%xsz)
-            wk1_p = fftw_alloc_complex(sz)
-            call c_f_pointer(wk1_p, wk1, ph%xsz)
+            call decomp_pool_get(wk1, ph%xsz)
             wk1 = in
             call c2c_1m_x(wk1, plan(isign, 1))
          end if
@@ -1818,9 +1754,7 @@ contains
          if (inplace) then
             call c2c_1m_z(in, plan(isign, 3))
          else
-            sz = product(ph%zsz)
-            wk1_p = fftw_alloc_complex(sz)
-            call c_f_pointer(wk1_p, wk1, ph%zsz)
+            call decomp_pool_get(wk1, ph%zsz)
             wk1 = in
             call c2c_1m_z(wk1, plan(isign, 3))
          end if
@@ -1851,10 +1785,8 @@ contains
       end if
 
       ! Free memory
-      if (associated(wk1)) then
-         call fftw_free(wk1_p)
-         nullify (wk1)
-      end if
+      call decomp_pool_free(wk2_c2c)
+      if (associated(wk1)) call decomp_pool_free(wk1)
 
       if (decomp_profiler_fft) call decomp_profiler_end("fft_c2c")
 
@@ -1872,11 +1804,12 @@ contains
       complex(mytype), dimension(:, :, :), intent(OUT) :: out_c
 
       ! Local variable
-      complex(mytype), contiguous, pointer :: wk0(:, :, :)
+      complex(mytype), contiguous, pointer :: wk2_r2c(:, :, :), wk0(:, :, :)
 
       if (decomp_profiler_fft) call decomp_profiler_start("fft_r2c")
 
-      ! Initialise to NULL pointer
+      ! Init pointers
+      call decomp_pool_get(wk2_r2c, sp%ysz)
       nullify (wk0)
 
       if (format == PHYSICAL_IN_X) then
@@ -1885,7 +1818,7 @@ contains
          if (inplace_r2c) then
             call c_f_pointer(c_loc(in_r), wk0, sp%xsz)
          else
-            wk0 => wk13
+            call decomp_pool_get(wk0, sp%xsz)
          end if
          call r2c_1m_x(in_r, wk0)
 
@@ -1911,7 +1844,7 @@ contains
          if (inplace_r2c) then
             call c_f_pointer(c_loc(in_r), wk0, sp%zsz)
          else
-            wk0 => wk13
+            call decomp_pool_get(wk0, sp%zsz)
          end if
          call r2c_1m_z(in_r, wk0)
 
@@ -1933,7 +1866,8 @@ contains
       end if
 
       ! Free memory
-      if (associated(wk0)) nullify (wk0)
+      call decomp_pool_free(wk2_r2c)
+      if (.not.inplace_r2c) call decomp_pool_free(wk0)
 
       if (decomp_profiler_fft) call decomp_profiler_end("fft_r2c")
 
@@ -1952,16 +1886,14 @@ contains
       real(mytype), target, contiguous, dimension(:, :, :), intent(OUT) :: out_r
 
       ! Local variables
-      complex(mytype), contiguous, pointer :: wk0(:, :, :), wk1(:, :, :)
-      integer(C_SIZE_T) :: sz
-      type(C_PTR) :: wk1_p
+      complex(mytype), contiguous, pointer :: wk2_r2c(:, :, :), wk0(:, :, :), wk1(:, :, :)
 
       if (decomp_profiler_fft) call decomp_profiler_start("fft_c2r")
 
-      ! Initialise to NULL pointer
+      ! Init pointers
+      call decomp_pool_get(wk2_r2c, sp%ysz)
       nullify (wk0)
       nullify (wk1)
-      wk1_p = c_null_ptr
 
       if (format == PHYSICAL_IN_X) then
 
@@ -1969,9 +1901,7 @@ contains
          if (inplace) then
             call c2c_1m_z(in_c, plan(2, 3))
          else
-            sz = product(sp%zsz)
-            wk1_p = fftw_alloc_complex(sz)
-            call c_f_pointer(wk1_p, wk1, sp%zsz)
+            call decomp_pool_get(wk1, sp%zsz)
             wk1 = in_c
             call c2c_1m_z(wk1, plan(2, 3))
          end if
@@ -1988,7 +1918,7 @@ contains
          if (inplace_c2r) then
             call c_f_pointer(c_loc(out_r), wk0, sp%xsz)
          else
-            wk0 => wk13
+            call decomp_pool_get(wk0, sp%xsz)
          end if
          if (dims(1) > 1) then
             call transpose_y_to_x(wk2_r2c, wk0, sp)
@@ -2003,9 +1933,7 @@ contains
          if (inplace) then
             call c2c_1m_x(in_c, plan(2, 1))
          else
-            sz = product(sp%xsz)
-            wk1_p = fftw_alloc_complex(sz)
-            call c_f_pointer(wk1_p, wk1, sp%xsz)
+            call decomp_pool_get(wk1, sp%xsz)
             wk1 = in_c
             call c2c_1m_x(wk1, plan(2, 1))
          end if
@@ -2030,7 +1958,7 @@ contains
          if (inplace_c2r) then
             call c_f_pointer(c_loc(out_r), wk0, sp%zsz)
          else
-            wk0 => wk13
+            call decomp_pool_get(wk0, sp%zsz)
          end if
          if (dims(1) > 1) then
             call transpose_y_to_z(wk2_r2c, wk0, sp)
@@ -2046,11 +1974,9 @@ contains
       end if
 
       ! Free memory
-      if (associated(wk0)) nullify (wk0)
-      if (associated(wk1)) then
-         call fftw_free(wk1_p)
-         nullify (wk1)
-      end if
+      call decomp_pool_free(wk2_r2c)
+      if (.not.inplace_c2r) call decomp_pool_free(wk0)
+      if (associated(wk1)) call decomp_pool_free(wk1)
 
       if (decomp_profiler_fft) call decomp_profiler_end("fft_c2r")
 
@@ -2079,7 +2005,7 @@ contains
       end if
 
       ! Get a buffer for arrays in y-pencil                                                
-      call c_f_pointer(c_loc(wk2_c2c), wk2ra, ph%ysz)
+      call decomp_pool_get(wk2ra, ph%ysz)
 
       ! Perform the 3D DTT
       if ((format == PHYSICAL_IN_X .and. isign == DECOMP_2D_FFT_FORWARD) .or. &
@@ -2119,7 +2045,7 @@ contains
 
       end if
 
-      nullify (wk2ra)
+      call decomp_pool_free(wk2ra)
 
       if (decomp_profiler_fft) call decomp_profiler_end("decomp_2d_dtt_3d_r2r")
 

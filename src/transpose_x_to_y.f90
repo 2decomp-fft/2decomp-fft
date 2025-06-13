@@ -32,6 +32,8 @@ contains
 
 #if defined(_GPU)
       integer :: istat, nsize
+#else
+      real(mytype), pointer, contiguous, dimension(:) :: work1_r, work2_r
 #endif
 
       if (decomp_profiler_transpose) call decomp_profiler_start("transp_x_y_r")
@@ -153,6 +155,8 @@ contains
 
 #if defined(_GPU)
       integer :: istat, nsize
+#else
+      complex(mytype), pointer, contiguous, dimension(:) :: work1_c, work2_c
 #endif
 
       if (decomp_profiler_transpose) call decomp_profiler_start("transp_x_y_c")

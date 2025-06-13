@@ -116,15 +116,13 @@ module decomp_2d
 
    ! These are the buffers used by MPI_ALLTOALL(V) calls
    integer, save :: decomp_buf_size = 0
-   ! Shared real/complex buffers
 #if defined(_GPU)
+   ! Shared real/complex GPU buffers
    real(mytype), target, device, allocatable, dimension(:) :: work1, work2
-#else
-   real(mytype), target, allocatable, dimension(:) :: work1, work2
-#endif
-   ! Real/complex pointers to CPU buffers
+   ! Real / complex pointers to GPU buffers
    real(mytype), pointer, contiguous, dimension(:) :: work1_r, work2_r
    complex(mytype), pointer, contiguous, dimension(:) :: work1_c, work2_c
+#endif
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
    ! To define smaller arrays using every several mesh points
@@ -392,10 +390,15 @@ contains
 
       implicit none
 
+      ! Arguments
       integer, intent(IN) :: nx, ny, nz
       TYPE(DECOMP_INFO), intent(INOUT) :: decomp
 
-      integer :: buf_size, status, errorcode
+      ! Local variables
+      integer :: buf_size, errorcode
+#if defined(_GPU)
+      integer :: status
+#endif
 
       ! verify the global size can actually be distributed as pencils
       if (nx_global < dims(1) .or. ny_global < dims(1) .or. ny_global < dims(2) .or. nz_global < dims(2)) then
@@ -460,6 +463,7 @@ contains
          decomp_buf_size = buf_size
          if (use_pool) then
             call decomp_pool%new_shape(decomp_pool_default_type, shp=(/buf_size/))
+#if defined(_GPU)
          else
             if (associated(work1_r)) nullify (work1_r)
             if (associated(work2_r)) nullify (work2_r)
@@ -483,7 +487,6 @@ contains
             call c_f_pointer(c_loc(work2), work2_r, [buf_size])
             call c_f_pointer(c_loc(work1), work1_c, [buf_size])
             call c_f_pointer(c_loc(work2), work2_c, [buf_size])
-#if defined(_GPU)
             call decomp_2d_cumpi_init(buf_size, work1, work2)
 #endif
          end if

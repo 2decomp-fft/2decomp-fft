@@ -289,7 +289,7 @@ module decomp_2d_fft
       ! transpose_y_to_x(wk2_r2c, wk13, sp)
       ! transpose_y_to_z(wk2_r2c, wk13, sp)
       !
-      if (pencil == PHYSICAL_IN_X) then
+      if (engine%format == PHYSICAL_IN_X) then
          call alloc_x(engine%wk13, engine%sp)
       else if (pencil == PHYSICAL_IN_Z) then
          call alloc_z(engine%wk13, engine%sp)

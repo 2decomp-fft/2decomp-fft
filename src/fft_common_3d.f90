@@ -17,9 +17,13 @@ subroutine fft_3d_c2c(in, out, isign)
 
    ! Local variables
    integer :: i, j, k
-   complex(mytype), allocatable, dimension(:, :, :) :: wk1
+   complex(mytype), contiguous, pointer, dimension(:, :, :) :: wk2_c2c, wk1
 
    if (decomp_profiler_fft) call decomp_profiler_start("fft_c2c")
+
+   ! Init pointer
+   call decomp_pool_get(wk2_c2c, ph%ysz)
+   nullify (wk1)
 
    if (format == PHYSICAL_IN_X .AND. isign == DECOMP_2D_FFT_FORWARD .OR. &
        format == PHYSICAL_IN_Z .AND. isign == DECOMP_2D_FFT_BACKWARD) then
@@ -28,7 +32,7 @@ subroutine fft_3d_c2c(in, out, isign)
       if (inplace) then
          call c2c_1m_x(in, isign, ph)
       else
-         call alloc_x(wk1, ph)
+         call decomp_pool_get(wk1, ph%xsz)
          do concurrent(k=1:ph%xsz(3), j=1:ph%xsz(2), i=1:ph%xsz(1))
             wk1(i, j, k) = in(i, j, k)
          end do
@@ -71,7 +75,7 @@ subroutine fft_3d_c2c(in, out, isign)
       if (inplace) then
          call c2c_1m_z(in, isign, ph)
       else
-         call alloc_z(wk1, ph)
+         call decomp_pool_get(wk1, ph%zsz)
          do concurrent(k=1:ph%zsz(3), j=1:ph%zsz(2), i=1:ph%zsz(1))
             wk1(i, j, k) = in(i, j, k)
          end do
@@ -104,7 +108,8 @@ subroutine fft_3d_c2c(in, out, isign)
    end if
 
    ! Free memory
-   if (allocated(wk1)) deallocate (wk1)
+   call decomp_pool_free(wk2_c2c)
+   if (associated(wk1)) call decomp_pool_free(wk1)
 
    if (decomp_profiler_fft) call decomp_profiler_end("fft_c2c")
 
@@ -120,7 +125,17 @@ subroutine fft_3d_r2c(in_r, out_c)
    real(mytype), dimension(:, :, :), intent(IN) :: in_r
    complex(mytype), dimension(:, :, :), intent(OUT) :: out_c
 
+   complex(mytype), pointer, contiguous, dimension(:, :, :) :: wk2_r2c, wk13
+
    if (decomp_profiler_fft) call decomp_profiler_start("fft_r2c")
+
+   ! Init pointers
+   call decomp_pool_get(wk2_r2c, sp%ysz)
+   if (format == PHYSICAL_IN_X) then
+      call decomp_pool_get(wk13, sp%xsz)
+   else
+      call decomp_pool_get(wk13, sp%zsz)
+   end if
 
    if (format == PHYSICAL_IN_X) then
 
@@ -165,6 +180,10 @@ subroutine fft_3d_r2c(in_r, out_c)
 
    end if
 
+   ! Free memory
+   call decomp_pool_free(wk2_r2c)
+   call decomp_pool_free(wk13)
+
    if (decomp_profiler_fft) call decomp_profiler_end("fft_r2c")
 
 end subroutine fft_3d_r2c
@@ -182,9 +201,18 @@ subroutine fft_3d_c2r(in_c, out_r)
 
    ! Local variables
    integer :: i, j, k
-   complex(mytype), allocatable, dimension(:, :, :) :: wk1
+   complex(mytype), pointer, contiguous, dimension(:, :, :) :: wk2_r2c, wk13, wk1
 
    if (decomp_profiler_fft) call decomp_profiler_start("fft_c2r")
+
+   ! Init pointers
+   call decomp_pool_get(wk2_r2c, sp%ysz)
+   if (format == PHYSICAL_IN_X) then
+      call decomp_pool_get(wk13, sp%xsz)
+   else
+      call decomp_pool_get(wk13, sp%zsz)
+   end if
+   nullify (wk1)
 
    if (format == PHYSICAL_IN_X) then
 
@@ -192,7 +220,7 @@ subroutine fft_3d_c2r(in_c, out_r)
       if (inplace) then
          call c2c_1m_z(in_c, 1, sp)
       else
-         call alloc_z(wk1, sp)
+         call decomp_pool_get(wk1, sp%zsz)
          do concurrent(k=1:sp%zsz(3), j=1:sp%zsz(2), i=1:sp%zsz(1))
             wk1(i, j, k) = in_c(i, j, k)
          end do
@@ -221,7 +249,7 @@ subroutine fft_3d_c2r(in_c, out_r)
       if (inplace) then
          call c2c_1m_x(in_c, 1, sp)
       else
-         call alloc_x(wk1, sp)
+         call decomp_pool_get(wk1, sp%xsz)
          do concurrent(k=1:sp%xsz(3), j=1:sp%xsz(2), i=1:sp%xsz(1))
             wk1(i, j, k) = in_c(i, j, k)
          end do
@@ -259,7 +287,9 @@ subroutine fft_3d_c2r(in_c, out_r)
    end if
 
    ! Free memory
-   if (allocated(wk1)) deallocate (wk1)
+   call decomp_pool_free(wk2_r2c)
+   call decomp_pool_free(wk13)
+   if (associated(wk1)) call decomp_pool_free(wk1)
 
    if (decomp_profiler_fft) call decomp_profiler_end("fft_c2r")
 

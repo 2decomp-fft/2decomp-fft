@@ -15,11 +15,6 @@ integer, save, dimension(2) :: dims
 TYPE(DECOMP_INFO), pointer, save :: ph => null()  ! physical space
 TYPE(DECOMP_INFO), pointer, save :: sp => null()  ! spectral space
 
-! Workspace to store the intermediate Y-pencil data
-complex(mytype), contiguous, pointer, dimension(:, :, :) :: wk2_r2c => null(), &
-                                                            wk2_c2c => null(), &
-                                                            wk13 => null()
-
 ! In-place FFT
 logical, pointer, save :: inplace => null(), &
                           inplace_r2c => null(), &
@@ -234,32 +229,6 @@ subroutine decomp_2d_fft_engine_init(engine, pencil, nx, ny, nz, &
    if (use_pool) call decomp_pool%new_shape(complex_type, shp=(/max(engine%sp%x1count * dims(1), engine%sp%y2count * dims(2))/))
 #endif
 
-   !
-   ! Allocate the workspace for intermediate y-pencil data
-   ! The largest memory block needed is the one for c2c transforms
-   !
-   call alloc_y(engine%wk2_c2c, engine%ph)
-   !
-   ! A smaller memory block is needed for r2c and c2r transforms
-   ! wk2_c2c and wk2_r2c start at the same memory location
-   !
-   !    Size of wk2_c2c : ph%ysz(1), ph%ysz(2), ph%ysz(3)
-   !    Size of wk2_r2c : sp%ysz(1), sp%ysz(2), sp%ysz(3)
-   !
-   call c_f_pointer(c_loc(engine%wk2_c2c), engine%wk2_r2c, engine%sp%ysz)
-   !
-   ! Allocate the workspace for r2c and c2r transforms
-   !
-   ! wk13 can not be easily fused with wk2_*2c due to statements such as
-   ! transpose_y_to_x(wk2_r2c, wk13, sp)
-   ! transpose_y_to_z(wk2_r2c, wk13, sp)
-   !
-   if (pencil == PHYSICAL_IN_X) then
-      call alloc_x(engine%wk13, engine%sp)
-   else if (pencil == PHYSICAL_IN_Z) then
-      call alloc_z(engine%wk13, engine%sp)
-   end if
-
    ! Warning : replace the default engine
    call engine%use_it(opt_force=.true.)
 
@@ -301,9 +270,6 @@ subroutine decomp_2d_fft_finalize
    nullify (nz_fft)
    nullify (ph)
    nullify (sp)
-   nullify (wk2_c2c)
-   nullify (wk2_r2c)
-   nullify (wk13)
    nullify (inplace)
    nullify (inplace_r2c)
    nullify (inplace_c2r)
@@ -332,10 +298,6 @@ subroutine decomp_2d_fft_engine_fin(engine)
    end if
    nullify (engine%ph)
    call decomp_info_finalize(engine%sp)
-
-   if (allocated(engine%wk2_c2c)) deallocate (engine%wk2_c2c)
-   if (associated(engine%wk2_r2c)) nullify (engine%wk2_r2c)
-   if (allocated(engine%wk13)) deallocate (engine%wk13)
 
    call finalize_fft_engine(engine)
 
@@ -510,9 +472,6 @@ subroutine decomp_2d_fft_engine_use_it(engine, opt_force)
    nz_fft => engine%nz_fft
    ph => engine%ph
    sp => engine%sp
-   wk2_c2c => engine%wk2_c2c
-   wk2_r2c => engine%wk2_r2c
-   wk13 => engine%wk13
    inplace => engine%inplace
    skip_x_c2c => engine%skip_x_c2c
    skip_y_c2c => engine%skip_y_c2c

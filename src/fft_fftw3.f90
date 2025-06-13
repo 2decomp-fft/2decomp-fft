@@ -50,9 +50,6 @@ module decomp_2d_fft
       type(decomp_info), pointer, public :: ph => null()
       type(decomp_info), private :: ph_target ! ph => ph_target or ph => decomp_main
       type(decomp_info), public :: sp
-      complex(mytype), allocatable, private :: wk2_c2c(:, :, :)
-      complex(mytype), contiguous, pointer, private :: wk2_r2c(:, :, :) => null()
-      complex(mytype), allocatable, private :: wk13(:, :, :)
       logical, private :: inplace
       logical, private :: skip_x_c2c, skip_y_c2c, skip_z_c2c
    contains
@@ -541,9 +538,13 @@ module decomp_2d_fft
       integer, intent(IN) :: isign
 
       ! Local variables
-      complex(mytype), allocatable, dimension(:, :, :) :: wk1
+      complex(mytype), pointer, contiguous, dimension(:, :, :) :: wk2_c2c, wk1
 
       if (decomp_profiler_fft) call decomp_profiler_start("fft_c2c")
+
+      ! Init pointers
+      call decomp_pool_get(wk2_c2c, ph%ysz)
+      nullify (wk1)
 
       if (format == PHYSICAL_IN_X .AND. isign == DECOMP_2D_FFT_FORWARD .OR. &
           format == PHYSICAL_IN_Z .AND. isign == DECOMP_2D_FFT_BACKWARD) then
@@ -552,7 +553,7 @@ module decomp_2d_fft
          if (inplace) then
             call c2c_1m_x(in, plan(isign, 1))
          else
-            call alloc_x(wk1, ph)
+            call decomp_pool_get(wk1, ph%xsz)
             wk1 = in
             call c2c_1m_x(wk1, plan(isign, 1))
          end if
@@ -594,7 +595,7 @@ module decomp_2d_fft
          if (inplace) then
             call c2c_1m_z(in, plan(isign, 3))
          else
-            call alloc_z(wk1, ph)
+            call decomp_pool_get(wk1, ph%zsz)
             wk1 = in
             call c2c_1m_z(wk1, plan(isign, 3))
          end if
@@ -625,7 +626,8 @@ module decomp_2d_fft
       end if
 
       ! Free memory
-      if (allocated(wk1)) deallocate (wk1)
+      call decomp_pool_free(wk2_c2c)
+      if (associated(wk1)) call decomp_pool_free(wk1)
 
       if (decomp_profiler_fft) call decomp_profiler_end("fft_c2c")
 
@@ -641,7 +643,17 @@ module decomp_2d_fft
       real(mytype), dimension(:, :, :), intent(INOUT) :: in_r
       complex(mytype), dimension(:, :, :), intent(OUT) :: out_c
 
+      complex(mytype), pointer, contiguous, dimension(:, :, :) :: wk2_r2c, wk13
+
       if (decomp_profiler_fft) call decomp_profiler_start("fft_r2c")
+
+      ! Init pointers
+      call decomp_pool_get(wk2_r2c, sp%ysz)
+      if (format == PHYSICAL_IN_X) then
+         call decomp_pool_get(wk13, sp%xsz)
+      else
+         call decomp_pool_get(wk13, sp%zsz)
+      end if
 
       if (format == PHYSICAL_IN_X) then
 
@@ -686,6 +698,10 @@ module decomp_2d_fft
 
       end if
 
+      ! Free memory
+      call decomp_pool_free(wk2_r2c)
+      call decomp_pool_free(wk13)
+
       if (decomp_profiler_fft) call decomp_profiler_end("fft_r2c")
 
    end subroutine fft_3d_r2c
@@ -702,9 +718,18 @@ module decomp_2d_fft
       real(mytype), dimension(:, :, :), intent(OUT) :: out_r
 
       ! Local variables
-      complex(mytype), allocatable, dimension(:, :, :) :: wk1
+      complex(mytype), pointer, contiguous, dimension(:, :, :) :: wk2_r2c, wk13, wk1
 
       if (decomp_profiler_fft) call decomp_profiler_start("fft_c2r")
+
+      ! Init pointers
+      call decomp_pool_get(wk2_r2c, sp%ysz)
+      if (format == PHYSICAL_IN_X) then
+         call decomp_pool_get(wk13, sp%xsz)
+      else
+         call decomp_pool_get(wk13, sp%zsz)
+      end if
+      nullify (wk1)
 
       if (format == PHYSICAL_IN_X) then
 
@@ -712,7 +737,7 @@ module decomp_2d_fft
          if (inplace) then
             call c2c_1m_z(in_c, plan(2, 3))
          else
-            call alloc_z(wk1, sp)
+            call decomp_pool_get(wk1, sp%zsz)
             wk1 = in_c
             call c2c_1m_z(wk1, plan(2, 3))
          end if
@@ -739,7 +764,7 @@ module decomp_2d_fft
          if (inplace) then
             call c2c_1m_x(in_c, plan(2, 1))
          else
-            call alloc_x(wk1, sp)
+            call decomp_pool_get(wk1, sp%xsz)
             wk1 = in_c
             call c2c_1m_x(wk1, plan(2, 1))
          end if
@@ -775,7 +800,9 @@ module decomp_2d_fft
       end if
 
       ! Free memory
-      if (allocated(wk1)) deallocate (wk1)
+      call decomp_pool_free(wk2_r2c)
+      call decomp_pool_free(wk13)
+      if (associated(wk1)) call decomp_pool_free(wk1)
 
       if (decomp_profiler_fft) call decomp_profiler_end("fft_c2r")
 

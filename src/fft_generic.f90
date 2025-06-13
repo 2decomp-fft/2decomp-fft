@@ -32,9 +32,6 @@ module decomp_2d_fft
       type(decomp_info), pointer, public :: ph => null()
       type(decomp_info), private :: ph_target ! ph => ph_target or ph => decomp_main
       type(decomp_info), public :: sp
-      complex(mytype), allocatable, private :: wk2_c2c(:, :, :)
-      complex(mytype), contiguous, pointer, private :: wk2_r2c(:, :, :) => null()
-      complex(mytype), allocatable, private :: wk13(:, :, :)
       logical, private :: inplace
       logical, private :: skip_x_c2c, skip_y_c2c, skip_z_c2c
    contains

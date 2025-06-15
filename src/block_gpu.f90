@@ -1,7 +1,7 @@
 !! SPDX-License-Identifier: BSD-3-Clause
 
 !
-! Low-level module for a list of memory blocks managed by FFTW
+! Low-level module for a list of memory blocks in CUDA Fortran
 !
 ! The external code will not use directly this object
 !
@@ -11,10 +11,9 @@ module m_blk
    use, intrinsic :: iso_c_binding
    use decomp_2d_constants
    use decomp_2d_mpi, only : nrank, decomp_2d_abort
+   use cudafor
 
    implicit none
-
-   include "fftw3.f03"
 
    !
    ! Derived type for a memory block inside a list
@@ -88,7 +87,9 @@ contains
          call decomp_2d_abort(__FILE__, __LINE__, ierr, "Block creation failed")
 
       ! Allocate the memory and store the address
-      self%next%ref = fftw_malloc(size * 4_c_size_t)
+      ierr = cudaHostAlloc(self%next%ref, size * 4_c_size_t, cudaHostAllocMapped)
+      if (ierr /= 0) &
+         call decomp_2d_abort(__FILE__, __LINE__, ierr, "Allocation failed")
 
       ! Initialize the memory if needed
       if (init) then
@@ -127,6 +128,8 @@ contains
 
       class(blk), target, intent(inout) :: self
 
+      integer :: ierr
+
       ! Safety check
       if (.not. self%allocated) &
          call decomp_2d_abort(__FILE__, __LINE__, 1, "Block must be allocated")
@@ -138,7 +141,9 @@ contains
       self%allocated = .false.
 
       ! Free memory
-      call fftw_free(self%ref)
+      ierr = cudaFreeHost(self%ref)
+      if (ierr /= 0) &
+         call decomp_2d_abort(__FILE__, __LINE__, ierr, "cudaFreeHost")
       self%ref = c_null_ptr
 
    end subroutine blk_fin
@@ -207,6 +212,7 @@ contains
       logical, intent(in) :: init
 
       ! Local variable
+      integer :: ierr
       integer(c_size_t) :: i
       real(real32), pointer, contiguous :: dat(:)
 
@@ -215,10 +221,14 @@ contains
          call decomp_2d_abort(__FILE__, __LINE__, 1, "Block must be allocated")
 
       ! Free memory
-      call fftw_free(self%ref)
+      ierr = cudaFreeHost(self%ref)
+      if (ierr /= 0) &
+         call decomp_2d_abort(__FILE__, __LINE__, ierr, "cudaFreeHost")
 
       ! Allocate again and update the address
-      self%ref = fftw_malloc(size * 4_c_size_t)
+      ierr = cudaHostAlloc(self%ref, size * 4_c_size_t, cudaHostAllocMapped)
+      if (ierr /= 0) &
+         call decomp_2d_abort(__FILE__, __LINE__, ierr, "Allocation failed")
 
       ! Initialize the memory if needed
       if (init) then

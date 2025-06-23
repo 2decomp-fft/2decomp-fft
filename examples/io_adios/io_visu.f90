@@ -167,8 +167,9 @@ contains
          write (ioxml, *) '<?xml version="1.0"?>'
          write (ioxml, *) '<VTKFile type="ImageData" version="0.1" byte_order="LittleEndian">'
          ! Size of the domain : [3, 2, 1]
-         write (ioxml, *) '  <ImageData WholeExtent="0 ', lx, ' 0 ', ly, ' 0 ', lz, '" Origin="0 0 0" Spacing="', dx, ' ', dy, ' ', dz, '">'
-         write (ioxml, *) '    <Piece Extent="0 ', lx, ' 0 ', ly, ' 0 ', lz, '">'
+         ! Extent should be in reversed order
+         write (ioxml, *) '  <ImageData WholeExtent="1 ', nz, ' 1 ', ny, ' 1 ', nx, '" Origin="0 0 0" Spacing="', dx, ' ', dy, ' ', dz, '">'
+         write (ioxml, *) '    <Piece Extent="1 ', nz, ' 1 ', ny, ' 1 ', nx, '">'
 
          ! Data
          write (ioxml, *) '      <PointData>'

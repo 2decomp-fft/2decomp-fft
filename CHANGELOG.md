@@ -23,6 +23,7 @@ _e.g._ vX.Y - YYYY-MM-DD and a new "Unreleased" section started above.
 - Add support for ADIOS2 BP5. See [PR #380](https://github.com/2decomp-fft/2decomp-fft/pull/380)
 - Add padded all-to-all communications in the CI. See [PR #384](https://github.com/2decomp-fft/2decomp-fft/pull/384/)
 - Add padded all-to-all communications for GPU. See [PR #385](https://github.com/2decomp-fft/2decomp-fft/pull/385/)
+- Add a vtk.xml file in the ADIOS2 visualization example to rescale the domain in paraview. See [PR #387](https://github.com/2decomp-fft/2decomp-fft/pull/387)
 
 ### Fixed
 

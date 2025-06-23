@@ -29,7 +29,7 @@ program visu
    call init_data()
 
    call write_data()
-   call write_visu("default.bp5")
+   call write_visu()
 
    call fin()
 
@@ -131,16 +131,13 @@ contains
 
    end subroutine write_data
 
-   subroutine write_visu(dirname)
+   subroutine write_visu()
       ! This subroutine is based on the xdmf writers in Xcompact3d.
       ! Copyright (c) 2012-2022, Xcompact3d
       ! SPDX-License-Identifier: BSD 3-Clause
       use, intrinsic :: iso_fortran_env, only: real64
 
-      ! Arguments
-      character(*), intent(in), optional :: dirname
-
-      ! Local variable
+      type(d2d_io_family), pointer :: family
       integer :: ioxml
       real(real64) :: lx, ly, lz, dx, dy, dz
 
@@ -157,11 +154,16 @@ contains
       if (nrank == 0) then
 
          ! Open the file
-         if (present(dirname)) then
-            open (newunit=ioxml, file=trim(dirname)//"/vtk.xml")
+         family => decomp_2d_adios_get_default_family()
+         if (family%io%engine_type == "BP4") then
+            open (newunit=ioxml, file=trim(family%label)//".bp4/vtk.xml")
+         else if (family%io%engine_type == "BP5") then
+            open (newunit=ioxml, file=trim(family%label)//".bp5/vtk.xml")
          else
-            open (newunit=ioxml, file="./vtk.xml")
+            ! TODO : check the compatibility of HDF5 and SST formats with vtk.xml
+            return
          end if
+         nullify (family)
 
          ! Header for a uniform grid
          write (ioxml, *) '<?xml version="1.0"?>'

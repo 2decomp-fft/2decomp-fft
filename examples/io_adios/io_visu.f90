@@ -29,7 +29,7 @@ program visu
    call init_data()
 
    call write_data()
-   call write_visu()
+   call write_visu("default.bp5")
 
    call fin()
 
@@ -56,9 +56,9 @@ contains
       call decomp_2d_testing_log()
 
       call decomp_2d_io_init()
-      call decomp_2d_register_var("u1.dat", 1, real_type)
-      call decomp_2d_register_var("u2.dat", 2, real_type)
-      call decomp_2d_register_var("u3.dat", 3, real_type)
+      call decomp_2d_register_var("u1", 1, real_type)
+      call decomp_2d_register_var("u2", 2, real_type)
+      call decomp_2d_register_var("u3", 3, real_type)
 
    end subroutine init_example
 
@@ -124,94 +124,64 @@ contains
 
       ! Standard I/O pattern - file per field
       call io%open_start(decomp_2d_write_mode)
-      call decomp_2d_adios_write_var(io, u1, 'u1.dat')
-      call decomp_2d_adios_write_var(io, u2, 'u2.dat')
-      call decomp_2d_adios_write_var(io, u3, 'u3.dat')
+      call decomp_2d_adios_write_var(io, u1, 'u1')
+      call decomp_2d_adios_write_var(io, u2, 'u2')
+      call decomp_2d_adios_write_var(io, u3, 'u3')
       call io%end_close
 
    end subroutine write_data
 
-   subroutine write_visu()
+   subroutine write_visu(dirname)
       ! This subroutine is based on the xdmf writers in Xcompact3d.
       ! Copyright (c) 2012-2022, Xcompact3d
       ! SPDX-License-Identifier: BSD 3-Clause
       use, intrinsic :: iso_fortran_env, only: real64
 
-      integer :: ioxdmf
+      ! Arguments
+      character(*), intent(in), optional :: dirname
 
-      character(len=:), allocatable :: fmt
+      ! Local variable
+      integer :: ioxml
+      real(real64) :: lx, ly, lz, dx, dy, dz
 
-      integer :: precision
+      ! Size of the domain
+      lx = 3.
+      ly = 2.
+      lz = 1.
 
-      integer :: varctr
-      character(len=16) :: filename
-      character(len=2) :: varname
+      ! Uniform grid
+      dx = lx / (nx - 1)
+      dy = ly / (ny - 1)
+      dz = lz / (nz - 1)
 
       if (nrank == 0) then
-         OPEN (newunit=ioxdmf, file="./out.xdmf")
 
-         write (ioxdmf, '(A22)') '<?xml version="1.0" ?>'
-         write (ioxdmf, *) '<!DOCTYPE Xdmf SYSTEM "Xdmf.dtd" []>'
-         write (ioxdmf, *) '<Xdmf xmlns:xi="http://www.w3.org/2001/XInclude" Version="2.0">'
-         write (ioxdmf, *) '<Domain>'
-
-         write (ioxdmf, '(A)') '    <Topology name="topo" TopologyType="3DCoRectMesh"'
-         fmt = "(A, I0, A, I0, A, I0, A)"
-         write (ioxdmf, fmt) '        Dimensions="', nz, " ", ny, " ", nx, '">'
-         write (ioxdmf, '(A)') '    </Topology>'
-
-         write (ioxdmf, *) '    <Geometry name="geo" Type="ORIGIN_DXDYDZ">'
-         write (ioxdmf, *) '        <!-- Origin -->'
-         write (ioxdmf, *) '        <DataItem Format="XML" Dimensions="3">'
-         write (ioxdmf, *) '          0.0 0.0 0.0'
-         write (ioxdmf, *) '        </DataItem>'
-         write (ioxdmf, *) '        <!-- DxDyDz -->'
-         write (ioxdmf, *) '        <DataItem Format="XML" Dimensions="3">'
-         if (mytype == kind(0._real64)) then
-            fmt = "(A, E24.17, A, E24.17, A, E24.17)"
+         ! Open the file
+         if (present(dirname)) then
+            open (newunit=ioxml, file=trim(dirname)//"/vtk.xml")
          else
-            fmt = "(A, E16.9, A, E16.9, A, E16.9)"
+            open (newunit=ioxml, file="./vtk.xml")
          end if
-         write (ioxdmf, fmt) '        ', 1.0_mytype, " ", 1.0_mytype, " ", 1.0_mytype
-         write (ioxdmf, *) '        </DataItem>'
-         write (ioxdmf, *) '    </Geometry>'
 
-         write (ioxdmf, *) '   <Grid Name="1" GridType="Uniform">'
-         write (ioxdmf, *) '       <Topology Reference="/Xdmf/Domain/Topology[1]"/>'
-         write (ioxdmf, *) '       <Geometry Reference="/Xdmf/Domain/Geometry[1]"/>'
+         ! Header for a uniform grid
+         write (ioxml, *) '<?xml version="1.0"?>'
+         write (ioxml, *) '<VTKFile type="ImageData" version="0.1" byte_order="LittleEndian">'
+         ! Size of the domain : [3, 2, 1]
+         write (ioxml, *) '  <ImageData WholeExtent="0 ', lx, ' 0 ', ly, ' 0 ', lz, '" Origin="0 0 0" Spacing="', dx, ' ', dy, ' ', dz, '">'
+         write (ioxml, *) '    <Piece Extent="0 ', lx, ' 0 ', ly, ' 0 ', lz, '">'
 
-         do varctr = 1, 3
-            write (varname, "(A, I0)") "u", varctr
-            write (filename, '(A, I0, A)') "./out/u", varctr, ".dat"
-            write (ioxdmf, *) '       <Attribute Name="'//trim(varname)//'" Center="Node">'
-            write (ioxdmf, *) '          <DataItem Format="HDF"'
+         ! Data
+         write (ioxml, *) '      <PointData>'
+         write (ioxml, *) '        <DataArray Name="u1" />'
+         write (ioxml, *) '        <DataArray Name="u2" />'
+         write (ioxml, *) '        <DataArray Name="u3" />'
+         write (ioxml, *) '      </PointData>'
 
-#ifdef DOUBLE_PREC
-            print *, "Double precision build"
-#ifdef SAVE_SINGLE
-            precision = 4
-#else
-            precision = 8
-#endif
-#else
-            precision = 4
-#endif
-            write (ioxdmf, "(A,I0,A)") '            DataType="Float" Precision="', precision, '" Endian="little" Seek="0"'
+         ! Footer
+         write (ioxml, *) '    </Piece>'
+         write (ioxml, *) '  </ImageData>'
+         write (ioxml, *) '</VTKFile>'
 
-            fmt = "(A, I0, A, I0, A, I0, A)"
-            write (ioxdmf, fmt) '            Dimensions="', nz, " ", ny, " ", nx, '">'
-
-            write (ioxdmf, *) '              '//trim(filename)
-
-            write (ioxdmf, *) '           </DataItem>'
-            write (ioxdmf, *) '        </Attribute>'
-         end do
-
-         write (ioxdmf, '(/)')
-         write (ioxdmf, *) '    </Grid>'
-         write (ioxdmf, *) '</Domain>'
-         write (ioxdmf, '(A7)') '</Xdmf>'
-         close (ioxdmf)
       end if
 
    end subroutine write_visu

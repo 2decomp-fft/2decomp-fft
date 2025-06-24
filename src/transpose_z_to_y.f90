@@ -94,11 +94,21 @@ contains
       if (.not. decomp%even) then
          call mem_split_zy_real(src, s1, s2, s3, wk1, dims(2), &
                                 decomp%z2dist, decomp)
+      else
+         ! For PURE EVEN we don't have to do anything
+         ! only for GPU the mem cpy below is needed      
+#   if defined(_GPU)
+         ! For GPU we need always to use a device array for comumnication
+         !$acc host_data use_device(src)
+         istat = cudaMemcpy(wk1, src, s1 * s2 * s3, cudaMemcpyDeviceToDevice)
+         !$acc end host_data
+         if (istat /= 0) call decomp_2d_abort(__FILE__, __LINE__, istat, "cudaMemcpy")
+#   endif
       end if
 # else
     ! Not EVEN branch
-#   if defined(_NCCL)
-      ! For NCCL comms we need to use a device array
+#   if defined(_GPU)
+      ! For GPU we need always to use a device array for comumnication
       !$acc host_data use_device(src)
       istat = cudaMemcpy(wk1, src, s1 * s2 * s3, cudaMemcpyDeviceToDevice)
       !$acc end host_data
@@ -110,11 +120,17 @@ contains
       ! define receive buffer
 #ifdef EVEN
       if (decomp%even) then
-         !$acc host_data use_device(src)
+#   if defined(_GPU)
+         ! For GPU we need to use only device arrays
+         call MPI_ALLTOALL(wk1, decomp%z2count, real_type, &
+                           wk2, decomp%y2count, real_type, &
+                           DECOMP_2D_COMM_ROW, ierror)
+#   else
+         ! For pure MPI we can start from src
          call MPI_ALLTOALL(src, decomp%z2count, real_type, &
                            wk2, decomp%y2count, real_type, &
                            DECOMP_2D_COMM_ROW, ierror)
-         !$acc end host_data
+#   endif
       else
          call MPI_ALLTOALL(wk1, decomp%z2count, real_type, &
                            wk2, decomp%y2count, real_type, &
@@ -123,7 +139,8 @@ contains
       if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_ALLTOALL")
 
 #else
-#  if defined(_NCCL)
+#  if defined(_GPU)
+#    if defined(_NCCL)
       call decomp_2d_nccl_send_recv_row(wk2, &
                                         wk1, &
                                         decomp%z2disp, &
@@ -131,13 +148,17 @@ contains
                                         decomp%y2disp, &
                                         decomp%y2cnts, &
                                         dims(2))
+#    else
+      call MPI_ALLTOALLV(wk1, decomp%z2cnts, decomp%z2disp, real_type, &
+                         wk2, decomp%y2cnts, decomp%y2disp, real_type, &
+                         DECOMP_2D_COMM_ROW, ierror)
+      if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_ALLTOALLV")
+#    endif
 #  else
       associate (wk => wk1); end associate
-      !$acc host_data use_device(src)
       call MPI_ALLTOALLV(src, decomp%z2cnts, decomp%z2disp, real_type, &
                          wk2, decomp%y2cnts, decomp%y2disp, real_type, &
                          DECOMP_2D_COMM_ROW, ierror)
-      !$acc end host_data
       if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_ALLTOALLV")
 #  endif
 #endif
@@ -231,10 +252,20 @@ contains
       if (.not. decomp%even) then
          call mem_split_zy_complex(src, s1, s2, s3, wk1, dims(2), &
                                    decomp%z2dist, decomp)
+      else 
+      ! note the src array is suitable to be a send buffer
+      ! so no split operation needed only memcopy is needed for GPU
+#   if defined(_GPU)
+      ! For GPU we need to use always a device array for comunication
+      !$acc host_data use_device(src)
+      istat = cudaMemcpy(wk1, src, s1 * s2 * s3, cudaMemcpyDeviceToDevice)
+      !$acc end host_data
+     if (istat /= 0) call decomp_2d_abort(__FILE__, __LINE__, istat, "cudaMemcpy")
+#  endif
       end if
 #else
-#   if defined(_NCCL)
-      ! For NCCL comms we need to use a device array
+#   if defined(_GPU)
+      ! For GPU we need to use always a device array for comunication
       !$acc host_data use_device(src)
       istat = cudaMemcpy(wk1, src, s1 * s2 * s3, cudaMemcpyDeviceToDevice)
       !$acc end host_data
@@ -246,11 +277,15 @@ contains
       ! define receive buffer
 #ifdef EVEN
       if (decomp%even) then
-         !$acc host_data use_device(src)
+#   if defined(_GPU)
+         call MPI_ALLTOALL(wk1, decomp%z2count, complex_type, &
+                           wk2, decomp%y2count, complex_type, &
+                           DECOMP_2D_COMM_ROW, ierror)
+#   else
          call MPI_ALLTOALL(src, decomp%z2count, complex_type, &
                            wk2, decomp%y2count, complex_type, &
                            DECOMP_2D_COMM_ROW, ierror)
-         !$acc end host_data
+#   endif
       else
          call MPI_ALLTOALL(wk1, decomp%z2count, complex_type, &
                            wk2, decomp%y2count, complex_type, &
@@ -259,7 +294,9 @@ contains
       if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_ALLTOALL")
 #else
     ! NO EVEN BRANCH
-#   if defined(_NCCL)
+#   if defined(_GPU)
+      ! GPU
+#     if defined(_NCCL)
       call decomp_2d_nccl_send_recv_row(wk2, &
                                         wk1, &
                                         decomp%z2disp, &
@@ -268,14 +305,18 @@ contains
                                         decomp%y2cnts, &
                                         dims(2), &
                                         decomp_buf_size)
+#     else
+      call MPI_ALLTOALLV(wk1, decomp%z2cnts, decomp%z2disp, complex_type, &
+                         wk2, decomp%y2cnts, decomp%y2disp, complex_type, &
+                         DECOMP_2D_COMM_ROW, ierror)
+      if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_ALLTOALLV")
+#     endif
 #   else
-      ! MPI
+      ! PURE MPI
       associate (wk => wk1); end associate
-      !$acc host_data use_device(src)
       call MPI_ALLTOALLV(src, decomp%z2cnts, decomp%z2disp, complex_type, &
                          wk2, decomp%y2cnts, decomp%y2disp, complex_type, &
                          DECOMP_2D_COMM_ROW, ierror)
-      !$acc end host_data
       if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_ALLTOALLV")
 #   endif
 #endif

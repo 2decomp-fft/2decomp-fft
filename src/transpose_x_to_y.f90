@@ -93,21 +93,21 @@ contains
       ! define receive buffer
       ! transpose using MPI_ALLTOALL(V)
 #ifdef EVEN
-#     if defined(_NCCL)
+#   if defined(_NCCL)
       ! NCCL equivalent of MPI_ALLTOALLV
       call decomp_2d_nccl_send_recv_col(wk2, &
                                         wk1, &
                                         decomp%x1count, &
                                         decomp%y1count, &
                                         dims(1))
-#     else
+#   else
       call MPI_ALLTOALL(wk1, decomp%x1count, real_type, &
                         wk2, decomp%y1count, real_type, &
                         DECOMP_2D_COMM_COL, ierror)
       if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_ALLTOALL")
-#     endif
+#   endif
 #else
-#     if defined(_NCCL)
+#   if defined(_NCCL)
       ! NCCL equivalent of MPI_ALLTOALLV
       call decomp_2d_nccl_send_recv_col(wk2, &
                                         wk1, &
@@ -116,13 +116,13 @@ contains
                                         decomp%y1disp, &
                                         decomp%y1cnts, &
                                         dims(1))
-#     else
+#   else
       ! MPI and CUDA aware MPI
       call MPI_ALLTOALLV(wk1, decomp%x1cnts, decomp%x1disp, real_type, &
                          wk2, decomp%y1cnts, decomp%y1disp, real_type, &
                          DECOMP_2D_COMM_COL, ierror)
       if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_ALLTOALLV")
-#     endif
+#   endif
 #endif
 
       ! rearrange receive buffer

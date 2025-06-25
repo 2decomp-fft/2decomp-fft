@@ -155,14 +155,7 @@ contains
 
          ! Open the file
          family => decomp_2d_adios_get_default_family()
-         if (family%io%engine_type == "BP4") then
-            open (newunit=ioxml, file=trim(family%label)//".bp4/vtk.xml")
-         else if (family%io%engine_type == "BP5") then
-            open (newunit=ioxml, file=trim(family%label)//".bp5/vtk.xml")
-         else
-            ! TODO : check the compatibility of HDF5 and SST formats with vtk.xml
-            return
-         end if
+         open (newunit=ioxml, file=family%get_folder()//"/vtk.xml")
          nullify (family)
 
          ! Header for a uniform grid

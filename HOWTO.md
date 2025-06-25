@@ -135,6 +135,11 @@ call decomp_2d_register_variable(io_name,filename,ipencil,icoarse,iplanes,kind)
 where the arguments are described as above.
 The argument ``iplanes`` is used to declare writing planes from a field - pass ``0`` for 3-D field output and the ``kind``
 argument is the argument used when declaring the variable, e.g. ``real(kind)``.
+#### Opening an ADIOS2 file
+Data written using the ADIOS2 ``.bp<x>`` engines are stored in a directory, e.g. ``data.bp4``.
+To visualise this using ParaView open the directory in the file open prompt,
+this will ensure the ParaView reader correctly reads the ``vtk.xml`` file
+describing the problem dimensions.
 ### Use of the halo exchange
 The halo-cell support API provides data structures and nearest-neighbour communication routines 
 that support explicit message passing between neighbouring pencils. 

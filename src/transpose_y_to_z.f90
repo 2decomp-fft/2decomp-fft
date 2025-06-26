@@ -147,7 +147,7 @@ contains
 #     endif
 #   else
       ! Pure MPI on CPU  => direct to DST
-      associate (wk => wk2); end associate
+      unused(wk2)
       call MPI_ALLTOALLV(wk1, decomp%y2cnts, decomp%y2disp, real_type, &
                          dst, decomp%z2cnts, decomp%z2disp, real_type, &
                          DECOMP_2D_COMM_ROW, ierror)
@@ -325,7 +325,7 @@ contains
       if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_ALLTOALLV")
 #     endif
 #   else
-      associate (wk => wk2); end associate
+      unused(wk2)
       call MPI_ALLTOALLV(wk1, decomp%y2cnts, decomp%y2disp, complex_type, &
                          dst, decomp%z2cnts, decomp%z2disp, complex_type, &
                          DECOMP_2D_COMM_ROW, ierror)

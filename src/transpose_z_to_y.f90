@@ -1,4 +1,6 @@
 !! SPDX-License-Identifier: BSD-3-Clause
+! Preprocessor macro to deal with unused variables
+#define unused(x) associate(tmp => x); end associate
 
 ! This file contains the routines that transpose data from Z to Y pencil
 submodule(decomp_2d) d2d_transpose_z_to_y
@@ -255,6 +257,9 @@ contains
       integer :: s1, s2, s3, d1, d2, d3
       integer :: ierror
 
+      unused(wk1_r)
+      unused(wk2_r)
+      
       s1 = SIZE(src, 1)
       s2 = SIZE(src, 2)
       s3 = SIZE(src, 3)

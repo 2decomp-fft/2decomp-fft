@@ -95,11 +95,11 @@ contains
 #ifdef EVEN
 #   if defined(_NCCL)
       ! NCCL equivalent of MPI_ALLTOALLV
-      call decomp_2d_nccl_send_recv_col(wk2, &
-                                        wk1, &
-                                        decomp%x1count, &
-                                        decomp%y1count, &
-                                        dims(1))
+      call decomp_2d_nccl_alltoall_col_real(wk2, &
+                                            wk1, &
+                                            decomp%x1count, &
+                                            decomp%y1count, &
+                                            dims(1))
 #   else
       call MPI_ALLTOALL(wk1, decomp%x1count, real_type, &
                         wk2, decomp%y1count, real_type, &
@@ -109,13 +109,13 @@ contains
 #else
 #   if defined(_NCCL)
       ! NCCL equivalent of MPI_ALLTOALLV
-      call decomp_2d_nccl_send_recv_col(wk2, &
-                                        wk1, &
-                                        decomp%x1disp, &
-                                        decomp%x1cnts, &
-                                        decomp%y1disp, &
-                                        decomp%y1cnts, &
-                                        dims(1))
+      call decomp_2d_nccl_alltoall_col_real(wk2, &
+                                            wk1, &
+                                            decomp%x1disp, &
+                                            decomp%x1cnts, &
+                                            decomp%y1disp, &
+                                            decomp%y1cnts, &
+                                            dims(1))
 #   else
       ! MPI and CUDA aware MPI
       call MPI_ALLTOALLV(wk1, decomp%x1cnts, decomp%x1disp, real_type, &
@@ -168,7 +168,8 @@ contains
 #endif
       else
 #if defined(_GPU)
-         call transpose_x_to_y_complex(src, dst, decomp, work1_c_d, work2_c_d)
+         call transpose_x_to_y_complex(src, dst, decomp, work1_c_d, work2_c_d, &
+                                                         work1_r_d, work2_r_d)
 #else
          if (use_pool) then
             call decomp_pool_get(work1_c)
@@ -186,7 +187,7 @@ contains
 
    end subroutine transpose_x_to_y_complex_long
 
-   subroutine transpose_x_to_y_complex(src, dst, decomp, wk1, wk2)
+   subroutine transpose_x_to_y_complex(src, dst, decomp, wk1, wk2, wk1_r, wk2_r)
 
       implicit none
 
@@ -194,8 +195,10 @@ contains
       complex(mytype), dimension(:, :, :), intent(OUT) :: dst
       TYPE(DECOMP_INFO), intent(IN) :: decomp
       complex(mytype), dimension(:), intent(OUT) :: wk1, wk2
+      real(mytype), dimension(:), intent(OUT), optional :: wk1_r, wk2_r
 #if defined(_GPU)
       attributes(device) :: wk1, wk2
+      attributes(device) :: wk1_r, wk2_r
 #endif
 
       integer :: s1, s2, s3, d1, d2, d3
@@ -211,27 +214,34 @@ contains
       ! rearrange source array as send buffer
       call mem_split_xy_complex(src, s1, s2, s3, wk1, dims(1), &
                                 decomp%x1dist, decomp)
-
       ! define receive buffer
       ! transpose using MPI_ALLTOALL(V)
 #ifdef EVEN
+#   if defined(_NCCL)
+      ! NCCL equivalent of MPI_ALLTOALL
+      ! Here we pass the real pointer since NCCL do not support complex
+      call decomp_2d_nccl_alltoall_col_cmplx(wk2_r, &
+                                             wk1_r, &
+                                             decomp%x1count, &
+                                             decomp%y1count, &
+                                             dims(1))
+#   else
       call MPI_ALLTOALL(wk1, decomp%x1count, complex_type, &
                         wk2, decomp%y1count, complex_type, &
                         DECOMP_2D_COMM_COL, ierror)
       if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_ALLTOALL")
-
-
+#   endif
 #else
 #     if defined(_NCCL)
       ! NCCL analogue for MPI_ALLTOALLV
-      call decomp_2d_nccl_send_recv_col(wk2, &
-                                        wk1, &
-                                        decomp%x1disp, &
-                                        decomp%x1cnts, &
-                                        decomp%y1disp, &
-                                        decomp%y1cnts, &
-                                        dims(1), &
-                                        decomp_buf_size)
+      call decomp_2d_nccl_alltoall_col_cmplx(wk2, &
+                                             wk1, &
+                                             decomp%x1disp, &
+                                             decomp%x1cnts, &
+                                             decomp%y1disp, &
+                                             decomp%y1cnts, &
+                                             dims(1), &
+                                             decomp_buf_size)
 #     else
       ! MPI and CUDA aware MPI
       call MPI_ALLTOALLV(wk1, decomp%x1cnts, decomp%x1disp, complex_type, &

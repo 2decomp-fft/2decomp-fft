@@ -5,7 +5,6 @@
 module decomp_2d_nccl
 
    use mpi
-   use, intrinsic:: iso_c_binding, only: c_double, c_float
    use decomp_2d_constants
    use decomp_2d_mpi
    use decomp_2d_cumpi
@@ -18,15 +17,9 @@ module decomp_2d_nccl
 
 #ifdef DOUBLE_PREC
    type(ncclDataType), parameter, public :: ncclType = ncclDouble
-   integer, parameter, public :: mytype_c = c_double
 #else
    type(ncclDataType), parameter, public :: ncclType = ncclFloat
-   integer, parameter, public :: mytype_c = c_float
 #endif
-
-   type :: complex_type_c
-    real(mytype_c) :: real, imag
-   end type complex_type_c
 
    integer, save, public :: row_rank, col_rank
 
@@ -39,29 +32,30 @@ module decomp_2d_nccl
    ! Extra pointers for nccl complex transpose
    real(mytype), target, device, allocatable, dimension(:) :: work3, work4
    real(mytype), dimension(:), device, pointer, contiguous :: work3_r_d, work4_r_d
-   type(complex_type_c), dimension(:), device, public, pointer, contiguous :: work1_cc_d, work2_cc_d
 
    public :: decomp_2d_nccl_init, &
              decomp_2d_nccl_fin, &
              decomp_2d_nccl_mem_init, &
              decomp_2d_nccl_mem_fin, &
-             decomp_2d_nccl_send_recv_col, &
-             decomp_2d_nccl_send_recv_row
+             decomp_2d_nccl_alltoall_col_real, &
+             decomp_2d_nccl_alltoall_col_cmplx, &
+             decomp_2d_nccl_alltoall_row_real, &
+             decomp_2d_nccl_alltoall_row_cmplx
 
-   interface decomp_2d_nccl_send_recv_col
-      module subroutine decomp_2d_nccl_alltoall_real_col(dst_d, &
-                                                         src_d, &
-                                                         cnt_s, &
-                                                         cnt_r, &
-                                                         dime)
+   interface decomp_2d_nccl_alltoall_col_real
+      module subroutine decomp_2d_nccl_a2a_col_real(dst_d, &
+                                                    src_d, &
+                                                    cnt_s, &
+                                                    cnt_r, &
+                                                    dime)
          integer, intent(in) :: dime
          real(mytype), dimension(:), intent(in), device :: src_d
          real(mytype), dimension(:), intent(out), device :: dst_d
          integer, intent(in) :: cnt_s
          integer, intent(in) :: cnt_r
-      end subroutine decomp_2d_nccl_alltoall_real_col
+      end subroutine decomp_2d_nccl_a2a_col_real
       !
-      module subroutine decomp_2d_nccl_alltoallV_real_col(dst_d, &
+      module subroutine decomp_2d_nccl_a2aV_col_real(dst_d, &
                                                           src_d, &
                                                           disp_s, &
                                                           cnts_s, &
@@ -73,64 +67,92 @@ module decomp_2d_nccl
          real(mytype), dimension(:), intent(out), device :: dst_d
          integer, dimension(0:dime - 1), intent(in) :: disp_s, cnts_s
          integer, dimension(0:dime - 1), intent(in) :: disp_r, cnts_r
-      end subroutine decomp_2d_nccl_alltoallV_real_col
+      end subroutine decomp_2d_nccl_a2aV_col_real
+   end interface decomp_2d_nccl_alltoall_col_real
       !
-      module subroutine decomp_2d_nccl_alltoallV_cmplx_col(dst_d, &
-                                                           src_d, &
-                                                           disp_s, &
-                                                           cnts_s, &
-                                                           disp_r, &
-                                                           cnts_r, &
-                                                           dime)
-         integer, intent(in) :: dime
-         complex(mytype), dimension(:), intent(in), device :: src_d
-         complex(mytype), dimension(:), intent(out), device :: dst_d
-         integer, dimension(0:dime - 1), intent(in) :: disp_s, cnts_s
-         integer, dimension(0:dime - 1), intent(in) :: disp_r, cnts_r
-      end subroutine decomp_2d_nccl_alltoallV_cmplx_col
-   end interface decomp_2d_nccl_send_recv_col
-
-   interface decomp_2d_nccl_send_recv_row
-      module subroutine decomp_2d_nccl_alltoall_real_row(dst_d, &
-                                                         src_d, &
-                                                         cnt_s, &
-                                                         cnt_r, &
-                                                         dime)
+   interface decomp_2d_nccl_alltoall_col_cmplx
+      module subroutine decomp_2d_nccl_a2a_col_cmplx(dst_d, &
+                                                     src_d, &
+                                                     cnt_s, &
+                                                     cnt_r, &
+                                                     dime)
          integer, intent(in) :: dime
          real(mytype), dimension(:), intent(in), device :: src_d
          real(mytype), dimension(:), intent(out), device :: dst_d
          integer, intent(in) :: cnt_s
          integer, intent(in) :: cnt_r
-      end subroutine decomp_2d_nccl_alltoall_real_row
+      end subroutine decomp_2d_nccl_a2a_col_cmplx
       !
-      module subroutine decomp_2d_nccl_alltoallV_real_row(dst_d,  &
-                                                          src_d,  &
-                                                          disp_s, &
-                                                          cnts_s, &
-                                                          disp_r, &
-                                                          cnts_r, &
-                                                          dime)
-         integer, intent(in) :: dime
-         real(mytype), dimension(:), intent(in), device :: src_d
-         real(mytype), dimension(:), intent(out), device :: dst_d
-         integer, dimension(0:dime - 1), intent(in) :: disp_s, cnts_s
-         integer, dimension(0:dime - 1), intent(in) :: disp_r, cnts_r
-      end subroutine decomp_2d_nccl_alltoallV_real_row
-      !
-      module subroutine decomp_2d_nccl_alltoallV_cmplx_row(dst_d,  &
-                                                           src_d,  &
-                                                           disp_s, &
-                                                           cnts_s, &
-                                                           disp_r, &
-                                                           cnts_r, &
-                                                           dime)
+      module subroutine decomp_2d_nccl_a2aV_col_cmplx(dst_d, &
+                                                      src_d, &
+                                                      disp_s, &
+                                                      cnts_s, &
+                                                      disp_r, &
+                                                      cnts_r, &
+                                                      dime)
          integer, intent(in) :: dime
          complex(mytype), dimension(:), intent(in), device :: src_d
          complex(mytype), dimension(:), intent(out), device :: dst_d
          integer, dimension(0:dime - 1), intent(in) :: disp_s, cnts_s
          integer, dimension(0:dime - 1), intent(in) :: disp_r, cnts_r
-      end subroutine decomp_2d_nccl_alltoallV_cmplx_row
-   end interface decomp_2d_nccl_send_recv_row
+      end subroutine decomp_2d_nccl_a2aV_col_cmplx
+   end interface decomp_2d_nccl_alltoall_col_cmplx
+
+   interface decomp_2d_nccl_alltoall_row_real
+      module subroutine decomp_2d_nccl_a2a_row_real(dst_d, &
+                                                    src_d, &
+                                                    cnt_s, &
+                                                    cnt_r, &
+                                                    dime)
+         integer, intent(in) :: dime
+         real(mytype), dimension(:), intent(in), device :: src_d
+         real(mytype), dimension(:), intent(out), device :: dst_d
+         integer, intent(in) :: cnt_s
+         integer, intent(in) :: cnt_r
+      end subroutine decomp_2d_nccl_a2a_row_real
+      !
+      module subroutine decomp_2d_nccl_a2aV_row_real(dst_d,  &
+                                                     src_d,  &
+                                                     disp_s, &
+                                                     cnts_s, &
+                                                     disp_r, &
+                                                     cnts_r, &
+                                                     dime)
+         integer, intent(in) :: dime
+         real(mytype), dimension(:), intent(in), device :: src_d
+         real(mytype), dimension(:), intent(out), device :: dst_d
+         integer, dimension(0:dime - 1), intent(in) :: disp_s, cnts_s
+         integer, dimension(0:dime - 1), intent(in) :: disp_r, cnts_r
+      end subroutine decomp_2d_nccl_a2aV_row_real
+   end interface decomp_2d_nccl_alltoall_row_real
+      !
+   interface decomp_2d_nccl_alltoall_row_cmplx
+      module subroutine decomp_2d_nccl_a2a_row_cmplx(dst_d, &
+                                                     src_d, &
+                                                     cnt_s, &
+                                                     cnt_r, &
+                                                     dime)
+         integer, intent(in) :: dime
+         real(mytype), dimension(:), intent(in), device :: src_d
+         real(mytype), dimension(:), intent(out), device :: dst_d
+         integer, intent(in) :: cnt_s
+         integer, intent(in) :: cnt_r
+      end subroutine decomp_2d_nccl_a2a_row_cmplx
+      !
+      module subroutine decomp_2d_nccl_a2aV_row_cmplx(dst_d,  &
+                                                      src_d,  &
+                                                      disp_s, &
+                                                      cnts_s, &
+                                                      disp_r, &
+                                                      cnts_r, &
+                                                      dime)
+         integer, intent(in) :: dime
+         complex(mytype), dimension(:), intent(in), device :: src_d
+         complex(mytype), dimension(:), intent(out), device :: dst_d
+         integer, dimension(0:dime - 1), intent(in) :: disp_s, cnts_s
+         integer, dimension(0:dime - 1), intent(in) :: disp_r, cnts_r
+      end subroutine decomp_2d_nccl_a2aV_row_cmplx
+   end interface decomp_2d_nccl_alltoall_row_cmplx
 
 contains
    !
@@ -227,12 +249,6 @@ contains
       call c_f_pointer(c_loc(work3), work3_r_d, [buf_size])
       call c_f_pointer(c_loc(work4), work4_r_d, [buf_size])
 
-      ! Assign pointers for new wk arrays for complex of c_type
-      if (associated(work1_cc_d)) nullify (work1_cc_d)
-      if (associated(work2_cc_d)) nullify (work2_cc_d)
-      call c_f_pointer(c_loc(wk1), work1_cc_d, [buf_size])
-      call c_f_pointer(c_loc(wk2), work2_cc_d, [buf_size])
-
    end subroutine decomp_2d_nccl_mem_init
    !
    ! Free the arrays
@@ -246,18 +262,15 @@ contains
       if (allocated(work3)) deallocate (work3)
       if (allocated(work4)) deallocate (work4)
       
-      if (associated(work1_cc_d)) nullify (work1_cc_d)
-      if (associated(work2_cc_d)) nullify (work2_cc_d)
-
    end subroutine decomp_2d_nccl_mem_fin
    !
    ! NCCL ALLTOALL for REAL COL
    !
-   subroutine decomp_2d_nccl_alltoall_real_col(dst_d, &
-                                               src_d, &
-                                               cnt_s, &
-                                               cnt_r, &
-                                               dime)
+   subroutine decomp_2d_nccl_a2a_col_real(dst_d, &
+                                          src_d, &
+                                          cnt_s, &
+                                          cnt_r, &
+                                          dime)
 
       implicit none
 
@@ -293,17 +306,61 @@ contains
       cuda_stat = cudaStreamSynchronize(cuda_stream_2decomp)
       if (cuda_stat /= 0) call decomp_2d_abort(__FILE__, __LINE__, cuda_stat, "cudaStreamSynchronize")
 
-   end subroutine decomp_2d_nccl_alltoall_real_col
+   end subroutine decomp_2d_nccl_a2a_col_real
+   !
+   ! NCCL ALLTOALL for COMPLEX COL
+   !
+   subroutine decomp_2d_nccl_a2a_col_cmplx(dst_d, &
+                                           src_d, &
+                                           cnt_s, &
+                                           cnt_r, &
+                                           dime)
+
+      implicit none
+
+      integer, intent(in) :: dime
+      real(mytype), dimension(:), intent(in), device :: src_d
+      real(mytype), dimension(:), intent(out), device :: dst_d
+      integer, intent(in) ::  cnt_s
+      integer, intent(in) ::  cnt_r
+
+      integer :: col_rank_id, cuda_stat
+      type(ncclResult) :: nccl_stat
+
+      nccl_stat = ncclGroupStart()
+      if (nccl_stat /= ncclSuccess) call decomp_2d_abort(__FILE__, __LINE__, nccl_stat, "ncclGroupStart")
+      do col_rank_id = 0, (col_comm_size - 1)
+         nccl_stat = ncclSend(src_d(col_rank_id * cnt_s * 2 + 1),   &
+                              cnt_s * 2,                            &
+                              ncclType,                             &
+                              local_to_global_col(col_rank_id + 1), &
+                              nccl_comm_2decomp,                    &
+                              cuda_stream_2decomp)
+         if (nccl_stat /= ncclSuccess) call decomp_2d_abort(__FILE__, __LINE__, nccl_stat, "ncclSend")
+         nccl_stat = ncclRecv(dst_d(col_rank_id * cnt_r * 2 + 1),   &
+                              cnt_r * 2,                            &
+                              ncclType,                             &
+                              local_to_global_col(col_rank_id + 1), &
+                              nccl_comm_2decomp,                    &
+                              cuda_stream_2decomp)
+         if (nccl_stat /= ncclSuccess) call decomp_2d_abort(__FILE__, __LINE__, nccl_stat, "ncclRecv")
+      end do
+      nccl_stat = ncclGroupEnd()
+      if (nccl_stat /= ncclSuccess) call decomp_2d_abort(__FILE__, __LINE__, nccl_stat, "ncclGroupEnd")
+      cuda_stat = cudaStreamSynchronize(cuda_stream_2decomp)
+      if (cuda_stat /= 0) call decomp_2d_abort(__FILE__, __LINE__, cuda_stat, "cudaStreamSynchronize")
+
+   end subroutine decomp_2d_nccl_a2a_col_cmplx
    !
    ! NCCL ALLTOALL_V for REAL COL
    !
-   subroutine decomp_2d_nccl_alltoallV_real_col(dst_d, &
-                                                src_d, &
-                                                disp_s, &
-                                                cnts_s, &
-                                                disp_r, &
-                                                cnts_r, &
-                                                dime)
+   subroutine decomp_2d_nccl_a2aV_col_real(dst_d, &
+                                           src_d, &
+                                           disp_s, &
+                                           cnts_s, &
+                                           disp_r, &
+                                           cnts_r, &
+                                           dime)
 
       implicit none
 
@@ -339,18 +396,18 @@ contains
       cuda_stat = cudaStreamSynchronize(cuda_stream_2decomp)
       if (cuda_stat /= 0) call decomp_2d_abort(__FILE__, __LINE__, cuda_stat, "cudaStreamSynchronize")
 
-   end subroutine decomp_2d_nccl_alltoallV_real_col
+   end subroutine decomp_2d_nccl_a2aV_col_real
    !
    ! NCCL ALLTOALL_V for COMPLEX COL 
    !
-   subroutine decomp_2d_nccl_alltoallV_cmplx_col(dst_d, &
-                                                 src_d, &
-                                                 disp_s, &
-                                                 cnts_s, &
-                                                 disp_r, &
-                                                 cnts_r, &
-                                                 dime, &
-                                                 buf_size)
+   subroutine decomp_2d_nccl_a2aV_col_cmplx(dst_d, &
+                                            src_d, &
+                                            disp_s, &
+                                            cnts_s, &
+                                            disp_r, &
+                                            cnts_r, &
+                                            dime, &
+                                            buf_size)
 
       implicit none
 
@@ -368,13 +425,13 @@ contains
          work3_r_d(ii) = real(src_d(ii), mytype)
       end do
       !$acc end kernels
-      call decomp_2d_nccl_send_recv_col(work4_r_d, &
-                                        work3_r_d, &
-                                        disp_s, &
-                                        cnts_s, &
-                                        disp_r, &
-                                        cnts_r, &
-                                        dime)
+      call decomp_2d_nccl_a2aV_col_real(work4_r_d, &
+                                       work3_r_d, &
+                                       disp_s, &
+                                       cnts_s, &
+                                       disp_r, &
+                                       cnts_r, &
+                                       dime)
       !$acc kernels default(present)
       do ii = 1, buf_size
          dst_d(ii) = cmplx(work4_r_d(ii), 0._mytype, mytype)
@@ -386,27 +443,27 @@ contains
          work3_r_d(ii) = aimag(src_d(ii))
       end do
       !$acc end kernels
-      call decomp_2d_nccl_send_recv_col(work4_r_d, &
-                                        work3_r_d, &
-                                        disp_s, &
-                                        cnts_s, &
-                                        disp_r, &
-                                        cnts_r, &
-                                        dime)
+      call decomp_2d_nccl_a2aV_col_real(work4_r_d, &
+                                       work3_r_d, &
+                                       disp_s, &
+                                       cnts_s, &
+                                       disp_r, &
+                                       cnts_r, &
+                                       dime)
       !$acc kernels default(present)
       do ii = 1, buf_size
          dst_d(ii) = cmplx(real(dst_d(ii), mytype), work4_r_d(ii), mytype)
       end do
       !$acc end kernels
-   end subroutine decomp_2d_nccl_alltoallV_cmplx_col
+   end subroutine decomp_2d_nccl_a2aV_col_cmplx
    !
    ! NCCL ALLTOALL for REAL ROW 
    !
-   subroutine decomp_2d_nccl_alltoall_real_row(dst_d,  &
-                                                src_d, &
-                                                cnt_s, &
-                                                cnt_r, &
-                                                dime)
+   subroutine decomp_2d_nccl_a2a_row_real(dst_d,  &
+                                          src_d, &
+                                          cnt_s, &
+                                          cnt_r, &
+                                          dime)
 
       implicit none
 
@@ -442,17 +499,61 @@ contains
       cuda_stat = cudaStreamSynchronize(cuda_stream_2decomp)
       if (cuda_stat /= 0) call decomp_2d_abort(__FILE__, __LINE__, cuda_stat, "cudaStreamSynchronize")
 
-   end subroutine decomp_2d_nccl_alltoall_real_row
+   end subroutine decomp_2d_nccl_a2a_row_real
+   !
+   ! NCCL ALLTOALL for REAL ROW 
+   !
+   subroutine decomp_2d_nccl_a2a_row_cmplx(dst_d,  &
+                                           src_d, &
+                                           cnt_s, &
+                                           cnt_r, &
+                                           dime)
+
+      implicit none
+
+      integer, intent(in) :: dime
+      real(mytype), dimension(:), intent(in), device :: src_d
+      real(mytype), dimension(:), intent(out), device :: dst_d
+      integer, intent(in) :: cnt_s
+      integer, intent(in) :: cnt_r
+
+      integer :: row_rank_id, cuda_stat
+      type(ncclResult) :: nccl_stat
+
+      nccl_stat = ncclGroupStart()
+      if (nccl_stat /= ncclSuccess) call decomp_2d_abort(__FILE__, __LINE__, nccl_stat, "ncclGroupStart")
+      do row_rank_id = 0, (row_comm_size - 1)
+         nccl_stat = ncclSend(src_d(row_rank_id * cnt_s * 2 + 1),   &
+                              cnt_s * 2,                            &
+                              ncclType,                             &
+                              local_to_global_row(row_rank_id + 1), &
+                              nccl_comm_2decomp,                    &
+                              cuda_stream_2decomp)
+         if (nccl_stat /= ncclSuccess) call decomp_2d_abort(__FILE__, __LINE__, nccl_stat, "ncclSend")
+         nccl_stat = ncclRecv(dst_d(row_rank_id * cnt_r * 2 + 1),   & 
+                              cnt_r * 2,                            &
+                              ncclType,                             &
+                              local_to_global_row(row_rank_id + 1), &
+                              nccl_comm_2decomp,                    &
+                              cuda_stream_2decomp)
+         if (nccl_stat /= ncclSuccess) call decomp_2d_abort(__FILE__, __LINE__, nccl_stat, "ncclRecv")
+      end do
+      nccl_stat = ncclGroupEnd()
+      if (nccl_stat /= ncclSuccess) call decomp_2d_abort(__FILE__, __LINE__, nccl_stat, "ncclGroupEnd")
+      cuda_stat = cudaStreamSynchronize(cuda_stream_2decomp)
+      if (cuda_stat /= 0) call decomp_2d_abort(__FILE__, __LINE__, cuda_stat, "cudaStreamSynchronize")
+
+   end subroutine decomp_2d_nccl_a2a_row_cmplx
    !
    ! NCCL ALLTOALL_V for REAL ROW 
    !
-   subroutine decomp_2d_nccl_alltoallV_real_row(dst_d, &
-                                                src_d, &
-                                                disp_s, &
-                                                cnts_s, &
-                                                disp_r, &
-                                                cnts_r, &
-                                                dime)
+   subroutine decomp_2d_nccl_a2aV_row_real(dst_d, &
+                                           src_d, &
+                                           disp_s, &
+                                           cnts_s, &
+                                           disp_r, &
+                                           cnts_r, &
+                                           dime)
 
       implicit none
 
@@ -488,18 +589,18 @@ contains
       cuda_stat = cudaStreamSynchronize(cuda_stream_2decomp)
       if (cuda_stat /= 0) call decomp_2d_abort(__FILE__, __LINE__, cuda_stat, "cudaStreamSynchronize")
 
-   end subroutine decomp_2d_nccl_alltoallV_real_row
+   end subroutine decomp_2d_nccl_a2aV_row_real
    !
    ! Send-Recv complex
    !
-   subroutine decomp_2d_nccl_alltoallV_cmplx_row(dst_d, &
-                                                 src_d, &
-                                                 disp_s, &
-                                                 cnts_s, &
-                                                 disp_r, &
-                                                 cnts_r, &
-                                                 dime, &
-                                                 buf_size)
+   subroutine decomp_2d_nccl_a2aV_row_cmplx(dst_d, &
+                                            src_d, &
+                                            disp_s, &
+                                            cnts_s, &
+                                            disp_r, &
+                                            cnts_r, &
+                                            dime, &
+                                            buf_size)
 
       implicit none
 
@@ -517,7 +618,7 @@ contains
          work3_r_d(ii) = real(src_d(ii), mytype)
       end do
       !$acc end kernels
-      call decomp_2d_nccl_send_recv_row(work4_r_d, &
+      call decomp_2d_nccl_a2aV_row_real(work4_r_d, &
                                         work3_r_d, &
                                         disp_s, &
                                         cnts_s, &
@@ -535,7 +636,7 @@ contains
          work3_r_d(ii) = aimag(src_d(ii))
       end do
       !$acc end kernels
-      call decomp_2d_nccl_send_recv_row(work4_r_d, &
+      call decomp_2d_nccl_a2aV_row_real(work4_r_d, &
                                         work3_r_d, &
                                         disp_s, &
                                         cnts_s, &
@@ -547,7 +648,7 @@ contains
          dst_d(ii) = cmplx(real(dst_d(ii), mytype), work4_r_d(ii), mytype)
       end do
       !$acc end kernels
-   end subroutine decomp_2d_nccl_alltoallV_cmplx_row
+   end subroutine decomp_2d_nccl_a2aV_row_cmplx
 
 end module decomp_2d_nccl
 

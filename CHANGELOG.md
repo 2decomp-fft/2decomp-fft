@@ -19,17 +19,22 @@ _e.g._ vX.Y - YYYY-MM-DD and a new "Unreleased" section started above.
 - Add the possibility to perform r2r DCT and DST transforms when using the backend `fftw_f03` [PR #350](https://github.com/2decomp-fft/2decomp-fft/pull/350)
 - Add the possibility to average data in one direction when writing a plane. See [PR #368](https://github.com/2decomp-fft/2decomp-fft/pull/368), [PR #369](https://github.com/2decomp-fft/2decomp-fft/pull/369) and [PR #370](https://github.com/2decomp-fft/2decomp-fft/pull/370).
 - The backend `fftw_f03` is now compatible with OpenMP [PR #364](https://github.com/2decomp-fft/2decomp-fft/pull/364).
-- Add a memory pool to reduce memory usage. See [PR #376](https://github.com/2decomp-fft/2decomp-fft/pull/376).
+- Add a memory pool to reduce memory usage on CPU. See [PR #376](https://github.com/2decomp-fft/2decomp-fft/pull/376) and [PR #383](https://github.com/2decomp-fft/2decomp-fft/pull/383).
+- Add support for ADIOS2 BP5. See [PR #380](https://github.com/2decomp-fft/2decomp-fft/pull/380)
+- Add padded all-to-all communications in the CI. See [PR #384](https://github.com/2decomp-fft/2decomp-fft/pull/384/)
+- Add padded all-to-all communications for GPU. See [PR #385](https://github.com/2decomp-fft/2decomp-fft/pull/385/)
+- Add a vtk.xml file in the ADIOS2 visualization example to rescale the domain in paraview. See [PR #387](https://github.com/2decomp-fft/2decomp-fft/pull/387)
 
 ### Fixed
 
 - Fix 3D complex-to-complex FFT for the MKL backend. See [PR 341](https://github.com/2decomp-fft/2decomp-fft/pull/341)
 - Fuse transpose CPU and GPU memory buffers to reduce memory usage. See [PR 271](https://github.com/2decomp-fft/2decomp-fft/pull/271)
 - Fixed CI and add `cudafor` module in NCCL. See [PR 362](https://github.com/2decomp-fft/2decomp-fft/pull/362)
+- Fix the size of the memory pool in case of r2c / c2r FFT combined with padded all-to-all communications. See [PR #384](https://github.com/2decomp-fft/2decomp-fft/pull/384/)
 
 ### Changed
 
-- Major update in the IO routines. The new IO interface is not backward compatible. The examples are updated accordingly. See [PR 344](https://github.com/2decomp-fft/2decomp-fft/pull/344) and [PR 357](https://github.com/2decomp-fft/2decomp-fft/pull/357).
+- Major update in the IO routines. The new IO interface is not backward compatible. The examples are updated accordingly. See [PR 344](https://github.com/2decomp-fft/2decomp-fft/pull/344), [PR 357](https://github.com/2decomp-fft/2decomp-fft/pull/357) and [PR 380](https://github.com/2decomp-fft/2decomp-fft/pull/380).
 - The transpose subroutines have been moved into submodules rather than `#include` files. See [PR #206](https://github.com/2decomp-fft/2decomp-fft/pull/206)
 
 ### Deprecated

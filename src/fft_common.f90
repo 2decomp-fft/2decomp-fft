@@ -230,6 +230,9 @@ subroutine decomp_2d_fft_engine_init(engine, pencil, nx, ny, nz, &
    !                        the line below will make sure complex arrays fit in the memory pool
    !
    if (use_pool) call decomp_pool%new_shape(complex_type, engine%sp)
+#ifdef EVEN
+   if (use_pool) call decomp_pool%new_shape(complex_type, shp=(/max(engine%sp%x1count * dims(1), engine%sp%y2count * dims(2))/))
+#endif
 
    !
    ! Allocate the workspace for intermediate y-pencil data

@@ -114,7 +114,8 @@ contains
       if (cuda_stat /= 0) call decomp_2d_abort(__FILE__, __LINE__, cuda_stat, "cudaStreamDestroy")
 
    end subroutine decomp_2d_nccl_fin
-   ! init of the arrays
+   !
+   ! Allocate the arrays
    !
    subroutine decomp_2d_nccl_mem_init(buf_size)
 
@@ -124,7 +125,6 @@ contains
 
       integer, intent(in) :: buf_size
       integer :: status, errorcode
-      real(mytype), target, dimension(:), device :: wk3, wk4
 
       allocate (work3(buf_size), STAT=status)
       if (status /= 0) then
@@ -145,7 +145,7 @@ contains
 
    end subroutine decomp_2d_nccl_mem_init
    !
-   ! init of the arrays
+   ! Free the arrays
    !
    subroutine decomp_2d_nccl_mem_fin
 
@@ -157,6 +157,7 @@ contains
       if (allocated(work4)) deallocate (work4)
 
    end subroutine decomp_2d_nccl_mem_fin
+   !
    ! Send-Recv Real Col
    !
    subroutine decomp_2d_nccl_send_recv_real_col(dst_d, &

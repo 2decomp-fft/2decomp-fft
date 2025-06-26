@@ -5,7 +5,7 @@
 module decomp_2d
 
    use MPI
-   use iso_c_binding, only : c_size_t
+   use iso_c_binding, only: c_size_t
    use, intrinsic :: iso_fortran_env, only: real32, real64
    use factor
    use decomp_2d_constants

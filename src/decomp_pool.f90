@@ -229,13 +229,14 @@ contains
 
    end subroutine decomp_pool_get_real1D_device
 
-   subroutine decomp_pool_get_cplx1D_device(ptr, devptr)
+   subroutine decomp_pool_get_cplx1D_device(ptr, devptr, devptr_r)
 
       implicit none
 
       ! Arguments
       complex(mytype), intent(out), dimension(:), contiguous, pointer :: ptr
       complex(mytype), intent(out), dimension(:), contiguous, device, pointer :: devptr
+      real(mytype), intent(out), dimension(:), contiguous, device, pointer, optional :: devptr_r
 
       ! Local variable
       integer :: istat
@@ -254,6 +255,15 @@ contains
          call c_f_pointer(tmp, devptr, (/decomp_pool%get_size() / 2_c_size_t/))
       else
          call c_f_pointer(tmp, devptr, (/decomp_pool%get_size() / 4_c_size_t/))
+      end if
+
+      ! Provide a real buffer overlapping the complex one for NCCL
+      if (present(devptr_r)) then
+         if (mytype == KIND(0._real32)) then
+            call c_f_pointer(tmp, devptr_r, (/decomp_pool%get_size()/))
+         else
+            call c_f_pointer(tmp, devptr_r, (/decomp_pool%get_size() / 2_c_size_t/))
+         end if
       end if
 
    end subroutine decomp_pool_get_cplx1D_device

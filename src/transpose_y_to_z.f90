@@ -98,8 +98,7 @@ contains
          call decomp_2d_nccl_alltoall_row_real(wk2, &
                                                wk1, &
                                                decomp%y2count, &
-                                               decomp%z2count, &
-                                               dims(2))
+                                               decomp%z2count  )
 #     else
          call MPI_ALLTOALL(wk1, decomp%y2count, real_type, &
                            wk2, decomp%z2count, real_type, &
@@ -117,8 +116,7 @@ contains
          call decomp_2d_nccl_alltoall_row_real(wk2, &
                                                wk1, &
                                                decomp%y2count, &
-                                               decomp%z2count, &
-                                               dims(2))
+                                               decomp%z2count  )
 #   else
          call MPI_ALLTOALL(wk1, decomp%y2count, real_type, &
                            wk2, decomp%z2count, real_type, &
@@ -276,8 +274,7 @@ contains
          call decomp_2d_nccl_alltoall_row_cmplx(wk2_r,          &
                                                 wk1_r,          &
                                                 decomp%y2count, &
-                                                decomp%z2count, &
-                                                dims(2))
+                                                decomp%z2count  )
 #     else
          call MPI_ALLTOALL(wk1, decomp%y2count, complex_type, &
                            wk2, decomp%z2count, complex_type, &
@@ -297,8 +294,7 @@ contains
          call decomp_2d_nccl_alltoall_row_cmplx(wk2_r,          &
                                                 wk1_r,          &
                                                 decomp%y2count, &
-                                                decomp%z2count, &
-                                                dims(2))
+                                                decomp%z2count  )
 #     else
          call MPI_ALLTOALL(wk1, decomp%y2count, complex_type, &
                            wk2, decomp%z2count, complex_type, &
@@ -310,14 +306,13 @@ contains
     ! MPI_ALLTOALLV branch => NO EVEN
 #   if defined(_GPU)
 #     if defined(_NCCL)
-      call decomp_2d_nccl_alltoall_row_cmplx(wk2, &
-                                             wk1, &
+      call decomp_2d_nccl_alltoall_row_cmplx(wk2_r, &
+                                             wk1_r, &
                                              decomp%y2disp, &
                                              decomp%y2cnts, &
                                              decomp%z2disp, &
                                              decomp%z2cnts, &
-                                             dims(2), &
-                                             decomp_buf_size)
+                                             dims(2)        )
 #     else
       call MPI_ALLTOALLV(wk1, decomp%y2cnts, decomp%y2disp, complex_type, &
                          wk2, decomp%z2cnts, decomp%z2disp, complex_type, &

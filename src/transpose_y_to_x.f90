@@ -98,8 +98,7 @@ contains
       call decomp_2d_nccl_alltoall_col_real(wk2, &
                                             wk1, &
                                             decomp%y1count, &
-                                            decomp%x1count, &
-                                            dims(1))
+                                            decomp%x1count  )
 #   else
       call MPI_ALLTOALL(wk1, decomp%y1count, real_type, &
                         wk2, decomp%x1count, real_type, &
@@ -223,8 +222,7 @@ contains
       call decomp_2d_nccl_alltoall_col_cmplx(wk2_r, &
                                              wk1_r, &
                                              decomp%y1count, &
-                                             decomp%x1count, &
-                                             dims(1))
+                                             decomp%x1count  )
 #   else
       call MPI_ALLTOALL(wk1, decomp%y1count, complex_type, &
                         wk2, decomp%x1count, complex_type, &
@@ -234,14 +232,13 @@ contains
 #else
 #   if defined(_NCCL)
       ! NCCL equavalent to MPI_ALLTOALLV
-      call decomp_2d_nccl_alltoall_col_cmplx(wk2, &
-                                             wk1, &
+      call decomp_2d_nccl_alltoall_col_cmplx(wk2_r, &
+                                             wk1_r, &
                                              decomp%y1disp, &
                                              decomp%y1cnts, &
                                              decomp%x1disp, &
                                              decomp%x1cnts, &
-                                             dims(1), &
-                                             decomp_buf_size)
+                                             dims(1)        )
 #   else
       ! MPI and CUDA aware MPI
       call MPI_ALLTOALLV(wk1, decomp%y1cnts, decomp%y1disp, complex_type, &

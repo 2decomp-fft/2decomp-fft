@@ -105,7 +105,11 @@
                             'Invalid data passed to update_halo')
     end if
 
-    if (.not.allocated(out)) call decomp_2d_abort(__FILE__, __LINE__, 1, "Deprecated interface")
+#ifdef _GPU
+    if (.not.allocated(out)) call decomp_2d_abort(__FILE__, __LINE__, 1, "The caller should allocate the array and create it on the GPU")
+#else
+    if (.not.allocated(out)) allocate (out(xs:xe, ys:ye, zs:ze))
+#endif
     !    out = -1.0_mytype ! fill the halo for debugging
 
     !$acc enter data create(requests,neighbour)

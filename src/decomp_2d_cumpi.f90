@@ -35,8 +35,8 @@ contains
       if (associated(work2_r_d)) nullify (work2_r_d)
       if (associated(work1_c_d)) nullify (work1_c_d)
       if (associated(work2_c_d)) nullify (work2_c_d)
-      call c_f_pointer(c_loc(wk1), work1_r_d, [buf_size])
-      call c_f_pointer(c_loc(wk2), work2_r_d, [buf_size])
+      call c_f_pointer(c_loc(wk1), work1_r_d, [2 * buf_size])
+      call c_f_pointer(c_loc(wk2), work2_r_d, [2 * buf_size])
       call c_f_pointer(c_loc(wk1), work1_c_d, [buf_size])
       call c_f_pointer(c_loc(wk2), work2_c_d, [buf_size])
 

@@ -1,4 +1,6 @@
 !! SPDX-License-Identifier: BSD-3-Clause
+! Preprocessor macro to deal with unused variables
+#define unused(x) associate(tmp => x); end associate
 
 ! This file contains the routines that transpose data from Y to X pencil
 submodule(decomp_2d) d2d_transpose_y_to_x
@@ -93,29 +95,35 @@ contains
       ! define receive buffer
       ! transpose using MPI_ALLTOALL(V)
 #ifdef EVEN
+#   if defined(_NCCL)
+      ! NCCL equivalent of MPI_ALLTOALLV
+      call decomp_2d_nccl_alltoall_col_real(wk2, &
+                                            wk1, &
+                                            decomp%y1count, &
+                                            decomp%x1count  )
+#   else
       call MPI_ALLTOALL(wk1, decomp%y1count, real_type, &
                         wk2, decomp%x1count, real_type, &
                         DECOMP_2D_COMM_COL, ierror)
       if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_ALLTOALL")
-
-
+#   endif
 #else
-#     if defined(_NCCL)
+#   if defined(_NCCL)
       ! NCCL equivalent of MPI_ALLTOALLV
-      call decomp_2d_nccl_send_recv_col(wk2, &
-                                        wk1, &
-                                        decomp%y1disp, &
-                                        decomp%y1cnts, &
-                                        decomp%x1disp, &
-                                        decomp%x1cnts, &
-                                        dims(1))
-#     else
+      call decomp_2d_nccl_alltoall_col_real(wk2, &
+                                            wk1, &
+                                            decomp%y1disp, &
+                                            decomp%y1cnts, &
+                                            decomp%x1disp, &
+                                            decomp%x1cnts, &
+                                            dims(1))
+#   else
       ! MPI and CUDA aware MPI
       call MPI_ALLTOALLV(wk1, decomp%y1cnts, decomp%y1disp, real_type, &
                          wk2, decomp%x1cnts, decomp%x1disp, real_type, &
                          DECOMP_2D_COMM_COL, ierror)
       if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_ALLTOALLV")
-#     endif
+#   endif
 #endif
 
       ! rearrange receive buffer
@@ -161,7 +169,7 @@ contains
 #endif
       else
 #if defined(_GPU)
-         call transpose_y_to_x_complex(src, dst, decomp, work1_c_d, work2_c_d)
+         call transpose_y_to_x_complex(src, dst, decomp, work1_c_d, work2_c_d, work1_r_d, work2_r_d)
 #else
          if (use_pool) then
             call decomp_pool_get(work1_c)
@@ -179,7 +187,7 @@ contains
 
    end subroutine transpose_y_to_x_complex_long
 
-   subroutine transpose_y_to_x_complex(src, dst, decomp, wk1, wk2)
+   subroutine transpose_y_to_x_complex(src, dst, decomp, wk1, wk2, wk1_r, wk2_r)
 
       implicit none
 
@@ -187,13 +195,18 @@ contains
       complex(mytype), dimension(:, :, :), intent(OUT) :: dst
       TYPE(DECOMP_INFO), intent(IN) :: decomp
       complex(mytype), dimension(:), intent(OUT) :: wk1, wk2
+      real(mytype), dimension(:), intent(OUT), optional :: wk1_r, wk2_r
 #if defined(_GPU)
       attributes(device) :: wk1, wk2
+      attributes(device) :: wk1_r, wk2_r
 #endif
 
       integer :: s1, s2, s3, d1, d2, d3
       integer :: ierror
 
+      unused(wk1_r)
+      unused(wk2_r)
+      
       s1 = SIZE(src, 1)
       s2 = SIZE(src, 2)
       s3 = SIZE(src, 3)
@@ -208,28 +221,36 @@ contains
       ! define receive buffer
       ! transpose using MPI_ALLTOALL(V)
 #ifdef EVEN
+#   if defined(_NCCL)
+      ! NCCL equivalent of MPI_ALLTOALL
+      ! Here we pass the real pointer since NCCL do not support complex
+      call decomp_2d_nccl_alltoall_col_cmplx(wk2_r, &
+                                             wk1_r, &
+                                             decomp%y1count, &
+                                             decomp%x1count  )
+#   else
       call MPI_ALLTOALL(wk1, decomp%y1count, complex_type, &
                         wk2, decomp%x1count, complex_type, &
                         DECOMP_2D_COMM_COL, ierror)
       if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_ALLTOALL")
+#   endif
 #else
-#     if defined(_NCCL)
+#   if defined(_NCCL)
       ! NCCL equavalent to MPI_ALLTOALLV
-      call decomp_2d_nccl_send_recv_col(wk2, &
-                                        wk1, &
-                                        decomp%y1disp, &
-                                        decomp%y1cnts, &
-                                        decomp%x1disp, &
-                                        decomp%x1cnts, &
-                                        dims(1), &
-                                        decomp_buf_size)
-#     else
+      call decomp_2d_nccl_alltoall_col_cmplx(wk2_r, &
+                                             wk1_r, &
+                                             decomp%y1disp, &
+                                             decomp%y1cnts, &
+                                             decomp%x1disp, &
+                                             decomp%x1cnts, &
+                                             dims(1)        )
+#   else
       ! MPI and CUDA aware MPI
       call MPI_ALLTOALLV(wk1, decomp%y1cnts, decomp%y1disp, complex_type, &
                          wk2, decomp%x1cnts, decomp%x1disp, complex_type, &
                          DECOMP_2D_COMM_COL, ierror)
       if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_ALLTOALLV")
-#     endif
+#   endif
 #endif
 
       ! rearrange receive buffer

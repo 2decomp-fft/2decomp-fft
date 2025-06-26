@@ -55,7 +55,7 @@ contains
    !
    ! Initialize and allocate a new block in the list
    !
-   !   - size : number of elements (sinfle precision real)
+   !   - size : number of elements (single precision real)
    !   - init : flag to initialize the array to zero
    !
    subroutine blk_new(self, size, init)

@@ -212,7 +212,6 @@
      if (allocated(work2)) deallocate (work2)
      call decomp_2d_cumpi_fin()
 #if defined(_NCCL)
-     call decomp_2d_nccl_mem_fin()
      call decomp_2d_nccl_fin()
 #endif
 #endif

@@ -488,9 +488,6 @@ contains
             call c_f_pointer(c_loc(work1), work1_c, [buf_size])
             call c_f_pointer(c_loc(work2), work2_c, [buf_size])
             call decomp_2d_cumpi_init(buf_size, work1, work2)
-#if defined(_NCCL)
-            call decomp_2d_nccl_mem_init(buf_size)
-#endif
 #endif
          end if
       end if

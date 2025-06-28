@@ -1056,22 +1056,12 @@ contains
 
       real(mytype), contiguous, pointer :: a1(:, :, :)
       complex(mytype), contiguous, pointer :: a2(:, :, :)
-      type(C_PTR) :: a1_p, a2_p
-      integer(C_SIZE_T) :: sz
 
-      a1_p = c_null_ptr
-      a2_p = c_null_ptr
-
-      sz = product(decomp_ph%xsz)
-      if (inplace_r2c) sz = max(sz, 2 * product(int(decomp_sp%xsz, kind=C_SIZE_T)))
-      a1_p = fftw_alloc_real(sz)
-      call c_f_pointer(a1_p, a1, decomp_ph%xsz)
+      call decomp_pool_get(a1, decomp_ph%xsz)
       if (inplace_r2c) then
-         call c_f_pointer(a1_p, a2, decomp_sp%xsz)
+         call c_f_pointer(c_loc(a1), a2, decomp_sp%xsz)
       else
-         sz = product(decomp_sp%xsz)
-         a2_p = fftw_alloc_complex(sz)
-         call c_f_pointer(a2_p, a2, decomp_sp%xsz)
+         call decomp_pool_get(a2, decomp_sp%xsz)
       end if
 
 #ifdef DOUBLE_PREC
@@ -1086,8 +1076,12 @@ contains
                                       plan_type)
 #endif
 
-      call fftw_free(a1_p)
-      if (.not. inplace_r2c) call fftw_free(a2_p)
+      call decomp_pool_free(a1)
+      if (inplace_r2c) then
+         nullify (a2)
+      else
+         call decomp_pool_free(a2)
+      end if
       if (.not. c_associated(plan1)) call decomp_2d_abort(__FILE__, __LINE__, 4, "Plan creation failed")
 
    end subroutine r2c_1m_x_plan
@@ -1103,22 +1097,12 @@ contains
 
       complex(mytype), contiguous, pointer :: a1(:, :, :)
       real(mytype), contiguous, pointer :: a2(:, :, :)
-      type(C_PTR) :: a1_p, a2_p
-      integer(C_SIZE_T) :: sz
 
-      a1_p = c_null_ptr
-      a2_p = c_null_ptr
-
-      sz = product(decomp_ph%xsz)
-      if (inplace_c2r) sz = max(sz, 2 * product(int(decomp_sp%xsz, kind=C_SIZE_T)))
-      a2_p = fftw_alloc_real(sz)
-      call c_f_pointer(a2_p, a2, decomp_ph%xsz)
+      call decomp_pool_get(a2, decomp_ph%xsz)
       if (inplace_c2r) then
-         call c_f_pointer(a2_p, a1, decomp_sp%xsz)
+         call c_f_pointer(c_loc(a2), a1, decomp_sp%xsz)
       else
-         sz = product(decomp_sp%xsz)
-         a1_p = fftw_alloc_complex(sz)
-         call c_f_pointer(a1_p, a1, decomp_sp%xsz)
+         call decomp_pool_get(a1, decomp_sp%xsz)
       end if
 
 #ifdef DOUBLE_PREC
@@ -1133,8 +1117,12 @@ contains
                                       plan_type)
 #endif
 
-      if (.not. inplace_c2r) call fftw_free(a1_p)
-      call fftw_free(a2_p)
+      if (inplace_c2r) then
+         nullify (a1)
+      else
+         call decomp_pool_free(a1)
+      end if
+      call decomp_pool_free(a2)
       if (.not. c_associated(plan1)) call decomp_2d_abort(__FILE__, __LINE__, 5, "Plan creation failed")
 
    end subroutine c2r_1m_x_plan
@@ -1150,22 +1138,12 @@ contains
 
       real(mytype), contiguous, pointer :: a1(:, :, :)
       complex(mytype), contiguous, pointer :: a2(:, :, :)
-      type(C_PTR) :: a1_p, a2_p
-      integer(C_SIZE_T) :: sz
 
-      a1_p = c_null_ptr
-      a2_p = c_null_ptr
-
-      sz = product(decomp_ph%zsz)
-      if (inplace_r2c) sz = max(sz, 2 * product(int(decomp_sp%zsz, kind=C_SIZE_T)))
-      a1_p = fftw_alloc_real(sz)
-      call c_f_pointer(a1_p, a1, decomp_ph%zsz)
+      call decomp_pool_get(a1, decomp_ph%zsz)
       if (inplace_r2c) then
-         call c_f_pointer(a1_p, a2, decomp_sp%zsz)
+         call c_f_pointer(c_loc(a1), a2, decomp_sp%zsz)
       else
-         sz = product(decomp_sp%zsz)
-         a2_p = fftw_alloc_complex(sz)
-         call c_f_pointer(a2_p, a2, decomp_sp%zsz)
+         call decomp_pool_get(a2, decomp_sp%zsz)
       end if
 
 #ifdef DOUBLE_PREC
@@ -1180,8 +1158,12 @@ contains
                                       decomp_sp%zsz(1) * decomp_sp%zsz(2), 1, plan_type)
 #endif
 
-      call fftw_free(a1_p)
-      if (.not. inplace_r2c) call fftw_free(a2_p)
+      call decomp_pool_free(a1)
+      if (inplace_r2c) then
+         nullify (a2)
+      else
+         call decomp_pool_free(a2)
+      end if
       if (.not. c_associated(plan1)) call decomp_2d_abort(__FILE__, __LINE__, 6, "Plan creation failed")
 
    end subroutine r2c_1m_z_plan
@@ -1197,22 +1179,12 @@ contains
 
       complex(mytype), contiguous, pointer :: a1(:, :, :)
       real(mytype), contiguous, pointer :: a2(:, :, :)
-      type(C_PTR) :: a1_p, a2_p
-      integer(C_SIZE_T) :: sz
 
-      a1_p = c_null_ptr
-      a2_p = c_null_ptr
-
-      sz = product(decomp_ph%zsz)
-      if (inplace_c2r) sz = max(sz, 2 * product(int(decomp_sp%zsz, kind=C_SIZE_T)))
-      a2_p = fftw_alloc_real(sz)
-      call c_f_pointer(a2_p, a2, decomp_ph%zsz)
+      call decomp_pool_get(a2, decomp_ph%zsz)
       if (inplace_c2r) then
-         call c_f_pointer(a2_p, a1, decomp_sp%zsz)
+         call c_f_pointer(c_loc(a2), a1, decomp_sp%zsz)
       else
-         sz = product(decomp_sp%zsz)
-         a1_p = fftw_alloc_complex(sz)
-         call c_f_pointer(a1_p, a1, decomp_sp%zsz)
+         call decomp_pool_get(a1, decomp_sp%zsz)
       end if
 
 #ifdef DOUBLE_PREC
@@ -1227,8 +1199,12 @@ contains
                                       decomp_ph%zsz(1) * decomp_ph%zsz(2), 1, plan_type)
 #endif
 
-      if (.not. inplace_c2r) call fftw_free(a1_p)
-      call fftw_free(a2_p)
+      if (inplace_c2r) then
+         nullify (a1)
+      else
+         call decomp_pool_free(a1)
+      end if
+      call decomp_pool_free(a2)
       if (.not. c_associated(plan1)) call decomp_2d_abort(__FILE__, __LINE__, 7, "Plan creation failed")
 
    end subroutine c2r_1m_z_plan

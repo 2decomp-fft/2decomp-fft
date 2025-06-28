@@ -554,7 +554,7 @@ module decomp_2d_fft
             call c2c_1m_x(in, plan(isign, 1))
          else
             call decomp_pool_get(wk1, ph%xsz)
-            wk1 = in
+            wk1(:,:,:) = in(:,:,:)
             call c2c_1m_x(wk1, plan(isign, 1))
          end if
 
@@ -596,7 +596,7 @@ module decomp_2d_fft
             call c2c_1m_z(in, plan(isign, 3))
          else
             call decomp_pool_get(wk1, ph%zsz)
-            wk1 = in
+            wk1(:,:,:) = in(:,:,:)
             call c2c_1m_z(wk1, plan(isign, 3))
          end if
 
@@ -738,7 +738,7 @@ module decomp_2d_fft
             call c2c_1m_z(in_c, plan(2, 3))
          else
             call decomp_pool_get(wk1, sp%zsz)
-            wk1 = in_c
+            wk1(:,:,:) = in_c(:,:,:)
             call c2c_1m_z(wk1, plan(2, 3))
          end if
 
@@ -765,7 +765,7 @@ module decomp_2d_fft
             call c2c_1m_x(in_c, plan(2, 1))
          else
             call decomp_pool_get(wk1, sp%xsz)
-            wk1 = in_c
+            wk1(:,:,:) = in_c(:,:,:)
             call c2c_1m_x(wk1, plan(2, 1))
          end if
 

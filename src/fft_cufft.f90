@@ -700,7 +700,7 @@ module decomp_2d_fft
             !$acc enter data create(wk1) async
             !$acc wait
             !$acc kernels default(present)
-            wk1 = in
+            wk1(:,:,:) = in(:,:,:)
             !$acc end kernels
             call c2c_1m_x(wk1, isign, plan(isign, 1))
          end if
@@ -746,7 +746,7 @@ module decomp_2d_fft
             !$acc enter data create(wk1) async
             !$acc wait
             !$acc kernels default(present)
-            wk1 = in
+            wk1(:,:,:) = in(:,:,:)
             !$acc end kernels
             call c2c_1m_z(wk1, isign, plan(isign, 3))
          end if
@@ -965,7 +965,7 @@ module decomp_2d_fft
             !$acc enter data create(wk1) async
             !$acc wait
             !$acc kernels default(present)
-            wk1 = in_c
+            wk1(:,:,:) = in_c(:,:,:)
             !$acc end kernels
             call c2c_1m_z(wk1, 1, plan(2, 3))
          end if
@@ -1027,7 +1027,7 @@ module decomp_2d_fft
             !$acc enter data create(wk1) async
             !$acc wait
             !$acc kernels default(present)
-            wk1 = in_c
+            wk1(:,:,:) = in_c(:,:,:)
             !$acc end kernels
             call c2c_1m_x(wk1, 1, plan(2, 1))
 

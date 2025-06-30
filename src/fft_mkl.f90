@@ -718,10 +718,10 @@ module decomp_2d_fft
 
       ! Init pointers to null
       call decomp_pool_get(wk2_r2c, sp%ysz)
-      if (format == PHYSICAL_IN_X) then                                                    
-         call decomp_pool_get(wk13, sp%xsz)                                                
-      else                                                                                 
-         call decomp_pool_get(wk13, sp%zsz)                                                
+      if (format == PHYSICAL_IN_X) then
+         call decomp_pool_get(wk13, sp%xsz)
+      else
+         call decomp_pool_get(wk13, sp%zsz)
       end if
       nullify (wk1)
       nullify (wk2b)

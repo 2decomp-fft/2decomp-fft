@@ -139,9 +139,9 @@ contains
 
       ! Scalar field
       !$acc kernels default(present)
-      do k= 1, xe3
-         do j= 1, xe2
-            do i= 1, xe1
+      do k = 1, xe3
+         do j = 1, xe2
+            do i = 1, xe1
                z = (k + xs3 - 2) * dz
                y = (j + xs2 - 2) * dy
                x = (i + xs1 - 2) * dx
@@ -238,8 +238,8 @@ contains
       coeff = coeff / delta
 
       !$acc kernels default(present)
-      do k = 1,nz
-         do i = 1,nx
+      do k = 1, nz
+         do i = 1, nx
             df(i, 1, k) = coeff * (ff(i, 2, k) - ff(i, ny, k))
          end do
          do j = 2, ny - 1
@@ -287,7 +287,7 @@ contains
          end do
       end do
       do j = 1, ny
-         do i = 1,nx
+         do i = 1, nx
             df(i, j, nz) = coeff * (ff(i, j, 1) - ff(i, j, nz - 1))
          end do
       end do

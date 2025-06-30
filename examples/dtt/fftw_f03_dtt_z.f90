@@ -104,9 +104,9 @@ program dtt_z
             sp => ph
 
             ! Allocate memory and set to zero
-            call alloc_z(in_r, ph, opt_global = .true.)
+            call alloc_z(in_r, ph, opt_global=.true.)
             in_r = 0._mytype
-            call alloc_x(out_r, sp, opt_global = .true.)
+            call alloc_x(out_r, sp, opt_global=.true.)
             out_r = 0._mytype
 
             ! Local size

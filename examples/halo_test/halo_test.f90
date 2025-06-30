@@ -240,13 +240,13 @@ contains
          write (*, *) 'Calculated via global transposition'
          !$acc update self(div)
 #ifdef HALO_GLOBAL
-         write (*, *) div(2:xsize(1)-1,xstart(2),xstart(3))
-         write (*, *) wk2(ystart(1),2:ysize(2)-1,ystart(3))
-         write (*, *) wk3(zstart(1),zstart(2),2:zstart(3)-1)
+         write (*, *) div(2:xsize(1) - 1, xstart(2), xstart(3))
+         write (*, *) wk2(ystart(1), 2:ysize(2) - 1, ystart(3))
+         write (*, *) wk3(zstart(1), zstart(2), 2:zstart(3) - 1)
 #else
-         write (*, *) div(2:xsize(1)-1,1,1)
-         write (*, *) wk2(1,2:ysize(2)-1,1)
-         write (*, *) wk3(1,1,2:zsize(3)-1)
+         write (*, *) div(2:xsize(1) - 1, 1, 1)
+         write (*, *) wk2(1, 2:ysize(2) - 1, 1)
+         write (*, *) wk3(1, 1, 2:zsize(3) - 1)
 #endif
       end if
 #endif

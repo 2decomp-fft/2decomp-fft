@@ -619,7 +619,6 @@ contains
       call fftw_cleanup()
 #endif
 
-
    end subroutine decomp_2d_fft_finalize
 
    ! Clean the given FFT engine
@@ -1435,7 +1434,7 @@ contains
 
 #ifdef FFTW_omp
       ierr = fftw_init_threads()
-      if (ierr==0) call decomp_2d_abort(__FILE__, __LINE__, ierr, "fftw_init_threads")
+      if (ierr == 0) call decomp_2d_abort(__FILE__, __LINE__, ierr, "fftw_init_threads")
       call fftw_plan_with_nthreads(omp_get_max_threads())
 #endif
 
@@ -2084,7 +2083,7 @@ contains
          call decomp_2d_abort(__FILE__, __LINE__, isign, "Invalid value")
       end if
 
-      ! Get a buffer for arrays in y-pencil                                                
+      ! Get a buffer for arrays in y-pencil
       call c_f_pointer(c_loc(wk2_c2c), wk2ra, ph%ysz)
 
       ! Perform the 3D DTT

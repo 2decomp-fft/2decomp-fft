@@ -166,7 +166,7 @@ contains
             call decomp_pool_get(work2_c)
          end if
          call transpose_x_to_y_complex(src, dst, decomp, work1_c, work2_c)
-         if (use_pool) then                               
+         if (use_pool) then
             call decomp_pool_free(work1_c)
             call decomp_pool_free(work2_c)
          end if
@@ -210,7 +210,6 @@ contains
                         wk2, decomp%y1count, complex_type, &
                         DECOMP_2D_COMM_COL, ierror)
       if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_ALLTOALL")
-
 
 #else
 #     if defined(_NCCL)
@@ -272,12 +271,12 @@ contains
 
 #if defined(_GPU)
          !$acc host_data use_device(in)
-         istat = cudaMemcpy2D(out(init_pos),      & 
-                              i2 - i1 + 1,        &
-                              in(i1, 1, 1),       &
-                              n1,                 &
-                              i2 - i1 + 1,        &
-                              n2 * n3,            & 
+         istat = cudaMemcpy2D(out(init_pos), &
+                              i2 - i1 + 1, &
+                              in(i1, 1, 1), &
+                              n1, &
+                              i2 - i1 + 1, &
+                              n2 * n3, &
                               cudaMemcpyDeviceToDevice)
          !$acc end host_data
          if (istat /= 0) call decomp_2d_abort(__FILE__, __LINE__, istat, "cudaMemcpy2D")
@@ -286,7 +285,7 @@ contains
          do k = 1, n3
             do j = 1, n2
                do i = i1, i2
-                  pos = init_pos + (i-i1) + (j-1)*(i2-i1+1) + (k-1)*n2*(i2-i1+1)
+                  pos = init_pos + (i - i1) + (j - 1) * (i2 - i1 + 1) + (k - 1) * n2 * (i2 - i1 + 1)
                   out(pos) = in(i, j, k)
                end do
             end do
@@ -332,11 +331,11 @@ contains
 #if defined(_GPU)
          !$acc host_data use_device(in)
          istat = cudaMemcpy2D(out(init_pos), &
-                              i2 - i1 + 1,   &
-                              in(i1, 1, 1),  &
-                              n1,            &
-                              i2 - i1 + 1,   &
-                              n2 * n3,       &
+                              i2 - i1 + 1, &
+                              in(i1, 1, 1), &
+                              n1, &
+                              i2 - i1 + 1, &
+                              n2 * n3, &
                               cudaMemcpyDeviceToDevice)
          !$acc end host_data
          if (istat /= 0) call decomp_2d_abort(__FILE__, __LINE__, istat, "cudaMemcpy2D")
@@ -345,7 +344,7 @@ contains
          do k = 1, n3
             do j = 1, n2
                do i = i1, i2
-                  pos = init_pos + (i-i1) + (j-1)*(i2-i1+1) + (k-1)*n2*(i2-i1+1)
+                  pos = init_pos + (i - i1) + (j - 1) * (i2 - i1 + 1) + (k - 1) * n2 * (i2 - i1 + 1)
                   out(pos) = in(i, j, k)
                end do
             end do
@@ -390,12 +389,12 @@ contains
 
 #if defined(_GPU)
          !$acc host_data use_device(out)
-         istat = cudaMemcpy2D(out(1, i1, 1),      &
-                              n1 * n2,            &
-                              in(init_pos),       &
+         istat = cudaMemcpy2D(out(1, i1, 1), &
+                              n1 * n2, &
+                              in(init_pos), &
                               n1 * (i2 - i1 + 1), &
                               n1 * (i2 - i1 + 1), &
-                              n3,                 &
+                              n3, &
                               cudaMemcpyDeviceToDevice)
          !$acc end host_data
          if (istat /= 0) call decomp_2d_abort(__FILE__, __LINE__, istat, "cudaMemcpy2D")
@@ -404,7 +403,7 @@ contains
          do k = 1, n3
             do j = i1, i2
                do i = 1, n1
-                  pos = init_pos + (i-1) + (j-i1)*n1 + (k-1)*(i2-i1+1)*n1
+                  pos = init_pos + (i - 1) + (j - i1) * n1 + (k - 1) * (i2 - i1 + 1) * n1
                   out(i, j, k) = in(pos)
                end do
             end do
@@ -449,12 +448,12 @@ contains
 
 #if defined(_GPU)
          !$acc host_data use_device(out)
-         istat = cudaMemcpy2D(out(1, i1, 1),      &
-                              n1 * n2,            &
-                              in(init_pos),       &
-                              n1 * (i2 - i1 + 1), & 
-                              n1 * (i2 - i1 + 1), & 
-                              n3,                 &
+         istat = cudaMemcpy2D(out(1, i1, 1), &
+                              n1 * n2, &
+                              in(init_pos), &
+                              n1 * (i2 - i1 + 1), &
+                              n1 * (i2 - i1 + 1), &
+                              n3, &
                               cudaMemcpyDeviceToDevice)
          !$acc end host_data
          if (istat /= 0) call decomp_2d_abort(__FILE__, __LINE__, istat, "cudaMemcpy2D")
@@ -463,7 +462,7 @@ contains
          do k = 1, n3
             do j = i1, i2
                do i = 1, n1
-                  pos = init_pos + (i-1) + (j-i1)*n1 + (k-1)*(i2-i1+1)*n1
+                  pos = init_pos + (i - 1) + (j - i1) * n1 + (k - 1) * (i2 - i1 + 1) * n1
                   out(i, j, k) = in(pos)
                end do
             end do

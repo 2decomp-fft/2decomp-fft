@@ -8,7 +8,7 @@ module decomp_2d_nccl
    use decomp_2d_constants
    use decomp_2d_mpi
    use decomp_2d_cumpi
-   use cudafor 
+   use cudafor
    use nccl
 
    implicit none

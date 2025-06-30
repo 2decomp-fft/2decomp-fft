@@ -462,7 +462,6 @@ contains
                               " label "//trim(family%label)//".")
       end if
 
-
    end function d2d_io_family_get_folder
 
    !

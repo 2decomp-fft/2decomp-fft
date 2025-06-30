@@ -10,7 +10,7 @@ module m_blk
    use iso_fortran_env, only: real32, output_unit, error_unit
    use, intrinsic :: iso_c_binding
    use decomp_2d_constants
-   use decomp_2d_mpi, only : nrank, decomp_2d_abort
+   use decomp_2d_mpi, only: nrank, decomp_2d_abort
    use cudafor
 
    implicit none
@@ -94,11 +94,11 @@ contains
       ! Initialize the memory if needed
       if (init) then
          call c_f_pointer(self%next%ref, dat, (/size/))
-         !$omp parallel do
+!$omp parallel do
          do i = 1_c_size_t, size
             dat(i) = 0._real32
          end do
-         !$omp end parallel do
+!$omp end parallel do
          nullify (dat)
       end if
 
@@ -233,11 +233,11 @@ contains
       ! Initialize the memory if needed
       if (init) then
          call c_f_pointer(self%ref, dat, (/size/))
-         !$omp parallel do
+!$omp parallel do
          do i = 1_c_size_t, size
             dat(i) = 0._real32
          end do
-         !$omp end parallel do
+!$omp end parallel do
          nullify (dat)
       end if
 

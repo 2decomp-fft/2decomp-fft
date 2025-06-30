@@ -10,7 +10,7 @@ module m_blk
    use iso_fortran_env, only: real32, output_unit, error_unit
    use iso_c_binding, only: c_ptr, c_null_ptr, c_size_t, c_associated, c_loc
    use decomp_2d_constants
-   use decomp_2d_mpi, only : nrank, decomp_2d_abort
+   use decomp_2d_mpi, only: nrank, decomp_2d_abort
 
    implicit none
 
@@ -94,11 +94,11 @@ contains
 
       ! Initialize the memory if needed
       if (init) then
-         !$omp parallel do
+!$omp parallel do
          do i = 1_c_size_t, size
             self%next%dat(i) = 0._real32
          end do
-         !$omp end parallel do
+!$omp end parallel do
       end if
 
       ! Tag the block
@@ -234,11 +234,11 @@ contains
 
       ! Initialize the memory if needed
       if (init) then
-         !$omp parallel do
+!$omp parallel do
          do i = 1_c_size_t, size
             self%dat(i) = 0._real32
          end do
-         !$omp end parallel do
+!$omp end parallel do
       end if
 
    end subroutine blk_resize

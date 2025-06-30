@@ -49,7 +49,7 @@ program timing2d_complex
    ! Now we can check if user put some inputs
    call decomp_2d_testing_init(p_row, p_col, nx, ny, nz, niter)
 
-   call decomp_2d_init(nx, ny, nz, p_row, p_col, complex_pool = .true.)
+   call decomp_2d_init(nx, ny, nz, p_row, p_col, complex_pool=.true.)
 
    call decomp_2d_testing_log()
 

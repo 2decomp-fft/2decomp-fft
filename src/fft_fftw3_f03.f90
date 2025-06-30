@@ -571,7 +571,6 @@ contains
       call fftw_cleanup()
 #endif
 
-
    end subroutine decomp_2d_fft_finalize
 
    ! Clean the given FFT engine
@@ -1345,7 +1344,7 @@ contains
 
 #ifdef FFTW_omp
       ierr = fftw_init_threads()
-      if (ierr==0) call decomp_2d_abort(__FILE__, __LINE__, ierr, "fftw_init_threads")
+      if (ierr == 0) call decomp_2d_abort(__FILE__, __LINE__, ierr, "fftw_init_threads")
       call fftw_plan_with_nthreads(omp_get_max_threads())
 #endif
 
@@ -1689,7 +1688,7 @@ contains
             call c2c_1m_x(in, plan(isign, 1))
          else
             call decomp_pool_get(wk1, ph%xsz)
-            wk1(:,:,:) = in(:,:,:)
+            wk1(:, :, :) = in(:, :, :)
             call c2c_1m_x(wk1, plan(isign, 1))
          end if
 
@@ -1731,7 +1730,7 @@ contains
             call c2c_1m_z(in, plan(isign, 3))
          else
             call decomp_pool_get(wk1, ph%zsz)
-            wk1(:,:,:) = in(:,:,:)
+            wk1(:, :, :) = in(:, :, :)
             call c2c_1m_z(wk1, plan(isign, 3))
          end if
 
@@ -1843,7 +1842,7 @@ contains
 
       ! Free memory
       call decomp_pool_free(wk2_r2c)
-      if (.not.inplace_r2c) call decomp_pool_free(wk0)
+      if (.not. inplace_r2c) call decomp_pool_free(wk0)
 
       if (decomp_profiler_fft) call decomp_profiler_end("fft_r2c")
 
@@ -1878,7 +1877,7 @@ contains
             call c2c_1m_z(in_c, plan(2, 3))
          else
             call decomp_pool_get(wk1, sp%zsz)
-            wk1(:,:,:) = in_c(:,:,:)
+            wk1(:, :, :) = in_c(:, :, :)
             call c2c_1m_z(wk1, plan(2, 3))
          end if
 
@@ -1910,7 +1909,7 @@ contains
             call c2c_1m_x(in_c, plan(2, 1))
          else
             call decomp_pool_get(wk1, sp%xsz)
-            wk1(:,:,:) = in_c(:,:,:)
+            wk1(:, :, :) = in_c(:, :, :)
             call c2c_1m_x(wk1, plan(2, 1))
          end if
 
@@ -1951,7 +1950,7 @@ contains
 
       ! Free memory
       call decomp_pool_free(wk2_r2c)
-      if (.not.inplace_c2r) call decomp_pool_free(wk0)
+      if (.not. inplace_c2r) call decomp_pool_free(wk0)
       if (associated(wk1)) call decomp_pool_free(wk1)
 
       if (decomp_profiler_fft) call decomp_profiler_end("fft_c2r")
@@ -1980,7 +1979,7 @@ contains
          call decomp_2d_abort(__FILE__, __LINE__, isign, "Invalid value")
       end if
 
-      ! Get a buffer for arrays in y-pencil                                                
+      ! Get a buffer for arrays in y-pencil
       call decomp_pool_get(wk2ra, ph%ysz)
 
       ! Perform the 3D DTT

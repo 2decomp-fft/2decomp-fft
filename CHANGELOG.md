@@ -10,6 +10,14 @@ _e.g._ vX.Y - YYYY-MM-DD and a new "Unreleased" section started above.
 ## Unreleased
 
 ### Added
+### Fixed
+### Changed
+### Deprecated
+### Removed
+
+## v2.1 - 2025/07/01
+
+### Added
 
 - Add the possibility to skip c2c transforms along one or several dimensions [PR #339](https://github.com/2decomp-fft/2decomp-fft/pull/339), [PR #340](https://github.com/2decomp-fft/2decomp-fft/pull/340)
 - Add profiling to transpose subroutines when `p_row` or `p_col` is equal to one. See [PR #251](https://github.com/2decomp-fft/2decomp-fft/pull/251)

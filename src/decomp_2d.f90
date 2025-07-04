@@ -1157,7 +1157,7 @@ contains
          open (newunit=i, status='scratch', form='unformatted')
          write (i) decomp%x1dist, decomp%y1dist, decomp%y2dist, decomp%z2dist, &
             decomp%xsz, decomp%ysz, decomp%zsz
-         close (i, status='delete')
+         close (i)
       end if
 
       ! MPI_ALLTOALLV buffer information

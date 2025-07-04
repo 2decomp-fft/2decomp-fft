@@ -188,7 +188,7 @@
        ! all data in local memory already, no halo exchange
 
        ! *** north/south ***
-       tag_s = coord(1)
+       tag_s = coord(1) + dims(1)
        if (coord(1) == dims(1) - 1 .AND. periodic_y) then
           tag_n = 0
        else
@@ -239,7 +239,7 @@
        ! no need to define derived data type as data on xy-planes
        ! all contiguous in memory, which can be sent/received using
        ! MPI directly
-       tag_b = coord(2)
+       tag_b = coord(2) + dims(2)
        if (coord(2) == dims(2) - 1 .AND. periodic_z) then
           tag_t = 0
        else
@@ -294,7 +294,7 @@
 #endif
 
        ! *** east/west ***
-       tag_w = coord(1)
+       tag_w = coord(1) + dims(1)
        if (coord(1) == dims(1) - 1 .AND. periodic_x) then
           tag_e = 0
        else
@@ -348,7 +348,7 @@
        ! no need to define derived data type as data on xy-planes
        ! all contiguous in memory, which can be sent/received using
        ! MPI directly
-       tag_b = coord(2)
+       tag_b = coord(2) + dims(2)
        if (coord(2) == dims(2) - 1 .AND. periodic_z) then
           tag_t = 0
        else
@@ -402,7 +402,7 @@
        end if
 #endif
        ! *** east/west ***
-       tag_w = coord(1)
+       tag_w = coord(1) + dims(1)
        if (coord(1) == dims(1) - 1 .AND. periodic_x) then
           tag_e = 0
        else
@@ -450,7 +450,7 @@
 #endif
 
        ! *** north/south ***
-       tag_s = coord(2)
+       tag_s = coord(2) + dims(2)
        if (coord(2) == dims(2) - 1 .AND. periodic_y) then
           tag_n = 0
        else

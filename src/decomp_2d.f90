@@ -1154,7 +1154,7 @@ contains
       !       * pas de plantage en O2
 
       if (nrank == 0) then
-         open (newunit=i, file='temp.dat', form='unformatted')
+         open (newunit=i, status='scratch', form='unformatted')
          write (i) decomp%x1dist, decomp%y1dist, decomp%y2dist, decomp%z2dist, &
             decomp%xsz, decomp%ysz, decomp%zsz
          close (i, status='delete')

@@ -11,6 +11,9 @@ _e.g._ vX.Y - YYYY-MM-DD and a new "Unreleased" section started above.
 
 ### Added
 ### Fixed
+
+- Fix a bug in the halo exchange in case of periodicty and `p_row = 1` or `p_col = 1`. See [PR #402](https://github.com/2decomp-fft/2decomp-fft/pull/402).
+
 ### Changed
 ### Deprecated
 ### Removed

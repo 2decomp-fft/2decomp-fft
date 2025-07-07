@@ -6,6 +6,7 @@ submodule(decomp_2d) d2d_log_submodule
    use iso_fortran_env, only: output_unit
    use decomp_2d_constants
    use decomp_2d_mpi
+   use m_info, only: decomp_info, decomp_main
 
    implicit none
 

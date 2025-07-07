@@ -39,10 +39,6 @@ module decomp_2d_fft
    ! Global size of the FFT
    integer, pointer, save :: nx_fft => null(), ny_fft => null(), nz_fft => null()
 
-   ! 2D processor grid
-   ! FIXME this is already available in the module decomp_2d
-   integer, save, dimension(2) :: dims
-
    ! Decomposition objects
    TYPE(DECOMP_INFO), pointer, save :: ph => null()  ! physical space
    TYPE(DECOMP_INFO), pointer, save :: sp => null()  ! spectral space

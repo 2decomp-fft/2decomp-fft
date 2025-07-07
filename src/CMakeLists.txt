@@ -1,6 +1,7 @@
 file(GLOB files_decomp factor.f90
 	               decomp_2d_constants.f90
 		       decomp_2d_mpi.f90
+                       halo.f90
 	               decomp_2d.f90
 		       decomp_pool.f90
 		       log.f90

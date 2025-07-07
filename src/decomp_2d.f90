@@ -10,6 +10,9 @@ module decomp_2d
    use factor
    use decomp_2d_constants
    use decomp_2d_mpi
+   use decomp_2d_mpi, only: DECOMP_2D_COMM_CART_X => DECOMP_2D_COMM_CART_X
+   use decomp_2d_mpi, only: DECOMP_2D_COMM_CART_Y => DECOMP_2D_COMM_CART_Y
+   use decomp_2d_mpi, only: DECOMP_2D_COMM_CART_Z => DECOMP_2D_COMM_CART_Z
    use decomp_2d_profiler
 #if defined(_GPU)
    use cudafor
@@ -19,9 +22,12 @@ module decomp_2d
    use decomp_2d_nccl
 #endif
 #endif
-   use m_info
+   use m_info, only: decomp_info => decomp_info ! Expose decomp_info from 2decomp
+   use m_info, only: decomp_main => decomp_main ! Expose decomp_main from 2decomp
    use m_decomp_pool
    use m_mem_pool
+   use m_halo, only: init_neighbour
+   use m_halo, only: update_halo => update_halo ! Expose update_halo from 2decomp
 
    implicit none
 
@@ -33,22 +39,6 @@ module decomp_2d
    ! some key global variables
    integer, save, public :: nx_global, ny_global, nz_global  ! global size
    logical, save, public, protected :: use_pool
-
-   ! parameters for 2D Cartesian topology
-   integer, save, dimension(2) :: dims, coord
-   integer, save, public :: DECOMP_2D_COMM_CART_X = MPI_COMM_NULL
-   integer, save, public :: DECOMP_2D_COMM_CART_Y = MPI_COMM_NULL
-   integer, save, public :: DECOMP_2D_COMM_CART_Z = MPI_COMM_NULL
-   integer, save :: DECOMP_2D_COMM_ROW = MPI_COMM_NULL
-   integer, save :: DECOMP_2D_COMM_COL = MPI_COMM_NULL
-
-   ! define neighboring blocks (to be used in halo-cell support)
-   !  first dimension 1=X-pencil, 2=Y-pencil, 3=Z-pencil
-   ! second dimension 1=east, 2=west, 3=north, 4=south, 5=top, 6=bottom
-   integer, save, dimension(3, 6) :: neighbour
-
-   ! flags for periodic condition in three dimensions
-   logical, save :: periodic_x, periodic_y, periodic_z
 
    !
    ! Output for the log can be changed by the external code before calling decomp_2d_init
@@ -78,35 +68,6 @@ module decomp_2d
 #else
    integer(kind(D2D_DEBUG_LEVEL_OFF)), public, save :: decomp_debug = D2D_DEBUG_LEVEL_OFF
 #endif
-
-   ! derived type to store decomposition info for a given global data size
-   TYPE, extends(info), public :: DECOMP_INFO
-      ! starting/ending index and size are defined in the parent type, see info.f90
-
-      ! in addition to local information, processors also need to know
-      ! some global information for global communications to work
-
-      ! how each dimension is distributed along pencils
-      integer, allocatable, dimension(:) :: &
-         x1dist, y1dist, y2dist, z2dist
-
-      ! send/receive buffer counts and displacements for MPI_ALLTOALLV
-      integer, allocatable, dimension(:) :: &
-         x1cnts, y1cnts, y2cnts, z2cnts
-      integer, allocatable, dimension(:) :: &
-         x1disp, y1disp, y2disp, z2disp
-
-#ifdef EVEN
-      ! buffer counts for MPI_ALLTOALL for padded-alltoall
-      integer :: x1count, y1count, y2count, z2count
-      ! evenly distributed data
-      logical :: even
-#endif
-
-   END TYPE DECOMP_INFO
-
-   ! main (default) decomposition information for global size nx*ny*nz
-   TYPE(DECOMP_INFO), target, save, public :: decomp_main
 
    ! staring/ending index and size of data held by current processor
    ! duplicate 'decomp_main', needed by apps to define data structure
@@ -138,6 +99,7 @@ module decomp_2d
    public :: decomp_2d_init, decomp_2d_finalize, &
              transpose_x_to_y, transpose_y_to_z, &
              transpose_z_to_y, transpose_y_to_x, &
+             decomp_info, decomp_main, &
              decomp_info_init, decomp_info_finalize, partition, &
              decomp_info_print, &
              init_coarser_mesh_statS, fine_to_coarseS, &
@@ -260,13 +222,6 @@ module decomp_2d
          complex(mytype), dimension(:, :, :), intent(OUT) :: dst
       end subroutine transpose_y_to_x_complex_short
    end interface transpose_y_to_x
-
-   interface update_halo
-      module procedure update_halo_real
-      module procedure update_halo_real_short
-      module procedure update_halo_complex
-      module procedure update_halo_complex_short
-   end interface update_halo
 
    interface alloc_x
       module procedure alloc_x_freal
@@ -1208,11 +1163,6 @@ contains
 #endif
 
    end subroutine prepare_buffer
-
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-   ! Halo cell support
-  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-#include "halo.f90"
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
    ! Utility routines to help allocate 3D arrays

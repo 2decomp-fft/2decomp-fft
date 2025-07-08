@@ -77,13 +77,4 @@
        !!! istat = cudaMemcpy(out,in,s1*s2*s3,cudaMemcpyDeviceToDevice)
     end if
 
-    ! If needed, define MPI derived data type to pack halo data,
-    ! then call MPI send/receive to exchange halo data
-
-    if (ipencil == 1) then
-#include "halo_exchange_x_body.f90"
-    else if (ipencil == 2) then
-#include "halo_exchange_y_body.f90"
-    else if (ipencil == 3) then
-#include "halo_exchange_z_body.f90"
-    end if  ! pencil
+    call halo_exchange(out, ipencil, halo_extents, level, [s1, s2, s3])

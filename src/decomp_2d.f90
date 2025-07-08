@@ -1148,17 +1148,18 @@ contains
 
       integer :: i
 
+#if __GNUC__ == 9 &&  __GNUC_MINOR__ == 3
       !LG : AJOUTS "bidons" pour eviter un plantage en -O3 avec gcc9.3
       !       * la fonction sortait des valeurs 'aleatoires'
       !         et le calcul plantait dans MPI_ALLTOALLV
       !       * pas de plantage en O2
-
       if (nrank == 0) then
          open (newunit=i, status='scratch', form='unformatted')
          write (i) decomp%x1dist, decomp%y1dist, decomp%y2dist, decomp%z2dist, &
             decomp%xsz, decomp%ysz, decomp%zsz
          close (i)
       end if
+#endif
 
       ! MPI_ALLTOALLV buffer information
 

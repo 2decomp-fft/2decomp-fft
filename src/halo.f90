@@ -30,6 +30,16 @@ module m_halo
    public :: update_halo
    public :: init_neighbour
 
+  type halo_extents_t
+     integer :: xs, xe
+     integer :: ys, ye
+     integer :: zs, ze
+  end type halo_extents_t
+
+  interface halo_extents_t
+     procedure init_halo_extents
+  end interface halo_extents_t
+
 contains
 
    !---------------------------------------------------------------------
@@ -107,7 +117,8 @@ contains
       logical :: global
 
       ! starting/ending index of array with halo cells
-      integer :: xs, ys, zs, xe, ye, ze
+      type(halo_extents_t) :: halo_extents
+      
       ! additional start end
       integer :: ist, ien, jst, jen, kst, ken
 
@@ -121,7 +132,6 @@ contains
       integer :: tag_e, tag_w, tag_n, tag_s, tag_t, tag_b
 
       integer :: ipencil
-      logical, save :: first_call_x = .true., first_call_y = .true., first_call_z = .true.
 
       data_type = real_type
 
@@ -164,7 +174,8 @@ contains
       logical :: global
 
       ! starting/ending index of array with halo cells
-      integer :: xs, ys, zs, xe, ye, ze
+      type(halo_extents_t) :: halo_extents
+      
       ! additional start end
       integer :: ist, ien, jst, jen, kst, ken
 
@@ -178,7 +189,6 @@ contains
       integer :: tag_e, tag_w, tag_n, tag_s, tag_t, tag_b
 
       integer :: ipencil
-      logical, save :: first_call_x = .true., first_call_y = .true., first_call_z = .true.
 
       data_type = complex_type
 
@@ -187,4 +197,126 @@ contains
       return
    end subroutine update_halo_complex
 
+  integer function get_pencil(sizes, decomp, opt_pencil)
+    integer, dimension(3), intent(in) :: sizes
+    type(decomp_info), intent(in) :: decomp
+    integer, intent(in), optional :: opt_pencil
+
+    integer :: s1, s2, s3
+    logical, save :: first_call_x = .true.
+    logical, save :: first_call_y = .true.
+    logical, save :: first_call_z = .true.
+
+    s1 = sizes(1)
+    s2 = sizes(2)
+    s3 = sizes(3)
+
+    if (present(opt_pencil)) then
+       get_pencil = opt_pencil
+    else
+       ! Historic/default behaviour
+       if (s1 == decomp%xsz(1)) then
+          get_pencil = 1
+          if (first_call_x) then
+             first_call_x = .false.
+             call decomp_2d_warning(__FILE__, __LINE__, &
+                                    0, "Deprecated interface - calling halo in X without explicit pencil")
+          end if
+       else if (s2 == decomp%ysz(2)) then
+          get_pencil = 2
+          if (first_call_y) then
+             first_call_y = .false.
+             call decomp_2d_warning(__FILE__, __LINE__, &
+                                    0, "Deprecated interface - calling halo in Y without explicit pencil")
+          end if
+       else if (s3 == decomp%zsz(3)) then
+          get_pencil = 3
+          if (first_call_z) then
+             first_call_z = .false.
+             call decomp_2d_warning(__FILE__, __LINE__, &
+                                    0, "Deprecated interface - calling halo in Z without explicit pencil")
+          end if
+       else
+          get_pencil = 0
+          call decomp_2d_abort(__FILE__, __LINE__, 1, "Invalid decomposition size")
+       end if
+    end if
+
+  end function get_pencil
+
+  type(halo_extents_t) function init_halo_extents(ipencil, sizes, decomp, level, global) result(halo_extents)
+    integer, intent(in) :: ipencil
+    integer, dimension(3), intent(in) :: sizes
+    type(decomp_info), intent(in) :: decomp
+    integer, intent(in) :: level
+    logical, intent(in) :: global
+
+    integer :: s1, s2, s3
+
+    s1 = sizes(1)
+    s2 = sizes(2)
+    s3 = sizes(3)
+    
+    ! Calculate the starting index and ending index of output
+    if (ipencil == 1) then  ! X-pencil input
+       if (global) then
+          halo_extents%xs = decomp%xst(1)
+          halo_extents%xe = decomp%xen(1)
+          halo_extents%ys = decomp%xst(2) - level
+          halo_extents%ye = decomp%xen(2) + level
+          halo_extents%zs = decomp%xst(3) - level
+          halo_extents%ze = decomp%xen(3) + level
+       else
+          halo_extents%xs = 1
+          halo_extents%xe = s1
+          halo_extents%ys = 1 - level
+          halo_extents%ye = s2 + level
+          halo_extents%zs = 1 - level
+          halo_extents%ze = s3 + level
+       end if
+    else if (ipencil == 2) then  ! Y-pencil input
+       if (global) then
+          halo_extents%xs = decomp%yst(1) - level
+          halo_extents%xe = decomp%yen(1) + level
+          halo_extents%ys = decomp%yst(2)
+          halo_extents%ye = decomp%yen(2)
+          halo_extents%zs = decomp%yst(3) - level
+          halo_extents%ze = decomp%yen(3) + level
+       else
+          halo_extents%xs = 1 - level
+          halo_extents%xe = s1 + level
+          halo_extents%ys = 1
+          halo_extents%ye = s2
+          halo_extents%zs = 1 - level
+          halo_extents%ze = s3 + level
+       end if
+    else if (ipencil == 3) then  ! Z-pencil input
+       if (global) then
+          halo_extents%xs = decomp%zst(1) - level
+          halo_extents%xe = decomp%zen(1) + level
+          halo_extents%ys = decomp%zst(2) - level
+          halo_extents%ye = decomp%zen(2) + level
+          halo_extents%zs = decomp%zst(3)
+          halo_extents%ze = decomp%zen(3)
+       else
+          halo_extents%xs = 1 - level
+          halo_extents%xe = s1 + level
+          halo_extents%ys = 1 - level
+          halo_extents%ye = s2 + level
+          halo_extents%zs = 1
+          halo_extents%ze = s3
+       end if
+    else
+       ! invalid input
+
+       ! Set defaults to silence "uninitialised errors"
+       halo_extents%xs = 1; halo_extents%xe = 1
+       halo_extents%ys = 1; halo_extents%ye = 1
+       halo_extents%zs = 1; halo_extents%ze = 1
+
+       call decomp_2d_abort(__FILE__, __LINE__, 10, &
+                            'Invalid data passed to update_halo')
+    end if
+  end function init_halo_extents
+  
 end module m_halo

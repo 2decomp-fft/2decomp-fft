@@ -40,6 +40,11 @@ module m_halo
      procedure init_halo_extents
   end interface halo_extents_t
 
+  interface halo_exchange
+     procedure halo_exchange_real
+     procedure halo_exchange_complex
+  end interface halo_exchange
+
 contains
 
    !---------------------------------------------------------------------
@@ -122,18 +127,9 @@ contains
       ! additional start end
       integer :: ist, ien, jst, jen, kst, ken
 
-      integer :: i, j, k, s1, s2, s3, ierror
-      integer :: data_type
-
-      integer :: icount, ilength, ijump
-      integer :: halo12, halo21, halo31, halo32
-      integer, dimension(4) :: requests
-      integer, dimension(MPI_STATUS_SIZE, 4) :: status
-      integer :: tag_e, tag_w, tag_n, tag_s, tag_t, tag_b
+      integer :: i, j, k, s1, s2, s3
 
       integer :: ipencil
-
-      data_type = real_type
 
 #include "halo_common.f90"
 
@@ -179,18 +175,9 @@ contains
       ! additional start end
       integer :: ist, ien, jst, jen, kst, ken
 
-      integer :: i, j, k, s1, s2, s3, ierror
-      integer :: data_type
-
-      integer :: icount, ilength, ijump
-      integer :: halo12, halo21, halo31, halo32
-      integer, dimension(4) :: requests
-      integer, dimension(MPI_STATUS_SIZE, 4) :: status
-      integer :: tag_e, tag_w, tag_n, tag_s, tag_t, tag_b
+      integer :: i, j, k, s1, s2, s3
 
       integer :: ipencil
-
-      data_type = complex_type
 
 #include "halo_common.f90"
 
@@ -318,5 +305,76 @@ contains
                             'Invalid data passed to update_halo')
     end if
   end function init_halo_extents
+
+  subroutine halo_exchange_real(arr, ipencil, halo_extents, level, sizes)
+
+    type(halo_extents_t), intent(in) :: halo_extents 
+    real(mytype), dimension(halo_extents%xs:halo_extents%xe,halo_extents%ys:halo_extents%ye,halo_extents%zs:halo_extents%ze), intent(inout) :: arr
+    integer, intent(in) :: ipencil
+    integer, intent(in) :: level
+    integer, dimension(3), intent(in) :: sizes
+
+    integer :: s1, s2, s3
+
+    integer, parameter :: data_type = real_type
+
+    integer :: icount, ilength, ijump
+    integer :: halo12, halo21, halo31, halo32
+    integer, dimension(4) :: requests
+    integer, dimension(MPI_STATUS_SIZE, 4) :: status
+    integer :: tag_e, tag_w, tag_n, tag_s, tag_t, tag_b
+
+    integer :: ierror
+
+    s1 = sizes(1)
+    s2 = sizes(2)
+    s3 = sizes(3)
+    
+    if (ipencil == 1) then
+#include "halo_exchange_x_body.f90"
+    else if (ipencil == 2) then
+#include "halo_exchange_y_body.f90"
+    else if (ipencil == 3) then
+#include "halo_exchange_z_body.f90"
+    end if  ! pencil
+
+  end subroutine halo_exchange_real
+
+  subroutine halo_exchange_complex(arr, ipencil, halo_extents, level, sizes)
+
+    type(halo_extents_t), intent(in) :: halo_extents 
+    complex(mytype), dimension(halo_extents%xs:halo_extents%xe,halo_extents%ys:halo_extents%ye,halo_extents%zs:halo_extents%ze), intent(inout) :: arr
+    integer, intent(in) :: ipencil
+    integer, intent(in) :: level
+    integer, dimension(3), intent(in) :: sizes
+
+    integer :: s1, s2, s3
+
+    integer, parameter :: data_type = complex_type
+
+    integer :: icount, ilength, ijump
+    integer :: halo12, halo21, halo31, halo32
+    integer, dimension(4) :: requests
+    integer, dimension(MPI_STATUS_SIZE, 4) :: status
+    integer :: tag_e, tag_w, tag_n, tag_s, tag_t, tag_b
+
+    integer :: ierror
+#ifdef HALO_DEBUG
+    integer :: i, j, k
+#endif
+
+    s1 = sizes(1)
+    s2 = sizes(2)
+    s3 = sizes(3)
+    
+    if (ipencil == 1) then
+#include "halo_exchange_x_body.f90"
+    else if (ipencil == 2) then
+#include "halo_exchange_y_body.f90"
+    else if (ipencil == 3) then
+#include "halo_exchange_z_body.f90"
+    end if  ! pencil
+
+  end subroutine halo_exchange_complex
   
 end module m_halo

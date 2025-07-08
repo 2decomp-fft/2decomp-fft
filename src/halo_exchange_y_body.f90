@@ -8,7 +8,7 @@
      write (*, *) 'Data on a x-z plane is shown'
      write (*, *) 'Before halo exchange'
      do i = halo_extents%xe, halo_extents%xs, -1
-        write (*, '(10F4.0)') (out(i, 1, k), k=halo_extents%zs, halo_extents%ze)
+        write (*, '(10F4.0)') (arr(i, 1, k), k=halo_extents%zs, halo_extents%ze)
      end do
   end if
 #endif
@@ -29,22 +29,22 @@
   call MPI_TYPE_COMMIT(halo21, ierror)
   if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_TYPE_COMMIT")
   ! receive from west
-  call MPI_IRECV(out(halo_extents%xs, halo_extents%ys, halo_extents%zs), 1, halo21, &
+  call MPI_IRECV(arr(halo_extents%xs, halo_extents%ys, halo_extents%zs), 1, halo21, &
        neighbour(2, 2), tag_w, DECOMP_2D_COMM_CART_Y, &
        requests(1), ierror)
   if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_IRECV")
   ! receive from east
-  call MPI_IRECV(out(halo_extents%xe - level + 1, halo_extents%ys, halo_extents%zs), 1, halo21, &
+  call MPI_IRECV(arr(halo_extents%xe - level + 1, halo_extents%ys, halo_extents%zs), 1, halo21, &
        neighbour(2, 1), tag_e, DECOMP_2D_COMM_CART_Y, &
        requests(2), ierror)
   if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_IRECV")
   ! send to west
-  call MPI_ISSEND(out(halo_extents%xs + level, halo_extents%ys, halo_extents%zs), 1, halo21, &
+  call MPI_ISSEND(arr(halo_extents%xs + level, halo_extents%ys, halo_extents%zs), 1, halo21, &
        neighbour(2, 2), tag_w, DECOMP_2D_COMM_CART_Y, &
        requests(3), ierror)
   if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_ISSEND")
   ! send to east
-  call MPI_ISSEND(out(halo_extents%xe - level - level + 1, halo_extents%ys, halo_extents%zs), 1, halo21, &
+  call MPI_ISSEND(arr(halo_extents%xe - level - level + 1, halo_extents%ys, halo_extents%zs), 1, halo21, &
        neighbour(2, 1), tag_e, DECOMP_2D_COMM_CART_Y, &
        requests(4), ierror)
   if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_ISSEND")
@@ -56,7 +56,7 @@
   if (nrank == 0) then
      write (*, *) 'After exchange in X'
      do i = halo_extents%xe, halo_extents%xs, -1
-        write (*, '(10F4.0)') (out(i, 1, k), k=halo_extents%zs, halo_extents%ze)
+        write (*, '(10F4.0)') (arr(i, 1, k), k=halo_extents%zs, halo_extents%ze)
      end do
   end if
 #endif
@@ -76,22 +76,22 @@
   end if
   icount = (s2 * (s1 + 2 * level)) * level
   ! receive from bottom
-  call MPI_IRECV(out(halo_extents%xs, halo_extents%ys, halo_extents%zs), icount, data_type, &
+  call MPI_IRECV(arr(halo_extents%xs, halo_extents%ys, halo_extents%zs), icount, data_type, &
        neighbour(2, 6), tag_b, DECOMP_2D_COMM_CART_Y, &
        requests(1), ierror)
   if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_IRECV")
   ! receive from top
-  call MPI_IRECV(out(halo_extents%xs, halo_extents%ys, halo_extents%ze - level + 1), icount, data_type, &
+  call MPI_IRECV(arr(halo_extents%xs, halo_extents%ys, halo_extents%ze - level + 1), icount, data_type, &
        neighbour(2, 5), tag_t, DECOMP_2D_COMM_CART_Y, &
        requests(2), ierror)
   if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_IRECV")
   ! send to bottom
-  call MPI_ISSEND(out(halo_extents%xs, halo_extents%ys, halo_extents%zs + level), icount, data_type, &
+  call MPI_ISSEND(arr(halo_extents%xs, halo_extents%ys, halo_extents%zs + level), icount, data_type, &
        neighbour(2, 6), tag_b, DECOMP_2D_COMM_CART_Y, &
        requests(3), ierror)
   if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_ISSEND")
   ! send to top
-  call MPI_ISSEND(out(halo_extents%xs, halo_extents%ys, halo_extents%ze - level - level + 1), icount, data_type, &
+  call MPI_ISSEND(arr(halo_extents%xs, halo_extents%ys, halo_extents%ze - level - level + 1), icount, data_type, &
        neighbour(2, 5), tag_t, DECOMP_2D_COMM_CART_Y, &
        requests(4), ierror)
   if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_ISSEND")
@@ -101,7 +101,7 @@
   if (nrank == 0) then
      write (*, *) 'After exchange in Z'
      do i = halo_extents%xe, halo_extents%xs, -1
-        write (*, '(10F4.0)') (out(i, 1, k), k=halo_extents%zs, halo_extents%ze)
+        write (*, '(10F4.0)') (arr(i, 1, k), k=halo_extents%zs, halo_extents%ze)
      end do
   end if
 #endif

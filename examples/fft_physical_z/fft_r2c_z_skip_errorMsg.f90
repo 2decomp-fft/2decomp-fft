@@ -91,7 +91,7 @@ program fft_r2c_z_errorMsg
    if (nrank == 0) then
       write (*, *) '===== r2c/c2r interface ====='
       write (*, *) 'First iteration with dedicated timer'
-      write (*, *) '     time (sec): ', t1, t3
+      write (*, '(A,ES14.8,1x,A,1x,ES14.8)') 'time (sec): ', t1,',', t3
       write (*, *) ''
    end if
    ! Init the time
@@ -160,7 +160,7 @@ program fft_r2c_z_errorMsg
 
    if (nrank == 0) then
       write (*, *) 'error / mesh point: ', error
-      write (*, *) 'Avg time (sec): ', t1, t3
+      write (*, '(A,ES14.8,1x,A,1x,ES14.8)') 'Avg time (sec): ', t1,',', t3
       write (*, *) '   '
       write (*, *) 'fft_r2c_z completed '
       write (*, *) '   '

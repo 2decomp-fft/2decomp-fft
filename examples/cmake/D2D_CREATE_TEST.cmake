@@ -39,6 +39,9 @@ macro(CreateMPITest run_dir
   target_link_libraries(${case} PRIVATE decomp2d examples_utils)
   if (OPENMP_FOUND AND ENABLE_OMP)
     target_link_libraries(${case} PRIVATE OpenMP::OpenMP_Fortran)
+    if (Fortran_COMPILER_NAME MATCHES "Cray")
+      target_link_options(${case} PRIVATE -h omp)
+    endif()
   endif()
   # Install
   install(TARGETS ${case} DESTINATION ${run_dir})

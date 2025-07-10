@@ -132,8 +132,8 @@ module decomp_2d_constants
    ! Major and minor version number
    !
    integer, parameter :: D2D_MAJOR = 2
-   integer, parameter :: D2D_MINOR = 1
-   logical, parameter :: D2D_RELEASE = .true.
+   integer, parameter :: D2D_MINOR = 2
+   logical, parameter :: D2D_RELEASE = .false.
 
 end module decomp_2d_constants
 

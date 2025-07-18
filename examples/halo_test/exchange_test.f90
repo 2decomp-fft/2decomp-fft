@@ -287,10 +287,8 @@ contains
 
       halo_extents = halo_extents_t(1, [s1, s2, s3], decomp_main, 1, global)
 
-      allocate (vh(halo_extents%xs:halo_extents%xe, &
-                   halo_extents%ys:halo_extents%ye, &
-                   halo_extents%zs:halo_extents%ze))
-      allocate (wh, mold=vh)
+      call alloc_x(vh, global, opt_levels=1)
+      call alloc_x(wh, global, opt_levels=1)
 
       ! Populate interiors
       !$acc data copy(halo_extents)
@@ -387,10 +385,8 @@ contains
 
       halo_extents = halo_extents_t(2, [s1, s2, s3], decomp_main, 1, global)
 
-      allocate (uh(halo_extents%xs:halo_extents%xe, &
-                   halo_extents%ys:halo_extents%ye, &
-                   halo_extents%zs:halo_extents%ze))
-      allocate (wh, mold=uh)
+      call alloc_y(uh, global, opt_levels=1)
+      call alloc_y(wh, global, opt_levels=1)
 
       ! Populate interiors
       !$acc data copy(halo_extents)
@@ -481,10 +477,8 @@ contains
 
       halo_extents = halo_extents_t(3, [s1, s2, s3], decomp_main, 1, global)
 
-      allocate (uh(halo_extents%xs:halo_extents%xe, &
-                   halo_extents%ys:halo_extents%ye, &
-                   halo_extents%zs:halo_extents%ze))
-      allocate (vh, mold=uh)
+      call alloc_z(uh, global, opt_levels=1)
+      call alloc_z(vh, global, opt_levels=1)
 
       ! Populate interiors
       call transpose_y_to_z(u2, u3)

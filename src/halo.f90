@@ -46,7 +46,7 @@ module m_halo
    public :: init_neighbour
    public :: halo_exchange
    public :: halo_extents_t
-
+  
 contains
 
    !---------------------------------------------------------------------

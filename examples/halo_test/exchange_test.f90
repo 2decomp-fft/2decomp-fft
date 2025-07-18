@@ -454,33 +454,48 @@ contains
       integer :: jfirst, jlast ! J loop start/end
       integer :: kfirst, klast ! K loop start/end
 
+      type(halo_extents_t) :: halo_extents
+
+      integer :: s1, s2, s3
+
       call alloc_x(div3, global)
+      s1 = size(w3, dim=1)
+      s2 = size(w3, dim=2)
+      s3 = size(w3, dim=3)
+
+      halo_extents = halo_extents_t(3, [s1, s2, s3], decomp_main, 1, global)
+
+      allocate(uh(halo_extents%xs:halo_extents%xe, &
+                  halo_extents%ys:halo_extents%ye, &
+                  halo_extents%zs:halo_extents%ze))
+      allocate(vh, mold=uh)
+
+      ! Populate interiors
+      call transpose_y_to_z(u2, u3)
+      call transpose_y_to_z(v2, v3)
+      call transpose_y_to_z(w2, w3)
+      uh(halo_extents%xs+1:halo_extents%xe-1,halo_extents%ys+1:halo_extents%ye-1,halo_extents%zs:halo_extents%ze) = u3(:,:,:)
+      vh(halo_extents%xs+1:halo_extents%xe-1,halo_extents%ys+1:halo_extents%ye-1,halo_extents%zs:halo_extents%ze) = v3(:,:,:)
 
       ! Expected sizes
       nx_expected = zsize(1) + 2
       ny_expected = zsize(2) + 2
       nz_expected = nz
-
-      call transpose_y_to_z(u2, u3)
-      call transpose_y_to_z(v2, v3)
-      call transpose_y_to_z(w2, w3)
+      call test_halo_size(uh, nx_expected, ny_expected, nz_expected, "Z:u")
+      call test_halo_size(vh, nx_expected, ny_expected, nz_expected, "Z:v")
 
       ! du/dx
 #ifdef HALO_GLOBAL
-      call update_halo(u3, uh, 1, opt_global=.true., opt_pencil=3)
-      call update_halo(v3, vh, 1, opt_global=.true., opt_pencil=3)
       ifirst = zstart(1); ilast = zend(1)
       jfirst = zstart(2); jlast = zend(2)
 #else
-      call update_halo(u3, uh, 1, opt_pencil=3)
-      call update_halo(v3, vh, 1, opt_pencil=3)
       ifirst = 1; ilast = zsize(1)
       jfirst = 1; jlast = zsize(2)
 #endif
       kfirst = 2; klast = zsize(3) - 1
 
-      call test_halo_size(uh, nx_expected, ny_expected, nz_expected, "Z:u")
-      call test_halo_size(vh, nx_expected, ny_expected, nz_expected, "Z:v")
+      call halo_exchange(uh, 3, halo_extents, 1, [s1, s2, s3])
+      call halo_exchange(vh, 3, halo_extents, 1, [s1, s2, s3])
 
       !$acc data copy(div3)
       !$acc kernels default(present)

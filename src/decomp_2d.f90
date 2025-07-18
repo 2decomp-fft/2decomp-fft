@@ -27,7 +27,6 @@ module decomp_2d
    use m_decomp_pool
    use m_mem_pool
    use m_halo, only: init_neighbour
-   use m_halo, only: update_halo => update_halo ! Expose update_halo from 2decomp
 
    implicit none
 
@@ -106,7 +105,6 @@ module decomp_2d
              init_coarser_mesh_statV, fine_to_coarseV, &
              init_coarser_mesh_statP, fine_to_coarseP, &
              alloc_x, alloc_y, alloc_z, &
-             update_halo, &
              get_decomp_info, &
              get_decomp_dims, &
              d2d_log_is_active, &

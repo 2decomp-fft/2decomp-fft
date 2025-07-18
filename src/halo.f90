@@ -14,6 +14,21 @@ module m_halo
 
    implicit none
 
+   ! define neighboring blocks (to be used in halo-cell support)
+   !  first dimension 1=X-pencil, 2=Y-pencil, 3=Z-pencil
+   ! second dimension 1=east, 2=west, 3=north, 4=south, 5=top, 6=bottom
+   integer, save, dimension(3, 6) :: neighbour
+
+   type :: halo_extents_t
+      integer :: xs, xe
+      integer :: ys, ye
+      integer :: zs, ze
+   end type halo_extents_t
+
+   interface halo_extents_t
+      procedure init_halo_extents
+   end interface halo_extents_t
+
    interface update_halo
       module procedure update_halo_real
       module procedure update_halo_real_short
@@ -21,30 +36,17 @@ module m_halo
       module procedure update_halo_complex_short
    end interface update_halo
 
-   ! define neighboring blocks (to be used in halo-cell support)
-   !  first dimension 1=X-pencil, 2=Y-pencil, 3=Z-pencil
-   ! second dimension 1=east, 2=west, 3=north, 4=south, 5=top, 6=bottom
-   integer, save, dimension(3, 6) :: neighbour
+   interface halo_exchange
+      procedure halo_exchange_real
+      procedure halo_exchange_complex
+   end interface halo_exchange
 
    private
-   public :: update_halo
+   public :: update_halo 
    public :: init_neighbour
-
-  type halo_extents_t
-     integer :: xs, xe
-     integer :: ys, ye
-     integer :: zs, ze
-  end type halo_extents_t
-
-  interface halo_extents_t
-     procedure init_halo_extents
-  end interface halo_extents_t
-
-  interface halo_exchange
-     procedure halo_exchange_real
-     procedure halo_exchange_complex
-  end interface halo_exchange
-
+   public :: halo_exchange
+   public :: halo_extents_t
+  
 contains
 
    !---------------------------------------------------------------------

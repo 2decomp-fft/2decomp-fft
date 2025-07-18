@@ -5,7 +5,7 @@
 !   (2) halo-cell exchange
 ! The two method should give identical results
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-program halo_test
+program exchange_test
 
    use mpi
 
@@ -276,33 +276,47 @@ contains
       integer :: jfirst, jlast ! J loop start/end
       integer :: kfirst, klast ! K loop start/end
 
+      type(halo_extents_t) :: halo_extents
+
+      integer :: s1, s2, s3
+
       call alloc_x(div1, global)
+      s1 = size(div1, dim=1)
+      s2 = size(div1, dim=2)
+      s3 = size(div1, dim=3)
+
+      halo_extents = halo_extents_t(1, [s1, s2, s3], decomp_main, 1, global)
+
+      allocate(vh(halo_extents%xs:halo_extents%xe, &
+                  halo_extents%ys:halo_extents%ye, &
+                  halo_extents%zs:halo_extents%ze))
+      allocate(wh, mold=vh)
+
+      ! Populate interiors
+      vh(halo_extents%xs:halo_extents%xe,halo_extents%ys+1:halo_extents%ye-1,halo_extents%zs+1:halo_extents%ze-1) = v1(:,:,:)
+      wh(halo_extents%xs:halo_extents%xe,halo_extents%ys+1:halo_extents%ye-1,halo_extents%zs+1:halo_extents%ze-1) = w1(:,:,:)
 
       ! Expected sizes
       nx_expected = nx
       ny_expected = xsize(2) + 2
       nz_expected = xsize(3) + 2
+      call test_halo_size(vh, nx_expected, ny_expected, nz_expected, "X:v")
+      call test_halo_size(wh, nx_expected, ny_expected, nz_expected, "X:w")
 
       ! Only global arrays defined in initialise needs to be ported
       ! Halo array are allocated in both host and device in update_halo
       ! Halo arrays are just removed before being deallocated
 #ifdef HALO_GLOBAL
-      call update_halo(v1, vh, 1, opt_global=.true., opt_pencil=1)
-      call update_halo(w1, wh, 1, opt_global=.true., opt_pencil=1)
-
       kfirst = xstart(3); klast = xend(3)
       jfirst = xstart(2); jlast = xend(2)
 #else
-      call update_halo(v1, vh, 1, opt_pencil=1)
-      call update_halo(w1, wh, 1, opt_pencil=1)
-
       kfirst = 1; klast = xsize(3)
       jfirst = 1; jlast = xsize(2)
 #endif
       ifirst = 2; ilast = xsize(1) - 1
 
-      call test_halo_size(vh, nx_expected, ny_expected, nz_expected, "X:v")
-      call test_halo_size(wh, nx_expected, ny_expected, nz_expected, "X:w")
+      call halo_exchange(vh, 1, halo_extents, 1, [s1, s2, s3])
+      call halo_exchange(wh, 1, halo_extents, 1, [s1, s2, s3])
 
       !$acc data copy(div1)
       !$acc kernels default(present)
@@ -593,4 +607,4 @@ contains
 
    end subroutine test_halo_size
 
-end program halo_test
+ end program exchange_test

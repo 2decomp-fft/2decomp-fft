@@ -15,6 +15,35 @@ module m_info
       integer, dimension(3) :: zst, zen, zsz ! z-pencil
    end type info
 
+   ! derived type to store decomposition info for a given global data size
+   TYPE, extends(info), public :: DECOMP_INFO
+      ! starting/ending index and size are defined in the parent type, see info.f90
+
+      ! in addition to local information, processors also need to know
+      ! some global information for global communications to work
+
+      ! how each dimension is distributed along pencils
+      integer, allocatable, dimension(:) :: &
+         x1dist, y1dist, y2dist, z2dist
+
+      ! send/receive buffer counts and displacements for MPI_ALLTOALLV
+      integer, allocatable, dimension(:) :: &
+         x1cnts, y1cnts, y2cnts, z2cnts
+      integer, allocatable, dimension(:) :: &
+         x1disp, y1disp, y2disp, z2disp
+
+#ifdef EVEN
+      ! buffer counts for MPI_ALLTOALL for padded-alltoall
+      integer :: x1count, y1count, y2count, z2count
+      ! evenly distributed data
+      logical :: even
+#endif
+
+   END TYPE DECOMP_INFO
+
+   ! main (default) decomposition information for global size nx*ny*nz
+   TYPE(DECOMP_INFO), target, save, public :: decomp_main
+
    ! Default : public
    public
 

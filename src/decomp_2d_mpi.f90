@@ -38,6 +38,17 @@ module decomp_2d_mpi
       module procedure decomp_2d_warning_file_line
    end interface decomp_2d_warning
 
+   ! parameters for 2D Cartesian topology
+   integer, save, dimension(2), public :: dims, coord
+   integer, save, public :: DECOMP_2D_COMM_CART_X = MPI_COMM_NULL
+   integer, save, public :: DECOMP_2D_COMM_CART_Y = MPI_COMM_NULL
+   integer, save, public :: DECOMP_2D_COMM_CART_Z = MPI_COMM_NULL
+   integer, save, public :: DECOMP_2D_COMM_ROW = MPI_COMM_NULL
+   integer, save, public :: DECOMP_2D_COMM_COL = MPI_COMM_NULL
+
+   ! flags for periodic condition in three dimensions
+   logical, save :: periodic_x, periodic_y, periodic_z
+
 contains
 
    !

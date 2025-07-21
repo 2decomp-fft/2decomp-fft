@@ -193,7 +193,7 @@ contains
       do k = xstart(3), xend(3)
          do j = xstart(2), xend(2)
             do i = xstart(1), xend(1)
-               if (abs((u1(i, j, k) - u1b(i, j, k))) > epsilon(data1(1,1,1))) then
+               if (abs((u1(i, j, k) - u1b(i, j, k))) > epsilon(data1(1, 1, 1))) then
                   print *, u1(i, j, k), u1b(i, j, k)
                   stop 1
                end if
@@ -204,7 +204,7 @@ contains
       do k = ystart(3), yend(3)
          do j = ystart(2), yend(2)
             do i = ystart(1), yend(1)
-               if (abs((u2(i, j, k) - u2b(i, j, k))) > epsilon(data1(1,1,1))) stop 2
+               if (abs((u2(i, j, k) - u2b(i, j, k))) > epsilon(data1(1, 1, 1))) stop 2
             end do
          end do
       end do
@@ -212,7 +212,7 @@ contains
       do k = ystart(3), yend(3)
          do j = ystart(2), yend(2)
             do i = ystart(1), yend(1)
-               if (abs((u2(i, j, k) - u2c(i, j, k))) > epsilon(data1(1,1,1))) stop 2
+               if (abs((u2(i, j, k) - u2c(i, j, k))) > epsilon(data1(1, 1, 1))) stop 2
             end do
          end do
       end do
@@ -220,7 +220,7 @@ contains
       do k = zstart(3), zend(3)
          do j = zstart(2), zend(2)
             do i = zstart(1), zend(1)
-               if (abs((u3(i, j, k) - u3b(i, j, k))) > epsilon(data1(1,1,1))) stop 3
+               if (abs((u3(i, j, k) - u3b(i, j, k))) > epsilon(data1(1, 1, 1))) stop 3
             end do
          end do
       end do
@@ -229,7 +229,7 @@ contains
       do k = xstart(3), xend(3)
          do j = xstart(2), xend(2)
             do i = xstart(1), xend(1)
-               if (abs(data1(i, j, k) - u1b(i, j, k)) > epsilon(data1(1,1,1))) stop 4
+               if (abs(data1(i, j, k) - u1b(i, j, k)) > epsilon(data1(1, 1, 1))) stop 4
             end do
          end do
       end do
@@ -237,7 +237,7 @@ contains
       do k = ystart(3), yend(3)
          do j = ystart(2), yend(2)
             do i = ystart(1), yend(1)
-               if (abs((data1(i, j, k) - u2b(i, j, k))) > epsilon(data1(1,1,1))) stop 5
+               if (abs((data1(i, j, k) - u2b(i, j, k))) > epsilon(data1(1, 1, 1))) stop 5
             end do
          end do
       end do
@@ -245,7 +245,7 @@ contains
       do k = ystart(3), yend(3)
          do j = ystart(2), yend(2)
             do i = ystart(1), yend(1)
-               if (abs((data1(i, j, k) - u2c(i, j, k))) > epsilon(data1(1,1,1))) stop 5
+               if (abs((data1(i, j, k) - u2c(i, j, k))) > epsilon(data1(1, 1, 1))) stop 5
             end do
          end do
       end do
@@ -253,7 +253,7 @@ contains
       do k = zstart(3), zend(3)
          do j = zstart(2), zend(2)
             do i = zstart(1), zend(1)
-               if (abs((data1(i, j, k) - u3b(i, j, k))) > epsilon(data1(1,1,1))) stop 6
+               if (abs((data1(i, j, k) - u3b(i, j, k))) > epsilon(data1(1, 1, 1))) stop 6
             end do
          end do
       end do

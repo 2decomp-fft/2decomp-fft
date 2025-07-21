@@ -74,6 +74,7 @@ module decomp_2d_io_object_adios
       procedure :: register_var => d2d_io_family_register_var     ! Register a 3D variable
       procedure :: register_plane => d2d_io_family_register_plane ! Register a 2D variable or stacked 2D variables
       procedure :: log => d2d_io_family_log                       ! Print some information about the object
+      procedure :: get_folder => d2d_io_family_get_folder         ! Returns the name of the associated folder
    end type d2d_io_family
 
    ! Default family for ADIOS2 IO
@@ -436,6 +437,34 @@ contains
    end subroutine d2d_io_family_log
 
    !
+   ! Return the name of the associated folder
+   !
+   function d2d_io_family_get_folder(family)
+
+      implicit none
+
+      class(d2d_io_family), intent(in) :: family
+
+      character(:), allocatable :: d2d_io_family_get_folder
+
+      if (family%io%engine_type == "BP4") then
+         d2d_io_family_get_folder = trim(family%label)//".bp4"
+      else if (family%io%engine_type == "BP5") then
+         d2d_io_family_get_folder = trim(family%label)//".bp5"
+      else if (family%io%engine_type == "HDF5") then
+         d2d_io_family_get_folder = trim(family%label)//".hdf5"
+      else if (family%io%engine_type == "SST") then
+         d2d_io_family_get_folder = trim(family%label)
+      else
+         d2d_io_family_get_folder = ""
+         call decomp_2d_abort(__FILE__, __LINE__, -1, &
+                              "Engine type "//family%io%engine_type// &
+                              " label "//trim(family%label)//".")
+      end if
+
+   end function d2d_io_family_get_folder
+
+   !
    ! Set the default adios2_adios object using a XML file
    !
    subroutine set_default_adios(adios_xml)
@@ -502,21 +531,12 @@ contains
 
       ! Open IO
       if (family%io%valid) then
-         if (writer%family%io%engine_type == "BP4") then
+         if (writer%family%io%engine_type == "BP4" .or. &
+             writer%family%io%engine_type == "BP5" .or. &
+             writer%family%io%engine_type == "HDF5" .or. &
+             writer%family%io%engine_type == "SST") then
             call adios2_open(writer%engine, family%io, &
-                             trim(writer%family%label)//".bp4", &
-                             access_mode, ierror)
-         else if (writer%family%io%engine_type == "BP5") then
-            call adios2_open(writer%engine, family%io, &
-                             trim(writer%family%label)//".bp5", &
-                             access_mode, ierror)
-         else if (writer%family%io%engine_type == "HDF5") then
-            call adios2_open(writer%engine, family%io, &
-                             trim(writer%family%label)//".hdf5", &
-                             access_mode, ierror)
-         else if (writer%family%io%engine_type == "SST") then
-            call adios2_open(writer%engine, family%io, &
-                             trim(writer%family%label), &
+                             writer%family%get_folder(), &
                              access_mode, ierror)
          else
             call decomp_2d_abort(__FILE__, __LINE__, -1, &

@@ -52,9 +52,6 @@ module decomp_2d_fft
       type(decomp_info), pointer, public :: ph => null()
       type(decomp_info), private :: ph_target ! ph => ph_target or ph => decomp_main
       type(decomp_info), public :: sp
-      complex(mytype), allocatable, private :: wk2_c2c(:, :, :)
-      complex(mytype), contiguous, pointer, private :: wk2_r2c(:, :, :) => null()
-      complex(mytype), allocatable, private :: wk13(:, :, :)
       logical, private :: inplace
       logical, private :: skip_x_c2c, skip_y_c2c, skip_z_c2c
    contains
@@ -424,10 +421,16 @@ module decomp_2d_fft
       integer, intent(IN) :: isign
 
       ! Local variables
-      complex(mytype), allocatable, dimension(:, :, :) :: wk1, wk2b, wk3
+      complex(mytype), contiguous, pointer, dimension(:, :, :) :: wk2_c2c, wk1, wk2b, wk3
       integer :: k, status
 
       if (decomp_profiler_fft) call decomp_profiler_start("fft_c2c")
+
+      ! Init pointers
+      call decomp_pool_get(wk2_c2c, ph%ysz)
+      nullify (wk1)
+      nullify (wk2b)
+      nullify (wk3)
 
       if (format == PHYSICAL_IN_X .AND. isign == DECOMP_2D_FFT_FORWARD .OR. &
           format == PHYSICAL_IN_Z .AND. isign == DECOMP_2D_FFT_BACKWARD) then
@@ -441,7 +444,7 @@ module decomp_2d_fft
          if (inplace) then
             status = wrapper_c2c_inplace(c2c_x, in, isign)
          else
-            call alloc_x(wk1, ph)
+            call decomp_pool_get(wk1, ph%xsz)
             status = wrapper_c2c(c2c_x, in, wk1, isign)
          end if
          if (status /= 0) call decomp_2d_abort(__FILE__, __LINE__, status, "wrapper_c2c")
@@ -460,14 +463,14 @@ module decomp_2d_fft
                if (status /= 0) call decomp_2d_abort(__FILE__, __LINE__, status, "wrapper_c2c")
             end do
          else
-            call alloc_y(wk2b, ph)
+            call decomp_pool_get(wk2b, ph%ysz)
             do k = 1, ph%ysz(3) ! one Z-plane at a time
                !          if (isign==DECOMP_2D_FFT_FORWARD) then
                !             status = DftiComputeForward(c2c_y, wk2(:,1,k), wk2b(:,1,k))
                !          else if (isign==DECOMP_2D_FFT_BACKWARD) then
                !             status = DftiComputeBackward(c2c_y, wk2(:,1,k), wk2b(:,1,k))
                !          end if
-               status = wrapper_c2c(c2c_y, wk2_c2c(:, :, k), wk2b(1, 1, k), isign)
+               status = wrapper_c2c(c2c_y, wk2_c2c(:, :, k), wk2b(:, :, k), isign)
                if (status /= 0) call decomp_2d_abort(__FILE__, __LINE__, status, "wrapper_c2c")
             end do
          end if
@@ -476,7 +479,7 @@ module decomp_2d_fft
          if (inplace) then
             call transpose_y_to_z(wk2_c2c, out, ph)
          else
-            call alloc_z(wk3, ph)
+            call decomp_pool_get(wk3, ph%zsz)
             call transpose_y_to_z(wk2b, wk3, ph)
          end if
 
@@ -506,7 +509,7 @@ module decomp_2d_fft
          if (inplace) then
             status = wrapper_c2c_inplace(c2c_z, in, isign)
          else
-            call alloc_z(wk1, ph)
+            call decomp_pool_get(wk1, ph%zsz)
             status = wrapper_c2c(c2c_z, in, wk1, isign)
          end if
          if (status /= 0) call decomp_2d_abort(__FILE__, __LINE__, status, "wrapper_c2c")
@@ -525,14 +528,14 @@ module decomp_2d_fft
                if (status /= 0) call decomp_2d_abort(__FILE__, __LINE__, status, "wrapper_c2c")
             end do
          else
-            call alloc_y(wk2b, ph)
+            call decomp_pool_get(wk2b, ph%ysz)
             do k = 1, ph%ysz(3) ! one Z-plane at a time
                !          if (isign==DECOMP_2D_FFT_FORWARD) then
                !             status = DftiComputeForward(c2c_y, wk2(:,1,k), wk2b(:,1,k))
                !          else if (isign==DECOMP_2D_FFT_BACKWARD) then
                !             status = DftiComputeBackward(c2c_y, wk2(:,1,k), wk2b(:,1,k))
                !          end if
-               status = wrapper_c2c(c2c_y, wk2_c2c(:, :, k), wk2b(1, 1, k), isign)
+               status = wrapper_c2c(c2c_y, wk2_c2c(:, :, k), wk2b(:, :, k), isign)
                if (status /= 0) call decomp_2d_abort(__FILE__, __LINE__, status, "wrapper_c2c")
             end do
          end if
@@ -541,7 +544,7 @@ module decomp_2d_fft
          if (inplace) then
             call transpose_y_to_x(wk2_c2c, out, ph)
          else
-            call alloc_x(wk3, ph)
+            call decomp_pool_get(wk3, ph%xsz)
             call transpose_y_to_x(wk2b, wk3, ph)
          end if
 
@@ -561,9 +564,10 @@ module decomp_2d_fft
       end if
 
       ! Free memory
-      if (allocated(wk1)) deallocate (wk1)
-      if (allocated(wk2b)) deallocate (wk2b)
-      if (allocated(wk3)) deallocate (wk3)
+      call decomp_pool_free(wk2_c2c)
+      if (associated(wk1)) call decomp_pool_free(wk1)
+      if (associated(wk2b)) call decomp_pool_free(wk2b)
+      if (associated(wk3)) call decomp_pool_free(wk3)
 
       if (decomp_profiler_fft) call decomp_profiler_end("fft_c2c")
 
@@ -581,10 +585,20 @@ module decomp_2d_fft
       complex(mytype), dimension(:, :, :), intent(OUT) :: out_c
 
       ! Local variables
-      complex(mytype), allocatable, dimension(:, :, :) :: wk2b, wk3
+      complex(mytype), pointer, contiguous, dimension(:, :, :) :: wk2_r2c, wk13, wk2b, wk3
       integer :: k, status, isign
 
       if (decomp_profiler_fft) call decomp_profiler_start("fft_r2c")
+
+      ! Init pointers to null
+      call decomp_pool_get(wk2_r2c, sp%ysz)
+      if (format == PHYSICAL_IN_X) then
+         call decomp_pool_get(wk13, sp%xsz)
+      else
+         call decomp_pool_get(wk13, sp%zsz)
+      end if
+      nullify (wk2b)
+      nullify (wk3)
 
       isign = DECOMP_2D_FFT_FORWARD
 
@@ -605,10 +619,10 @@ module decomp_2d_fft
                if (status /= 0) call decomp_2d_abort(__FILE__, __LINE__, status, "wrapper_c2c")
             end do
          else
-            call alloc_y(wk2b, sp)
+            call decomp_pool_get(wk2b, sp%ysz)
             do k = 1, sp%ysz(3)
                !          status = DftiComputeForward(c2c_y2, wk2(:,1,k), wk2b(:,1,k))
-               status = wrapper_c2c(c2c_y2, wk2_r2c(:, :, k), wk2b(1, 1, k), isign)
+               status = wrapper_c2c(c2c_y2, wk2_r2c(:, :, k), wk2b(:, :, k), isign)
                if (status /= 0) call decomp_2d_abort(__FILE__, __LINE__, status, "wrapper_c2c")
             end do
          end if
@@ -617,7 +631,7 @@ module decomp_2d_fft
          if (inplace) then
             call transpose_y_to_z(wk2_r2c, out_c, sp)
          else
-            call alloc_z(wk3, sp)
+            call decomp_pool_get(wk3, sp%zsz)
             call transpose_y_to_z(wk2b, wk3, sp)
          end if
 
@@ -647,10 +661,10 @@ module decomp_2d_fft
                if (status /= 0) call decomp_2d_abort(__FILE__, __LINE__, status, "wrapper_c2c")
             end do
          else
-            call alloc_y(wk2b, sp)
+            call decomp_pool_get(wk2b, sp%ysz)
             do k = 1, sp%ysz(3)
                !          status = DftiComputeForward(c2c_y2, wk2(:,1,k), wk2b(:,1,k))
-               status = wrapper_c2c(c2c_y2, wk2_r2c(:, :, k), wk2b(1, 1, k), isign)
+               status = wrapper_c2c(c2c_y2, wk2_r2c(:, :, k), wk2b(:, :, k), isign)
                if (status /= 0) call decomp_2d_abort(__FILE__, __LINE__, status, "wrapper_c2c")
             end do
          end if
@@ -659,7 +673,7 @@ module decomp_2d_fft
          if (inplace) then
             call transpose_y_to_x(wk2_r2c, out_c, sp)
          else
-            call alloc_x(wk3, sp)
+            call decomp_pool_get(wk3, sp%xsz)
             call transpose_y_to_x(wk2b, wk3, sp)
          end if
 
@@ -675,8 +689,10 @@ module decomp_2d_fft
       end if
 
       ! Free memory
-      if (allocated(wk2b)) deallocate (wk2b)
-      if (allocated(wk3)) deallocate (wk3)
+      call decomp_pool_free(wk2_r2c)
+      call decomp_pool_free(wk13)
+      if (associated(wk2b)) call decomp_pool_free(wk2b)
+      if (associated(wk3)) call decomp_pool_free(wk3)
 
       if (decomp_profiler_fft) call decomp_profiler_end("fft_r2c")
 
@@ -695,10 +711,20 @@ module decomp_2d_fft
       real(mytype), dimension(:, :, :), intent(OUT) :: out_r
 
       ! Local variables
-      complex(mytype), allocatable, dimension(:, :, :) :: wk1, wk2b
+      complex(mytype), pointer, contiguous, dimension(:, :, :) :: wk2_r2c, wk13, wk1, wk2b
       integer :: k, status, isign
 
       if (decomp_profiler_fft) call decomp_profiler_start("fft_c2r")
+
+      ! Init pointers to null
+      call decomp_pool_get(wk2_r2c, sp%ysz)
+      if (format == PHYSICAL_IN_X) then
+         call decomp_pool_get(wk13, sp%xsz)
+      else
+         call decomp_pool_get(wk13, sp%zsz)
+      end if
+      nullify (wk1)
+      nullify (wk2b)
 
       isign = DECOMP_2D_FFT_BACKWARD
 
@@ -708,7 +734,7 @@ module decomp_2d_fft
          if (inplace) then
             status = wrapper_c2c_inplace(c2c_z2, in_c, isign)
          else
-            call alloc_z(wk1, sp)
+            call decomp_pool_get(wk1, sp%zsz)
             !       status = DftiComputeBackward(c2c_z2, in_c(:,1,1), wk1(:,1,1))
             status = wrapper_c2c(c2c_z2, in_c, wk1, isign)
          end if
@@ -728,10 +754,10 @@ module decomp_2d_fft
                if (status /= 0) call decomp_2d_abort(__FILE__, __LINE__, status, "wrapper_c2c")
             end do
          else
-            call alloc_y(wk2b, sp)
+            call decomp_pool_get(wk2b, sp%ysz)
             do k = 1, sp%ysz(3)
                !          status = DftiComputeBackward(c2c_y2, wk2(:,1,k), wk2b(:,1,k))
-               status = wrapper_c2c(c2c_y2, wk2_r2c(:, :, k), wk2b(1, 1, k), isign)
+               status = wrapper_c2c(c2c_y2, wk2_r2c(:, :, k), wk2b(:, :, k), isign)
                if (status /= 0) call decomp_2d_abort(__FILE__, __LINE__, status, "wrapper_c2c")
             end do
          end if
@@ -754,7 +780,7 @@ module decomp_2d_fft
          if (inplace) then
             status = wrapper_c2c_inplace(c2c_x2, in_c, isign)
          else
-            call alloc_x(wk1, sp)
+            call decomp_pool_get(wk1, sp%xsz)
             !       status = DftiComputeBackward(c2c_x2, in_c(:,1,1), wk1(:,1,1))
             status = wrapper_c2c(c2c_x2, in_c, wk1, isign)
          end if
@@ -774,10 +800,10 @@ module decomp_2d_fft
                if (status /= 0) call decomp_2d_abort(__FILE__, __LINE__, status, "wrapper_c2c")
             end do
          else
-            call alloc_y(wk2b, sp)
+            call decomp_pool_get(wk2b, sp%ysz)
             do k = 1, sp%ysz(3)
                !          status = DftiComputeBackward(c2c_y2, wk2(:,1,k), wk2b(:,1,k))
-               status = wrapper_c2c(c2c_y2, wk2_r2c(:, :, k), wk2b(1, 1, k), isign)
+               status = wrapper_c2c(c2c_y2, wk2_r2c(:, :, k), wk2b(:, :, k), isign)
                if (status /= 0) call decomp_2d_abort(__FILE__, __LINE__, status, "wrapper_c2c")
             end do
          end if
@@ -797,8 +823,10 @@ module decomp_2d_fft
       end if
 
       ! Free memory
-      if (allocated(wk1)) deallocate (wk1)
-      if (allocated(wk2b)) deallocate (wk2b)
+      call decomp_pool_free(wk2_r2c)
+      call decomp_pool_free(wk13)
+      if (associated(wk1)) call decomp_pool_free(wk1)
+      if (associated(wk2b)) call decomp_pool_free(wk2b)
 
       if (decomp_profiler_fft) call decomp_profiler_end("fft_c2r")
 

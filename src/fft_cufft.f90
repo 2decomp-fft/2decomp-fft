@@ -60,6 +60,11 @@ module decomp_2d_fft
       procedure, private :: c2r => decomp_2d_fft_engine_fft_c2r
    end type decomp_2d_fft_engine
 
+   ! Workspace to store the intermediate Y-pencil data
+   complex(mytype), contiguous, pointer, dimension(:, :, :) :: wk2_r2c => null(), &
+                                                               wk2_c2c => null(), &
+                                                               wk13 => null()
+
    ! common code used for all engines, including global variables,
    ! generic interface definitions and several subroutines
 #include "fft_common.f90"
@@ -264,7 +269,31 @@ module decomp_2d_fft
       integer(int_ptr_kind()) :: cufft_ws, ws
       integer :: i, j, istat
 
-      associate (tmp => engine); end associate
+      !
+      ! Allocate the workspace for intermediate y-pencil data
+      ! The largest memory block needed is the one for c2c transforms
+      !
+      call alloc_y(engine%wk2_c2c, engine%ph)
+      !
+      ! A smaller memory block is needed for r2c and c2r transforms
+      ! wk2_c2c and wk2_r2c start at the same memory location
+      !
+      !    Size of wk2_c2c : ph%ysz(1), ph%ysz(2), ph%ysz(3)
+      !    Size of wk2_r2c : sp%ysz(1), sp%ysz(2), sp%ysz(3)
+      !
+      call c_f_pointer(c_loc(engine%wk2_c2c), engine%wk2_r2c, engine%sp%ysz)
+      !
+      ! Allocate the workspace for r2c and c2r transforms
+      !
+      ! wk13 can not be easily fused with wk2_*2c due to statements such as
+      ! transpose_y_to_x(wk2_r2c, wk13, sp)
+      ! transpose_y_to_z(wk2_r2c, wk13, sp)
+      !
+      if (engine%format == PHYSICAL_IN_X) then
+         call alloc_x(engine%wk13, engine%sp)
+      else if (engine%format == PHYSICAL_IN_Z) then
+         call alloc_z(engine%wk13, engine%sp)
+      end if
 
       call decomp_2d_fft_log("cuFFT")
 
@@ -412,7 +441,15 @@ module decomp_2d_fft
 
       integer :: i, j, istat
 
+      nullify (wk2_c2c)
+      nullify (wk2_r2c)
+      nullify (wk13)
+
       if (present(engine)) then
+
+         if (allocated(engine%wk2_c2c)) deallocate (engine%wk2_c2c)
+         if (associated(engine%wk2_r2c)) nullify (engine%wk2_r2c)
+         if (allocated(engine%wk13)) deallocate (engine%wk13)
 
          do j = 1, 3
             do i = -1, 2
@@ -437,6 +474,9 @@ module decomp_2d_fft
 
       type(decomp_2d_fft_engine), target, intent(in) :: engine
 
+      wk2_c2c => engine%wk2_c2c
+      wk2_r2c => engine%wk2_r2c
+      wk13 => engine%wk13
       plan => engine%plan
       cufft_workspace => engine%cufft_workspace
 
@@ -660,7 +700,7 @@ module decomp_2d_fft
             !$acc enter data create(wk1) async
             !$acc wait
             !$acc kernels default(present)
-            wk1 = in
+            wk1(:, :, :) = in(:, :, :)
             !$acc end kernels
             call c2c_1m_x(wk1, isign, plan(isign, 1))
          end if
@@ -706,7 +746,7 @@ module decomp_2d_fft
             !$acc enter data create(wk1) async
             !$acc wait
             !$acc kernels default(present)
-            wk1 = in
+            wk1(:, :, :) = in(:, :, :)
             !$acc end kernels
             call c2c_1m_z(wk1, isign, plan(isign, 3))
          end if
@@ -925,7 +965,7 @@ module decomp_2d_fft
             !$acc enter data create(wk1) async
             !$acc wait
             !$acc kernels default(present)
-            wk1 = in_c
+            wk1(:, :, :) = in_c(:, :, :)
             !$acc end kernels
             call c2c_1m_z(wk1, 1, plan(2, 3))
          end if
@@ -987,7 +1027,7 @@ module decomp_2d_fft
             !$acc enter data create(wk1) async
             !$acc wait
             !$acc kernels default(present)
-            wk1 = in_c
+            wk1(:, :, :) = in_c(:, :, :)
             !$acc end kernels
             call c2c_1m_x(wk1, 1, plan(2, 1))
 

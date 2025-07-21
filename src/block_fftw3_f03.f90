@@ -1,18 +1,20 @@
 !! SPDX-License-Identifier: BSD-3-Clause
 
 !
-! Low-level module for a list of memory blocks
+! Low-level module for a list of memory blocks managed by FFTW
 !
 ! The external code will not use directly this object
 !
 module m_blk
 
    use iso_fortran_env, only: real32, output_unit, error_unit
-   use iso_c_binding, only: c_ptr, c_null_ptr, c_size_t, c_associated, c_loc
+   use, intrinsic :: iso_c_binding
    use decomp_2d_constants
    use decomp_2d_mpi, only: nrank, decomp_2d_abort
 
    implicit none
+
+   include "fftw3.f03"
 
    !
    ! Derived type for a memory block inside a list
@@ -20,8 +22,6 @@ module m_blk
    ! The external code will not use directly this object
    !
    type :: blk
-      ! Memory block
-      real(real32), allocatable, dimension(:), private :: dat
       ! Address of the memory block
       type(c_ptr), public :: ref = c_null_ptr
       ! True when the block is allocated
@@ -71,6 +71,7 @@ contains
       ! Local variables
       integer :: ierr
       integer(c_size_t) :: i
+      real(real32), pointer, contiguous :: dat(:)
       type(blk), pointer :: ptr
 
       ! Save a pointer to the next block if needed
@@ -87,18 +88,17 @@ contains
          call decomp_2d_abort(__FILE__, __LINE__, ierr, "Block creation failed")
 
       ! Allocate the memory and store the address
-      allocate (self%next%dat(size), stat=ierr)
-      if (ierr /= 0) &
-         call decomp_2d_abort(__FILE__, __LINE__, ierr, "Allocation failed")
-      self%next%ref = c_loc(self%next%dat)
+      self%next%ref = fftw_malloc(size * 4_c_size_t)
 
       ! Initialize the memory if needed
       if (init) then
+         call c_f_pointer(self%next%ref, dat, (/size/))
 !$omp parallel do
          do i = 1_c_size_t, size
-            self%next%dat(i) = 0._real32
+            dat(i) = 0._real32
          end do
 !$omp end parallel do
+         nullify (dat)
       end if
 
       ! Tag the block
@@ -127,9 +127,6 @@ contains
 
       class(blk), target, intent(inout) :: self
 
-      ! Local variable
-      integer :: ierr
-
       ! Safety check
       if (.not. self%allocated) &
          call decomp_2d_abort(__FILE__, __LINE__, 1, "Block must be allocated")
@@ -141,9 +138,7 @@ contains
       self%allocated = .false.
 
       ! Free memory
-      deallocate (self%dat, stat=ierr)
-      if (ierr /= 0) &
-         call decomp_2d_abort(__FILE__, __LINE__, 1, "Deallocation failed")
+      call fftw_free(self%ref)
       self%ref = c_null_ptr
 
    end subroutine blk_fin
@@ -212,33 +207,28 @@ contains
       logical, intent(in) :: init
 
       ! Local variable
-      integer :: ierr
       integer(c_size_t) :: i
+      real(real32), pointer, contiguous :: dat(:)
 
       ! Safety check
       if (.not. self%allocated) &
          call decomp_2d_abort(__FILE__, __LINE__, 1, "Block must be allocated")
 
       ! Free memory
-      deallocate (self%dat, stat=ierr)
-      if (ierr /= 0) &
-         call decomp_2d_abort(__FILE__, __LINE__, ierr, "Deallocation failed")
+      call fftw_free(self%ref)
 
-      ! Allocate again
-      allocate (self%dat(size), stat=ierr)
-      if (ierr /= 0) &
-         call decomp_2d_abort(__FILE__, __LINE__, ierr, "Allocation failed")
-
-      ! Update the address
-      self%ref = c_loc(self%dat)
+      ! Allocate again and update the address
+      self%ref = fftw_malloc(size * 4_c_size_t)
 
       ! Initialize the memory if needed
       if (init) then
+         call c_f_pointer(self%ref, dat, (/size/))
 !$omp parallel do
          do i = 1_c_size_t, size
-            self%dat(i) = 0._real32
+            dat(i) = 0._real32
          end do
 !$omp end parallel do
+         nullify (dat)
       end if
 
    end subroutine blk_resize

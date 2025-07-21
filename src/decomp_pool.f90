@@ -15,6 +15,9 @@ module m_decomp_pool
    use decomp_2d_mpi, only: decomp_2d_abort
    use m_info
    use m_mem_pool
+#ifdef _GPU
+   use cudafor
+#endif
 
    implicit none
 
@@ -47,6 +50,10 @@ module m_decomp_pool
       module procedure decomp_pool_get_real1D
       module procedure decomp_pool_get_cplx
       module procedure decomp_pool_get_cplx1D
+#ifdef _GPU
+      module procedure decomp_pool_get_real1D_device
+      module procedure decomp_pool_get_cplx1D_device
+#endif
    end interface decomp_pool_get
 
    interface decomp_pool_free
@@ -191,6 +198,76 @@ contains
       nullify (ptr3D)
 
    end subroutine decomp_pool_get_cplx1D
+
+#ifdef _GPU
+   subroutine decomp_pool_get_real1D_device(ptr, devptr)
+
+      implicit none
+
+      ! Arguments
+      real(mytype), intent(out), dimension(:), contiguous, pointer :: ptr
+      real(mytype), intent(out), dimension(:), contiguous, device, pointer :: devptr
+
+      ! Local variable
+      integer :: istat
+      type(c_devptr) :: tmp
+
+      ! Memory block on the CPU
+      call decomp_pool_get(ptr)
+
+      ! Get a device pointer to the same array
+      istat = cudaHostGetDevicePointer(tmp, c_loc(ptr), 0)
+      if (istat /= 0) &
+         call decomp_2d_abort(__FILE__, __LINE__, istat, "cudaHostGetDevicePointer")
+
+      ! Map a 1D array to the GPU memory block
+      if (mytype == KIND(0._real32)) then
+         call c_f_pointer(tmp, devptr, (/decomp_pool%get_size()/))
+      else
+         call c_f_pointer(tmp, devptr, (/decomp_pool%get_size() / 2_c_size_t/))
+      end if
+
+   end subroutine decomp_pool_get_real1D_device
+
+   subroutine decomp_pool_get_cplx1D_device(ptr, devptr, devptr_r)
+
+      implicit none
+
+      ! Arguments
+      complex(mytype), intent(out), dimension(:), contiguous, pointer :: ptr
+      complex(mytype), intent(out), dimension(:), contiguous, device, pointer :: devptr
+      real(mytype), intent(out), dimension(:), contiguous, device, pointer, optional :: devptr_r
+
+      ! Local variable
+      integer :: istat
+      type(c_devptr) :: tmp
+
+      ! Memory block on the CPU
+      call decomp_pool_get(ptr)
+
+      ! Get a device pointer to the same array
+      istat = cudaHostGetDevicePointer(tmp, c_loc(ptr), 0)
+      if (istat /= 0) &
+         call decomp_2d_abort(__FILE__, __LINE__, istat, "cudaHostGetDevicePointer")
+
+      ! Map a 1D array to the GPU memory block
+      if (mytype == KIND(0._real32)) then
+         call c_f_pointer(tmp, devptr, (/decomp_pool%get_size() / 2_c_size_t/))
+      else
+         call c_f_pointer(tmp, devptr, (/decomp_pool%get_size() / 4_c_size_t/))
+      end if
+
+      ! Provide a real buffer overlapping the complex one for NCCL
+      if (present(devptr_r)) then
+         if (mytype == KIND(0._real32)) then
+            call c_f_pointer(tmp, devptr_r, (/decomp_pool%get_size()/))
+         else
+            call c_f_pointer(tmp, devptr_r, (/decomp_pool%get_size() / 2_c_size_t/))
+         end if
+      end if
+
+   end subroutine decomp_pool_get_cplx1D_device
+#endif
 
    !
    ! Return the provided array to the free memory pool

@@ -1,4 +1,6 @@
 !! SPDX-License-Identifier: BSD-3-Clause
+! Preprocessor macro to deal with unused variables
+#define unused(x) associate(tmp => x); end associate
 
 ! This file contains the routines that transpose data from X to Y pencil
 submodule(decomp_2d) d2d_transpose_x_to_y
@@ -30,6 +32,8 @@ contains
 
 #if defined(_GPU)
       integer :: istat, nsize
+#else
+      real(mytype), pointer, contiguous, dimension(:) :: work1_r, work2_r
 #endif
 
       if (decomp_profiler_transpose) call decomp_profiler_start("transp_x_y_r")
@@ -93,27 +97,35 @@ contains
       ! define receive buffer
       ! transpose using MPI_ALLTOALL(V)
 #ifdef EVEN
+#   if defined(_NCCL)
+      ! NCCL equivalent of MPI_ALLTOALLV
+      call decomp_2d_nccl_alltoall_col_real(wk2, &
+                                            wk1, &
+                                            decomp%x1count, &
+                                            decomp%y1count)
+#   else
       call MPI_ALLTOALL(wk1, decomp%x1count, real_type, &
                         wk2, decomp%y1count, real_type, &
                         DECOMP_2D_COMM_COL, ierror)
       if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_ALLTOALL")
+#   endif
 #else
-#     if defined(_NCCL)
+#   if defined(_NCCL)
       ! NCCL equivalent of MPI_ALLTOALLV
-      call decomp_2d_nccl_send_recv_col(wk2, &
-                                        wk1, &
-                                        decomp%x1disp, &
-                                        decomp%x1cnts, &
-                                        decomp%y1disp, &
-                                        decomp%y1cnts, &
-                                        dims(1))
-#     else
+      call decomp_2d_nccl_alltoall_col_real(wk2, &
+                                            wk1, &
+                                            decomp%x1disp, &
+                                            decomp%x1cnts, &
+                                            decomp%y1disp, &
+                                            decomp%y1cnts, &
+                                            dims(1))
+#   else
       ! MPI and CUDA aware MPI
       call MPI_ALLTOALLV(wk1, decomp%x1cnts, decomp%x1disp, real_type, &
                          wk2, decomp%y1cnts, decomp%y1disp, real_type, &
                          DECOMP_2D_COMM_COL, ierror)
       if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_ALLTOALLV")
-#     endif
+#   endif
 #endif
 
       ! rearrange receive buffer
@@ -143,6 +155,8 @@ contains
 
 #if defined(_GPU)
       integer :: istat, nsize
+#else
+      complex(mytype), pointer, contiguous, dimension(:) :: work1_c, work2_c
 #endif
 
       if (decomp_profiler_transpose) call decomp_profiler_start("transp_x_y_c")
@@ -159,14 +173,15 @@ contains
 #endif
       else
 #if defined(_GPU)
-         call transpose_x_to_y_complex(src, dst, decomp, work1_c_d, work2_c_d)
+         call transpose_x_to_y_complex(src, dst, decomp, work1_c_d, work2_c_d, &
+                                       work1_r_d, work2_r_d)
 #else
          if (use_pool) then
             call decomp_pool_get(work1_c)
             call decomp_pool_get(work2_c)
          end if
          call transpose_x_to_y_complex(src, dst, decomp, work1_c, work2_c)
-         if (use_pool) then                               
+         if (use_pool) then
             call decomp_pool_free(work1_c)
             call decomp_pool_free(work2_c)
          end if
@@ -177,7 +192,7 @@ contains
 
    end subroutine transpose_x_to_y_complex_long
 
-   subroutine transpose_x_to_y_complex(src, dst, decomp, wk1, wk2)
+   subroutine transpose_x_to_y_complex(src, dst, decomp, wk1, wk2, wk1_r, wk2_r)
 
       implicit none
 
@@ -185,12 +200,17 @@ contains
       complex(mytype), dimension(:, :, :), intent(OUT) :: dst
       TYPE(DECOMP_INFO), intent(IN) :: decomp
       complex(mytype), dimension(:), intent(OUT) :: wk1, wk2
+      real(mytype), dimension(:), intent(OUT), optional :: wk1_r, wk2_r
 #if defined(_GPU)
       attributes(device) :: wk1, wk2
+      attributes(device) :: wk1_r, wk2_r
 #endif
 
       integer :: s1, s2, s3, d1, d2, d3
       integer :: ierror
+
+      unused(wk1_r)
+      unused(wk2_r)
 
       s1 = SIZE(src, 1)
       s2 = SIZE(src, 2)
@@ -202,27 +222,32 @@ contains
       ! rearrange source array as send buffer
       call mem_split_xy_complex(src, s1, s2, s3, wk1, dims(1), &
                                 decomp%x1dist, decomp)
-
       ! define receive buffer
       ! transpose using MPI_ALLTOALL(V)
 #ifdef EVEN
+#   if defined(_NCCL)
+      ! NCCL equivalent of MPI_ALLTOALL
+      ! Here we pass the real pointer since NCCL do not support complex
+      call decomp_2d_nccl_alltoall_col_cmplx(wk2_r, &
+                                             wk1_r, &
+                                             decomp%x1count, &
+                                             decomp%y1count)
+#   else
       call MPI_ALLTOALL(wk1, decomp%x1count, complex_type, &
                         wk2, decomp%y1count, complex_type, &
                         DECOMP_2D_COMM_COL, ierror)
       if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_ALLTOALL")
-
-
+#   endif
 #else
 #     if defined(_NCCL)
       ! NCCL analogue for MPI_ALLTOALLV
-      call decomp_2d_nccl_send_recv_col(wk2, &
-                                        wk1, &
-                                        decomp%x1disp, &
-                                        decomp%x1cnts, &
-                                        decomp%y1disp, &
-                                        decomp%y1cnts, &
-                                        dims(1), &
-                                        decomp_buf_size)
+      call decomp_2d_nccl_alltoall_col_cmplx(wk2_r, &
+                                             wk1_r, &
+                                             decomp%x1disp, &
+                                             decomp%x1cnts, &
+                                             decomp%y1disp, &
+                                             decomp%y1cnts, &
+                                             dims(1))
 #     else
       ! MPI and CUDA aware MPI
       call MPI_ALLTOALLV(wk1, decomp%x1cnts, decomp%x1disp, complex_type, &
@@ -272,12 +297,12 @@ contains
 
 #if defined(_GPU)
          !$acc host_data use_device(in)
-         istat = cudaMemcpy2D(out(init_pos),      & 
-                              i2 - i1 + 1,        &
-                              in(i1, 1, 1),       &
-                              n1,                 &
-                              i2 - i1 + 1,        &
-                              n2 * n3,            & 
+         istat = cudaMemcpy2D(out(init_pos), &
+                              i2 - i1 + 1, &
+                              in(i1, 1, 1), &
+                              n1, &
+                              i2 - i1 + 1, &
+                              n2 * n3, &
                               cudaMemcpyDeviceToDevice)
          !$acc end host_data
          if (istat /= 0) call decomp_2d_abort(__FILE__, __LINE__, istat, "cudaMemcpy2D")
@@ -286,7 +311,7 @@ contains
          do k = 1, n3
             do j = 1, n2
                do i = i1, i2
-                  pos = init_pos + (i-i1) + (j-1)*(i2-i1+1) + (k-1)*n2*(i2-i1+1)
+                  pos = init_pos + (i - i1) + (j - 1) * (i2 - i1 + 1) + (k - 1) * n2 * (i2 - i1 + 1)
                   out(pos) = in(i, j, k)
                end do
             end do
@@ -332,11 +357,11 @@ contains
 #if defined(_GPU)
          !$acc host_data use_device(in)
          istat = cudaMemcpy2D(out(init_pos), &
-                              i2 - i1 + 1,   &
-                              in(i1, 1, 1),  &
-                              n1,            &
-                              i2 - i1 + 1,   &
-                              n2 * n3,       &
+                              i2 - i1 + 1, &
+                              in(i1, 1, 1), &
+                              n1, &
+                              i2 - i1 + 1, &
+                              n2 * n3, &
                               cudaMemcpyDeviceToDevice)
          !$acc end host_data
          if (istat /= 0) call decomp_2d_abort(__FILE__, __LINE__, istat, "cudaMemcpy2D")
@@ -345,7 +370,7 @@ contains
          do k = 1, n3
             do j = 1, n2
                do i = i1, i2
-                  pos = init_pos + (i-i1) + (j-1)*(i2-i1+1) + (k-1)*n2*(i2-i1+1)
+                  pos = init_pos + (i - i1) + (j - 1) * (i2 - i1 + 1) + (k - 1) * n2 * (i2 - i1 + 1)
                   out(pos) = in(i, j, k)
                end do
             end do
@@ -390,12 +415,12 @@ contains
 
 #if defined(_GPU)
          !$acc host_data use_device(out)
-         istat = cudaMemcpy2D(out(1, i1, 1),      &
-                              n1 * n2,            &
-                              in(init_pos),       &
+         istat = cudaMemcpy2D(out(1, i1, 1), &
+                              n1 * n2, &
+                              in(init_pos), &
                               n1 * (i2 - i1 + 1), &
                               n1 * (i2 - i1 + 1), &
-                              n3,                 &
+                              n3, &
                               cudaMemcpyDeviceToDevice)
          !$acc end host_data
          if (istat /= 0) call decomp_2d_abort(__FILE__, __LINE__, istat, "cudaMemcpy2D")
@@ -404,7 +429,7 @@ contains
          do k = 1, n3
             do j = i1, i2
                do i = 1, n1
-                  pos = init_pos + (i-1) + (j-i1)*n1 + (k-1)*(i2-i1+1)*n1
+                  pos = init_pos + (i - 1) + (j - i1) * n1 + (k - 1) * (i2 - i1 + 1) * n1
                   out(i, j, k) = in(pos)
                end do
             end do
@@ -449,12 +474,12 @@ contains
 
 #if defined(_GPU)
          !$acc host_data use_device(out)
-         istat = cudaMemcpy2D(out(1, i1, 1),      &
-                              n1 * n2,            &
-                              in(init_pos),       &
-                              n1 * (i2 - i1 + 1), & 
-                              n1 * (i2 - i1 + 1), & 
-                              n3,                 &
+         istat = cudaMemcpy2D(out(1, i1, 1), &
+                              n1 * n2, &
+                              in(init_pos), &
+                              n1 * (i2 - i1 + 1), &
+                              n1 * (i2 - i1 + 1), &
+                              n3, &
                               cudaMemcpyDeviceToDevice)
          !$acc end host_data
          if (istat /= 0) call decomp_2d_abort(__FILE__, __LINE__, istat, "cudaMemcpy2D")
@@ -463,7 +488,7 @@ contains
          do k = 1, n3
             do j = i1, i2
                do i = 1, n1
-                  pos = init_pos + (i-1) + (j-i1)*n1 + (k-1)*(i2-i1+1)*n1
+                  pos = init_pos + (i - 1) + (j - i1) * n1 + (k - 1) * (i2 - i1 + 1) * n1
                   out(i, j, k) = in(pos)
                end do
             end do

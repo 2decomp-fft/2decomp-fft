@@ -1,16 +1,17 @@
 !! SPDX-License-Identifier: BSD-3-Clause
 
 !
-! Low-level module for a list of memory blocks
+! Low-level module for a list of memory blocks in CUDA Fortran
 !
 ! The external code will not use directly this object
 !
 module m_blk
 
    use iso_fortran_env, only: real32, output_unit, error_unit
-   use iso_c_binding, only: c_ptr, c_null_ptr, c_size_t, c_associated, c_loc
+   use, intrinsic :: iso_c_binding
    use decomp_2d_constants
    use decomp_2d_mpi, only: nrank, decomp_2d_abort
+   use cudafor
 
    implicit none
 
@@ -20,8 +21,6 @@ module m_blk
    ! The external code will not use directly this object
    !
    type :: blk
-      ! Memory block
-      real(real32), allocatable, dimension(:), private :: dat
       ! Address of the memory block
       type(c_ptr), public :: ref = c_null_ptr
       ! True when the block is allocated
@@ -56,7 +55,7 @@ contains
    !
    ! Initialize and allocate a new block in the list
    !
-   !   - size : number of elements (sinfle precision real)
+   !   - size : number of elements (single precision real)
    !   - init : flag to initialize the array to zero
    !
    subroutine blk_new(self, size, init)
@@ -71,6 +70,7 @@ contains
       ! Local variables
       integer :: ierr
       integer(c_size_t) :: i
+      real(real32), pointer, contiguous :: dat(:)
       type(blk), pointer :: ptr
 
       ! Save a pointer to the next block if needed
@@ -87,18 +87,19 @@ contains
          call decomp_2d_abort(__FILE__, __LINE__, ierr, "Block creation failed")
 
       ! Allocate the memory and store the address
-      allocate (self%next%dat(size), stat=ierr)
+      ierr = cudaHostAlloc(self%next%ref, size * 4_c_size_t, cudaHostAllocMapped)
       if (ierr /= 0) &
          call decomp_2d_abort(__FILE__, __LINE__, ierr, "Allocation failed")
-      self%next%ref = c_loc(self%next%dat)
 
       ! Initialize the memory if needed
       if (init) then
+         call c_f_pointer(self%next%ref, dat, (/size/))
 !$omp parallel do
          do i = 1_c_size_t, size
-            self%next%dat(i) = 0._real32
+            dat(i) = 0._real32
          end do
 !$omp end parallel do
+         nullify (dat)
       end if
 
       ! Tag the block
@@ -127,7 +128,6 @@ contains
 
       class(blk), target, intent(inout) :: self
 
-      ! Local variable
       integer :: ierr
 
       ! Safety check
@@ -141,9 +141,9 @@ contains
       self%allocated = .false.
 
       ! Free memory
-      deallocate (self%dat, stat=ierr)
+      ierr = cudaFreeHost(self%ref)
       if (ierr /= 0) &
-         call decomp_2d_abort(__FILE__, __LINE__, 1, "Deallocation failed")
+         call decomp_2d_abort(__FILE__, __LINE__, ierr, "cudaFreeHost")
       self%ref = c_null_ptr
 
    end subroutine blk_fin
@@ -214,31 +214,31 @@ contains
       ! Local variable
       integer :: ierr
       integer(c_size_t) :: i
+      real(real32), pointer, contiguous :: dat(:)
 
       ! Safety check
       if (.not. self%allocated) &
          call decomp_2d_abort(__FILE__, __LINE__, 1, "Block must be allocated")
 
       ! Free memory
-      deallocate (self%dat, stat=ierr)
+      ierr = cudaFreeHost(self%ref)
       if (ierr /= 0) &
-         call decomp_2d_abort(__FILE__, __LINE__, ierr, "Deallocation failed")
+         call decomp_2d_abort(__FILE__, __LINE__, ierr, "cudaFreeHost")
 
-      ! Allocate again
-      allocate (self%dat(size), stat=ierr)
+      ! Allocate again and update the address
+      ierr = cudaHostAlloc(self%ref, size * 4_c_size_t, cudaHostAllocMapped)
       if (ierr /= 0) &
          call decomp_2d_abort(__FILE__, __LINE__, ierr, "Allocation failed")
 
-      ! Update the address
-      self%ref = c_loc(self%dat)
-
       ! Initialize the memory if needed
       if (init) then
+         call c_f_pointer(self%ref, dat, (/size/))
 !$omp parallel do
          do i = 1_c_size_t, size
-            self%dat(i) = 0._real32
+            dat(i) = 0._real32
          end do
 !$omp end parallel do
+         nullify (dat)
       end if
 
    end subroutine blk_resize

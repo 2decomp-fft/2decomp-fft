@@ -10,6 +10,14 @@ _e.g._ vX.Y - YYYY-MM-DD and a new "Unreleased" section started above.
 ## Unreleased
 
 ### Added
+### Fixed
+### Changed
+### Deprecated
+### Removed
+
+## v2.1 - 2025/07/01
+
+### Added
 
 - Add the possibility to skip c2c transforms along one or several dimensions [PR #339](https://github.com/2decomp-fft/2decomp-fft/pull/339), [PR #340](https://github.com/2decomp-fft/2decomp-fft/pull/340)
 - Add profiling to transpose subroutines when `p_row` or `p_col` is equal to one. See [PR #251](https://github.com/2decomp-fft/2decomp-fft/pull/251)
@@ -22,7 +30,7 @@ _e.g._ vX.Y - YYYY-MM-DD and a new "Unreleased" section started above.
 - Add a memory pool to reduce memory usage on CPU. See [PR #376](https://github.com/2decomp-fft/2decomp-fft/pull/376) and [PR #383](https://github.com/2decomp-fft/2decomp-fft/pull/383).
 - Add support for ADIOS2 BP5. See [PR #380](https://github.com/2decomp-fft/2decomp-fft/pull/380)
 - Add padded all-to-all communications in the CI. See [PR #384](https://github.com/2decomp-fft/2decomp-fft/pull/384/)
-- Add padded all-to-all communications for GPU. See [PR #385](https://github.com/2decomp-fft/2decomp-fft/pull/385/)
+- Add padded all-to-all communications for GPU. See [PR #385](https://github.com/2decomp-fft/2decomp-fft/pull/385/) and [PR #388](https://github.com/2decomp-fft/2decomp-fft/pull/388)
 - Add a vtk.xml file in the ADIOS2 visualization example to rescale the domain in paraview. See [PR #387](https://github.com/2decomp-fft/2decomp-fft/pull/387)
 
 ### Fixed

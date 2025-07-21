@@ -262,9 +262,6 @@ contains
 
       real(mytype), allocatable, dimension(:, :, :) :: div1
       real(mytype), allocatable, dimension(:, :, :) :: vh, wh
-#if defined(_GPU)
-      attributes(device) :: vh, wh
-#endif
 
 #ifdef HALO_GLOBAL
       logical, parameter :: global = .true.
@@ -276,6 +273,9 @@ contains
       integer :: kfirst, klast ! K loop start/end
 
       call alloc_x(div1, global)
+      allocate(vh(lbound(div1,1):ubound(div1,1), lbound(div1,2)-1:ubound(div1,2)+1, lbound(div1,3)-1:ubound(div1,3)+1))
+      allocate(wh(lbound(div1,1):ubound(div1,1), lbound(div1,2)-1:ubound(div1,2)+1, lbound(div1,3)-1:ubound(div1,3)+1))
+      !$acc enter data create(vh, wh)
 
       ! Expected sizes
       nx_expected = nx
@@ -323,6 +323,7 @@ contains
       call check_err(div1, div, "X")
       !$acc end data
 
+      !$acc exit data delete(vh, wh)
       deallocate (vh, wh, div1)
 
    end subroutine test_div_haloX
@@ -336,9 +337,6 @@ contains
 
       real(mytype), allocatable, dimension(:, :, :) :: div2
       real(mytype), allocatable, dimension(:, :, :) :: uh, wh
-#if defined(_GPU)
-      attributes(device) :: uh, wh
-#endif
 
 #ifdef HALO_GLOBAL
       logical, parameter :: global = .true.
@@ -349,6 +347,14 @@ contains
       integer :: jfirst, jlast ! J loop start/end
       integer :: kfirst, klast ! K loop start/end
 
+      ! Get the shape for the temporary array
+      call alloc_y(div2, global)
+      allocate(uh(lbound(div2,1)-1:ubound(div2,1)+1, lbound(div2,2):ubound(div2,2), lbound(div2,3)-1:ubound(div2,3)+1))
+      allocate(wh(lbound(div2,1)-1:ubound(div2,1)+1, lbound(div2,2):ubound(div2,2), lbound(div2,3)-1:ubound(div2,3)+1))
+      !$acc enter data create(uh, wh)
+
+      ! div2 output will be in x
+      deallocate(div2)
       call alloc_x(div2, global)
 
       ! Expected sizes
@@ -396,6 +402,7 @@ contains
       call check_err(div2, div, "Y")
       !$acc end data
 
+      !$acc exit data delete(uh, wh)
       deallocate (uh, wh, div2)
 
    end subroutine test_div_haloY
@@ -410,9 +417,6 @@ contains
       real(mytype), allocatable, dimension(:, :, :) :: div3
 
       real(mytype), allocatable, dimension(:, :, :) :: uh, vh
-#if defined(_GPU)
-      attributes(device) :: vh, uh
-#endif
 
 #ifdef HALO_GLOBAL
       logical, parameter :: global = .true.
@@ -423,6 +427,14 @@ contains
       integer :: jfirst, jlast ! J loop start/end
       integer :: kfirst, klast ! K loop start/end
 
+      ! Get te shape for the temporary array
+      call alloc_z(div3, global)
+      allocate(uh(lbound(div3,1)-1:ubound(div3,1)+1, lbound(div3,2)-1:ubound(div3,2)+1, lbound(div3,3):ubound(div3,3)))
+      allocate(vh(lbound(div3,1)-1:ubound(div3,1)+1, lbound(div3,2)-1:ubound(div3,2)+1, lbound(div3,3):ubound(div3,3)))
+      !$acc enter data create(uh, vh)
+
+      ! div3 output will be in x
+      deallocate(div3)
       call alloc_x(div3, global)
 
       ! Expected sizes
@@ -471,6 +483,7 @@ contains
       call check_err(div3, div, "Z")
       !$acc end data
 
+      !$acc exit data delete(uh, vh)
       deallocate (uh, vh, div3)
    end subroutine test_div_haloZ
    !=====================================================================
@@ -564,9 +577,6 @@ contains
    subroutine test_halo_size(arrh, nx_expected, ny_expected, nz_expected, tag)
 
       real(mytype), dimension(:, :, :), intent(in) :: arrh
-#if defined(_GPU)
-      attributes(device) :: arrh
-#endif
       integer, intent(in) :: nx_expected, ny_expected, nz_expected
       character(len=*), intent(in) :: tag
 

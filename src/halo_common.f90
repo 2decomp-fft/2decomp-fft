@@ -104,8 +104,16 @@
        call decomp_2d_abort(__FILE__, __LINE__, 10, &
                             'Invalid data passed to update_halo')
     end if
-    allocate (out(xs:xe, ys:ye, zs:ze))
 
+    ! FIXME CPU / GPU should behave the same
+#ifdef _GPU
+    ! The GPU halo operation can not allocate the array
+    if (.not.allocated(out)) call decomp_2d_abort(__FILE__, __LINE__, 1, "The caller should allocate the array and create it on the GPU")
+#else
+    ! The CPU halo operations always allocate the array
+    if (allocated(out)) deallocate(out)
+    allocate (out(xs:xe, ys:ye, zs:ze))
+#endif
     !    out = -1.0_mytype ! fill the halo for debugging
 
     !$acc enter data create(requests,neighbour)
@@ -203,6 +211,7 @@
        call MPI_TYPE_COMMIT(halo12, ierror)
        if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_TYPE_COMMIT")
        ! receive from south
+       !$acc host_data use_device(out)
        call MPI_IRECV(out(xs, ys, zs), 1, halo12, &
                       neighbour(1, 4), tag_s, DECOMP_2D_COMM_CART_X, &
                       requests(1), ierror)
@@ -222,6 +231,7 @@
                        neighbour(1, 3), tag_n, DECOMP_2D_COMM_CART_X, &
                        requests(4), ierror)
        if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_ISSEND")
+       !$acc end host_data
        call MPI_WAITALL(4, requests, status, ierror)
        if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_WAITALL")
        call MPI_TYPE_FREE(halo12, ierror)
@@ -247,6 +257,7 @@
        end if
        icount = (s1 * (s2 + 2 * level)) * level
        ! receive from bottom
+       !$acc host_data use_device(out)
        call MPI_IRECV(out(xs, ys, zs), icount, data_type, &
                       neighbour(1, 6), tag_b, DECOMP_2D_COMM_CART_X, &
                       requests(1), ierror)
@@ -266,6 +277,7 @@
                        neighbour(1, 5), tag_t, DECOMP_2D_COMM_CART_X, &
                        requests(4), ierror)
        if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_ISSEND")
+       !$acc end host_data
        call MPI_WAITALL(4, requests, status, ierror)
        if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_WAITALL")
 #ifdef HALO_DEBUG
@@ -309,6 +321,7 @@
        call MPI_TYPE_COMMIT(halo21, ierror)
        if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_TYPE_COMMIT")
        ! receive from west
+       !$acc host_data use_device(out)
        call MPI_IRECV(out(xs, ys, zs), 1, halo21, &
                       neighbour(2, 2), tag_w, DECOMP_2D_COMM_CART_Y, &
                       requests(1), ierror)
@@ -328,6 +341,7 @@
                        neighbour(2, 1), tag_e, DECOMP_2D_COMM_CART_Y, &
                        requests(4), ierror)
        if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_ISSEND")
+       !$acc end host_data
        call MPI_WAITALL(4, requests, status, ierror)
        if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_WAITALL")
        call MPI_TYPE_FREE(halo21, ierror)
@@ -356,6 +370,7 @@
        end if
        icount = (s2 * (s1 + 2 * level)) * level
        ! receive from bottom
+       !$acc host_data use_device(out)
        call MPI_IRECV(out(xs, ys, zs), icount, data_type, &
                       neighbour(2, 6), tag_b, DECOMP_2D_COMM_CART_Y, &
                       requests(1), ierror)
@@ -375,6 +390,7 @@
                        neighbour(2, 5), tag_t, DECOMP_2D_COMM_CART_Y, &
                        requests(4), ierror)
        if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_ISSEND")
+       !$acc end host_data
        call MPI_WAITALL(4, requests, status, ierror)
        if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_WAITALL")
 #ifdef HALO_DEBUG
@@ -417,6 +433,7 @@
        call MPI_TYPE_COMMIT(halo31, ierror)
        if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_TYPE_COMMIT")
        ! receive from west
+       !$acc host_data use_device(out)
        call MPI_IRECV(out(xs, ys, zs), 1, halo31, &
                       neighbour(3, 2), tag_w, DECOMP_2D_COMM_CART_Z, &
                       requests(1), ierror)
@@ -436,6 +453,7 @@
                        neighbour(3, 1), tag_e, DECOMP_2D_COMM_CART_Z, &
                        requests(4), ierror)
        if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_ISSEND")
+       !$acc end host_data
        call MPI_WAITALL(4, requests, status, ierror)
        if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_WAITALL")
        call MPI_TYPE_FREE(halo31, ierror)
@@ -465,6 +483,7 @@
        call MPI_TYPE_COMMIT(halo32, ierror)
        if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_TYPE_COMMIT")
        ! receive from south
+       !$acc host_data use_device(out)
        call MPI_IRECV(out(xs, ys, zs), 1, halo32, &
                       neighbour(3, 4), tag_s, DECOMP_2D_COMM_CART_Z, &
                       requests(1), ierror)
@@ -484,6 +503,7 @@
                        neighbour(3, 3), tag_n, DECOMP_2D_COMM_CART_Z, &
                        requests(4), ierror)
        if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_ISSEND")
+       !$acc end host_data
        call MPI_WAITALL(4, requests, status, ierror)
        if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_WAITALL")
        call MPI_TYPE_FREE(halo32, ierror)

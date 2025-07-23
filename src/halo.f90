@@ -332,6 +332,7 @@ contains
     s2 = sizes(2)
     s3 = sizes(3)
     
+    !$acc enter data create(requests,neighbour)
     if (ipencil == 1) then
 #include "halo_exchange_x_body.f90"
     else if (ipencil == 2) then
@@ -339,6 +340,7 @@ contains
     else if (ipencil == 3) then
 #include "halo_exchange_z_body.f90"
     end if  ! pencil
+    !$acc exit data delete(neighbour,requests)
 
   end subroutine halo_exchange_real
 
@@ -369,6 +371,7 @@ contains
     s2 = sizes(2)
     s3 = sizes(3)
     
+    !$acc enter data create(requests,neighbour)
     if (ipencil == 1) then
 #include "halo_exchange_x_body.f90"
     else if (ipencil == 2) then
@@ -376,6 +379,7 @@ contains
     else if (ipencil == 3) then
 #include "halo_exchange_z_body.f90"
     end if  ! pencil
+    !$acc exit data delete(neighbour,requests)
 
   end subroutine halo_exchange_complex
   

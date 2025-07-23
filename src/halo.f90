@@ -312,6 +312,9 @@ contains
 
     type(halo_extents_t), intent(in) :: halo_extents 
     real(mytype), dimension(halo_extents%xs:halo_extents%xe,halo_extents%ys:halo_extents%ye,halo_extents%zs:halo_extents%ze), intent(inout) :: arr
+#if defined(_GPU)
+    attributes(device) :: arr
+#endif
     integer, intent(in) :: ipencil
     integer, intent(in) :: level
     integer, dimension(3), intent(in) :: sizes
@@ -348,6 +351,9 @@ contains
 
     type(halo_extents_t), intent(in) :: halo_extents 
     complex(mytype), dimension(halo_extents%xs:halo_extents%xe,halo_extents%ys:halo_extents%ye,halo_extents%zs:halo_extents%ze), intent(inout) :: arr
+#if defined(_GPU)
+    attributes(device) :: arr
+#endif
     integer, intent(in) :: ipencil
     integer, intent(in) :: level
     integer, dimension(3), intent(in) :: sizes

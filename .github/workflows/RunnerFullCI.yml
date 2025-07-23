@@ -169,29 +169,6 @@ jobs:
         rm -rf build  
     
     # Configure-Build-Run-Run on 4 cores 
-    - name: Compile Intel MKL CPU
-      run: |
-        ls -ltr ~/.bashrc
-        source /etc/profile.d/lmod.sh
-        source ~/.bash_aliases
-        module avail 
-        ml tbb
-        ml compiler-rt
-        ml umf
-        ml compiler
-        ml mpi
-        ml mkl
-        ml ifort
-        export FC=mpiifort
-        export MKL_DIR=${MKLROOT}/lib/cmake/mkl
-        cmake -S . -B build -DCMAKE_BUILD_TYPE=Dev -DBUILD_TESTING=ON -DFFT_Choice=mkl
-        cmake -S . -B build -DNX=128 -DNY=128 -DNX=128 -DMPIEXEC_MAX_NUMPROCS=4
-        cmake --build build -j 4
-        cmake --install build 
-        ctest --test-dir build
-        rm -rf build  
-    
-    # Configure-Build-Run-Run on 4 cores 
     - name: Compile IntelLLVM MKL CPU
       run: |
         ls -ltr ~/.bashrc

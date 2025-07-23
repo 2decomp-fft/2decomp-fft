@@ -107,7 +107,6 @@
      end do
   end if
 #endif
-  !$acc exit data delete(neighbour,requests)
 
   ! *** top/bottom ***
   ! all data in local memory already, no halo exchange

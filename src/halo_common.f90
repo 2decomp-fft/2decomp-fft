@@ -20,7 +20,6 @@
        halo_extents%zs:halo_extents%ze))
   !    out = -1.0_mytype ! fill the halo for debugging
 
-  !$acc enter data create(requests,neighbour)
   ! copy input data to output
   if (global) then
      ! using global coordinate

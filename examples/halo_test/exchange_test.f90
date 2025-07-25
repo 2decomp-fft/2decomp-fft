@@ -293,9 +293,11 @@ contains
       allocate(wh, mold=vh)
 
       ! Populate interiors
+      !$acc kernels default(present)
       vh(halo_extents%xs:halo_extents%xe,halo_extents%ys+1:halo_extents%ye-1,halo_extents%zs+1:halo_extents%ze-1) = v1(:,:,:)
       wh(halo_extents%xs:halo_extents%xe,halo_extents%ys+1:halo_extents%ye-1,halo_extents%zs+1:halo_extents%ze-1) = w1(:,:,:)
-
+      !$acc end kernels
+      
       ! Expected sizes
       nx_expected = nx
       ny_expected = xsize(2) + 2
@@ -385,9 +387,11 @@ contains
       allocate(wh, mold=uh)
 
       ! Populate interiors
+      !$acc kernels default(present)
       uh(halo_extents%xs+1:halo_extents%xe-1,halo_extents%ys:halo_extents%ye,halo_extents%zs+1:halo_extents%ze-1) = u2(:,:,:)
       wh(halo_extents%xs+1:halo_extents%xe-1,halo_extents%ys:halo_extents%ye,halo_extents%zs+1:halo_extents%ze-1) = w2(:,:,:)
-
+      !$acc end kernels
+      
       ! Expected sizes
       nx_expected = ysize(1) + 2
       ny_expected = ny
@@ -474,8 +478,11 @@ contains
       call transpose_y_to_z(u2, u3)
       call transpose_y_to_z(v2, v3)
       call transpose_y_to_z(w2, w3)
+
+      !$acc kernels default(present)
       uh(halo_extents%xs+1:halo_extents%xe-1,halo_extents%ys+1:halo_extents%ye-1,halo_extents%zs:halo_extents%ze) = u3(:,:,:)
       vh(halo_extents%xs+1:halo_extents%xe-1,halo_extents%ys+1:halo_extents%ye-1,halo_extents%zs:halo_extents%ze) = v3(:,:,:)
+      !$acc end kernels
 
       ! Expected sizes
       nx_expected = zsize(1) + 2

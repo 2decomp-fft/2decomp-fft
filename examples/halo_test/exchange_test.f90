@@ -5,7 +5,7 @@
 !   (2) halo-cell exchange
 ! The two method should give identical results
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-program halo_test
+program exchange_test
 
    use mpi
 
@@ -276,33 +276,49 @@ contains
       integer :: jfirst, jlast ! J loop start/end
       integer :: kfirst, klast ! K loop start/end
 
+      type(halo_extents_t) :: halo_extents
+
+      integer :: s1, s2, s3
+
       call alloc_x(div1, global)
+      s1 = size(div1, dim=1)
+      s2 = size(div1, dim=2)
+      s3 = size(div1, dim=3)
+
+      halo_extents = halo_extents_t(1, [s1, s2, s3], decomp_main, 1, global)
+
+      call alloc_x(vh, opt_global=global, opt_levels=1)
+      call alloc_x(wh, opt_global=global, opt_levels=1)
+
+      ! Populate interiors
+      !$acc data copy(halo_extents)
+      !$acc kernels default(present)
+      vh(halo_extents%xs:halo_extents%xe,halo_extents%ys+1:halo_extents%ye-1,halo_extents%zs+1:halo_extents%ze-1) = v1(:,:,:)
+      wh(halo_extents%xs:halo_extents%xe,halo_extents%ys+1:halo_extents%ye-1,halo_extents%zs+1:halo_extents%ze-1) = w1(:,:,:)
+      !$acc end kernels
+      !$acc end data
 
       ! Expected sizes
       nx_expected = nx
       ny_expected = xsize(2) + 2
       nz_expected = xsize(3) + 2
+      call test_halo_size(vh, nx_expected, ny_expected, nz_expected, "X:v")
+      call test_halo_size(wh, nx_expected, ny_expected, nz_expected, "X:w")
 
       ! Only global arrays defined in initialise needs to be ported
       ! Halo array are allocated in both host and device in update_halo
       ! Halo arrays are just removed before being deallocated
 #ifdef HALO_GLOBAL
-      call update_halo(v1, vh, 1, opt_global=.true., opt_pencil=1)
-      call update_halo(w1, wh, 1, opt_global=.true., opt_pencil=1)
-
       kfirst = xstart(3); klast = xend(3)
       jfirst = xstart(2); jlast = xend(2)
 #else
-      call update_halo(v1, vh, 1, opt_pencil=1)
-      call update_halo(w1, wh, 1, opt_pencil=1)
-
       kfirst = 1; klast = xsize(3)
       jfirst = 1; jlast = xsize(2)
 #endif
       ifirst = 2; ilast = xsize(1) - 1
 
-      call test_halo_size(vh, nx_expected, ny_expected, nz_expected, "X:v")
-      call test_halo_size(wh, nx_expected, ny_expected, nz_expected, "X:w")
+      call halo_exchange(vh, 1, halo_extents, 1, [s1, s2, s3])
+      call halo_exchange(wh, 1, halo_extents, 1, [s1, s2, s3])
 
       !$acc data copy(div1)
       !$acc kernels default(present)
@@ -350,33 +366,51 @@ contains
       integer :: jfirst, jlast ! J loop start/end
       integer :: kfirst, klast ! K loop start/end
 
-      call alloc_x(div2, global)
+      type(halo_extents_t) :: halo_extents
 
-      ! Expected sizes
-      nx_expected = ysize(1) + 2
-      ny_expected = ny
-      nz_expected = ysize(3) + 2
+      integer :: s1, s2, s3
 
       call transpose_x_to_y(u1, u2)
       call transpose_x_to_y(v1, v2)
       call transpose_x_to_y(w1, w2)
 
+      call alloc_x(div2, global)
+      s1 = size(u2, dim=1)
+      s2 = size(u2, dim=2)
+      s3 = size(u2, dim=3)
+
+      halo_extents = halo_extents_t(2, [s1, s2, s3], decomp_main, 1, global)
+
+      call alloc_y(uh, opt_global=global, opt_levels=1)
+      call alloc_y(wh, opt_global=global, opt_levels=1)
+
+      ! Populate interiors
+      !$acc data copy(halo_extents)
+      !$acc kernels default(present)
+      uh(halo_extents%xs+1:halo_extents%xe-1,halo_extents%ys:halo_extents%ye,halo_extents%zs+1:halo_extents%ze-1) = u2(:,:,:)
+      wh(halo_extents%xs+1:halo_extents%xe-1,halo_extents%ys:halo_extents%ye,halo_extents%zs+1:halo_extents%ze-1) = w2(:,:,:)
+      !$acc end kernels
+      !$acc end data
+      
+      ! Expected sizes
+      nx_expected = ysize(1) + 2
+      ny_expected = ny
+      nz_expected = ysize(3) + 2
+      call test_halo_size(uh, nx_expected, ny_expected, nz_expected, "Y:u")
+      call test_halo_size(wh, nx_expected, ny_expected, nz_expected, "Y:w")
+
       ! du/dx
 #ifdef HALO_GLOBAL
-      call update_halo(u2, uh, 1, opt_global=.true., opt_pencil=2)
-      call update_halo(w2, wh, 1, opt_global=.true., opt_pencil=2)
       kfirst = ystart(3); klast = yend(3)
       ifirst = ystart(1); ilast = yend(1)
 #else
-      call update_halo(u2, uh, 1, opt_pencil=2)
-      call update_halo(w2, wh, 1, opt_pencil=2)
       kfirst = 1; klast = ysize(3)
       ifirst = 1; ilast = ysize(1)
 #endif
       jfirst = 2; jlast = ysize(2) - 1
 
-      call test_halo_size(uh, nx_expected, ny_expected, nz_expected, "Y:u")
-      call test_halo_size(wh, nx_expected, ny_expected, nz_expected, "Y:w")
+      call halo_exchange(uh, 2, halo_extents, 1, [s1, s2, s3])
+      call halo_exchange(wh, 2, halo_extents, 1, [s1, s2, s3])
 
       !$acc data copy(div2)
       !$acc kernels default(present)
@@ -424,33 +458,51 @@ contains
       integer :: jfirst, jlast ! J loop start/end
       integer :: kfirst, klast ! K loop start/end
 
+      type(halo_extents_t) :: halo_extents
+
+      integer :: s1, s2, s3
+
       call alloc_x(div3, global)
+      s1 = size(w3, dim=1)
+      s2 = size(w3, dim=2)
+      s3 = size(w3, dim=3)
+
+      halo_extents = halo_extents_t(3, [s1, s2, s3], decomp_main, 1, global)
+
+      call alloc_z(uh, opt_global=global, opt_levels=1)
+      call alloc_z(vh, opt_global=global, opt_levels=1)
+
+      ! Populate interiors
+      call transpose_y_to_z(u2, u3)
+      call transpose_y_to_z(v2, v3)
+      call transpose_y_to_z(w2, w3)
+
+      !$acc data copy(halo_extents)
+      !$acc kernels default(present)
+      uh(halo_extents%xs+1:halo_extents%xe-1,halo_extents%ys+1:halo_extents%ye-1,halo_extents%zs:halo_extents%ze) = u3(:,:,:)
+      vh(halo_extents%xs+1:halo_extents%xe-1,halo_extents%ys+1:halo_extents%ye-1,halo_extents%zs:halo_extents%ze) = v3(:,:,:)
+      !$acc end kernels
+      !$acc end data
 
       ! Expected sizes
       nx_expected = zsize(1) + 2
       ny_expected = zsize(2) + 2
       nz_expected = nz
-
-      call transpose_y_to_z(u2, u3)
-      call transpose_y_to_z(v2, v3)
-      call transpose_y_to_z(w2, w3)
+      call test_halo_size(uh, nx_expected, ny_expected, nz_expected, "Z:u")
+      call test_halo_size(vh, nx_expected, ny_expected, nz_expected, "Z:v")
 
       ! du/dx
 #ifdef HALO_GLOBAL
-      call update_halo(u3, uh, 1, opt_global=.true., opt_pencil=3)
-      call update_halo(v3, vh, 1, opt_global=.true., opt_pencil=3)
       ifirst = zstart(1); ilast = zend(1)
       jfirst = zstart(2); jlast = zend(2)
 #else
-      call update_halo(u3, uh, 1, opt_pencil=3)
-      call update_halo(v3, vh, 1, opt_pencil=3)
       ifirst = 1; ilast = zsize(1)
       jfirst = 1; jlast = zsize(2)
 #endif
       kfirst = 2; klast = zsize(3) - 1
 
-      call test_halo_size(uh, nx_expected, ny_expected, nz_expected, "Z:u")
-      call test_halo_size(vh, nx_expected, ny_expected, nz_expected, "Z:v")
+      call halo_exchange(uh, 3, halo_extents, 1, [s1, s2, s3])
+      call halo_exchange(vh, 3, halo_extents, 1, [s1, s2, s3])
 
       !$acc data copy(div3)
       !$acc kernels default(present)
@@ -593,4 +645,4 @@ contains
 
    end subroutine test_halo_size
 
-end program halo_test
+ end program exchange_test

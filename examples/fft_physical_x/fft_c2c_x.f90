@@ -89,7 +89,7 @@ program fft_c2c_x
    if (nrank == 0) then
       write (*, *) '===== c2c interface ====='
       write (*, *) 'First iteration with dedicated timer'
-      write (*, *) '     time (sec): ', t1, t3
+      write (*, '(A,ES14.8,1x,A,1x,ES14.8)') 'time (sec): ', t1,',', t3
       write (*, *) ''
    end if
    ! Init the time
@@ -155,7 +155,7 @@ program fft_c2c_x
 
    if (nrank == 0) then
       write (*, *) 'error / mesh point: ', error
-      write (*, *) 'Avg time (sec): ', t1, t3
+      write (*, '(A,ES14.8,1x,A,1x,ES14.8)') 'Avg time (sec): ', t1,',', t3
       n1 = real(nx) * real(ny) * real(nz)
       n1 = n1**(1.d0 / 3.d0)
       ! 5n*log(n) flops per 1D FFT of size n using Cooley-Tukey algorithm
@@ -163,7 +163,7 @@ program fft_c2c_x
       ! 3 sets of 1D FFTs for 3 directions, each having n^2 1D FFTs
       flops = flops * 3.d0 * n1**2
       flops = 2.d0 * flops / (t1 + t3)
-      write (*, *) 'GFLOPS : ', flops / 1000.d0**3
+      write (*, '(A,ES14.8)') 'GFLOPS : ', flops / 1000.d0**3
       write (*, *) '   '
       write (*, *) 'fft_c2c_x completed '
       write (*, *) '   '

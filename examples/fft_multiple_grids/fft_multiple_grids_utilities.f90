@@ -105,7 +105,7 @@ contains
          end if
          write (*, *) ''
          write (*, *) 'First iteration with dedicated timer'
-         write (*, *) '     time (sec): ', t1 / dble(nproc), t2 / dble(nproc)
+         write (*, '(A,ES14.8,1x,A,1x,ES14.8)') ' time (sec): ', t1 / dble(nproc),',', t2 / dble(nproc)
          write (*, *) ''
       end if
 
@@ -175,7 +175,7 @@ contains
       ! Print some stuff
       if (nrank == 0) then
          write (*, *) 'error / mesh point: ', error
-         write (*, *) 'Avg time (sec): ', t1, t2
+         write (*, '(A,ES14.8,1x,A,1x,ES14.8)') 'Avg time (sec): ', t1,',', t2
          write (*, *) ''
       end if
 
@@ -301,7 +301,7 @@ contains
          end if
          write (*, *) ''
          write (*, *) 'First iteration with dedicated timer'
-         write (*, *) '     time (sec): ', t1 / dble(nproc), t2 / dble(nproc)
+         write (*, '(A,ES14.8,1x,A,1x,ES14.8)') ' time (sec): ', t1 / dble(nproc),',', t2 / dble(nproc)
          write (*, *) ''
       end if
 
@@ -370,7 +370,7 @@ contains
       ! Print some stuff
       if (nrank == 0) then
          write (*, *) 'error / mesh point: ', error
-         write (*, *) 'Avg time (sec): ', t1, t2
+         write (*, '(A,ES14.8,1x,A,1x,ES14.8)') 'Avg time (sec): ', t1,',', t2
          write (*, *) ''
       end if
 

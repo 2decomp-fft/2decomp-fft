@@ -123,7 +123,7 @@ program timing2d_real
    t6 = 0.d0
    t8 = 0.d0
    if (nrank == 0) then
-      write (*, *) 'Tot time it 0 ', t1
+      write (*, '(A,F8.6)') 'Tot time it 0: ', t1
    end if
    do iter = 1, niter
       !!!!!!!!!!!!!!!!!!!!!!!
@@ -240,11 +240,11 @@ program timing2d_real
    t7 = t7 / dble(nproc) / dble(niter)
    t8 = t1 + t3 + t5 + t7
    if (nrank == 0) then
-      write (*, *) 'Avg Time X->Y ', t1
-      write (*, *) 'Avg Time Y->Z ', t3
-      write (*, *) 'Avg Time Z->Y ', t5
-      write (*, *) 'Avg Time Y->X ', t7
-      write (*, *) 'Avg Time TOT  ', t8
+      write (*, '(A,ES14.8)') 'Avg Time X->Y: ', t1
+      write (*, '(A,ES14.8)') 'Avg Time Y->Z: ', t3
+      write (*, '(A,ES14.8)') 'Avg Time Z->Y: ', t5
+      write (*, '(A,ES14.8)') 'Avg Time Y->X: ', t7
+      write (*, '(A,ES14.8)') 'Avg Time TOT : ', t8
    end if
 
    if (nrank == 0) then

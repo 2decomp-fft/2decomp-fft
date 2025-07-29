@@ -234,6 +234,20 @@ module decomp_2d
       module procedure alloc_x_ints_short
       module procedure alloc_x_logs
       module procedure alloc_x_logs_short
+#if defined(_GPU)
+      module procedure alloc_x_dev_freal
+      module procedure alloc_x_dev_freal_short
+      module procedure alloc_x_dev_dreal
+      module procedure alloc_x_dev_dreal_short
+      module procedure alloc_x_dev_fcplx
+      module procedure alloc_x_dev_fcplx_short
+      module procedure alloc_x_dev_dcplx
+      module procedure alloc_x_dev_dcplx_short
+      module procedure alloc_x_dev_ints
+      module procedure alloc_x_dev_ints_short
+      module procedure alloc_x_dev_logs
+      module procedure alloc_x_dev_logs_short
+#endif
    end interface alloc_x
 
    interface alloc_y
@@ -249,6 +263,20 @@ module decomp_2d
       module procedure alloc_y_ints_short
       module procedure alloc_y_logs
       module procedure alloc_y_logs_short
+#if defined(_GPU)
+      module procedure alloc_y_dev_freal
+      module procedure alloc_y_dev_freal_short
+      module procedure alloc_y_dev_dreal
+      module procedure alloc_y_dev_dreal_short
+      module procedure alloc_y_dev_fcplx
+      module procedure alloc_y_dev_fcplx_short
+      module procedure alloc_y_dev_dcplx
+      module procedure alloc_y_dev_dcplx_short
+      module procedure alloc_y_dev_ints
+      module procedure alloc_y_dev_ints_short
+      module procedure alloc_y_dev_logs
+      module procedure alloc_y_dev_logs_short
+#endif
    end interface alloc_y
 
    interface alloc_z
@@ -264,6 +292,20 @@ module decomp_2d
       module procedure alloc_z_ints_short
       module procedure alloc_z_logs
       module procedure alloc_z_logs_short
+#if defined(_GPU)
+      module procedure alloc_z_dev_freal
+      module procedure alloc_z_dev_freal_short
+      module procedure alloc_z_dev_dreal
+      module procedure alloc_z_dev_dreal_short
+      module procedure alloc_z_dev_fcplx
+      module procedure alloc_z_dev_fcplx_short
+      module procedure alloc_z_dev_dcplx
+      module procedure alloc_z_dev_dcplx_short
+      module procedure alloc_z_dev_ints
+      module procedure alloc_z_dev_ints_short
+      module procedure alloc_z_dev_logs
+      module procedure alloc_z_dev_logs_short
+#endif
    end interface alloc_z
 
    interface
@@ -1167,5 +1209,6 @@ contains
    ! Utility routines to help allocate 3D arrays
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 #include "alloc.f90"
+#include "alloc_dev.f90"
 
 end module decomp_2d

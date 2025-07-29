@@ -16,7 +16,7 @@
 
      integer, intent(IN) :: ipencil
      TYPE(DECOMP_INFO), intent(IN) :: decomp
-     integer, intent(IN) :: levels ! How many halo levels to allocate?
+     integer, dimension(3), intent(IN) :: levels ! How many halo levels to allocate?
      logical, intent(IN), optional :: opt_global
      real(real32), allocatable, dimension(:, :, :), intent(INOUT), optional :: freal
      real(real64), allocatable, dimension(:, :, :), intent(INOUT), optional :: dreal
@@ -29,7 +29,6 @@
      integer :: ierror
      integer :: st1, st2, st3
      integer :: en1, en2, en3
-     integer :: xlevels, ylevels, zlevels
 
      if (present(opt_global)) then
         global = opt_global
@@ -90,22 +89,12 @@
      end if
 
      ! Set halo levels
-     xlevels = levels
-     ylevels = levels
-     zlevels = levels
-     if (ipencil == 1) then
-        xlevels = 0
-     else if (ipencil == 2) then
-        ylevels = 0
-     else if (ipencil == 3) then
-        zlevels = 0
-     end if
-     st1 = st1 - xlevels
-     en1 = en1 + xlevels
-     st2 = st2 - ylevels
-     en2 = en2 + ylevels
-     st3 = st3 - zlevels
-     en3 = en3 + zlevels
+     st1 = st1 - levels(1)
+     en1 = en1 + levels(1)
+     st2 = st2 - levels(2)
+     en2 = en2 + levels(2)
+     st3 = st3 - levels(3)
+     en3 = en3 + levels(3)
 
      if (present(freal)) then
         if (allocated(freal)) deallocate (freal)
@@ -152,7 +141,7 @@
      implicit none
 
      real(real32), allocatable, dimension(:, :, :) :: var
-     integer, intent(IN), optional :: opt_levels
+     integer, dimension(3), intent(IN), optional :: opt_levels
      logical, intent(IN), optional :: opt_global
 
      call alloc_x(var, decomp_main, opt_global, opt_levels)
@@ -164,7 +153,7 @@
      implicit none
 
      real(real64), allocatable, dimension(:, :, :) :: var
-     integer, intent(IN), optional :: opt_levels
+     integer, dimension(3), intent(IN), optional :: opt_levels
      logical, intent(IN), optional :: opt_global
 
      call alloc_x(var, decomp_main, opt_global, opt_levels)
@@ -176,7 +165,7 @@
      implicit none
 
      complex(real32), allocatable, dimension(:, :, :) :: var
-     integer, intent(IN), optional :: opt_levels
+     integer, dimension(3), intent(IN), optional :: opt_levels
      logical, intent(IN), optional :: opt_global
 
      call alloc_x(var, decomp_main, opt_global, opt_levels)
@@ -188,7 +177,7 @@
      implicit none
 
      complex(real64), allocatable, dimension(:, :, :) :: var
-     integer, intent(IN), optional :: opt_levels
+     integer, dimension(3), intent(IN), optional :: opt_levels
      logical, intent(IN), optional :: opt_global
 
      call alloc_x(var, decomp_main, opt_global, opt_levels)
@@ -200,7 +189,7 @@
      implicit none
 
      integer, allocatable, dimension(:, :, :) :: var
-     integer, intent(IN), optional :: opt_levels
+     integer, dimension(3), intent(IN), optional :: opt_levels
      logical, intent(IN), optional :: opt_global
 
      call alloc_x(var, decomp_main, opt_global, opt_levels)
@@ -212,7 +201,7 @@
      implicit none
 
      logical, allocatable, dimension(:, :, :) :: var
-     integer, intent(IN), optional :: opt_levels
+     integer, dimension(3), intent(IN), optional :: opt_levels
      logical, intent(IN), optional :: opt_global
 
      call alloc_x(var, decomp_main, opt_global, opt_levels)
@@ -225,15 +214,15 @@
 
      real(real32), allocatable, dimension(:, :, :) :: var
      TYPE(DECOMP_INFO), intent(IN) :: decomp
-     integer, intent(IN), optional :: opt_levels
+     integer, dimension(3), intent(IN), optional :: opt_levels
      logical, intent(IN), optional :: opt_global
 
-     integer :: levels
+     integer, dimension(3) :: levels
 
      if (present(opt_levels)) then
         levels = opt_levels
      else
-        levels = 0
+        levels = decomp%xlevel
      end if
 
      call alloc(1, decomp, levels, opt_global, freal=var)
@@ -246,15 +235,15 @@
 
      real(real64), allocatable, dimension(:, :, :) :: var
      TYPE(DECOMP_INFO), intent(IN) :: decomp
-     integer, intent(IN), optional :: opt_levels
+     integer, dimension(3), intent(IN), optional :: opt_levels
      logical, intent(IN), optional :: opt_global
 
-     integer :: levels
+     integer, dimension(3) :: levels
 
      if (present(opt_levels)) then
         levels = opt_levels
      else
-        levels = 0
+        levels = decomp%xlevel
      end if
 
      call alloc(1, decomp, levels, opt_global, dreal=var)
@@ -267,15 +256,15 @@
 
      complex(real32), allocatable, dimension(:, :, :) :: var
      TYPE(DECOMP_INFO), intent(IN) :: decomp
-     integer, intent(IN), optional :: opt_levels
+     integer, dimension(3), intent(IN), optional :: opt_levels
      logical, intent(IN), optional :: opt_global
 
-     integer :: levels
+     integer, dimension(3) :: levels
 
      if (present(opt_levels)) then
         levels = opt_levels
      else
-        levels = 0
+        levels = decomp%xlevel
      end if
 
      call alloc(1, decomp, levels, opt_global, fcplx=var)
@@ -288,15 +277,15 @@
 
      complex(real64), allocatable, dimension(:, :, :) :: var
      TYPE(DECOMP_INFO), intent(IN) :: decomp
-     integer, intent(IN), optional :: opt_levels
+     integer, dimension(3), intent(IN), optional :: opt_levels
      logical, intent(IN), optional :: opt_global
 
-     integer :: levels
+     integer, dimension(3) :: levels
 
      if (present(opt_levels)) then
         levels = opt_levels
      else
-        levels = 0
+        levels = decomp%xlevel
      end if
 
      call alloc(1, decomp, levels, opt_global, dcplx=var)
@@ -309,15 +298,15 @@
 
      integer, allocatable, dimension(:, :, :) :: var
      TYPE(DECOMP_INFO), intent(IN) :: decomp
-     integer, intent(IN), optional :: opt_levels
+     integer, dimension(3), intent(IN), optional :: opt_levels
      logical, intent(IN), optional :: opt_global
 
-     integer :: levels
+     integer, dimension(3) :: levels
 
      if (present(opt_levels)) then
         levels = opt_levels
      else
-        levels = 0
+        levels = decomp%xlevel
      end if
 
      call alloc(1, decomp, levels, opt_global, ints=var)
@@ -330,15 +319,15 @@
 
      logical, allocatable, dimension(:, :, :) :: var
      TYPE(DECOMP_INFO), intent(IN) :: decomp
-     integer, intent(IN), optional :: opt_levels
+     integer, dimension(3), intent(IN), optional :: opt_levels
      logical, intent(IN), optional :: opt_global
 
-     integer :: levels
+     integer, dimension(3) :: levels
 
      if (present(opt_levels)) then
         levels = opt_levels
      else
-        levels = 0
+        levels = decomp%xlevel
      end if
 
      call alloc(1, decomp, levels, opt_global, logs=var)
@@ -353,7 +342,7 @@
      implicit none
 
      real(real32), allocatable, dimension(:, :, :) :: var
-     integer, intent(IN), optional :: opt_levels
+     integer, dimension(3), intent(IN), optional :: opt_levels
      logical, intent(IN), optional :: opt_global
 
      call alloc_y(var, decomp_main, opt_global, opt_levels)
@@ -365,7 +354,7 @@
      implicit none
 
      real(real64), allocatable, dimension(:, :, :) :: var
-     integer, intent(IN), optional :: opt_levels
+     integer, dimension(3), intent(IN), optional :: opt_levels
      logical, intent(IN), optional :: opt_global
 
      call alloc_y(var, decomp_main, opt_global, opt_levels)
@@ -377,7 +366,7 @@
      implicit none
 
      complex(real32), allocatable, dimension(:, :, :) :: var
-     integer, intent(IN), optional :: opt_levels
+     integer, dimension(3), intent(IN), optional :: opt_levels
      logical, intent(IN), optional :: opt_global
 
      call alloc_y(var, decomp_main, opt_global, opt_levels)
@@ -389,7 +378,7 @@
      implicit none
 
      complex(real64), allocatable, dimension(:, :, :) :: var
-     integer, intent(IN), optional :: opt_levels
+     integer, dimension(3), intent(IN), optional :: opt_levels
      logical, intent(IN), optional :: opt_global
 
      call alloc_y(var, decomp_main, opt_global, opt_levels)
@@ -401,7 +390,7 @@
      implicit none
 
      integer, allocatable, dimension(:, :, :) :: var
-     integer, intent(IN), optional :: opt_levels
+     integer, dimension(3), intent(IN), optional :: opt_levels
      logical, intent(IN), optional :: opt_global
 
      call alloc_y(var, decomp_main, opt_global, opt_levels)
@@ -414,7 +403,7 @@
 
      logical, allocatable, dimension(:, :, :) :: var
 
-     integer, intent(IN), optional :: opt_levels
+     integer, dimension(3), intent(IN), optional :: opt_levels
      logical, intent(IN), optional :: opt_global
 
      call alloc_y(var, decomp_main, opt_global, opt_levels)
@@ -427,15 +416,15 @@
 
      real(real32), allocatable, dimension(:, :, :) :: var
      TYPE(DECOMP_INFO), intent(IN) :: decomp
-     integer, intent(IN), optional :: opt_levels
+     integer, dimension(3), intent(IN), optional :: opt_levels
      logical, intent(IN), optional :: opt_global
 
-     integer :: levels
+     integer, dimension(3) :: levels
 
      if (present(opt_levels)) then
         levels = opt_levels
      else
-        levels = 0
+        levels = decomp%ylevel
      end if
 
      call alloc(2, decomp, levels, opt_global, freal=var)
@@ -448,15 +437,15 @@
 
      real(real64), allocatable, dimension(:, :, :) :: var
      TYPE(DECOMP_INFO), intent(IN) :: decomp
-     integer, intent(IN), optional :: opt_levels
+     integer, dimension(3), intent(IN), optional :: opt_levels
      logical, intent(IN), optional :: opt_global
 
-     integer :: levels
+     integer, dimension(3) :: levels
 
      if (present(opt_levels)) then
         levels = opt_levels
      else
-        levels = 0
+        levels = decomp%ylevel
      end if
 
      call alloc(2, decomp, levels, opt_global, dreal=var)
@@ -469,15 +458,15 @@
 
      complex(real32), allocatable, dimension(:, :, :) :: var
      TYPE(DECOMP_INFO), intent(IN) :: decomp
-     integer, intent(IN), optional :: opt_levels
+     integer, dimension(3), intent(IN), optional :: opt_levels
      logical, intent(IN), optional :: opt_global
 
-     integer :: levels
+     integer, dimension(3) :: levels
 
      if (present(opt_levels)) then
         levels = opt_levels
      else
-        levels = 0
+        levels = decomp%ylevel
      end if
 
      call alloc(2, decomp, levels, opt_global, fcplx=var)
@@ -490,15 +479,15 @@
 
      complex(real64), allocatable, dimension(:, :, :) :: var
      TYPE(DECOMP_INFO), intent(IN) :: decomp
-     integer, intent(IN), optional :: opt_levels
+     integer, dimension(3), intent(IN), optional :: opt_levels
      logical, intent(IN), optional :: opt_global
 
-     integer :: levels
+     integer, dimension(3) :: levels
 
      if (present(opt_levels)) then
         levels = opt_levels
      else
-        levels = 0
+        levels = decomp%ylevel
      end if
 
      call alloc(2, decomp, levels, opt_global, dcplx=var)
@@ -511,15 +500,15 @@
 
      integer, allocatable, dimension(:, :, :) :: var
      TYPE(DECOMP_INFO), intent(IN) :: decomp
-     integer, intent(IN), optional :: opt_levels
+     integer, dimension(3), intent(IN), optional :: opt_levels
      logical, intent(IN), optional :: opt_global
 
-     integer :: levels
+     integer, dimension(3) :: levels
 
      if (present(opt_levels)) then
         levels = opt_levels
      else
-        levels = 0
+        levels = decomp%ylevel
      end if
 
      call alloc(2, decomp, levels, opt_global, ints=var)
@@ -532,15 +521,15 @@
 
      logical, allocatable, dimension(:, :, :) :: var
      TYPE(DECOMP_INFO), intent(IN) :: decomp
-     integer, intent(IN), optional :: opt_levels
+     integer, dimension(3), intent(IN), optional :: opt_levels
      logical, intent(IN), optional :: opt_global
 
-     integer :: levels
+     integer, dimension(3) :: levels
 
      if (present(opt_levels)) then
         levels = opt_levels
      else
-        levels = 0
+        levels = decomp%ylevel
      end if
 
      call alloc(2, decomp, levels, opt_global, logs=var)
@@ -555,7 +544,7 @@
      implicit none
 
      real(real32), allocatable, dimension(:, :, :) :: var
-     integer, intent(IN), optional :: opt_levels
+     integer, dimension(3), intent(IN), optional :: opt_levels
      logical, intent(IN), optional :: opt_global
 
      call alloc_z(var, decomp_main, opt_global, opt_levels)
@@ -567,7 +556,7 @@
      implicit none
 
      real(real64), allocatable, dimension(:, :, :) :: var
-     integer, intent(IN), optional :: opt_levels
+     integer, dimension(3), intent(IN), optional :: opt_levels
      logical, intent(IN), optional :: opt_global
 
      call alloc_z(var, decomp_main, opt_global, opt_levels)
@@ -579,7 +568,7 @@
      implicit none
 
      complex(real32), allocatable, dimension(:, :, :) :: var
-     integer, intent(IN), optional :: opt_levels
+     integer, dimension(3), intent(IN), optional :: opt_levels
      logical, intent(IN), optional :: opt_global
 
      call alloc_z(var, decomp_main, opt_global, opt_levels)
@@ -591,7 +580,7 @@
      implicit none
 
      complex(real64), allocatable, dimension(:, :, :) :: var
-     integer, intent(IN), optional :: opt_levels
+     integer, dimension(3), intent(IN), optional :: opt_levels
      logical, intent(IN), optional :: opt_global
 
      call alloc_z(var, decomp_main, opt_global, opt_levels)
@@ -603,7 +592,7 @@
      implicit none
 
      integer, allocatable, dimension(:, :, :) :: var
-     integer, intent(IN), optional :: opt_levels
+     integer, dimension(3), intent(IN), optional :: opt_levels
      logical, intent(IN), optional :: opt_global
 
      call alloc_z(var, decomp_main, opt_global, opt_levels)
@@ -615,7 +604,7 @@
      implicit none
 
      logical, allocatable, dimension(:, :, :) :: var
-     integer, intent(IN), optional :: opt_levels
+     integer, dimension(3), intent(IN), optional :: opt_levels
      logical, intent(IN), optional :: opt_global
 
      call alloc_z(var, decomp_main, opt_global, opt_levels)
@@ -628,15 +617,15 @@
 
      real(real32), allocatable, dimension(:, :, :) :: var
      TYPE(DECOMP_INFO), intent(IN) :: decomp
-     integer, intent(IN), optional :: opt_levels
+     integer, dimension(3), intent(IN), optional :: opt_levels
      logical, intent(IN), optional :: opt_global
 
-     integer :: levels
+     integer, dimension(3) :: levels
 
      if (present(opt_levels)) then
         levels = opt_levels
      else
-        levels = 0
+        levels = decomp%zlevel
      end if
      call alloc(3, decomp, levels, opt_global, freal=var)
 
@@ -648,15 +637,15 @@
 
      real(real64), allocatable, dimension(:, :, :) :: var
      TYPE(DECOMP_INFO), intent(IN) :: decomp
-     integer, intent(IN), optional :: opt_levels
+     integer, dimension(3), intent(IN), optional :: opt_levels
      logical, intent(IN), optional :: opt_global
 
-     integer :: levels
+     integer, dimension(3) :: levels
      
      if (present(opt_levels)) then
         levels = opt_levels
      else
-        levels = 0
+        levels = decomp%zlevel
      end if
 
      call alloc(3, decomp, levels, opt_global, dreal=var)
@@ -669,15 +658,15 @@
 
      complex(real32), allocatable, dimension(:, :, :) :: var
      TYPE(DECOMP_INFO), intent(IN) :: decomp
-     integer, intent(IN), optional :: opt_levels
+     integer, dimension(3), intent(IN), optional :: opt_levels
      logical, intent(IN), optional :: opt_global
 
-     integer :: levels
+     integer, dimension(3) :: levels
      
      if (present(opt_levels)) then
         levels = opt_levels
      else
-        levels = 0
+        levels = decomp%zlevel
      end if
 
      call alloc(3, decomp, levels, opt_global, fcplx=var)
@@ -690,15 +679,15 @@
 
      complex(real64), allocatable, dimension(:, :, :) :: var
      TYPE(DECOMP_INFO), intent(IN) :: decomp
-     integer, intent(IN), optional :: opt_levels
+     integer, dimension(3), intent(IN), optional :: opt_levels
      logical, intent(IN), optional :: opt_global
 
-     integer :: levels
+     integer, dimension(3) :: levels
 
      if (present(opt_levels)) then
         levels = opt_levels
      else
-        levels = 0
+        levels = decomp%zlevel
      end if
 
      call alloc(3, decomp, levels, opt_global, dcplx=var)
@@ -711,15 +700,15 @@
 
      integer, allocatable, dimension(:, :, :) :: var
      TYPE(DECOMP_INFO), intent(IN) :: decomp
-     integer, intent(IN), optional :: opt_levels
+     integer, dimension(3), intent(IN), optional :: opt_levels
      logical, intent(IN), optional :: opt_global
 
-     integer :: levels
+     integer, dimension(3) :: levels
 
      if (present(opt_levels)) then
         levels = opt_levels
      else
-        levels = 0
+        levels = decomp%zlevel
      end if
 
      call alloc(3, decomp, levels, opt_global, ints=var)
@@ -732,15 +721,15 @@
 
      logical, allocatable, dimension(:, :, :) :: var
      TYPE(DECOMP_INFO), intent(IN) :: decomp
-     integer, intent(IN), optional :: opt_levels
+     integer, dimension(3), intent(IN), optional :: opt_levels
      logical, intent(IN), optional :: opt_global
 
-     integer :: levels
+     integer, dimension(3) :: levels
 
      if (present(opt_levels)) then
         levels = opt_levels
      else
-        levels = 0
+        levels = decomp%zlevel
      end if
      
      call alloc(3, decomp, levels, opt_global, logs=var)

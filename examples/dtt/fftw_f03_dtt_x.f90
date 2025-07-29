@@ -200,7 +200,9 @@ program dtt_x
             call MPI_ALLREDUCE(MPI_IN_PLACE, errl2, 1, real_type, MPI_SUM, MPI_COMM_WORLD, ierror)
             errl2 = errl2 / (real(nx, mytype) * real(ny, mytype) * real(nz, mytype))
             call MPI_ALLREDUCE(MPI_IN_PLACE, errli, 1, real_type, MPI_MAX, MPI_COMM_WORLD, ierror)
-            if (nrank == 0) write (*, '(A,ES14.8,1x,A,1x,ES14.8)') 'L2 and Linf error: ', &
+            !if (nrank == 0) write (*, '(A,ES14.8,1x,A,1x,ES14.8)') 'L2 and Linf error: ', &
+            !                                                        sqrt(errl2), errli
+            if (nrank == 0) write (*, * ) 'L2 and Linf error: ', &
                                                                     sqrt(errl2), errli
 
             if (errli > 100 * epsilon(errli)) then

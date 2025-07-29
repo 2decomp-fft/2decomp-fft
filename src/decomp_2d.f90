@@ -1209,7 +1209,7 @@ contains
    ! Utility routines to help allocate 3D arrays
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 #include "alloc.f90"
-#ifdef(_GPU)
+#if defined(_GPU)
 #include "alloc_dev.f90"
 #endif
 

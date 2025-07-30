@@ -287,16 +287,20 @@ contains
 
       halo_extents = halo_extents_t(1, [s1, s2, s3], decomp_main, 1, global)
 
-      allocate(vh(halo_extents%xs:halo_extents%xe, &
-                  halo_extents%ys:halo_extents%ye, &
-                  halo_extents%zs:halo_extents%ze))
-      allocate(wh, mold=vh)
+      allocate (vh(halo_extents%xs:halo_extents%xe, &
+                   halo_extents%ys:halo_extents%ye, &
+                   halo_extents%zs:halo_extents%ze))
+      allocate (wh, mold=vh)
 
       ! Populate interiors
       !$acc data copy(halo_extents)
       !$acc kernels default(present)
-      vh(halo_extents%xs:halo_extents%xe,halo_extents%ys+1:halo_extents%ye-1,halo_extents%zs+1:halo_extents%ze-1) = v1(:,:,:)
-      wh(halo_extents%xs:halo_extents%xe,halo_extents%ys+1:halo_extents%ye-1,halo_extents%zs+1:halo_extents%ze-1) = w1(:,:,:)
+      vh(halo_extents%xs:halo_extents%xe, &
+         halo_extents%ys + 1:halo_extents%ye - 1, &
+         halo_extents%zs + 1:halo_extents%ze - 1) = v1(:, :, :)
+      wh(halo_extents%xs:halo_extents%xe, &
+         halo_extents%ys + 1:halo_extents%ye - 1, &
+         halo_extents%zs + 1:halo_extents%ze - 1) = w1(:, :, :)
       !$acc end kernels
       !$acc end data
 
@@ -383,19 +387,23 @@ contains
 
       halo_extents = halo_extents_t(2, [s1, s2, s3], decomp_main, 1, global)
 
-      allocate(uh(halo_extents%xs:halo_extents%xe, &
-                  halo_extents%ys:halo_extents%ye, &
-                  halo_extents%zs:halo_extents%ze))
-      allocate(wh, mold=uh)
+      allocate (uh(halo_extents%xs:halo_extents%xe, &
+                   halo_extents%ys:halo_extents%ye, &
+                   halo_extents%zs:halo_extents%ze))
+      allocate (wh, mold=uh)
 
       ! Populate interiors
       !$acc data copy(halo_extents)
       !$acc kernels default(present)
-      uh(halo_extents%xs+1:halo_extents%xe-1,halo_extents%ys:halo_extents%ye,halo_extents%zs+1:halo_extents%ze-1) = u2(:,:,:)
-      wh(halo_extents%xs+1:halo_extents%xe-1,halo_extents%ys:halo_extents%ye,halo_extents%zs+1:halo_extents%ze-1) = w2(:,:,:)
+      uh(halo_extents%xs + 1:halo_extents%xe - 1, &
+         halo_extents%ys:halo_extents%ye, &
+         halo_extents%zs + 1:halo_extents%ze - 1) = u2(:, :, :)
+      wh(halo_extents%xs + 1:halo_extents%xe - 1, &
+         halo_extents%ys:halo_extents%ye, &
+         halo_extents%zs + 1:halo_extents%ze - 1) = w2(:, :, :)
       !$acc end kernels
       !$acc end data
-      
+
       ! Expected sizes
       nx_expected = ysize(1) + 2
       ny_expected = ny
@@ -473,10 +481,10 @@ contains
 
       halo_extents = halo_extents_t(3, [s1, s2, s3], decomp_main, 1, global)
 
-      allocate(uh(halo_extents%xs:halo_extents%xe, &
-                  halo_extents%ys:halo_extents%ye, &
-                  halo_extents%zs:halo_extents%ze))
-      allocate(vh, mold=uh)
+      allocate (uh(halo_extents%xs:halo_extents%xe, &
+                   halo_extents%ys:halo_extents%ye, &
+                   halo_extents%zs:halo_extents%ze))
+      allocate (vh, mold=uh)
 
       ! Populate interiors
       call transpose_y_to_z(u2, u3)
@@ -485,8 +493,12 @@ contains
 
       !$acc data copy(halo_extents)
       !$acc kernels default(present)
-      uh(halo_extents%xs+1:halo_extents%xe-1,halo_extents%ys+1:halo_extents%ye-1,halo_extents%zs:halo_extents%ze) = u3(:,:,:)
-      vh(halo_extents%xs+1:halo_extents%xe-1,halo_extents%ys+1:halo_extents%ye-1,halo_extents%zs:halo_extents%ze) = v3(:,:,:)
+      uh(halo_extents%xs + 1:halo_extents%xe - 1, &
+         halo_extents%ys + 1:halo_extents%ye - 1, &
+         halo_extents%zs:halo_extents%ze) = u3(:, :, :)
+      vh(halo_extents%xs + 1:halo_extents%xe - 1, &
+         halo_extents%ys + 1:halo_extents%ye - 1, &
+         halo_extents%zs:halo_extents%ze) = v3(:, :, :)
       !$acc end kernels
       !$acc end data
 
@@ -651,4 +663,4 @@ contains
 
    end subroutine test_halo_size
 
- end program exchange_test
+end program exchange_test

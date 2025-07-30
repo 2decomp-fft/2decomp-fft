@@ -16,8 +16,8 @@
   ipencil = get_pencil([s1, s2, s3], decomp, opt_pencil)
   halo_extents = halo_extents_t(ipencil, [s1, s2, s3], decomp, level, global)
   allocate (out(halo_extents%xs:halo_extents%xe, &
-       halo_extents%ys:halo_extents%ye, &
-       halo_extents%zs:halo_extents%ze))
+                halo_extents%ys:halo_extents%ye, &
+                halo_extents%zs:halo_extents%ze))
   !    out = -1.0_mytype ! fill the halo for debugging
 
   ! copy input data to output

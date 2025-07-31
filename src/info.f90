@@ -39,6 +39,11 @@ module m_info
       logical :: even
 #endif
 
+      ! Default halo extents per pencil
+      integer, dimension(3) :: xlevel = [0, 0, 0]
+      integer, dimension(3) :: ylevel = [0, 0, 0]
+      integer, dimension(3) :: zlevel = [0, 0, 0]
+
    END TYPE DECOMP_INFO
 
    ! main (default) decomposition information for global size nx*ny*nz

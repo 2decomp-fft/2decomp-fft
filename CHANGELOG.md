@@ -10,8 +10,14 @@ _e.g._ vX.Y - YYYY-MM-DD and a new "Unreleased" section started above.
 ## Unreleased
 
 ### Added
+
+- Halo exchange subroutines have been separated from the `update_halo` interface - `update_halo` retains the original behaviour of returning a new array with added halo entries, `halo_exchange` takes a halo-extended array and performs the data exchange to fill the halo entries (and is used internally by `update_halo`).
+
 ### Fixed
 ### Changed
+
+- The halo subroutines have been moved to a module `m_halo` - users must now `use m_halo` to access these from their codes.
+
 ### Deprecated
 ### Removed
 

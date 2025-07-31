@@ -332,6 +332,9 @@ contains
       integer :: tag_e, tag_w, tag_n, tag_s, tag_t, tag_b
 
       integer :: ierror
+#ifdef HALO_DEBUG
+      integer :: i, j, k
+#endif
 
       s1 = sizes(1)
       s2 = sizes(2)

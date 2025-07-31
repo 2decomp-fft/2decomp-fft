@@ -311,7 +311,9 @@ contains
    subroutine halo_exchange_real(arr, ipencil, halo_extents, level, sizes)
 
       type(halo_extents_t), intent(in) :: halo_extents
-    real(mytype), dimension(halo_extents%xs:halo_extents%xe,halo_extents%ys:halo_extents%ye,halo_extents%zs:halo_extents%ze), intent(inout) :: arr
+      real(mytype), dimension(halo_extents%xs:halo_extents%xe, &
+                              halo_extents%ys:halo_extents%ye, &
+                              halo_extents%zs:halo_extents%ze), intent(inout) :: arr
 #if defined(_GPU)
       attributes(device) :: arr
 #endif
@@ -350,7 +352,9 @@ contains
    subroutine halo_exchange_complex(arr, ipencil, halo_extents, level, sizes)
 
       type(halo_extents_t), intent(in) :: halo_extents
-    complex(mytype), dimension(halo_extents%xs:halo_extents%xe,halo_extents%ys:halo_extents%ye,halo_extents%zs:halo_extents%ze), intent(inout) :: arr
+      complex(mytype), dimension(halo_extents%xs:halo_extents%xe, &
+                                 halo_extents%ys:halo_extents%ye, &
+                                 halo_extents%zs:halo_extents%ze), intent(inout) :: arr
 #if defined(_GPU)
       attributes(device) :: arr
 #endif

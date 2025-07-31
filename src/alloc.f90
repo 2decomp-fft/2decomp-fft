@@ -641,7 +641,7 @@
      logical, intent(IN), optional :: opt_global
 
      integer, dimension(3) :: levels
-     
+
      if (present(opt_levels)) then
         levels = opt_levels
      else
@@ -662,7 +662,7 @@
      logical, intent(IN), optional :: opt_global
 
      integer, dimension(3) :: levels
-     
+
      if (present(opt_levels)) then
         levels = opt_levels
      else
@@ -731,7 +731,7 @@
      else
         levels = decomp%zlevel
      end if
-     
+
      call alloc(3, decomp, levels, opt_global, logs=var)
 
   end subroutine alloc_z_logs

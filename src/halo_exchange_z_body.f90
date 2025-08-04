@@ -19,9 +19,10 @@
   else
      tag_e = coord(1) + 1
   end if
-  icount = (s2 + 2 * level) * s3
-  ilength = level
-  ijump = s1 + 2 * level
+  ! icount = (s2 + 2 * level(2)) * s3
+  icount = (s2 + 2 * levels(2)) * (s3 + 2 * levels(3))
+  ilength = levels(1)
+  ijump = s1 + 2 * levels(1)
   call MPI_TYPE_VECTOR(icount, ilength, ijump, &
                        data_type, halo31, ierror)
   if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_TYPE_VECTOR")
@@ -33,17 +34,17 @@
                  requests(1), ierror)
   if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_IRECV")
   ! receive from east
-  call MPI_IRECV(arr(halo_extents%xe - level + 1, halo_extents%ys, halo_extents%zs), 1, halo31, &
+  call MPI_IRECV(arr(halo_extents%xe - levels(1) + 1, halo_extents%ys, halo_extents%zs), 1, halo31, &
                  neighbour(3, 1), tag_e, DECOMP_2D_COMM_CART_Z, &
                  requests(2), ierror)
   if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_IRECV")
   ! send to west
-  call MPI_ISSEND(arr(halo_extents%xs + level, halo_extents%ys, halo_extents%zs), 1, halo31, &
+  call MPI_ISSEND(arr(halo_extents%xs + levels(1), halo_extents%ys, halo_extents%zs), 1, halo31, &
                   neighbour(3, 2), tag_w, DECOMP_2D_COMM_CART_Z, &
                   requests(3), ierror)
   if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_ISSEND")
   ! send to east
-  call MPI_ISSEND(arr(halo_extents%xe - level - level + 1, halo_extents%ys, halo_extents%zs), 1, halo31, &
+  call MPI_ISSEND(arr(halo_extents%xe - levels(1) - levels(1) + 1, halo_extents%ys, halo_extents%zs), 1, halo31, &
                   neighbour(3, 1), tag_e, DECOMP_2D_COMM_CART_Z, &
                   requests(4), ierror)
   if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_ISSEND")
@@ -67,9 +68,10 @@
   else
      tag_n = coord(2) + 1
   end if
-  icount = s3
-  ilength = level * (s1 + 2 * level)
-  ijump = (s1 + 2 * level) * (s2 + 2 * level)
+  ! icount = s3
+  icount = s3 + (2 * levels(3))
+  ilength = levels(2) * (s1 + 2 * levels(1))
+  ijump = (s1 + 2 * levels(1)) * (s2 + 2 * levels(2))
   call MPI_TYPE_VECTOR(icount, ilength, ijump, &
                        data_type, halo32, ierror)
   if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_TYPE_VECTOR")
@@ -81,17 +83,17 @@
                  requests(1), ierror)
   if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_IRECV")
   ! receive from north
-  call MPI_IRECV(arr(halo_extents%xs, halo_extents%ye - level + 1, halo_extents%zs), 1, halo32, &
+  call MPI_IRECV(arr(halo_extents%xs, halo_extents%ye - levels(2) + 1, halo_extents%zs), 1, halo32, &
                  neighbour(3, 3), tag_n, DECOMP_2D_COMM_CART_Z, &
                  requests(2), ierror)
   if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_IRECV")
   ! send to south
-  call MPI_ISSEND(arr(halo_extents%xs, halo_extents%ys + level, halo_extents%zs), 1, halo32, &
+  call MPI_ISSEND(arr(halo_extents%xs, halo_extents%ys + levels(2), halo_extents%zs), 1, halo32, &
                   neighbour(3, 4), tag_s, DECOMP_2D_COMM_CART_Z, &
                   requests(3), ierror)
   if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_ISSEND")
   ! send to north
-  call MPI_ISSEND(arr(halo_extents%xs, halo_extents%ye - level - level + 1, halo_extents%zs), 1, halo32, &
+  call MPI_ISSEND(arr(halo_extents%xs, halo_extents%ye - levels(2) - levels(2) + 1, halo_extents%zs), 1, halo32, &
                   neighbour(3, 3), tag_n, DECOMP_2D_COMM_CART_Z, &
                   requests(4), ierror)
   if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_ISSEND")

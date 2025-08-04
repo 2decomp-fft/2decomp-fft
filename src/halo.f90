@@ -26,7 +26,7 @@ module m_halo
    end type halo_extents_t
 
    interface halo_extents_t
-      procedure init_halo_extents
+      procedure init_halo_extents_short
    end interface halo_extents_t
 
    interface update_halo
@@ -38,7 +38,9 @@ module m_halo
 
    interface halo_exchange
       procedure halo_exchange_real
+      procedure halo_exchange_real_short
       procedure halo_exchange_complex
+      procedure halo_exchange_complex_short
    end interface halo_exchange
 
    private
@@ -46,6 +48,7 @@ module m_halo
    public :: init_neighbour
    public :: halo_exchange
    public :: halo_extents_t
+   public :: init_halo_extents
 
 contains
 
@@ -132,6 +135,7 @@ contains
       integer :: i, j, k, s1, s2, s3
 
       integer :: ipencil
+      integer, dimension(3) :: levels
 
 #include "halo_common.f90"
 
@@ -180,6 +184,7 @@ contains
       integer :: i, j, k, s1, s2, s3
 
       integer :: ipencil
+      integer, dimension(3) :: levels
 
 #include "halo_common.f90"
 
@@ -233,11 +238,27 @@ contains
 
    end function get_pencil
 
-   type(halo_extents_t) function init_halo_extents(ipencil, sizes, decomp, level, global) result(halo_extents)
+   type(halo_extents_t) function init_halo_extents_short(ipencil, sizes, decomp, level, global) result(halo_extents)
       integer, intent(in) :: ipencil
       integer, dimension(3), intent(in) :: sizes
       type(decomp_info), intent(in) :: decomp
       integer, intent(in) :: level
+      logical, intent(in) :: global
+
+      integer, dimension(3) :: levels
+
+      levels(:) = level
+      levels(ipencil) = 0
+
+      halo_extents = init_halo_extents(ipencil, sizes, decomp, levels, global)
+      
+   end function init_halo_extents_short
+   
+   type(halo_extents_t) function init_halo_extents(ipencil, sizes, decomp, levels, global) result(halo_extents)
+      integer, intent(in) :: ipencil
+      integer, dimension(3), intent(in) :: sizes
+      type(decomp_info), intent(in) :: decomp
+      integer, dimension(3), intent(in) :: levels
       logical, intent(in) :: global
 
       integer :: s1, s2, s3
@@ -251,47 +272,47 @@ contains
          if (global) then
             halo_extents%xs = decomp%xst(1)
             halo_extents%xe = decomp%xen(1)
-            halo_extents%ys = decomp%xst(2) - level
-            halo_extents%ye = decomp%xen(2) + level
-            halo_extents%zs = decomp%xst(3) - level
-            halo_extents%ze = decomp%xen(3) + level
+            halo_extents%ys = decomp%xst(2)
+            halo_extents%ye = decomp%xen(2)
+            halo_extents%zs = decomp%xst(3)
+            halo_extents%ze = decomp%xen(3)
          else
             halo_extents%xs = 1
             halo_extents%xe = s1
-            halo_extents%ys = 1 - level
-            halo_extents%ye = s2 + level
-            halo_extents%zs = 1 - level
-            halo_extents%ze = s3 + level
+            halo_extents%ys = 1
+            halo_extents%ye = s2
+            halo_extents%zs = 1
+            halo_extents%ze = s3
          end if
       else if (ipencil == 2) then  ! Y-pencil input
          if (global) then
-            halo_extents%xs = decomp%yst(1) - level
-            halo_extents%xe = decomp%yen(1) + level
+            halo_extents%xs = decomp%yst(1)
+            halo_extents%xe = decomp%yen(1)
             halo_extents%ys = decomp%yst(2)
             halo_extents%ye = decomp%yen(2)
-            halo_extents%zs = decomp%yst(3) - level
-            halo_extents%ze = decomp%yen(3) + level
+            halo_extents%zs = decomp%yst(3)
+            halo_extents%ze = decomp%yen(3)
          else
-            halo_extents%xs = 1 - level
-            halo_extents%xe = s1 + level
+            halo_extents%xs = 1
+            halo_extents%xe = s1
             halo_extents%ys = 1
             halo_extents%ye = s2
-            halo_extents%zs = 1 - level
-            halo_extents%ze = s3 + level
+            halo_extents%zs = 1
+            halo_extents%ze = s3
          end if
       else if (ipencil == 3) then  ! Z-pencil input
          if (global) then
-            halo_extents%xs = decomp%zst(1) - level
-            halo_extents%xe = decomp%zen(1) + level
-            halo_extents%ys = decomp%zst(2) - level
-            halo_extents%ye = decomp%zen(2) + level
+            halo_extents%xs = decomp%zst(1)
+            halo_extents%xe = decomp%zen(1)
+            halo_extents%ys = decomp%zst(2)
+            halo_extents%ye = decomp%zen(2)
             halo_extents%zs = decomp%zst(3)
             halo_extents%ze = decomp%zen(3)
          else
-            halo_extents%xs = 1 - level
-            halo_extents%xe = s1 + level
-            halo_extents%ys = 1 - level
-            halo_extents%ye = s2 + level
+            halo_extents%xs = 1
+            halo_extents%xe = s1
+            halo_extents%ys = 1
+            halo_extents%ye = s2
             halo_extents%zs = 1
             halo_extents%ze = s3
          end if
@@ -306,9 +327,57 @@ contains
          call decomp_2d_abort(__FILE__, __LINE__, 10, &
                               'Invalid data passed to update_halo')
       end if
+
+      halo_extents%xs = halo_extents%xs - levels(1)
+      halo_extents%xe = halo_extents%xe + levels(1)
+      halo_extents%ys = halo_extents%ys - levels(2)
+      halo_extents%ye = halo_extents%ye + levels(2)
+      halo_extents%zs = halo_extents%zs - levels(3)
+      halo_extents%ze = halo_extents%ze + levels(3)
+      
    end function init_halo_extents
 
-   subroutine halo_exchange_real(arr, ipencil, halo_extents, level, sizes)
+   subroutine halo_exchange_real_short(arr, ipencil, opt_levels)
+
+     real(mytype), dimension(:,:,:), intent(inout) :: arr
+#if defined(_GPU)
+      attributes(device) :: arr
+#endif
+     integer, intent(in) :: ipencil
+     integer, dimension(3), optional :: opt_levels
+
+     integer, dimension(3) :: levels
+     integer, dimension(3) :: sizes
+     type(halo_extents_t) :: halo_extents
+
+     if (present(opt_levels)) then
+        levels = opt_levels
+     else
+        select case(ipencil)
+        case(1)
+           levels = decomp_main%xlevel
+        case(2)
+           levels = decomp_main%ylevel
+        case(3)
+           levels = decomp_main%zlevel
+        case default
+           levels = 0
+           call decomp_2d_abort(__FILE__, __LINE__, 10, &
+                "Invalid pencil for halo exchange")
+        end select
+     end if
+
+     sizes(1) = size(arr, dim=1)
+     sizes(2) = size(arr, dim=2)
+     sizes(3) = size(arr, dim=3)
+     sizes = sizes - 2 * levels
+     halo_extents = init_halo_extents(ipencil, sizes, decomp_main, levels, .false.)
+
+     call halo_exchange(arr, ipencil, halo_extents, levels, sizes)
+
+   end subroutine halo_exchange_real_short
+
+   subroutine halo_exchange_real(arr, ipencil, halo_extents, levels, sizes)
 
       type(halo_extents_t), intent(in) :: halo_extents
       real(mytype), dimension(halo_extents%xs:halo_extents%xe, &
@@ -318,7 +387,7 @@ contains
       attributes(device) :: arr
 #endif
       integer, intent(in) :: ipencil
-      integer, intent(in) :: level
+      integer, dimension(3), intent(in) :: levels
       integer, dimension(3), intent(in) :: sizes
 
       integer :: s1, s2, s3
@@ -352,7 +421,46 @@ contains
 
    end subroutine halo_exchange_real
 
-   subroutine halo_exchange_complex(arr, ipencil, halo_extents, level, sizes)
+   subroutine halo_exchange_complex_short(arr, ipencil, opt_levels)
+     complex(mytype), dimension(:,:,:), intent(inout) :: arr
+#if defined(_GPU)
+      attributes(device) :: arr
+#endif
+     integer, intent(in) :: ipencil
+     integer, dimension(3), intent(in), optional :: opt_levels
+
+     integer, dimension(3) :: levels
+     integer, dimension(3) :: sizes
+     type(halo_extents_t) :: halo_extents
+
+     if (present(opt_levels)) then
+        levels = opt_levels
+     else
+        select case(ipencil)
+        case(1)
+           levels = decomp_main%xlevel
+        case(2)
+           levels = decomp_main%ylevel
+        case(3)
+           levels = decomp_main%zlevel
+        case default
+           levels = 0
+           call decomp_2d_abort(__FILE__, __LINE__, 10, &
+                "Invalid pencil for halo exchange")
+        end select
+     end if
+
+     sizes(1) = size(arr, dim=1)
+     sizes(2) = size(arr, dim=2)
+     sizes(3) = size(arr, dim=3)
+     sizes = sizes - 2 * levels
+     halo_extents = init_halo_extents(ipencil, sizes, decomp_main, levels, .false.)
+
+     call halo_exchange(arr, ipencil, halo_extents, levels, sizes)
+     
+   end subroutine halo_exchange_complex_short
+   
+   subroutine halo_exchange_complex(arr, ipencil, halo_extents, levels, sizes)
 
       type(halo_extents_t), intent(in) :: halo_extents
       complex(mytype), dimension(halo_extents%xs:halo_extents%xe, &
@@ -362,7 +470,7 @@ contains
       attributes(device) :: arr
 #endif
       integer, intent(in) :: ipencil
-      integer, intent(in) :: level
+      integer, dimension(3), intent(in) :: levels
       integer, dimension(3), intent(in) :: sizes
 
       integer :: s1, s2, s3

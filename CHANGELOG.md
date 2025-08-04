@@ -16,6 +16,8 @@ _e.g._ vX.Y - YYYY-MM-DD and a new "Unreleased" section started above.
 ### Fixed
 ### Changed
 
+- The `decomp_info` object now has per-pencil default halo depths (`0` unless set otherwise), when allocating an array this is used to set the halo depth.
+- The `alloc_*` subroutines can now allocate arrays with space for halo entries using the optional `opt_levels = [hx,hy,hz]` argument. 
 - The halo subroutines have been moved to a module `m_halo` - users must now `use m_halo` to access these from their codes.
 
 ### Deprecated

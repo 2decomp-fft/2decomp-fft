@@ -93,6 +93,15 @@ contains
 
    end subroutine init_neighbour
 
+   !---------------------------------------------------------------------
+   ! Given a local array, return a new array with halo padding filled by neighbouring processes.
+   ! -         in: the local input array
+   ! -        out: the returned array (with padding)
+   ! -      level: the halo depth to be applied in each axis perpendicular to the pencil
+   ! - opt_global: whether to use global (.true.) or local (.false., default) in exchanges
+   ! - opt_pencil: specifies which pencil orientation, otherwise falls back on legacy behaviour
+   !               using the array shape to determine the pencil (not recommended)
+   !---------------------------------------------------------------------
    subroutine update_halo_real_short(in, out, level, opt_global, opt_pencil)
 
       implicit none
@@ -110,6 +119,16 @@ contains
 
    end subroutine update_halo_real_short
 
+   !---------------------------------------------------------------------
+   ! Given a local array, return a new array with halo padding filled by neighbouring processes.
+   ! -         in: the local input array
+   ! -        out: the returned array (with padding)
+   ! -      level: the halo depth to be applied in each axis perpendicular to the pencil
+   ! -     decomp: the decomposition to use
+   ! - opt_global: whether to use global (.true.) or local (.false., default) in exchanges
+   ! - opt_pencil: specifies which pencil orientation, otherwise falls back on legacy behaviour
+   !               using the array shape to determine the pencil (not recommended)
+   !---------------------------------------------------------------------
    subroutine update_halo_real(in, out, level, decomp, opt_global, opt_pencil)
 
       implicit none
@@ -142,6 +161,15 @@ contains
       return
    end subroutine update_halo_real
 
+   !---------------------------------------------------------------------
+   ! Given a local array, return a new array with halo padding filled by neighbouring processes.
+   ! -         in: the local input array
+   ! -        out: the returned array (with padding)
+   ! -      level: the halo depth to be applied in each axis perpendicular to the pencil
+   ! - opt_global: whether to use global (.true.) or local (.false., default) in exchanges
+   ! - opt_pencil: specifies which pencil orientation, otherwise falls back on legacy behaviour
+   !               using the array shape to determine the pencil (not recommended)
+   !---------------------------------------------------------------------
    subroutine update_halo_complex_short(in, out, level, opt_global, opt_pencil)
 
       implicit none
@@ -159,6 +187,16 @@ contains
 
    end subroutine update_halo_complex_short
 
+   !---------------------------------------------------------------------
+   ! Given a local array, return a new array with halo padding filled by neighbouring processes.
+   ! -         in: the local input array
+   ! -        out: the returned array (with padding)
+   ! -      level: the halo depth to be applied in each axis perpendicular to the pencil
+   ! -     decomp: the decomposition to use
+   ! - opt_global: whether to use global (.true.) or local (.false., default) in exchanges
+   ! - opt_pencil: specifies which pencil orientation, otherwise falls back on legacy behaviour
+   !               using the array shape to determine the pencil (not recommended)
+   !---------------------------------------------------------------------
    subroutine update_halo_complex(in, out, level, decomp, opt_global, opt_pencil)
 
       implicit none
@@ -191,6 +229,12 @@ contains
       return
    end subroutine update_halo_complex
 
+   !---------------------------------------------------------------------
+   ! Utility function to determine the pencil orientation based on the shape of an array.
+   ! -      sizes: The [x,y,z] extents of the array
+   ! -     decomp: The decomposition to use
+   ! - opt_pencil: If specified, returns this pencil
+   !---------------------------------------------------------------------
    integer function get_pencil(sizes, decomp, opt_pencil)
       integer, dimension(3), intent(in) :: sizes
       type(decomp_info), intent(in) :: decomp
@@ -238,6 +282,15 @@ contains
 
    end function get_pencil
 
+   !---------------------------------------------------------------------
+   ! Simple constructor for the halo_extents_t type. Applies a constant halo depth in each
+   ! perpendicular axis.
+   ! - ipencil: The pencil orientation
+   ! -   sizes: The local array size [x,y,z]
+   ! -  decomp: The parallel decomposition
+   ! -   level: The halo depth to use
+   ! -  global: Use global (.true.) or local (.false., default) numbering?
+   !---------------------------------------------------------------------
    type(halo_extents_t) function init_halo_extents_short(ipencil, sizes, decomp, level, global) result(halo_extents)
       integer, intent(in) :: ipencil
       integer, dimension(3), intent(in) :: sizes
@@ -254,6 +307,14 @@ contains
       
    end function init_halo_extents_short
    
+   !---------------------------------------------------------------------
+   ! Full constructor for the halo_extents_t type. Applies a user specified halo depth per axis.
+   ! - ipencil: The pencil orientation
+   ! -   sizes: The local array size [x,y,z]
+   ! -  decomp: The parallel decomposition
+   ! -  levels: The halo depth to use in each axis [x,y,z]
+   ! -  global: Use global (.true.) or local (.false., default) numbering?
+   !---------------------------------------------------------------------
    type(halo_extents_t) function init_halo_extents(ipencil, sizes, decomp, levels, global) result(halo_extents)
       integer, intent(in) :: ipencil
       integer, dimension(3), intent(in) :: sizes
@@ -337,6 +398,14 @@ contains
       
    end function init_halo_extents
 
+   !---------------------------------------------------------------------
+   ! Simplified interface for performing the halo data exchange.
+   ! -        arr: The halo array, local data is sent to neighbours, on return contains updated halo
+   !               entries.
+   ! -    ipencil: The pencil orientation.
+   ! - opt_levels: The per-axis halo depths to use, if not supplied will use the default depths in
+   !               decomp_main.
+   !---------------------------------------------------------------------
    subroutine halo_exchange_real_short(arr, ipencil, opt_levels)
 
      real(mytype), dimension(:,:,:), intent(inout) :: arr
@@ -377,6 +446,15 @@ contains
 
    end subroutine halo_exchange_real_short
 
+   !---------------------------------------------------------------------
+   ! Full interface for performing the halo data exchange.
+   ! -          arr: The halo array, local data is sent to neighbours, on return contains updated halo
+   !                 entries.
+   ! -      ipencil: The pencil orientation.
+   ! - halo_extents: Halo descriptor object, provides the start/end indices of the extended array.
+   ! -       levels: The per-axis halo depths to use.
+   ! -       sizes: The local array shape.
+   !---------------------------------------------------------------------
    subroutine halo_exchange_real(arr, ipencil, halo_extents, levels, sizes)
 
       type(halo_extents_t), intent(in) :: halo_extents
@@ -421,6 +499,14 @@ contains
 
    end subroutine halo_exchange_real
 
+   !---------------------------------------------------------------------
+   ! Simplified interface for performing the halo data exchange.
+   ! -        arr: The halo array, local data is sent to neighbours, on return contains updated halo
+   !               entries.
+   ! -    ipencil: The pencil orientation.
+   ! - opt_levels: The per-axis halo depths to use, if not supplied will use the default depths in
+   !               decomp_main.
+   !---------------------------------------------------------------------
    subroutine halo_exchange_complex_short(arr, ipencil, opt_levels)
      complex(mytype), dimension(:,:,:), intent(inout) :: arr
 #if defined(_GPU)
@@ -460,6 +546,15 @@ contains
      
    end subroutine halo_exchange_complex_short
    
+   !---------------------------------------------------------------------
+   ! Full interface for performing the halo data exchange.
+   ! -          arr: The halo array, local data is sent to neighbours, on return contains updated halo
+   !                 entries.
+   ! -      ipencil: The pencil orientation.
+   ! - halo_extents: Halo descriptor object, provides the start/end indices of the extended array.
+   ! -       levels: The per-axis halo depths to use.
+   ! -       sizes: The local array shape.
+   !---------------------------------------------------------------------
    subroutine halo_exchange_complex(arr, ipencil, halo_extents, levels, sizes)
 
       type(halo_extents_t), intent(in) :: halo_extents

@@ -78,4 +78,4 @@
 !!! istat = cudaMemcpy(out,in,s1*s2*s3,cudaMemcpyDeviceToDevice)
   end if
 
-  call halo_exchange(out, ipencil, halo_extents, levels, [s1, s2, s3])
+  call halo_exchange(out, halo_extents)

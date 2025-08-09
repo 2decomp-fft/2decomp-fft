@@ -23,6 +23,9 @@ module m_halo
       integer :: xs, xe
       integer :: ys, ye
       integer :: zs, ze
+      integer :: ipencil
+      integer, dimension(3) :: levels
+      integer, dimension(3) :: sizes
    end type halo_extents_t
 
    interface halo_extents_t
@@ -324,6 +327,10 @@ contains
 
       integer :: s1, s2, s3
 
+      halo_extents%ipencil = ipencil
+      halo_extents%sizes = sizes
+      halo_extents%levels = levels
+
       s1 = sizes(1)
       s2 = sizes(2)
       s3 = sizes(3)
@@ -442,7 +449,7 @@ contains
      sizes = sizes - 2 * levels
      halo_extents = init_halo_extents(ipencil, sizes, decomp_main, levels, .false.)
 
-     call halo_exchange(arr, ipencil, halo_extents, levels, sizes)
+     call halo_exchange(arr, halo_extents)
 
    end subroutine halo_exchange_real_short
 
@@ -455,7 +462,7 @@ contains
    ! -       levels: The per-axis halo depths to use.
    ! -       sizes: The local array shape.
    !---------------------------------------------------------------------
-   subroutine halo_exchange_real(arr, ipencil, halo_extents, levels, sizes)
+   subroutine halo_exchange_real(arr, halo_extents)
 
       type(halo_extents_t), intent(in) :: halo_extents
       real(mytype), dimension(halo_extents%xs:halo_extents%xe, &
@@ -464,10 +471,11 @@ contains
 #if defined(_GPU)
       attributes(device) :: arr
 #endif
-      integer, intent(in) :: ipencil
-      integer, dimension(3), intent(in) :: levels
-      integer, dimension(3), intent(in) :: sizes
 
+      integer :: ipencil
+
+      integer, dimension(3) :: levels
+      integer, dimension(3) :: sizes
       integer :: s1, s2, s3
 
       integer, parameter :: data_type = real_type
@@ -482,6 +490,10 @@ contains
 #ifdef HALO_DEBUG
       integer :: i, j, k
 #endif
+
+      ipencil = halo_extents%ipencil
+      levels = halo_extents%levels
+      sizes = halo_extents%sizes
 
       s1 = sizes(1)
       s2 = sizes(2)
@@ -542,7 +554,7 @@ contains
      sizes = sizes - 2 * levels
      halo_extents = init_halo_extents(ipencil, sizes, decomp_main, levels, .false.)
 
-     call halo_exchange(arr, ipencil, halo_extents, levels, sizes)
+     call halo_exchange(arr, halo_extents)
      
    end subroutine halo_exchange_complex_short
    
@@ -555,7 +567,7 @@ contains
    ! -       levels: The per-axis halo depths to use.
    ! -       sizes: The local array shape.
    !---------------------------------------------------------------------
-   subroutine halo_exchange_complex(arr, ipencil, halo_extents, levels, sizes)
+   subroutine halo_exchange_complex(arr, halo_extents)
 
       type(halo_extents_t), intent(in) :: halo_extents
       complex(mytype), dimension(halo_extents%xs:halo_extents%xe, &
@@ -564,10 +576,10 @@ contains
 #if defined(_GPU)
       attributes(device) :: arr
 #endif
-      integer, intent(in) :: ipencil
-      integer, dimension(3), intent(in) :: levels
-      integer, dimension(3), intent(in) :: sizes
-
+      
+      integer :: ipencil
+      integer, dimension(3) :: levels
+      integer, dimension(3) :: sizes
       integer :: s1, s2, s3
 
       integer, parameter :: data_type = complex_type
@@ -583,6 +595,10 @@ contains
       integer :: i, j, k
 #endif
 
+      ipencil = halo_extents%ipencil
+      levels = halo_extents%levels
+      sizes = halo_extents%sizes
+      
       s1 = sizes(1)
       s2 = sizes(2)
       s3 = sizes(3)

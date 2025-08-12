@@ -287,9 +287,9 @@ contains
 
       halo_extents = halo_extents_t(1, [s1, s2, s3], decomp_main, 1, global)
 
-      call alloc_x(vh, opt_global=global, opt_levels=[0, 1, 1])
+      call alloc_x(vh, opt_global=global, opt_depth=1)
       call alloc_x(wh, opt_global=global, opt_levels=[0, 1, 1])
-      
+
       ! Populate interiors
       !$acc data copy(halo_extents)
       !$acc kernels default(present)
@@ -321,8 +321,9 @@ contains
 #endif
       ifirst = 2; ilast = xsize(1) - 1
 
-      call halo_exchange(vh, halo_extents)
-      call halo_exchange(wh, 1, [0, 1, 1])
+      call halo_exchange(vh, 1, opt_depth=1)
+      call halo_exchange(wh, 1, opt_levels=[0, 1, 1])
+
 
       !$acc data copy(div1)
       !$acc kernels default(present)
@@ -385,7 +386,7 @@ contains
 
       halo_extents = halo_extents_t(2, [s1, s2, s3], decomp_main, 1, global)
 
-      call alloc_y(uh, opt_global=global, opt_levels=[1, 0, 1])
+      call alloc_y(uh, opt_global=global, opt_depth=1)
       call alloc_y(wh, opt_global=global, opt_levels=[1, 0, 1])
 
       ! Populate interiors
@@ -417,8 +418,8 @@ contains
 #endif
       jfirst = 2; jlast = ysize(2) - 1
 
-      call halo_exchange(uh, halo_extents)
-      call halo_exchange(wh, 2, [1, 0, 1])
+      call halo_exchange(uh, 2, opt_depth=1)
+      call halo_exchange(wh, 2, opt_levels=[1, 0, 1])
 
       !$acc data copy(div2)
       !$acc kernels default(present)
@@ -477,7 +478,7 @@ contains
 
       halo_extents = halo_extents_t(3, [s1, s2, s3], decomp_main, 1, global)
 
-      call alloc_z(uh, opt_global=global, opt_levels=[1, 1, 0])
+      call alloc_z(uh, opt_global=global, opt_depth=1)
       call alloc_z(vh, opt_global=global, opt_levels=[1, 1, 0])
 
       ! Populate interiors
@@ -513,9 +514,9 @@ contains
 #endif
       kfirst = 2; klast = zsize(3) - 1
 
-      call halo_exchange(uh, halo_extents)
-      call halo_exchange(vh, 3, [1, 1, 0])
-
+      call halo_exchange(uh, 3, opt_depth=1)
+      call halo_exchange(vh, 3, opt_levels=[1, 1, 0])
+      
       !$acc data copy(div3)
       !$acc kernels default(present)
       do j = jfirst, jlast

@@ -8,16 +8,17 @@
   ! Allocate a 3D array
   !
   subroutine alloc(ipencil, decomp, &
-                   levels, &
                    opt_global, &
+                   opt_depth, opt_levels, &
                    freal, dreal, fcplx, dcplx, ints, logs)
 
      implicit none
 
      integer, intent(IN) :: ipencil
      TYPE(DECOMP_INFO), intent(IN) :: decomp
-     integer, dimension(3), intent(IN) :: levels ! How many halo levels to allocate?
      logical, intent(IN), optional :: opt_global
+     integer, intent(IN), optional :: opt_depth ! How many halo levels to allocate?
+     integer, dimension(3), intent(IN), optional :: opt_levels ! How many halo levels to allocate?
      real(real32), allocatable, dimension(:, :, :), intent(INOUT), optional :: freal
      real(real64), allocatable, dimension(:, :, :), intent(INOUT), optional :: dreal
      complex(real32), allocatable, dimension(:, :, :), intent(INOUT), optional :: fcplx
@@ -26,6 +27,7 @@
      logical, allocatable, dimension(:, :, :), intent(INOUT), optional :: logs
 
      logical :: global
+     integer, dimension(3) :: levels
      integer :: ierror
      integer :: st1, st2, st3
      integer :: en1, en2, en3
@@ -34,6 +36,22 @@
         global = opt_global
      else
         global = default_opt_global
+     end if
+
+     if (present(opt_levels)) then
+        levels = opt_levels
+     else if (present(opt_depth)) then
+        levels(:) = opt_depth
+        levels(ipencil) = 0
+     else if (ipencil == 1) then
+        levels = decomp%xlevel
+     else if (ipencil == 2) then
+        levels = decomp%ylevel
+     else if (ipencil == 3) then
+        levels = decomp%zlevel
+     else
+        levels = 0
+        call decomp_2d_abort(__FILE__, __LINE__, ipencil, "Invalid levels")
      end if
 
      if (global .and. ipencil == 1) then
@@ -136,602 +154,494 @@
   !
   ! X pencil
   !
-  subroutine alloc_x_freal_short(var, opt_global, opt_levels)
+  subroutine alloc_x_freal_short(var, opt_global, opt_depth, opt_levels)
 
      implicit none
 
      real(real32), allocatable, dimension(:, :, :) :: var
+     integer, intent(IN), optional :: opt_depth
      integer, dimension(3), intent(IN), optional :: opt_levels
      logical, intent(IN), optional :: opt_global
 
-     call alloc_x(var, decomp_main, opt_global, opt_levels)
+     call alloc_x(var, decomp_main, opt_global, opt_depth, opt_levels)
 
   end subroutine alloc_x_freal_short
 
-  subroutine alloc_x_dreal_short(var, opt_global, opt_levels)
+  subroutine alloc_x_dreal_short(var, opt_global, opt_depth, opt_levels)
 
      implicit none
 
      real(real64), allocatable, dimension(:, :, :) :: var
+     integer, intent(IN), optional :: opt_depth
      integer, dimension(3), intent(IN), optional :: opt_levels
      logical, intent(IN), optional :: opt_global
 
-     call alloc_x(var, decomp_main, opt_global, opt_levels)
+     call alloc_x(var, decomp_main, opt_global, opt_depth, opt_levels)
 
   end subroutine alloc_x_dreal_short
 
-  subroutine alloc_x_fcplx_short(var, opt_global, opt_levels)
+  subroutine alloc_x_fcplx_short(var, opt_global, opt_depth, opt_levels)
 
      implicit none
 
      complex(real32), allocatable, dimension(:, :, :) :: var
+     integer, intent(IN), optional :: opt_depth
      integer, dimension(3), intent(IN), optional :: opt_levels
      logical, intent(IN), optional :: opt_global
 
-     call alloc_x(var, decomp_main, opt_global, opt_levels)
+     call alloc_x(var, decomp_main, opt_global, opt_depth, opt_levels)
 
   end subroutine alloc_x_fcplx_short
 
-  subroutine alloc_x_dcplx_short(var, opt_global, opt_levels)
+  subroutine alloc_x_dcplx_short(var, opt_global, opt_depth, opt_levels)
 
      implicit none
 
      complex(real64), allocatable, dimension(:, :, :) :: var
+     integer, intent(IN), optional :: opt_depth
      integer, dimension(3), intent(IN), optional :: opt_levels
      logical, intent(IN), optional :: opt_global
 
-     call alloc_x(var, decomp_main, opt_global, opt_levels)
+     call alloc_x(var, decomp_main, opt_global, opt_depth, opt_levels)
 
   end subroutine alloc_x_dcplx_short
 
-  subroutine alloc_x_ints_short(var, opt_global, opt_levels)
+  subroutine alloc_x_ints_short(var, opt_global, opt_depth, opt_levels)
 
      implicit none
 
      integer, allocatable, dimension(:, :, :) :: var
+     integer, intent(IN), optional :: opt_depth
      integer, dimension(3), intent(IN), optional :: opt_levels
      logical, intent(IN), optional :: opt_global
 
-     call alloc_x(var, decomp_main, opt_global, opt_levels)
+     call alloc_x(var, decomp_main, opt_global, opt_depth, opt_levels)
 
   end subroutine alloc_x_ints_short
 
-  subroutine alloc_x_logs_short(var, opt_global, opt_levels)
+  subroutine alloc_x_logs_short(var, opt_global, opt_depth, opt_levels)
 
      implicit none
 
      logical, allocatable, dimension(:, :, :) :: var
+     integer, intent(IN), optional :: opt_depth
      integer, dimension(3), intent(IN), optional :: opt_levels
      logical, intent(IN), optional :: opt_global
 
-     call alloc_x(var, decomp_main, opt_global, opt_levels)
+     call alloc_x(var, decomp_main, opt_global, opt_depth, opt_levels)
 
   end subroutine alloc_x_logs_short
 
-  subroutine alloc_x_freal(var, decomp, opt_global, opt_levels)
+  subroutine alloc_x_freal(var, decomp, opt_global, opt_depth, opt_levels)
 
      implicit none
 
      real(real32), allocatable, dimension(:, :, :) :: var
      TYPE(DECOMP_INFO), intent(IN) :: decomp
+     integer, intent(IN), optional :: opt_depth
      integer, dimension(3), intent(IN), optional :: opt_levels
      logical, intent(IN), optional :: opt_global
 
-     integer, dimension(3) :: levels
-
-     if (present(opt_levels)) then
-        levels = opt_levels
-     else
-        levels = decomp%xlevel
-     end if
-
-     call alloc(1, decomp, levels, opt_global, freal=var)
+     call alloc(1, decomp, opt_global, opt_depth, opt_levels, freal = var)
 
   end subroutine alloc_x_freal
 
-  subroutine alloc_x_dreal(var, decomp, opt_global, opt_levels)
+  subroutine alloc_x_dreal(var, decomp, opt_global, opt_depth, opt_levels)
 
      implicit none
 
      real(real64), allocatable, dimension(:, :, :) :: var
      TYPE(DECOMP_INFO), intent(IN) :: decomp
+     integer, intent(IN), optional :: opt_depth
      integer, dimension(3), intent(IN), optional :: opt_levels
      logical, intent(IN), optional :: opt_global
 
-     integer, dimension(3) :: levels
-
-     if (present(opt_levels)) then
-        levels = opt_levels
-     else
-        levels = decomp%xlevel
-     end if
-
-     call alloc(1, decomp, levels, opt_global, dreal=var)
+     call alloc(1, decomp, opt_global, opt_depth, opt_levels, dreal = var)
 
   end subroutine alloc_x_dreal
 
-  subroutine alloc_x_fcplx(var, decomp, opt_global, opt_levels)
+  subroutine alloc_x_fcplx(var, decomp, opt_global, opt_depth, opt_levels)
 
      implicit none
 
      complex(real32), allocatable, dimension(:, :, :) :: var
      TYPE(DECOMP_INFO), intent(IN) :: decomp
+     integer, intent(IN), optional :: opt_depth
      integer, dimension(3), intent(IN), optional :: opt_levels
      logical, intent(IN), optional :: opt_global
 
-     integer, dimension(3) :: levels
-
-     if (present(opt_levels)) then
-        levels = opt_levels
-     else
-        levels = decomp%xlevel
-     end if
-
-     call alloc(1, decomp, levels, opt_global, fcplx=var)
+     call alloc(1, decomp, opt_global, opt_depth, opt_levels, fcplx = var)
 
   end subroutine alloc_x_fcplx
 
-  subroutine alloc_x_dcplx(var, decomp, opt_global, opt_levels)
+  subroutine alloc_x_dcplx(var, decomp, opt_global, opt_depth, opt_levels)
 
      implicit none
 
      complex(real64), allocatable, dimension(:, :, :) :: var
      TYPE(DECOMP_INFO), intent(IN) :: decomp
+     integer, intent(IN), optional :: opt_depth
      integer, dimension(3), intent(IN), optional :: opt_levels
      logical, intent(IN), optional :: opt_global
 
-     integer, dimension(3) :: levels
-
-     if (present(opt_levels)) then
-        levels = opt_levels
-     else
-        levels = decomp%xlevel
-     end if
-
-     call alloc(1, decomp, levels, opt_global, dcplx=var)
+     call alloc(1, decomp, opt_global, opt_depth, opt_levels, dcplx = var)
 
   end subroutine alloc_x_dcplx
 
-  subroutine alloc_x_ints(var, decomp, opt_global, opt_levels)
+  subroutine alloc_x_ints(var, decomp, opt_global, opt_depth, opt_levels)
 
      implicit none
 
      integer, allocatable, dimension(:, :, :) :: var
      TYPE(DECOMP_INFO), intent(IN) :: decomp
+     integer, intent(IN), optional :: opt_depth
      integer, dimension(3), intent(IN), optional :: opt_levels
      logical, intent(IN), optional :: opt_global
 
-     integer, dimension(3) :: levels
-
-     if (present(opt_levels)) then
-        levels = opt_levels
-     else
-        levels = decomp%xlevel
-     end if
-
-     call alloc(1, decomp, levels, opt_global, ints=var)
+     call alloc(1, decomp, opt_global, opt_depth, opt_levels, ints = var)
 
   end subroutine alloc_x_ints
 
-  subroutine alloc_x_logs(var, decomp, opt_global, opt_levels)
+  subroutine alloc_x_logs(var, decomp, opt_global, opt_depth, opt_levels)
 
      implicit none
 
      logical, allocatable, dimension(:, :, :) :: var
      TYPE(DECOMP_INFO), intent(IN) :: decomp
+     integer, intent(IN), optional :: opt_depth
      integer, dimension(3), intent(IN), optional :: opt_levels
      logical, intent(IN), optional :: opt_global
 
-     integer, dimension(3) :: levels
-
-     if (present(opt_levels)) then
-        levels = opt_levels
-     else
-        levels = decomp%xlevel
-     end if
-
-     call alloc(1, decomp, levels, opt_global, logs=var)
+     call alloc(1, decomp, opt_global, opt_depth, opt_levels, logs = var)
 
   end subroutine alloc_x_logs
 
   !
   ! Y pencil
   !
-  subroutine alloc_y_freal_short(var, opt_global, opt_levels)
+  subroutine alloc_y_freal_short(var, opt_global, opt_depth, opt_levels)
 
      implicit none
 
      real(real32), allocatable, dimension(:, :, :) :: var
+     integer, intent(IN), optional :: opt_depth
      integer, dimension(3), intent(IN), optional :: opt_levels
      logical, intent(IN), optional :: opt_global
 
-     call alloc_y(var, decomp_main, opt_global, opt_levels)
+     call alloc_y(var, decomp_main, opt_global, opt_depth, opt_levels)
 
   end subroutine alloc_y_freal_short
 
-  subroutine alloc_y_dreal_short(var, opt_global, opt_levels)
+  subroutine alloc_y_dreal_short(var, opt_global, opt_depth, opt_levels)
 
      implicit none
 
      real(real64), allocatable, dimension(:, :, :) :: var
+     integer, intent(IN), optional :: opt_depth
      integer, dimension(3), intent(IN), optional :: opt_levels
      logical, intent(IN), optional :: opt_global
 
-     call alloc_y(var, decomp_main, opt_global, opt_levels)
+     call alloc_y(var, decomp_main, opt_global, opt_depth, opt_levels)
 
   end subroutine alloc_y_dreal_short
 
-  subroutine alloc_y_fcplx_short(var, opt_global, opt_levels)
+  subroutine alloc_y_fcplx_short(var, opt_global, opt_depth, opt_levels)
 
      implicit none
 
      complex(real32), allocatable, dimension(:, :, :) :: var
+     integer, intent(IN), optional :: opt_depth
      integer, dimension(3), intent(IN), optional :: opt_levels
      logical, intent(IN), optional :: opt_global
 
-     call alloc_y(var, decomp_main, opt_global, opt_levels)
+     call alloc_y(var, decomp_main, opt_global, opt_depth, opt_levels)
 
   end subroutine alloc_y_fcplx_short
 
-  subroutine alloc_y_dcplx_short(var, opt_global, opt_levels)
+  subroutine alloc_y_dcplx_short(var, opt_global, opt_depth, opt_levels)
 
      implicit none
 
      complex(real64), allocatable, dimension(:, :, :) :: var
+     integer, intent(IN), optional :: opt_depth
      integer, dimension(3), intent(IN), optional :: opt_levels
      logical, intent(IN), optional :: opt_global
 
-     call alloc_y(var, decomp_main, opt_global, opt_levels)
+     call alloc_y(var, decomp_main, opt_global, opt_depth, opt_levels)
 
   end subroutine alloc_y_dcplx_short
 
-  subroutine alloc_y_ints_short(var, opt_global, opt_levels)
+  subroutine alloc_y_ints_short(var, opt_global, opt_depth, opt_levels)
 
      implicit none
 
      integer, allocatable, dimension(:, :, :) :: var
+     integer, intent(IN), optional :: opt_depth
      integer, dimension(3), intent(IN), optional :: opt_levels
      logical, intent(IN), optional :: opt_global
 
-     call alloc_y(var, decomp_main, opt_global, opt_levels)
+     call alloc_y(var, decomp_main, opt_global, opt_depth, opt_levels)
 
   end subroutine alloc_y_ints_short
 
-  subroutine alloc_y_logs_short(var, opt_global, opt_levels)
+  subroutine alloc_y_logs_short(var, opt_global, opt_depth, opt_levels)
 
      implicit none
 
      logical, allocatable, dimension(:, :, :) :: var
-
+     integer, intent(IN), optional :: opt_depth
      integer, dimension(3), intent(IN), optional :: opt_levels
      logical, intent(IN), optional :: opt_global
 
-     call alloc_y(var, decomp_main, opt_global, opt_levels)
+     call alloc_y(var, decomp_main, opt_global, opt_depth, opt_levels)
 
   end subroutine alloc_y_logs_short
 
-  subroutine alloc_y_freal(var, decomp, opt_global, opt_levels)
+  subroutine alloc_y_freal(var, decomp, opt_global, opt_depth, opt_levels)
 
      implicit none
 
      real(real32), allocatable, dimension(:, :, :) :: var
      TYPE(DECOMP_INFO), intent(IN) :: decomp
+     integer, intent(IN), optional :: opt_depth
      integer, dimension(3), intent(IN), optional :: opt_levels
      logical, intent(IN), optional :: opt_global
 
-     integer, dimension(3) :: levels
-
-     if (present(opt_levels)) then
-        levels = opt_levels
-     else
-        levels = decomp%ylevel
-     end if
-
-     call alloc(2, decomp, levels, opt_global, freal=var)
+     call alloc(2, decomp, opt_global, opt_depth, opt_levels, freal = var)
 
   end subroutine alloc_y_freal
 
-  subroutine alloc_y_dreal(var, decomp, opt_global, opt_levels)
+  subroutine alloc_y_dreal(var, decomp, opt_global, opt_depth, opt_levels)
 
      implicit none
 
      real(real64), allocatable, dimension(:, :, :) :: var
      TYPE(DECOMP_INFO), intent(IN) :: decomp
+     integer, intent(IN), optional :: opt_depth
      integer, dimension(3), intent(IN), optional :: opt_levels
      logical, intent(IN), optional :: opt_global
 
-     integer, dimension(3) :: levels
-
-     if (present(opt_levels)) then
-        levels = opt_levels
-     else
-        levels = decomp%ylevel
-     end if
-
-     call alloc(2, decomp, levels, opt_global, dreal=var)
+     call alloc(2, decomp, opt_global, opt_depth, opt_levels, dreal = var)
 
   end subroutine alloc_y_dreal
 
-  subroutine alloc_y_fcplx(var, decomp, opt_global, opt_levels)
+  subroutine alloc_y_fcplx(var, decomp, opt_global, opt_depth, opt_levels)
 
      implicit none
 
      complex(real32), allocatable, dimension(:, :, :) :: var
      TYPE(DECOMP_INFO), intent(IN) :: decomp
+     integer, intent(IN), optional :: opt_depth
      integer, dimension(3), intent(IN), optional :: opt_levels
      logical, intent(IN), optional :: opt_global
 
-     integer, dimension(3) :: levels
-
-     if (present(opt_levels)) then
-        levels = opt_levels
-     else
-        levels = decomp%ylevel
-     end if
-
-     call alloc(2, decomp, levels, opt_global, fcplx=var)
+     call alloc(2, decomp, opt_global, opt_depth, opt_levels, fcplx = var)
 
   end subroutine alloc_y_fcplx
 
-  subroutine alloc_y_dcplx(var, decomp, opt_global, opt_levels)
+  subroutine alloc_y_dcplx(var, decomp, opt_global, opt_depth, opt_levels)
 
      implicit none
 
      complex(real64), allocatable, dimension(:, :, :) :: var
      TYPE(DECOMP_INFO), intent(IN) :: decomp
+     integer, intent(IN), optional :: opt_depth
      integer, dimension(3), intent(IN), optional :: opt_levels
      logical, intent(IN), optional :: opt_global
 
-     integer, dimension(3) :: levels
-
-     if (present(opt_levels)) then
-        levels = opt_levels
-     else
-        levels = decomp%ylevel
-     end if
-
-     call alloc(2, decomp, levels, opt_global, dcplx=var)
+     call alloc(2, decomp, opt_global, opt_depth, opt_levels, dcplx = var)
 
   end subroutine alloc_y_dcplx
 
-  subroutine alloc_y_ints(var, decomp, opt_global, opt_levels)
+  subroutine alloc_y_ints(var, decomp, opt_global, opt_depth, opt_levels)
 
      implicit none
 
      integer, allocatable, dimension(:, :, :) :: var
      TYPE(DECOMP_INFO), intent(IN) :: decomp
+     integer, intent(IN), optional :: opt_depth
      integer, dimension(3), intent(IN), optional :: opt_levels
      logical, intent(IN), optional :: opt_global
 
-     integer, dimension(3) :: levels
-
-     if (present(opt_levels)) then
-        levels = opt_levels
-     else
-        levels = decomp%ylevel
-     end if
-
-     call alloc(2, decomp, levels, opt_global, ints=var)
+     call alloc(2, decomp, opt_global, opt_depth, opt_levels, ints = var)
 
   end subroutine alloc_y_ints
 
-  subroutine alloc_y_logs(var, decomp, opt_global, opt_levels)
+  subroutine alloc_y_logs(var, decomp, opt_global, opt_depth, opt_levels)
 
      implicit none
 
      logical, allocatable, dimension(:, :, :) :: var
      TYPE(DECOMP_INFO), intent(IN) :: decomp
+     integer, intent(IN), optional :: opt_depth
      integer, dimension(3), intent(IN), optional :: opt_levels
      logical, intent(IN), optional :: opt_global
 
-     integer, dimension(3) :: levels
-
-     if (present(opt_levels)) then
-        levels = opt_levels
-     else
-        levels = decomp%ylevel
-     end if
-
-     call alloc(2, decomp, levels, opt_global, logs=var)
+     call alloc(2, decomp, opt_global, opt_depth, opt_levels, logs = var)
 
   end subroutine alloc_y_logs
 
   !
   ! Z pencil
   !
-  subroutine alloc_z_freal_short(var, opt_global, opt_levels)
+  subroutine alloc_z_freal_short(var, opt_global, opt_depth, opt_levels)
 
      implicit none
 
      real(real32), allocatable, dimension(:, :, :) :: var
+     integer, intent(IN), optional :: opt_depth
      integer, dimension(3), intent(IN), optional :: opt_levels
      logical, intent(IN), optional :: opt_global
 
-     call alloc_z(var, decomp_main, opt_global, opt_levels)
+     call alloc_z(var, decomp_main, opt_global, opt_depth, opt_levels)
 
   end subroutine alloc_z_freal_short
 
-  subroutine alloc_z_dreal_short(var, opt_global, opt_levels)
+  subroutine alloc_z_dreal_short(var, opt_global, opt_depth, opt_levels)
 
      implicit none
 
      real(real64), allocatable, dimension(:, :, :) :: var
+     integer, intent(IN), optional :: opt_depth
      integer, dimension(3), intent(IN), optional :: opt_levels
      logical, intent(IN), optional :: opt_global
 
-     call alloc_z(var, decomp_main, opt_global, opt_levels)
+     call alloc_z(var, decomp_main, opt_global, opt_depth, opt_levels)
 
   end subroutine alloc_z_dreal_short
 
-  subroutine alloc_z_fcplx_short(var, opt_global, opt_levels)
+  subroutine alloc_z_fcplx_short(var, opt_global, opt_depth, opt_levels)
 
      implicit none
 
      complex(real32), allocatable, dimension(:, :, :) :: var
+     integer, intent(IN), optional :: opt_depth
      integer, dimension(3), intent(IN), optional :: opt_levels
      logical, intent(IN), optional :: opt_global
 
-     call alloc_z(var, decomp_main, opt_global, opt_levels)
+     call alloc_z(var, decomp_main, opt_global, opt_depth, opt_levels)
 
   end subroutine alloc_z_fcplx_short
 
-  subroutine alloc_z_dcplx_short(var, opt_global, opt_levels)
+  subroutine alloc_z_dcplx_short(var, opt_global, opt_depth, opt_levels)
 
      implicit none
 
      complex(real64), allocatable, dimension(:, :, :) :: var
+     integer, intent(IN), optional :: opt_depth
      integer, dimension(3), intent(IN), optional :: opt_levels
      logical, intent(IN), optional :: opt_global
 
-     call alloc_z(var, decomp_main, opt_global, opt_levels)
+     call alloc_z(var, decomp_main, opt_global, opt_depth, opt_levels)
 
   end subroutine alloc_z_dcplx_short
 
-  subroutine alloc_z_ints_short(var, opt_global, opt_levels)
+  subroutine alloc_z_ints_short(var, opt_global, opt_depth, opt_levels)
 
      implicit none
 
      integer, allocatable, dimension(:, :, :) :: var
+     integer, intent(IN), optional :: opt_depth
      integer, dimension(3), intent(IN), optional :: opt_levels
      logical, intent(IN), optional :: opt_global
 
-     call alloc_z(var, decomp_main, opt_global, opt_levels)
+     call alloc_z(var, decomp_main, opt_global, opt_depth, opt_levels)
 
   end subroutine alloc_z_ints_short
 
-  subroutine alloc_z_logs_short(var, opt_global, opt_levels)
+  subroutine alloc_z_logs_short(var, opt_global, opt_depth, opt_levels)
 
      implicit none
 
      logical, allocatable, dimension(:, :, :) :: var
+     integer, intent(IN), optional :: opt_depth
      integer, dimension(3), intent(IN), optional :: opt_levels
      logical, intent(IN), optional :: opt_global
 
-     call alloc_z(var, decomp_main, opt_global, opt_levels)
+     call alloc_z(var, decomp_main, opt_global, opt_depth, opt_levels)
 
   end subroutine alloc_z_logs_short
 
-  subroutine alloc_z_freal(var, decomp, opt_global, opt_levels)
+  subroutine alloc_z_freal(var, decomp, opt_global, opt_depth, opt_levels)
 
      implicit none
 
      real(real32), allocatable, dimension(:, :, :) :: var
      TYPE(DECOMP_INFO), intent(IN) :: decomp
+     integer, intent(IN), optional :: opt_depth
      integer, dimension(3), intent(IN), optional :: opt_levels
      logical, intent(IN), optional :: opt_global
 
-     integer, dimension(3) :: levels
-
-     if (present(opt_levels)) then
-        levels = opt_levels
-     else
-        levels = decomp%zlevel
-     end if
-     call alloc(3, decomp, levels, opt_global, freal=var)
+     call alloc(3, decomp, opt_global, opt_depth, opt_levels, freal = var)
 
   end subroutine alloc_z_freal
 
-  subroutine alloc_z_dreal(var, decomp, opt_global, opt_levels)
+  subroutine alloc_z_dreal(var, decomp, opt_global, opt_depth, opt_levels)
 
      implicit none
 
      real(real64), allocatable, dimension(:, :, :) :: var
      TYPE(DECOMP_INFO), intent(IN) :: decomp
+     integer, intent(IN), optional :: opt_depth
      integer, dimension(3), intent(IN), optional :: opt_levels
      logical, intent(IN), optional :: opt_global
 
-     integer, dimension(3) :: levels
-
-     if (present(opt_levels)) then
-        levels = opt_levels
-     else
-        levels = decomp%zlevel
-     end if
-
-     call alloc(3, decomp, levels, opt_global, dreal=var)
+     call alloc(3, decomp, opt_global, opt_depth, opt_levels, dreal = var)
 
   end subroutine alloc_z_dreal
 
-  subroutine alloc_z_fcplx(var, decomp, opt_global, opt_levels)
+  subroutine alloc_z_fcplx(var, decomp, opt_global, opt_depth, opt_levels)
 
      implicit none
 
      complex(real32), allocatable, dimension(:, :, :) :: var
      TYPE(DECOMP_INFO), intent(IN) :: decomp
+     integer, intent(IN), optional :: opt_depth
      integer, dimension(3), intent(IN), optional :: opt_levels
      logical, intent(IN), optional :: opt_global
 
-     integer, dimension(3) :: levels
-
-     if (present(opt_levels)) then
-        levels = opt_levels
-     else
-        levels = decomp%zlevel
-     end if
-
-     call alloc(3, decomp, levels, opt_global, fcplx=var)
+     call alloc(3, decomp, opt_global, opt_depth, opt_levels, fcplx = var)
 
   end subroutine alloc_z_fcplx
 
-  subroutine alloc_z_dcplx(var, decomp, opt_global, opt_levels)
+  subroutine alloc_z_dcplx(var, decomp, opt_global, opt_depth, opt_levels)
 
      implicit none
 
      complex(real64), allocatable, dimension(:, :, :) :: var
      TYPE(DECOMP_INFO), intent(IN) :: decomp
+     integer, intent(IN), optional :: opt_depth
      integer, dimension(3), intent(IN), optional :: opt_levels
      logical, intent(IN), optional :: opt_global
 
-     integer, dimension(3) :: levels
-
-     if (present(opt_levels)) then
-        levels = opt_levels
-     else
-        levels = decomp%zlevel
-     end if
-
-     call alloc(3, decomp, levels, opt_global, dcplx=var)
+     call alloc(3, decomp, opt_global, opt_depth, opt_levels, dcplx = var)
 
   end subroutine alloc_z_dcplx
 
-  subroutine alloc_z_ints(var, decomp, opt_global, opt_levels)
+  subroutine alloc_z_ints(var, decomp, opt_global, opt_depth, opt_levels)
 
      implicit none
 
      integer, allocatable, dimension(:, :, :) :: var
      TYPE(DECOMP_INFO), intent(IN) :: decomp
+     integer, intent(IN), optional :: opt_depth
      integer, dimension(3), intent(IN), optional :: opt_levels
      logical, intent(IN), optional :: opt_global
 
-     integer, dimension(3) :: levels
-
-     if (present(opt_levels)) then
-        levels = opt_levels
-     else
-        levels = decomp%zlevel
-     end if
-
-     call alloc(3, decomp, levels, opt_global, ints=var)
+     call alloc(3, decomp, opt_global, opt_depth, opt_levels, ints = var)
 
   end subroutine alloc_z_ints
 
-  subroutine alloc_z_logs(var, decomp, opt_global, opt_levels)
+  subroutine alloc_z_logs(var, decomp, opt_global, opt_depth, opt_levels)
 
      implicit none
 
      logical, allocatable, dimension(:, :, :) :: var
      TYPE(DECOMP_INFO), intent(IN) :: decomp
+     integer, intent(IN), optional :: opt_depth
      integer, dimension(3), intent(IN), optional :: opt_levels
      logical, intent(IN), optional :: opt_global
 
-     integer, dimension(3) :: levels
-
-     if (present(opt_levels)) then
-        levels = opt_levels
-     else
-        levels = decomp%zlevel
-     end if
-
-     call alloc(3, decomp, levels, opt_global, logs=var)
+     call alloc(3, decomp, opt_global, opt_depth, opt_levels, logs = var)
 
   end subroutine alloc_z_logs

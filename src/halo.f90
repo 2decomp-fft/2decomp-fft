@@ -326,11 +326,28 @@ contains
       logical, intent(in) :: global
 
       integer :: s1, s2, s3
+      integer :: i
 
       halo_extents%ipencil = ipencil
       halo_extents%sizes = sizes
       halo_extents%levels = levels
 
+      ! Check levels are sensible
+      if (levels(ipencil) /= 0) then
+         call decomp_2d_abort(1, "")
+      end if
+      do i = 1, 3
+         if (i == ipencil) then
+            if (levels(i) /= 0) then
+               call decomp_2d_abort(1, "Halo exchange is only performed in the perpendicular directions")
+            endif
+         else
+            if (levels(i) < 1) then
+               call decomp_2d_abort(1, "Halo exchange requires a non-zero depth in all perpendicular directions")
+            end if
+         end if
+      end do
+      
       s1 = sizes(1)
       s2 = sizes(2)
       s3 = sizes(3)

@@ -333,6 +333,9 @@ contains
       halo_extents%levels = levels
 
       ! Check levels are sensible
+      if (any(levels < 0)) then
+         call decomp_2d_abort(1, "Negative halo depths are not supported")
+      end if
       do i = 1, 3
          if (i /= ipencil) then
             if (levels(i) < 1) then

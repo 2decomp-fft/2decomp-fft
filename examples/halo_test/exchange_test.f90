@@ -41,7 +41,7 @@ program exchange_test
 
    integer :: nx_expected, ny_expected, nz_expected
 
-   logical :: passing, all_pass
+   logical :: all_pass
 
    call MPI_INIT(ierror)
    ! To resize the domain we need to know global number of ranks
@@ -551,6 +551,7 @@ contains
       character(len=*), intent(in) :: pencil
       real(mytype), dimension(:, :, :), allocatable :: tmp
       real(mytype) :: divmag, error
+      logical :: passing
 #if defined(_GPU)
       attributes(device) :: tmp
 #endif

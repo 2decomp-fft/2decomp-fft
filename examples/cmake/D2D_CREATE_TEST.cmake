@@ -1,11 +1,11 @@
-macro(CreateMPITest run_dir
+# Defines the body of 2DECOMP&FFT test cases
+macro(DefineD2DTest run_dir
                     case
 		    app_src
 		    exe_dep
 		    defs
 		    files
                     OMP_THREADS)
-  message(STATUS "Add Verification Test (MPI run) ${case}")
   # Create working directory
   file(MAKE_DIRECTORY ${run_dir})
   # Copy additional files
@@ -45,7 +45,38 @@ macro(CreateMPITest run_dir
   endif()
   # Install
   install(TARGETS ${case} DESTINATION ${run_dir})
-  # Run the test
+endmacro()
+
+# Constructs a serial test case - most likely useful for unit testing of internals
+macro(CreateSerTest run_dir
+                    case
+		    app_src
+		    exe_dep
+		    defs
+		    files
+                    OMP_THREADS)
+  message(STATUS "Add Verification/Unit Test (Serial run) ${case}")
+  # Test definition
+  DefineD2DTest("${run_dir}" "${case}" "${app_src}" "${exe_dep}" "${defs}" "${files}" "${OMP_THREADS}")
+  # Test launch parameters
+  add_test(NAME ${case} COMMAND $<TARGET_FILE:${case}> ${TEST_ARGUMENTS} WORKING_DIRECTORY ${run_dir})
+  if (OPENMP_FOUND AND ENABLE_OMP)
+    set_tests_properties(${case} PROPERTIES ENVIRONMENT "OMP_NUM_THREADS=${OMP_THREADS}")
+  endif (OPENMP_FOUND AND ENABLE_OMP)
+endmacro()
+
+# Constructs an MPI test case - most likely for verification tests
+macro(CreateMPITest run_dir
+                    case
+		    app_src
+		    exe_dep
+		    defs
+		    files
+                    OMP_THREADS)
+  message(STATUS "Add Verification Test (MPI run) ${case}")
+  # Test definition
+  DefineD2DTest("${run_dir}" "${case}" "${app_src}" "${exe_dep}" "${defs}" "${files}" "${OMP_THREADS}")
+  # Test launch parameters
   if (BUILD_TARGET MATCHES "gpu")
     add_test(NAME ${case} COMMAND ${MPIEXEC_EXECUTABLE} ${MPIEXEC_NUMPROC_FLAG} ${MPI_NUMPROCS} ./bind.sh $<TARGET_FILE:${case}> ${TEST_ARGUMENTS} WORKING_DIRECTORY ${run_dir})
   else ()  

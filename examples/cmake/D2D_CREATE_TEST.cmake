@@ -59,7 +59,9 @@ macro(CreateSerTest run_dir
   # Test definition
   DefineD2DTest("${run_dir}" "${case}" "${app_src}" "${exe_dep}" "${defs}" "${files}" "${OMP_THREADS}")
   # Test launch parameters
-  add_test(NAME ${case} COMMAND $<TARGET_FILE:${case}> ${TEST_ARGUMENTS} WORKING_DIRECTORY ${run_dir})
+  add_test(NAME ${case}
+           COMMAND $<TARGET_FILE:${case}> ${TEST_ARGUMENTS}
+	   WORKING_DIRECTORY ${run_dir})
   if (OPENMP_FOUND AND ENABLE_OMP)
     set_tests_properties(${case} PROPERTIES ENVIRONMENT "OMP_NUM_THREADS=${OMP_THREADS}")
   endif (OPENMP_FOUND AND ENABLE_OMP)

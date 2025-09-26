@@ -57,9 +57,10 @@ contains
     dims = [11, 42, 8]
     halo_extents = init_halo_extents(ipencil, dims, decomp, halos, global)
     
-    expect_count = dims(3) + 2 * halos(3)
-    expect_length = (dims(1) + 2 * halos(1)) * halos(2)
-    expect_stride = (dims(1) + 2 * halos(1)) * (dims(2) + 2 * halos(2))
+    ! Expected values based on [11, 42, 8] local grid with [0, 3, 2] halos
+    expect_count = 12
+    expect_length = 33
+    expect_stride = 528
 
     count = halo_extents%buffer_count(2)
     length = halo_extents%buffer_length(2)
@@ -73,9 +74,10 @@ contains
     dims = [11, 42, 8]
     halo_extents = init_halo_extents(ipencil, dims, decomp, halos, global)
 
-    expect_count = dims(3) + 2 * halos(3)
-    expect_length = (dims(1) + 2 * halos(1)) * halos(2)
-    expect_stride = (dims(1) + 2 * halos(1)) * (dims(2) + 2 * halos(2))
+    ! Expected values based on [11, 42, 8] local grid with [5, 3, 2] halos
+    expect_count = 12
+    expect_length = 63
+    expect_stride = 1008
 
     count = halo_extents%buffer_count(2)
     length = halo_extents%buffer_length(2)
@@ -93,9 +95,10 @@ contains
     dims = [11, 42, 8]
     halo_extents = init_halo_extents(ipencil, dims, decomp, halos, global)
     
+    ! Expected values based on [11, 42, 8] local grid with [0, 3, 2] halos
     ! buffer is contiguous in memory so count is 1 and stride is undefined
     expect_count = 1
-    expect_length = (dims(1) + 2 * halos(1)) * (dims(2) + 2 * halos(2)) * halos(3)
+    expect_length = 1056
     expect_stride = -1
 
     count = halo_extents%buffer_count(3)
@@ -111,9 +114,10 @@ contains
     dims = [11, 42, 8]
     halo_extents = init_halo_extents(ipencil, dims, decomp, halos, global)
 
+    ! Expected values based on [11, 42, 8] local grid with [5, 3, 2] halos
     ! buffer is contiguous in memory so count is 1 and stride is undefined
     expect_count = 1
-    expect_length = (dims(1) + 2 * halos(1)) * (dims(2) + 2 * halos(2)) * halos(3)
+    expect_length = 2016
     expect_stride = -1
 
     count = halo_extents%buffer_count(3)
@@ -157,9 +161,10 @@ contains
     dims = [11, 42, 8]
     halo_extents = init_halo_extents(ipencil, dims, decomp, halos, global)
     
-    expect_count = (dims(2) + 2 * halos(2)) * (dims(3) + 2 * halos(3))
-    expect_length = halos(1)
-    expect_stride = dims(1) + 2 * halos(1)
+    ! Expected values based on [11, 42, 8] local grid with [3, 0, 2] halos
+    expect_count = 504
+    expect_length = 3
+    expect_stride = 17
 
     count = halo_extents%buffer_count(1)
     length = halo_extents%buffer_length(1)
@@ -173,9 +178,10 @@ contains
     dims = [11, 42, 8]
     halo_extents = init_halo_extents(ipencil, dims, decomp, halos, global)
 
-    expect_count = (dims(2) + 2 * halos(2)) * (dims(3) + 2 * halos(3))
-    expect_length = halos(1)
-    expect_stride = dims(1) + 2 * halos(1)
+    ! Expected values based on [11, 42, 8] local grid with [3, 5, 2] halos
+    expect_count = 624
+    expect_length = 3
+    expect_stride = 17
 
     count = halo_extents%buffer_count(1)
     length = halo_extents%buffer_length(1)
@@ -193,9 +199,10 @@ contains
     dims = [11, 42, 8]
     halo_extents = init_halo_extents(ipencil, dims, decomp, halos, global)
     
+    ! Expected values based on [11, 42, 8] local grid with [3, 0, 2] halos
     ! buffer is contiguous in memory so count is 1 and stride is undefined
     expect_count = 1
-    expect_length = (dims(1) + 2 * halos(1)) * (dims(2) + 2 * halos(2)) * halos(3)
+    expect_length = 1428
     expect_stride = -1
 
     count = halo_extents%buffer_count(3)
@@ -211,9 +218,10 @@ contains
     dims = [11, 42, 8]
     halo_extents = init_halo_extents(ipencil, dims, decomp, halos, global)
 
+    ! Expected values based on [11, 42, 8] local grid with [3, 5, 2] halos
     ! buffer is contiguous in memory so count is 1 and stride is undefined
     expect_count = 1
-    expect_length = (dims(1) + 2 * halos(1)) * (dims(2) + 2 * halos(2)) * halos(3)
+    expect_length = 1768
     expect_stride = -1
 
     count = halo_extents%buffer_count(3)
@@ -257,9 +265,10 @@ contains
     dims = [11, 42, 8]
     halo_extents = init_halo_extents(ipencil, dims, decomp, halos, global)
     
-    expect_count = (dims(2) + 2 * halos(2)) * (dims(3) + 2 * halos(3))
-    expect_length = halos(1)
-    expect_stride = dims(1) + 2 * halos(1)
+    ! Expected values based on [11, 42, 8] local grid with [2, 3, 0] halos
+    expect_count = 384
+    expect_length = 2
+    expect_stride = 15
 
     count = halo_extents%buffer_count(1)
     length = halo_extents%buffer_length(1)
@@ -273,9 +282,10 @@ contains
     dims = [11, 42, 8]
     halo_extents = init_halo_extents(ipencil, dims, decomp, halos, global)
 
-    expect_count = (dims(2) + 2 * halos(2)) * (dims(3) + 2 * halos(3))
-    expect_length = halos(1)
-    expect_stride = dims(1) + 2 * halos(1)
+    ! Expected values based on [11, 42, 8] local grid with [2, 3, 5] halos
+    expect_count = 864
+    expect_length = 2
+    expect_stride = 15
 
     count = halo_extents%buffer_count(1)
     length = halo_extents%buffer_length(1)
@@ -293,9 +303,10 @@ contains
     dims = [11, 42, 8]
     halo_extents = init_halo_extents(ipencil, dims, decomp, halos, global)
     
-    expect_count = dims(3) + 2 * halos(3)
-    expect_length = (dims(1) + 2 * halos(1)) * halos(2)
-    expect_stride = (dims(1) + 2 * halos(1)) * (dims(2) + 2 * halos(2))
+    ! Expected values based on [11, 42, 8] local grid with [2, 3, 0] halos
+    expect_count = 8
+    expect_length = 45
+    expect_stride = 720
 
     count = halo_extents%buffer_count(2)
     length = halo_extents%buffer_length(2)
@@ -310,9 +321,10 @@ contains
     dims = [11, 42, 8]
     halo_extents = init_halo_extents(ipencil, dims, decomp, halos, global)
 
-    expect_count = dims(3) + 2 * halos(3)
-    expect_length = (dims(1) + 2 * halos(1)) * halos(2)
-    expect_stride = (dims(1) + 2 * halos(1)) * (dims(2) + 2 * halos(2))
+    ! Expected values based on [11, 42, 8] local grid with [2, 3, 5] halos
+    expect_count = 18
+    expect_length = 45
+    expect_stride = 720
 
     count = halo_extents%buffer_count(2)
     length = halo_extents%buffer_length(2)

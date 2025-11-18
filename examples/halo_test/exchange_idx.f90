@@ -1,0 +1,246 @@
+!! SPDX-License-Identifier: BSD-3-Clause
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+! This example tests that the exchanges place data correctly by exchanging global indices on an
+! extended (with halos) domain.
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+program exchange_idx
+
+  use mpi
+
+  use m_halo
+  use decomp_2d
+
+  use decomp_2d_testing
+
+  implicit none
+
+  integer :: nranks_tot
+  integer :: nx, ny, nz
+  integer :: hx, hy, hz
+  integer, parameter :: nx_base = 5, ny_base = 6, nz_base = 7
+  integer :: p_row = 0, p_col = 0
+  integer :: resize_domain
+
+  real(mytype), dimension(:, :, :), allocatable :: a1
+  type(halo_extents_t) :: halo_extents
+
+  integer :: i, j, k
+  integer :: ii, jj, kk
+  integer :: idx
+  
+  integer :: ierror
+
+  logical :: all_pass
+
+  !! Initialisation
+  call MPI_INIT(ierror)
+  ! To resize the domain we need to know global number of ranks
+  ! This operation is also done as part of decomp_2d_init
+  call MPI_COMM_SIZE(MPI_COMM_WORLD, nranks_tot, ierror)
+  resize_domain = int(nranks_tot / 4) + 1
+  nx = nx_base * resize_domain
+  ny = ny_base * resize_domain
+  nz = nz_base * resize_domain
+
+  ! Now we can check if user put some inputs
+  call decomp_2d_testing_init(p_row, p_col, nx, ny, nz)
+
+  call decomp_2d_init(nx, ny, nz, p_row, p_col)
+  call decomp_2d_testing_log()
+
+  all_pass = .true.
+
+  ! Create halo-extended arrays
+  hx = 1; hy = 1; hz = 1
+
+  halo_extents = init_halo_extents(1, xsize, decomp_main, [hx, hy, hz], .false.)
+  call alloc_x(a1, opt_global=.false., opt_levels=[hx, hy, hz])
+  a1(:, :, :) = -1.0_mytype
+  do k = halo_extents%zs+hz, halo_extents%ze-hz
+     do j = halo_extents%ys+hy, halo_extents%ye-hy
+        do i = halo_extents%xs+hx, halo_extents%xe-hx
+           ! Extended indices
+           ii = xstart(1) + (i - halo_extents%xs)
+           jj = xstart(2) + (j - halo_extents%ys)
+           kk = xstart(3) + (k - halo_extents%zs)
+
+           ! Global index
+           idx = ii + (jj - 1) * (nx + 2 * hx) + (kk - 1) * (nx + 2 * hx) * (ny + 2 * hy)
+           a1(i, j, k) = idx
+        end do
+        if (xstart(1) == 1) then
+           do i = halo_extents%xs, halo_extents%xs+(hx-1)
+              ! Extended indices
+              ii = xstart(1) + (i - halo_extents%xs)
+              jj = xstart(2) + (j - halo_extents%ys)
+              kk = xstart(3) + (k - halo_extents%zs)
+
+              ! Global index
+              idx = ii + (jj - 1) * (nx + 2 * hx) + (kk - 1) * (nx + 2 * hx) * (ny + 2 * hy)
+              a1(i, j, k) = idx
+           end do
+        end if
+        if (xend(1) == nx) then
+           do i = halo_extents%xe-hx+1, halo_extents%xe
+              ! Extended indices
+              ii = xstart(1) + (i - halo_extents%xs)
+              jj = xstart(2) + (j - halo_extents%ys)
+              kk = xstart(3) + (k - halo_extents%zs)
+
+              ! Global index
+              idx = ii + (jj - 1) * (nx + 2 * hx) + (kk - 1) * (nx + 2 * hx) * (ny + 2 * hy)
+              a1(i, j, k) = idx
+           end do
+        end if
+     end do
+     if (xstart(2) == 1) then
+        do j = halo_extents%ys, halo_extents%ys+(hy-1)
+           do i = halo_extents%xs+hx, halo_extents%xe-hx
+              ! Extended indices
+              ii = xstart(1) + (i - halo_extents%xs)
+              jj = xstart(2) + (j - halo_extents%ys)
+              kk = xstart(3) + (k - halo_extents%zs)
+
+              ! Global index
+              idx = ii + (jj - 1) * (nx + 2 * hx) + (kk - 1) * (nx + 2 * hx) * (ny + 2 * hy)
+              a1(i, j, k) = idx
+           end do
+        end do
+     end if
+     if (xend(2) == ny) then
+        do j = halo_extents%ye-hy+1, halo_extents%ye
+           do i = halo_extents%xs+hx, halo_extents%xe-hx
+              ! Extended indices
+              ii = xstart(1) + (i - halo_extents%xs)
+              jj = xstart(2) + (j - halo_extents%ys)
+              kk = xstart(3) + (k - halo_extents%zs)
+
+              ! Global index
+              idx = ii + (jj - 1) * (nx + 2 * hx) + (kk - 1) * (nx + 2 * hx) * (ny + 2 * hy)
+              a1(i, j, k) = idx
+           end do
+        end do
+     end if
+  end do
+  if (xstart(3) == 1) then
+     do k = halo_extents%zs, halo_extents%zs+(hz-1)
+        do j = halo_extents%ys+hy, halo_extents%ye-hy
+           do i = halo_extents%xs+hx, halo_extents%xe-hx
+              ! Extended indices
+              ii = xstart(1) + (i - halo_extents%xs)
+              jj = xstart(2) + (j - halo_extents%ys)
+              kk = xstart(3) + (k - halo_extents%zs)
+
+              ! Global index
+              idx = ii + (jj - 1) * (nx + 2 * hx) + (kk - 1) * (nx + 2 * hx) * (ny + 2 * hy)
+              a1(i, j, k) = idx
+           end do
+        end do
+     end do
+  end if
+  if (xend(3) == nz) then
+     do k = halo_extents%ze-hz+1, halo_extents%ze
+        do j = halo_extents%ys+hy, halo_extents%ye-hy
+           do i = halo_extents%xs+hx, halo_extents%xe-hx
+              ! Extended indices
+              ii = xstart(1) + (i - halo_extents%xs)
+              jj = xstart(2) + (j - halo_extents%ys)
+              kk = xstart(3) + (k - halo_extents%zs)
+
+              ! Global index
+              idx = ii + (jj - 1) * (nx + 2 * hx) + (kk - 1) * (nx + 2 * hx) * (ny + 2 * hy)
+              a1(i, j, k) = idx
+           end do
+        end do
+     end do
+  end if
+
+  call halo_exchange(a1, 1, opt_levels=[hx, hy, hz])
+  do k = halo_extents%zs, halo_extents%ze
+     do j = halo_extents%ys, halo_extents%ye
+        do i = halo_extents%xs, halo_extents%xe
+           ! Extended indices
+           ii = xstart(1) + (i - halo_extents%xs)
+           jj = xstart(2) + (j - halo_extents%ys)
+           kk = xstart(3) + (k - halo_extents%zs)
+
+           ! Global index
+           idx = ii + (jj - 1) * (nx + 2 * hx) + (kk - 1) * (nx + 2 * hx) * (ny + 2 * hy)
+
+           ! Check all points are valid, excluding "corners"
+           if (.not. is_global_corner(i, j, k, halo_extents)) then
+              if (a1(i, j, k) /= idx) then
+                 print *, "FAIL: got ", a1(i, j, k), " expected ", idx, " @ ", [ii, jj, kk]
+                 all_pass = .false.
+              end if
+           end if
+        end do
+     end do
+  end do
+  
+  call decomp_2d_finalize()
+  if (.not. all_pass) then
+     call decomp_2d_abort(1, "Error in exchange indices")
+  end if
+
+  call MPI_Finalize(ierror)
+
+contains
+
+  ! Determine if we are in a global "corner" of the extended domain
+  logical function is_global_corner(i, j, k, halo_extents)
+    integer, intent(in) :: i, j, k
+    type(halo_extents_t), intent(in) :: halo_extents
+
+    is_global_corner = .false.
+
+    if (xstart(1) == 1 .and. i < halo_extents%xs + hx) then
+       if (xstart(2) == 1) then
+          is_global_corner = is_global_corner .or. (j < halo_extents%ys + hy)
+       end if
+       if (xend(2) == ny) then
+          is_global_corner = is_global_corner .or. (j > halo_extents%ye - hy)
+       end if
+       if (xstart(3) == 1) then
+          is_global_corner = is_global_corner .or. (k < halo_extents%zs + hz)
+       end if
+       if (xend(3) == nz) then
+          is_global_corner = is_global_corner .or. (k > halo_extents%ze - hz)
+       end if
+    end if
+    if (xend(1) == nx .and. i > halo_extents%xe - hx) then
+       if (xstart(2) == 1) then
+          is_global_corner = is_global_corner .or. (j < halo_extents%ys + hy)
+       end if
+       if (xend(2) == ny) then
+          is_global_corner = is_global_corner .or. (j > halo_extents%ye - hy)
+       end if
+       if (xstart(3) == 1) then
+          is_global_corner = is_global_corner .or. (k < halo_extents%zs + hz)
+       end if
+       if (xend(3) == nz) then
+          is_global_corner = is_global_corner .or. (k > halo_extents%ze - hz)
+       end if
+    end if
+
+    if (xstart(2) == 1 .and. j < halo_extents%ys + hy) then
+       if (xstart(3) == 1) then
+          is_global_corner = is_global_corner .or. (k < halo_extents%zs + hz)
+       end if
+       if (xend(3) == nz) then
+          is_global_corner = is_global_corner .or. (k > halo_extents%ze - hz)
+       end if
+    end if
+    if (xend(2) == ny .and. j > halo_extents%ye - hy) then
+       if (xstart(3) == 1) then
+          is_global_corner = is_global_corner .or. (k < halo_extents%zs + hz)
+       end if
+       if (xend(3) == nz) then
+          is_global_corner = is_global_corner .or. (k > halo_extents%ze - hz)
+       end if
+    end if
+
+  end function is_global_corner
+
+end program exchange_idx
+

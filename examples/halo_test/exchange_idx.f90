@@ -6,6 +6,10 @@
 program exchange_idx
 
   use mpi
+#if defined(_GPU)
+   use cudafor
+   use openacc
+#endif
 
   use m_halo
   use decomp_2d
@@ -64,6 +68,9 @@ contains
     integer, intent(in) :: ipencil
 
     real(mytype), dimension(:, :, :), allocatable :: a1
+#if defined(_GPU)
+      attributes(device) :: a1
+#endif
     type(halo_extents_t) :: halo_extents
 
     integer :: i, j, k

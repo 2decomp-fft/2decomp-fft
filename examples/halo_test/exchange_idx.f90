@@ -227,7 +227,7 @@ contains
              ! Check all points are valid, excluding "corners"
              if (.not. is_global_corner(i, j, k, halo_extents, istart, iend)) then
                 if (a1(i, j, k) /= idx) then
-                   print *, "FAIL: got ", a1(i, j, k), " expected ", idx, " @ ", [ii, jj, kk]
+                   print *, "FAIL: @ ", [ii, jj, kk]
                    test_pass = .false.
                 end if
              end if

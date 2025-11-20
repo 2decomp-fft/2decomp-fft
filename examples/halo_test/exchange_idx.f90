@@ -177,7 +177,9 @@ contains
           end do
        end if
     end do
+    !acc end kernels
     if (istart(3) == 1) then
+       !$acc kernels default(present)
        do k = halo_extents%zs, halo_extents%zs+(hz-1)
           do j = halo_extents%ys+hy, halo_extents%ye-hy
              do i = halo_extents%xs+hx, halo_extents%xe-hx
@@ -192,8 +194,10 @@ contains
              end do
           end do
        end do
+       !acc end kernels
     end if
     if (iend(3) == nz) then
+       !$acc kernels default(present)
        do k = halo_extents%ze-hz+1, halo_extents%ze
           do j = halo_extents%ys+hy, halo_extents%ye-hy
              do i = halo_extents%xs+hx, halo_extents%xe-hx
@@ -208,8 +212,8 @@ contains
              end do
           end do
        end do
+       !acc end kernels
     end if
-    !acc end kernels
 
     call halo_exchange(a1, ipencil, opt_levels=[hx, hy, hz])
     !$acc kernels default(present)

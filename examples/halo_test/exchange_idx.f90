@@ -20,7 +20,6 @@ program exchange_idx
 
   integer :: nranks_tot
   integer :: nx, ny, nz
-  integer :: hx, hy, hz
   integer, parameter :: nx_base = 5, ny_base = 6, nz_base = 7
   integer :: p_row = 0, p_col = 0
   integer :: resize_domain
@@ -41,8 +40,6 @@ program exchange_idx
   nx = nx_base * resize_domain
   ny = ny_base * resize_domain
   nz = nz_base * resize_domain
-
-  hx = 1; hy = 1; hz = 1
 
   ! Now we can check if user put some inputs
   call decomp_2d_testing_init(p_row, p_col, nx, ny, nz)
@@ -76,6 +73,7 @@ contains
     integer :: i, j, k
     integer :: ii, jj, kk
     integer :: idx
+    integer :: hx, hy, hz
 
     test_pass = .true.
 
@@ -96,6 +94,7 @@ contains
     end if
 
     ! Create halo-extended arrays
+    hx = 1; hy = 1; hz = 1
 
     halo_extents = init_halo_extents(ipencil, isize, decomp_main, [hx, hy, hz], .false.)
 

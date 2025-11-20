@@ -110,6 +110,7 @@ contains
     end if
 
     a1(:, :, :) = -1.0_mytype
+    !$acc kernels default(present)
     do k = halo_extents%zs+hz, halo_extents%ze-hz
        do j = halo_extents%ys+hy, halo_extents%ye-hy
           do i = halo_extents%xs+hx, halo_extents%xe-hx
@@ -208,8 +209,10 @@ contains
           end do
        end do
     end if
+    !acc end kernels
 
     call halo_exchange(a1, ipencil, opt_levels=[hx, hy, hz])
+    !$acc kernels default(present)
     do k = halo_extents%zs, halo_extents%ze
        do j = halo_extents%ys, halo_extents%ye
           do i = halo_extents%xs, halo_extents%xe
@@ -231,6 +234,7 @@ contains
           end do
        end do
     end do
+    !$acc end kernels
 
   end function run_test
 

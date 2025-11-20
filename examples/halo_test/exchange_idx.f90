@@ -228,7 +228,7 @@ contains
              idx = ii + (jj - 1) * (nx + 2 * hx) + (kk - 1) * (nx + 2 * hx) * (ny + 2 * hy)
 
              ! Check all points are valid, excluding "corners"
-             if (.not. is_global_corner(i, j, k, halo_extents, istart, iend)) then
+             if (.not. is_global_corner(i, j, k, halo_extents, [hx, hy, hz], istart, iend)) then
                 if (a1(i, j, k) /= idx) then
                    test_pass = .false.
                 end if
@@ -241,10 +241,17 @@ contains
   end function run_test
 
   ! Determine if we are in a global "corner" of the extended domain
-  logical function is_global_corner(i, j, k, halo_extents, istart, iend)
+  logical function is_global_corner(i, j, k, halo_extents, hs, istart, iend)
     integer, intent(in) :: i, j, k
     type(halo_extents_t), intent(in) :: halo_extents
+    integer, dimension(3), intent(in) :: hs
     integer, dimension(3), intent(in) :: istart, iend
+
+    integer :: hx, hy, hz
+
+    hx = hs(1)
+    hy = hs(2)
+    hz = hs(3)
 
     is_global_corner = .false.
 

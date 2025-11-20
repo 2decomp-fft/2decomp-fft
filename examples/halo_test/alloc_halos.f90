@@ -119,9 +119,6 @@ program alloc_halo_test
 
    call MPI_Allreduce(passing, allpassing, 1, MPI_LOGICAL, MPI_LAND, MPI_COMM_WORLD, ierror)
    
-   ! Clean up
-   deallocate(u1h)
-  
    call decomp_2d_finalize()
 
    ! Report test results

@@ -177,7 +177,7 @@ contains
           end do
        end if
     end do
-    !acc end kernels
+    !$acc end kernels
     if (istart(3) == 1) then
        !$acc kernels default(present)
        do k = halo_extents%zs, halo_extents%zs+(hz-1)
@@ -194,7 +194,7 @@ contains
              end do
           end do
        end do
-       !acc end kernels
+       !$acc end kernels
     end if
     if (iend(3) == nz) then
        !$acc kernels default(present)
@@ -212,7 +212,7 @@ contains
              end do
           end do
        end do
-       !acc end kernels
+       !$acc end kernels
     end if
 
     call halo_exchange(a1, ipencil, opt_levels=[hx, hy, hz])

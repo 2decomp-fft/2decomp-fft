@@ -49,7 +49,7 @@ program exchange_idx
 
   all_pass = .true.
   do ipencil = 1, 3
-     all_pass = all_pass .and. run_test(ipencil)
+     all_pass = all_pass .and. run_test(ipencil, [nx, ny, nz])
   end do
   
   call decomp_2d_finalize()
@@ -61,8 +61,9 @@ program exchange_idx
 
 contains
 
-  logical function run_test(ipencil) result(test_pass)
+  logical function run_test(ipencil, ns) result(test_pass)
     integer, intent(in) :: ipencil
+    integer, dimension(3), intent(in) :: ns
 
     real(mytype), dimension(:, :, :), allocatable :: a1
 #if defined(_GPU)
@@ -74,6 +75,11 @@ contains
     integer :: ii, jj, kk
     integer :: idx
     integer :: hx, hy, hz
+    integer :: nx, ny, nz
+
+    nx = ns(1)
+    ny = ns(2)
+    nz = ns(3)
 
     test_pass = .true.
 

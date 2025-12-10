@@ -115,6 +115,7 @@ contains
     end if
 
     a1(:, :, :) = -1.0_mytype
+    !$acc data copyin(istart, halo_extents)
     !$acc kernels default(present)
     do k = halo_extents%zs+hz, halo_extents%ze-hz
        do j = halo_extents%ys+hy, halo_extents%ye-hy
@@ -243,6 +244,7 @@ contains
        end do
     end do
     !$acc end kernels
+    !$acc end data
 
   end function run_test
 

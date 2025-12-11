@@ -26,7 +26,7 @@ module m_halo
       integer :: ipencil
       integer, dimension(3) :: levels
       integer, dimension(3) :: sizes
-    contains
+   contains
       procedure :: buffer_count  ! How many buffers
       procedure :: buffer_length ! How many elements in each buffer
       procedure :: buffer_stride ! How is the buffer data strided
@@ -345,7 +345,7 @@ contains
             end if
          end if
       end do
-      
+
       s1 = sizes(1)
       s2 = sizes(2)
       s3 = sizes(3)
@@ -583,7 +583,7 @@ contains
       halo_extents = init_halo_extents(ipencil, sizes, decomp_main, levels, .false.)
 
       call halo_exchange(arr, halo_extents)
-     
+
    end subroutine halo_exchange_complex_short
 
    !---------------------------------------------------------------------
@@ -604,7 +604,7 @@ contains
 #if defined(_GPU)
       attributes(device) :: arr
 #endif
-      
+
       integer :: ipencil
       integer, dimension(3) :: levels
       integer, dimension(3) :: sizes
@@ -626,7 +626,7 @@ contains
       ipencil = halo_extents%ipencil
       levels = halo_extents%levels
       sizes = halo_extents%sizes
-      
+
       s1 = sizes(1)
       s2 = sizes(2)
       s3 = sizes(3)
@@ -644,122 +644,122 @@ contains
    end subroutine halo_exchange_complex
 
    integer function buffer_count(self, dir) result(count)
-     class(halo_extents_t) :: self
-     integer, intent(in) :: dir
+      class(halo_extents_t) :: self
+      integer, intent(in) :: dir
 
-     if (self%ipencil == 1) then
-        if (dir == 2) then
-           ! North/South buffer
-           count = self%sizes(3) + 2 * self%levels(3)
-        else if (dir == 3) then
-           ! Top/Bottom buffer: contiguous in memory, count is undefined
-           count = 1
-        else
-           count = 0
-        end if
-     else if (self%ipencil == 2) then
-        if (dir == 1) then
-           ! East/West buffer
-           count = (self%sizes(2) + 2 * self%levels(2)) * (self%sizes(3) + 2 * self%levels(3))
-        else if (dir == 3) then
-           ! Top/Bottom buffer: contiguous in memory, count is undefined
-           count = 1
-        else
-           count = 0
-        end if
-     else if (self%ipencil == 3) then
-        if (dir == 1) then
-           ! East/West buffer
-           count = (self%sizes(2) + 2 * self%levels(2)) * (self%sizes(3) + 2 * self%levels(3))
-        else if (dir == 2) then
-           ! Noth/South buffer
-           count = self%sizes(3) + 2 * self%levels(3)
-        else
-           count = 0
-        end if
-     else
-        count = -1
-     end if
-     
+      if (self%ipencil == 1) then
+         if (dir == 2) then
+            ! North/South buffer
+            count = self%sizes(3) + 2 * self%levels(3)
+         else if (dir == 3) then
+            ! Top/Bottom buffer: contiguous in memory, count is undefined
+            count = 1
+         else
+            count = 0
+         end if
+      else if (self%ipencil == 2) then
+         if (dir == 1) then
+            ! East/West buffer
+            count = (self%sizes(2) + 2 * self%levels(2)) * (self%sizes(3) + 2 * self%levels(3))
+         else if (dir == 3) then
+            ! Top/Bottom buffer: contiguous in memory, count is undefined
+            count = 1
+         else
+            count = 0
+         end if
+      else if (self%ipencil == 3) then
+         if (dir == 1) then
+            ! East/West buffer
+            count = (self%sizes(2) + 2 * self%levels(2)) * (self%sizes(3) + 2 * self%levels(3))
+         else if (dir == 2) then
+            ! Noth/South buffer
+            count = self%sizes(3) + 2 * self%levels(3)
+         else
+            count = 0
+         end if
+      else
+         count = -1
+      end if
+
    end function buffer_count
 
    integer function buffer_length(self, dir) result(length)
-     class(halo_extents_t) :: self
-     integer, intent(in) :: dir
+      class(halo_extents_t) :: self
+      integer, intent(in) :: dir
 
-     if (self%ipencil == 1) then
-        if (dir == 2) then
-           ! North/South buffer
-           length = (self%sizes(1) + 2 * self%levels(1)) * self%levels(2)
-        else if (dir == 3) then
-           ! Top/Bottom buffer
-           length = (self%sizes(1) + 2 * self%levels(1)) * (self%sizes(2) + 2 * self%levels(2)) * self%levels(3)
-        else
-           length = 0
-        end if
-     else if (self%ipencil == 2) then
-        if (dir == 1) then
-           ! East/West buffer
-           length = self%levels(1)
-        else if (dir == 3) then
-           ! Top/Bottom buffer
-           length = (self%sizes(1) + 2 * self%levels(1)) * (self%sizes(2) + 2 * self%levels(2)) * self%levels(3)
-        else
-           length = 0
-        end if
-     else if (self%ipencil == 3) then
-        if (dir == 1) then
-           ! East/West buffer
-           length = self%levels(1)
-        else if (dir == 2) then
-           ! Noth/South buffer
-           length = (self%sizes(1) + 2 * self%levels(1)) * self%levels(2)
-        else
-           length = 0
-        end if
-     else
-        length = -1
-     end if
-     
+      if (self%ipencil == 1) then
+         if (dir == 2) then
+            ! North/South buffer
+            length = (self%sizes(1) + 2 * self%levels(1)) * self%levels(2)
+         else if (dir == 3) then
+            ! Top/Bottom buffer
+            length = (self%sizes(1) + 2 * self%levels(1)) * (self%sizes(2) + 2 * self%levels(2)) * self%levels(3)
+         else
+            length = 0
+         end if
+      else if (self%ipencil == 2) then
+         if (dir == 1) then
+            ! East/West buffer
+            length = self%levels(1)
+         else if (dir == 3) then
+            ! Top/Bottom buffer
+            length = (self%sizes(1) + 2 * self%levels(1)) * (self%sizes(2) + 2 * self%levels(2)) * self%levels(3)
+         else
+            length = 0
+         end if
+      else if (self%ipencil == 3) then
+         if (dir == 1) then
+            ! East/West buffer
+            length = self%levels(1)
+         else if (dir == 2) then
+            ! Noth/South buffer
+            length = (self%sizes(1) + 2 * self%levels(1)) * self%levels(2)
+         else
+            length = 0
+         end if
+      else
+         length = -1
+      end if
+
    end function buffer_length
 
    integer function buffer_stride(self, dir) result(stride)
-     class(halo_extents_t) :: self
-     integer, intent(in) :: dir
+      class(halo_extents_t) :: self
+      integer, intent(in) :: dir
 
-     if (self%ipencil == 1) then
-        if (dir == 2) then
-           ! North/South buffer
-           stride = (self%sizes(1) + 2 * self%levels(1)) * (self%sizes(2) + 2 * self%levels(2))
-        else if (dir == 3) then
-           ! Top/Bottom buffer: contiguous in memory, stride is undefined
-           stride = -1
-        else
-           stride = 0
-        end if
-     else if (self%ipencil == 2) then
-        if (dir == 1) then
-           ! East/West buffer
-           stride = self%sizes(1) + 2 * self%levels(1)
-        else if (dir == 3) then
-           ! Top/Bottom buffer: contiguous in memory, stride is undefined
-           stride = -1
-        else
-           stride = 0
-        end if
-     else if (self%ipencil == 3) then
-        if (dir == 1) then
-           ! East/West buffer
-           stride = self%sizes(1) + 2 * self%levels(1)
-        else if (dir == 2) then
-           ! Noth/South buffer
-           stride = (self%sizes(1) + 2 * self%levels(1)) * (self%sizes(2) + 2 * self%levels(2))
-        else
-           stride = 0
-        end if
-     else
-        stride = -1
-     end if
+      if (self%ipencil == 1) then
+         if (dir == 2) then
+            ! North/South buffer
+            stride = (self%sizes(1) + 2 * self%levels(1)) * (self%sizes(2) + 2 * self%levels(2))
+         else if (dir == 3) then
+            ! Top/Bottom buffer: contiguous in memory, stride is undefined
+            stride = -1
+         else
+            stride = 0
+         end if
+      else if (self%ipencil == 2) then
+         if (dir == 1) then
+            ! East/West buffer
+            stride = self%sizes(1) + 2 * self%levels(1)
+         else if (dir == 3) then
+            ! Top/Bottom buffer: contiguous in memory, stride is undefined
+            stride = -1
+         else
+            stride = 0
+         end if
+      else if (self%ipencil == 3) then
+         if (dir == 1) then
+            ! East/West buffer
+            stride = self%sizes(1) + 2 * self%levels(1)
+         else if (dir == 2) then
+            ! Noth/South buffer
+            stride = (self%sizes(1) + 2 * self%levels(1)) * (self%sizes(2) + 2 * self%levels(2))
+         else
+            stride = 0
+         end if
+      else
+         stride = -1
+      end if
    end function buffer_stride
 
 end module m_halo

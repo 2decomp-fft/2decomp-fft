@@ -242,7 +242,7 @@
      integer, dimension(3), intent(IN), optional :: opt_levels
      logical, intent(IN), optional :: opt_global
 
-     call alloc(1, decomp, opt_global, opt_depth, opt_levels, freal = var)
+     call alloc(1, decomp, opt_global, opt_depth, opt_levels, freal=var)
 
   end subroutine alloc_x_freal
 
@@ -256,7 +256,7 @@
      integer, dimension(3), intent(IN), optional :: opt_levels
      logical, intent(IN), optional :: opt_global
 
-     call alloc(1, decomp, opt_global, opt_depth, opt_levels, dreal = var)
+     call alloc(1, decomp, opt_global, opt_depth, opt_levels, dreal=var)
 
   end subroutine alloc_x_dreal
 
@@ -270,7 +270,7 @@
      integer, dimension(3), intent(IN), optional :: opt_levels
      logical, intent(IN), optional :: opt_global
 
-     call alloc(1, decomp, opt_global, opt_depth, opt_levels, fcplx = var)
+     call alloc(1, decomp, opt_global, opt_depth, opt_levels, fcplx=var)
 
   end subroutine alloc_x_fcplx
 
@@ -284,7 +284,7 @@
      integer, dimension(3), intent(IN), optional :: opt_levels
      logical, intent(IN), optional :: opt_global
 
-     call alloc(1, decomp, opt_global, opt_depth, opt_levels, dcplx = var)
+     call alloc(1, decomp, opt_global, opt_depth, opt_levels, dcplx=var)
 
   end subroutine alloc_x_dcplx
 
@@ -298,7 +298,7 @@
      integer, dimension(3), intent(IN), optional :: opt_levels
      logical, intent(IN), optional :: opt_global
 
-     call alloc(1, decomp, opt_global, opt_depth, opt_levels, ints = var)
+     call alloc(1, decomp, opt_global, opt_depth, opt_levels, ints=var)
 
   end subroutine alloc_x_ints
 
@@ -312,7 +312,7 @@
      integer, dimension(3), intent(IN), optional :: opt_levels
      logical, intent(IN), optional :: opt_global
 
-     call alloc(1, decomp, opt_global, opt_depth, opt_levels, logs = var)
+     call alloc(1, decomp, opt_global, opt_depth, opt_levels, logs=var)
 
   end subroutine alloc_x_logs
 
@@ -407,7 +407,7 @@
      integer, dimension(3), intent(IN), optional :: opt_levels
      logical, intent(IN), optional :: opt_global
 
-     call alloc(2, decomp, opt_global, opt_depth, opt_levels, freal = var)
+     call alloc(2, decomp, opt_global, opt_depth, opt_levels, freal=var)
 
   end subroutine alloc_y_freal
 
@@ -421,7 +421,7 @@
      integer, dimension(3), intent(IN), optional :: opt_levels
      logical, intent(IN), optional :: opt_global
 
-     call alloc(2, decomp, opt_global, opt_depth, opt_levels, dreal = var)
+     call alloc(2, decomp, opt_global, opt_depth, opt_levels, dreal=var)
 
   end subroutine alloc_y_dreal
 
@@ -435,7 +435,7 @@
      integer, dimension(3), intent(IN), optional :: opt_levels
      logical, intent(IN), optional :: opt_global
 
-     call alloc(2, decomp, opt_global, opt_depth, opt_levels, fcplx = var)
+     call alloc(2, decomp, opt_global, opt_depth, opt_levels, fcplx=var)
 
   end subroutine alloc_y_fcplx
 
@@ -449,7 +449,7 @@
      integer, dimension(3), intent(IN), optional :: opt_levels
      logical, intent(IN), optional :: opt_global
 
-     call alloc(2, decomp, opt_global, opt_depth, opt_levels, dcplx = var)
+     call alloc(2, decomp, opt_global, opt_depth, opt_levels, dcplx=var)
 
   end subroutine alloc_y_dcplx
 
@@ -463,7 +463,7 @@
      integer, dimension(3), intent(IN), optional :: opt_levels
      logical, intent(IN), optional :: opt_global
 
-     call alloc(2, decomp, opt_global, opt_depth, opt_levels, ints = var)
+     call alloc(2, decomp, opt_global, opt_depth, opt_levels, ints=var)
 
   end subroutine alloc_y_ints
 
@@ -477,7 +477,7 @@
      integer, dimension(3), intent(IN), optional :: opt_levels
      logical, intent(IN), optional :: opt_global
 
-     call alloc(2, decomp, opt_global, opt_depth, opt_levels, logs = var)
+     call alloc(2, decomp, opt_global, opt_depth, opt_levels, logs=var)
 
   end subroutine alloc_y_logs
 
@@ -572,7 +572,7 @@
      integer, dimension(3), intent(IN), optional :: opt_levels
      logical, intent(IN), optional :: opt_global
 
-     call alloc(3, decomp, opt_global, opt_depth, opt_levels, freal = var)
+     call alloc(3, decomp, opt_global, opt_depth, opt_levels, freal=var)
 
   end subroutine alloc_z_freal
 
@@ -586,7 +586,7 @@
      integer, dimension(3), intent(IN), optional :: opt_levels
      logical, intent(IN), optional :: opt_global
 
-     call alloc(3, decomp, opt_global, opt_depth, opt_levels, dreal = var)
+     call alloc(3, decomp, opt_global, opt_depth, opt_levels, dreal=var)
 
   end subroutine alloc_z_dreal
 
@@ -600,7 +600,7 @@
      integer, dimension(3), intent(IN), optional :: opt_levels
      logical, intent(IN), optional :: opt_global
 
-     call alloc(3, decomp, opt_global, opt_depth, opt_levels, fcplx = var)
+     call alloc(3, decomp, opt_global, opt_depth, opt_levels, fcplx=var)
 
   end subroutine alloc_z_fcplx
 
@@ -614,7 +614,7 @@
      integer, dimension(3), intent(IN), optional :: opt_levels
      logical, intent(IN), optional :: opt_global
 
-     call alloc(3, decomp, opt_global, opt_depth, opt_levels, dcplx = var)
+     call alloc(3, decomp, opt_global, opt_depth, opt_levels, dcplx=var)
 
   end subroutine alloc_z_dcplx
 
@@ -628,7 +628,7 @@
      integer, dimension(3), intent(IN), optional :: opt_levels
      logical, intent(IN), optional :: opt_global
 
-     call alloc(3, decomp, opt_global, opt_depth, opt_levels, ints = var)
+     call alloc(3, decomp, opt_global, opt_depth, opt_levels, ints=var)
 
   end subroutine alloc_z_ints
 
@@ -642,6 +642,6 @@
      integer, dimension(3), intent(IN), optional :: opt_levels
      logical, intent(IN), optional :: opt_global
 
-     call alloc(3, decomp, opt_global, opt_depth, opt_levels, logs = var)
+     call alloc(3, decomp, opt_global, opt_depth, opt_levels, logs=var)
 
   end subroutine alloc_z_logs

@@ -55,7 +55,7 @@ program exchange_test
    ! Create a slab decomposition
    p_row = 1
    p_col = nranks_tot
-   
+
    ! Now we can check if user put some inputs
    call decomp_2d_testing_init(p_row, p_col, nx, ny, nz)
 
@@ -329,7 +329,6 @@ contains
       call halo_exchange(vh, 1, opt_levels=[0, 1, 1])
       call halo_exchange(wh, 1, opt_levels=[0, 1, 1])
 
-
       !$acc data copy(div1)
       !$acc kernels default(present)
       div1(:, :, :) = 0._mytype
@@ -521,7 +520,7 @@ contains
 
       call halo_exchange(uh, 3, opt_depth=1)
       call halo_exchange(vh, 3, opt_levels=[1, 1, 0])
-      
+
       !$acc data copy(div3)
       !$acc kernels default(present)
       do j = jfirst, jlast

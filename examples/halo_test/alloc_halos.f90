@@ -25,7 +25,7 @@ program alloc_halo_test
    real(mytype), allocatable, dimension(:, :, :) :: u1h, u2h, u3h
 
    integer :: irank, ierror
-   
+
    logical :: passing, allpassing
 
    ! Initialisation
@@ -63,8 +63,8 @@ program alloc_halo_test
       print *, "Alloc_x: FAIL - expected halo-padded arrays to end at ", xsize + [ih, jh, kh], ", got ", ubound(u1h)
       passing = .false.
    end if
-   deallocate(u1h)
-   call alloc_x(u1h, opt_global = .true.)
+   deallocate (u1h)
+   call alloc_x(u1h, opt_global=.true.)
    if (any(lbound(u1h) /= xstart - [ih, jh, kh])) then
       print *, "Alloc_x: FAIL - expected halo-padded arrays to start from index 0, got ", lbound(u1h)
       passing = .false.
@@ -73,7 +73,7 @@ program alloc_halo_test
       print *, "Alloc_x: FAIL - expected halo-padded arrays to end at ", xsize + [ih, jh, kh], ", got ", ubound(u1h)
       passing = .false.
    end if
-   deallocate(u1h)
+   deallocate (u1h)
 
    call alloc_y(u2h)
    if (any(lbound(u2h) /= [1, 1, 1] - [ih, jh, kh])) then
@@ -84,8 +84,8 @@ program alloc_halo_test
       print *, "Alloc_y: FAIL - expected halo-padded arrays to end at ", ysize + [ih, jh, kh], ", got ", ubound(u2h)
       passing = .false.
    end if
-   deallocate(u2h)
-   call alloc_y(u2h, opt_global = .true.)
+   deallocate (u2h)
+   call alloc_y(u2h, opt_global=.true.)
    if (any(lbound(u2h) /= ystart - [ih, jh, kh])) then
       print *, "Alloc_y: FAIL - expected halo-padded arrays to start from index 0, got ", lbound(u2h)
       passing = .false.
@@ -94,7 +94,7 @@ program alloc_halo_test
       print *, "Alloc_y: FAIL - expected halo-padded arrays to end at ", ysize + [ih, jh, kh], ", got ", ubound(u2h)
       passing = .false.
    end if
-   deallocate(u2h)
+   deallocate (u2h)
 
    call alloc_z(u3h)
    if (any(lbound(u3h) /= [1, 1, 1] - [ih, jh, kh])) then
@@ -105,8 +105,8 @@ program alloc_halo_test
       print *, "Alloc_z: FAIL - expected halo-padded arrays to end at ", zsize + [ih, jh, kh], ", got ", ubound(u3h)
       passing = .false.
    end if
-   deallocate(u3h)
-   call alloc_z(u3h, opt_global = .true.)
+   deallocate (u3h)
+   call alloc_z(u3h, opt_global=.true.)
    if (any(lbound(u3h) /= zstart - [ih, jh, kh])) then
       print *, "Alloc_z: FAIL - expected halo-padded arrays to start from index 0, got ", lbound(u3h)
       passing = .false.
@@ -115,10 +115,10 @@ program alloc_halo_test
       print *, "Alloc_z: FAIL - expected halo-padded arrays to end at ", zsize + [ih, jh, kh], ", got ", ubound(u3h)
       passing = .false.
    end if
-   deallocate(u3h)
+   deallocate (u3h)
 
    call MPI_Allreduce(passing, allpassing, 1, MPI_LOGICAL, MPI_LAND, MPI_COMM_WORLD, ierror)
-   
+
    call decomp_2d_finalize()
 
    ! Report test results
@@ -127,6 +127,6 @@ program alloc_halo_test
    end if
 
    call MPI_Finalize(ierror)
-   
+
 end program alloc_halo_test
 

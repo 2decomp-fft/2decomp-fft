@@ -35,29 +35,29 @@
      ilength = halo_extents%buffer_length(2)
      ijump = halo_extents%buffer_stride(2)
      call MPI_TYPE_VECTOR(icount, ilength, ijump, &
-          data_type, halo12, ierror)
+                          data_type, halo12, ierror)
      if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_TYPE_VECTOR")
      call MPI_TYPE_COMMIT(halo12, ierror)
      if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_TYPE_COMMIT")
      ! receive from south
      call MPI_IRECV(arr(halo_extents%xs, halo_extents%ys, halo_extents%zs), 1, halo12, &
-          neighbour(1, 4), tag_s, DECOMP_2D_COMM_CART_X, &
-          requests(1), ierror)
+                    neighbour(1, 4), tag_s, DECOMP_2D_COMM_CART_X, &
+                    requests(1), ierror)
      if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_IRECV")
      ! receive from north
      call MPI_IRECV(arr(halo_extents%xs, halo_extents%ye - levels(2) + 1, halo_extents%zs), 1, halo12, &
-          neighbour(1, 3), tag_n, DECOMP_2D_COMM_CART_X, &
-          requests(2), ierror)
+                    neighbour(1, 3), tag_n, DECOMP_2D_COMM_CART_X, &
+                    requests(2), ierror)
      if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_IRECV")
      ! send to south
      call MPI_ISSEND(arr(halo_extents%xs, halo_extents%ys + levels(2), halo_extents%zs), 1, halo12, &
-          neighbour(1, 4), tag_s, DECOMP_2D_COMM_CART_X, &
-          requests(3), ierror)
+                     neighbour(1, 4), tag_s, DECOMP_2D_COMM_CART_X, &
+                     requests(3), ierror)
      if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_ISSEND")
      ! send to north
      call MPI_ISSEND(arr(halo_extents%xs, halo_extents%ye - levels(2) - levels(2) + 1, halo_extents%zs), 1, halo12, &
-          neighbour(1, 3), tag_n, DECOMP_2D_COMM_CART_X, &
-          requests(4), ierror)
+                     neighbour(1, 3), tag_n, DECOMP_2D_COMM_CART_X, &
+                     requests(4), ierror)
      if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_ISSEND")
      call MPI_WAITALL(4, requests, status, ierror)
      if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_WAITALL")
@@ -94,23 +94,23 @@
      ilength = halo_extents%buffer_length(3)
      ! receive from bottom
      call MPI_IRECV(arr(halo_extents%xs, halo_extents%ys, halo_extents%zs), ilength, data_type, &
-          neighbour(1, 6), tag_b, DECOMP_2D_COMM_CART_X, &
-          requests(1), ierror)
+                    neighbour(1, 6), tag_b, DECOMP_2D_COMM_CART_X, &
+                    requests(1), ierror)
      if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_IRECV")
      ! receive from top
      call MPI_IRECV(arr(halo_extents%xs, halo_extents%ys, halo_extents%ze - levels(3) + 1), ilength, data_type, &
-          neighbour(1, 5), tag_t, DECOMP_2D_COMM_CART_X, &
-          requests(2), ierror)
+                    neighbour(1, 5), tag_t, DECOMP_2D_COMM_CART_X, &
+                    requests(2), ierror)
      if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_IRECV")
      ! send to bottom
      call MPI_ISSEND(arr(halo_extents%xs, halo_extents%ys, halo_extents%zs + levels(3)), ilength, data_type, &
-          neighbour(1, 6), tag_b, DECOMP_2D_COMM_CART_X, &
-          requests(3), ierror)
+                     neighbour(1, 6), tag_b, DECOMP_2D_COMM_CART_X, &
+                     requests(3), ierror)
      if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_ISSEND")
      ! send to top
      call MPI_ISSEND(arr(halo_extents%xs, halo_extents%ys, halo_extents%ze - levels(3) - levels(3) + 1), ilength, data_type, &
-          neighbour(1, 5), tag_t, DECOMP_2D_COMM_CART_X, &
-          requests(4), ierror)
+                     neighbour(1, 5), tag_t, DECOMP_2D_COMM_CART_X, &
+                     requests(4), ierror)
      if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_ISSEND")
      call MPI_WAITALL(4, requests, status, ierror)
      if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_WAITALL")

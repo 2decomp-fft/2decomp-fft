@@ -161,7 +161,6 @@ contains
       integer :: i, j, k, s1, s2, s3
 
       integer :: ipencil
-      integer, dimension(3) :: levels
 
 #include "halo_common.f90"
 
@@ -229,7 +228,6 @@ contains
       integer :: i, j, k, s1, s2, s3
 
       integer :: ipencil
-      integer, dimension(3) :: levels
 
 #include "halo_common.f90"
 

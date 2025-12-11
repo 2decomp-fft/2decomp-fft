@@ -14,8 +14,6 @@
   s3 = size(in, 3)
 
   ipencil = get_pencil([s1, s2, s3], decomp, opt_pencil)
-  levels(:) = level
-  levels(ipencil) = 0
   halo_extents = halo_extents_t(ipencil, [s1, s2, s3], decomp, level, global)
   allocate (out(halo_extents%xs:halo_extents%xe, &
                 halo_extents%ys:halo_extents%ye, &

@@ -520,8 +520,8 @@
 
           ! Non need for MPI communication
           !$acc kernels default(present)
-          out(:, :, zs:zs + level - 1) = out(:, :, ze - 2 * level + 1:ze - level)
-          out(:, :, ze - level + 1:ze) = out(:, :, zs + level:zs + 2 * level - 1)
+          out(:, ys:ys + level - 1, :) = out(:, ye - 2 * level + 1:ye - level, :)
+          out(:, ye - level + 1:ye, :) = out(:, ys + level:ys + 2 * level - 1, :)
           !$acc end kernels
 
        else

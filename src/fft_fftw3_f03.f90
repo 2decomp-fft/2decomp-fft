@@ -290,9 +290,6 @@ contains
          engine%skip_z_c2c = .false.
       end if
 
-      ! determine the processor grid in use
-      dims = get_decomp_dims()
-
       ! for c2r/r2c interface:
       ! if in physical space, a real array is of size: nx*ny*nz
       ! in spectral space, the complex array is of size:
@@ -321,9 +318,6 @@ contains
       !                        the line below will make sure complex arrays fit in the memory pool
       !
       if (use_pool) call decomp_pool%new_shape(complex_type, engine%sp)
-#ifdef EVEN
-      if (use_pool) call decomp_pool%new_shape(complex_type, shp=(/max(engine%sp%x1count * dims(1), engine%sp%y2count * dims(2))/))
-#endif
 
       ! Prepare the DTT components
       if (present(opt_DTT)) then
@@ -356,10 +350,6 @@ contains
 
       class(decomp_2d_fft_engine), intent(inout), target :: engine
       integer, dimension(:), intent(in) :: in_DTT
-
-#ifdef EVEN
-      integer :: dims(2)
-#endif
 
       ! Safety check
       if (size(in_DTT) < 3) call decomp_2d_abort(__FILE__, __LINE__, size(in_DTT), "Invalid argument")
@@ -444,10 +434,6 @@ contains
       ! Resize the memory pool if needed
       if (allocated(engine%dtt_decomp_sp_target%x1dist)) then
          if (use_pool) call decomp_pool%new_shape(complex_type, engine%dtt_decomp_sp_target)
-#ifdef EVEN
-         dims = get_decomp_dims()
-         if (use_pool) call decomp_pool%new_shape(complex_type, shp=(/max(engine%dtt_decomp_sp_target%x1count * dims(1), engine%dtt_decomp_sp_target%y2count * dims(2))/))
-#endif
       end if
 
       ! Prepare the fftw plans

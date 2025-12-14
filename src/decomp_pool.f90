@@ -77,7 +77,7 @@ contains
       implicit none
 
       ! Arguments
-      class(info), intent(in) :: decomp
+      type(decomp_info), intent(in) :: decomp
       integer, intent(in), optional :: type
 
       if (present(type)) then

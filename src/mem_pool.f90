@@ -9,7 +9,7 @@ module m_mem_pool
                               output_unit, error_unit
    use iso_c_binding, only: c_size_t, c_loc, c_associated, c_f_pointer, c_ptr, c_null_ptr
    use decomp_2d_constants
-   use decomp_2d_mpi, only: nrank, decomp_2d_abort
+   use decomp_2d_mpi, only: nrank, dims, decomp_2d_abort
    use m_blk
    use m_info
    use mpi
@@ -120,7 +120,7 @@ contains
 
       ! Arguments
       class(mem_pool), target, intent(inout) :: self
-      class(info), intent(in), optional :: decomp
+      type(decomp_info), intent(in), optional :: decomp
       integer, intent(in), optional :: shape(:)
       integer, intent(in), optional :: blk_n
       logical, intent(in), optional :: blk_init
@@ -790,7 +790,7 @@ contains
       ! Arguments
       class(mem_pool), intent(inout) :: self
       integer, intent(in) :: type
-      class(info), intent(in), optional :: decomp
+      type(decomp_info), intent(in), optional :: decomp
       integer, intent(in), optional :: shp(:)
 
       ! Local variables
@@ -823,6 +823,10 @@ contains
          new_size = fact * product(int(decomp%xsz, kind=c_size_t))
          new_size = max(new_size, fact * product(int(decomp%ysz, kind=c_size_t)))
          new_size = max(new_size, fact * product(int(decomp%zsz, kind=c_size_t)))
+#ifdef EVEN
+         new_size = max(new_size, fact * decomp%x1count * dims(1))
+         new_size = max(new_size, fact * decomp%y2count * dims(2))
+#endif
       else if (present(shp)) then
          new_size = fact * product(int(shp, kind=c_size_t))
       else

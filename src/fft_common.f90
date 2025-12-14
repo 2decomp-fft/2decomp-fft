@@ -192,9 +192,6 @@ subroutine decomp_2d_fft_engine_init(engine, pencil, nx, ny, nz, &
       engine%skip_z_c2c = .false.
    end if
 
-   ! determine the processor grid in use
-   dims = get_decomp_dims()
-
    ! for c2r/r2c interface:
    ! if in physical space, a real array is of size: nx*ny*nz
    ! in spectral space, the complex array is of size:
@@ -221,9 +218,6 @@ subroutine decomp_2d_fft_engine_init(engine, pencil, nx, ny, nz, &
    !                        the line below will make sure complex arrays fit in the memory pool
    !
    if (use_pool) call decomp_pool%new_shape(complex_type, engine%sp)
-#ifdef EVEN
-   if (use_pool) call decomp_pool%new_shape(complex_type, shp=(/max(engine%sp%x1count * dims(1), engine%sp%y2count * dims(2))/))
-#endif
 
    ! Warning : replace the default engine
    call engine%use_it(opt_force=.true.)

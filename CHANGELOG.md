@@ -27,6 +27,7 @@ _e.g._ vX.Y - YYYY-MM-DD and a new "Unreleased" section started above.
 ### Deprecated
 ### Removed
 
+- Remove subroutines `init_coarser_mesh_stat*` and `fine_to_coarse*`.
 - Remove FFT backend legacy interface fftw3.
 
 ## v2.1 - 2025/07/01

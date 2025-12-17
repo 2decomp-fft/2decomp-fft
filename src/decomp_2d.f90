@@ -84,16 +84,6 @@ module decomp_2d
    complex(mytype), pointer, contiguous, dimension(:) :: work1_c, work2_c
 #endif
 
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-   ! To define smaller arrays using every several mesh points
-   integer, save, dimension(3), public :: xszS, yszS, zszS, xstS, ystS, zstS, xenS, yenS, zenS
-   integer, save, dimension(3), public :: xszV, yszV, zszV, xstV, ystV, zstV, xenV, yenV, zenV
-   integer, save, dimension(3), public :: xszP, yszP, zszP, xstP, ystP, zstP, xenP, yenP, zenP
-   logical, save :: coarse_mesh_starts_from_1
-   integer, save :: iskipS, jskipS, kskipS
-   integer, save :: iskipV, jskipV, kskipV
-   integer, save :: iskipP, jskipP, kskipP
-
    ! public user routines
    public :: decomp_2d_init, decomp_2d_finalize, &
              transpose_x_to_y, transpose_y_to_z, &

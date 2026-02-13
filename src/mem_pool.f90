@@ -28,7 +28,7 @@ module m_mem_pool
       ! True when the list is active
       logical, private :: available = .false.
       ! Default shapes for the 3D blocks
-      integer, dimension(3, 4), public :: shapes
+      integer(c_size_t), dimension(3, 4), public :: shapes
    contains
       ! Initialize the memory pool
       procedure :: init => mem_pool_init
@@ -121,7 +121,7 @@ contains
       ! Arguments
       class(mem_pool), target, intent(inout) :: self
       class(info), intent(in), optional :: decomp
-      integer, intent(in), optional :: shape(:)
+      integer(c_size_t), intent(in), optional :: shape(:)
       integer, intent(in), optional :: blk_n
       logical, intent(in), optional :: blk_init
 
@@ -148,14 +148,14 @@ contains
       self%size = 0_c_size_t
       self%shapes = mem_pool_none
       if (present(decomp)) then
-         call update_size_shapes(self%size, self%shapes, mem_pool_default_type, decomp%xsz)
-         call update_size_shapes(self%size, self%shapes, mem_pool_default_type, decomp%ysz)
-         call update_size_shapes(self%size, self%shapes, mem_pool_default_type, decomp%zsz)
+         call update_size_shapes(self%size, self%shapes, mem_pool_default_type, int(decomp%xsz, c_size_t))
+         call update_size_shapes(self%size, self%shapes, mem_pool_default_type, int(decomp%ysz, c_size_t))
+         call update_size_shapes(self%size, self%shapes, mem_pool_default_type, int(decomp%zsz, c_size_t))
       else if (present(shape)) then
          if (size(shape) == 3) then
             call update_size_shapes(self%size, self%shapes, mem_pool_default_type, shape(:))
          else
-            call update_size_shapes(self%size, self%shapes, shape(1), shape(2:))
+            call update_size_shapes(self%size, self%shapes, int(shape(1)), shape(2:))
          end if
       else
          call decomp_2d_abort(__FILE__, __LINE__, 2, "Invalid arguments")
@@ -308,7 +308,7 @@ contains
       integer, intent(in), optional :: shape(:)
 
       ! Local variables
-      integer, dimension(:), allocatable :: shp
+      integer(c_size_t), dimension(:), allocatable :: shp
 
       ! Safety check
       if (.not. self%available) &
@@ -343,7 +343,7 @@ contains
       integer, intent(in), optional :: shape(:)
 
       ! Local variables
-      integer, dimension(:), allocatable :: shp
+      integer(c_size_t), dimension(:), allocatable :: shp
 
       ! Safety check
       if (.not. self%available) &
@@ -378,7 +378,7 @@ contains
       integer, intent(in), optional :: shape(:)
 
       ! Local variables
-      integer, dimension(:), allocatable :: shp
+      integer(c_size_t), dimension(:), allocatable :: shp
 
       ! Safety check
       if (.not. self%available) &
@@ -413,7 +413,7 @@ contains
       integer, intent(in), optional :: shape(:)
 
       ! Local variables
-      integer, dimension(:), allocatable :: shp
+      integer(c_size_t), dimension(:), allocatable :: shp
 
       ! Safety check
       if (.not. self%available) &
@@ -791,7 +791,7 @@ contains
       class(mem_pool), intent(inout) :: self
       integer, intent(in) :: type
       class(info), intent(in), optional :: decomp
-      integer, intent(in), optional :: shp(:)
+      integer(c_size_t), intent(in), optional :: shp(:)
 
       ! Local variables
       integer(c_size_t) :: new_size, fact
@@ -1030,8 +1030,9 @@ contains
 
       ! Argument
       integer(c_size_t), intent(inout) :: size
-      integer, dimension(:, :), intent(inout) :: shapes
-      integer, intent(in) :: type, shape(:)
+      integer(c_size_t), dimension(:, :), intent(inout) :: shapes
+      integer, intent(in) :: type
+      integer(c_size_t), intent(in) :: shape(:)
 
       ! Local variables
       integer(c_size_t) :: new_size, fact

@@ -81,10 +81,10 @@ contains
       integer, intent(in), optional :: type
 
       if (present(type)) then
-         call decomp_pool%init(shape=(/type, decomp%xsz/), blk_n=decomp_pool_nblk)
+         call decomp_pool%init(shape=int((/type, decomp%xsz/), c_size_t), blk_n=decomp_pool_nblk)
          call decomp_pool%new_shape(type, decomp)
       else
-         call decomp_pool%init(shape=(/decomp_pool_default_type, decomp%xsz/), blk_n=decomp_pool_nblk)
+         call decomp_pool%init(shape=int((/decomp_pool_default_type, decomp%xsz/), c_size_t), blk_n=decomp_pool_nblk)
          call decomp_pool%new_shape(decomp_pool_default_type, decomp)
       end if
 

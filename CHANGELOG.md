@@ -18,6 +18,8 @@ _e.g._ vX.Y - YYYY-MM-DD and a new "Unreleased" section started above.
 ### Fixed
 
 - Fixed the calculations of the displacement for MPI_ALL_TO_ALLV communication to avoid issue with 03 optimisation with come compilers [PR #422](https://github.com/2decomp-fft/2decomp-fft/pull/422)
+- Fixed the memory pool and the size of the buffers when the number of cells is very high [PR #432](https://github.com/2decomp-fft/2decomp-fft/pull/432). See [issue 431](https://github.com/2decomp-fft/2decomp-fft/issues/431).
+
 ### Changed
 
 - The `decomp_info` object now has per-pencil default halo depths (`0` unless set otherwise), when allocating an array this is used to set the halo depth.

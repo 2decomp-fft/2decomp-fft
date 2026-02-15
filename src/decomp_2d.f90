@@ -75,7 +75,7 @@ module decomp_2d
    integer, save, dimension(3), public :: zstart, zend, zsize  ! z-pencil
 
    ! These are the buffers used by MPI_ALLTOALL(V) calls
-   integer, save :: decomp_buf_size = 0
+   integer(c_size_t), save :: decomp_buf_size = 0
 #if defined(_GPU)
    ! Shared real/complex GPU buffers
    real(mytype), target, device, allocatable, dimension(:) :: work1, work2
@@ -377,7 +377,8 @@ contains
       TYPE(DECOMP_INFO), intent(INOUT) :: decomp
 
       ! Local variables
-      integer :: buf_size, errorcode
+      integer(c_size_t) :: buf_size
+      integer :: errorcode
 #if defined(_GPU)
       integer :: status
 #endif
@@ -423,14 +424,15 @@ contains
       ! allocate memory for the MPI_ALLTOALL(V) buffers
       ! define the buffers globally for performance reason
 
-      buf_size = max(decomp%xsz(1) * decomp%xsz(2) * decomp%xsz(3), &
-                     max(decomp%ysz(1) * decomp%ysz(2) * decomp%ysz(3), &
-                         decomp%zsz(1) * decomp%zsz(2) * decomp%zsz(3)))
+      buf_size = max(product(int(decomp%xsz(1:3), c_size_t)), &
+                     max(product(int(decomp%ysz(1:3), c_size_t)), &
+                         product(int(decomp%zsz(1:3), c_size_t))))
 
 #ifdef EVEN
       ! padded alltoall optimisation may need larger buffer space
       buf_size = max(buf_size, &
-                     max(decomp%x1count * dims(1), decomp%y2count * dims(2)))
+                     max(int(decomp%x1count, c_size_t) * int(dims(1), c_size_t), &
+                         int(decomp%y2count, c_size_t) * int(dims(2), c_size_t)))
       ! evenly distributed data ?
       if (mod(nx, dims(1)) == 0 .and. mod(ny, dims(1)) == 0 .and. &
           mod(ny, dims(2)) == 0 .and. mod(nz, dims(2)) == 0) then
@@ -453,13 +455,13 @@ contains
             if (associated(work2_c)) nullify (work2_c)
             if (allocated(work1)) deallocate (work1)
             if (allocated(work2)) deallocate (work2)
-            allocate (work1(2 * buf_size), STAT=status)
+            allocate (work1(2_c_size_t * buf_size), STAT=status)
             if (status /= 0) then
                errorcode = 2
                call decomp_2d_abort(__FILE__, __LINE__, errorcode, &
                                     'Out of memory when allocating 2DECOMP workspace')
             end if
-            allocate (work2(2 * buf_size), STAT=status)
+            allocate (work2(2_c_size_t * buf_size), STAT=status)
             if (status /= 0) then
                errorcode = 2
                call decomp_2d_abort(__FILE__, __LINE__, errorcode, &

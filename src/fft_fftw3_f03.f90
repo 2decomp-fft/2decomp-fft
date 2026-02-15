@@ -322,7 +322,7 @@ contains
       !
       if (use_pool) call decomp_pool%new_shape(complex_type, engine%sp)
 #ifdef EVEN
-      if (use_pool) call decomp_pool%new_shape(complex_type, shp=(/max(engine%sp%x1count * dims(1), engine%sp%y2count * dims(2))/))
+      if (use_pool) call decomp_pool%new_shape(complex_type, shp=(/max(int(engine%sp%x1count, c_size_t) * int(dims(1), c_size_t), int(engine%sp%y2count, c_size_t) * int(dims(2), c_size_t))/))
 #endif
 
       ! Prepare the DTT components
@@ -446,7 +446,7 @@ contains
          if (use_pool) call decomp_pool%new_shape(complex_type, engine%dtt_decomp_sp_target)
 #ifdef EVEN
          dims = get_decomp_dims()
-         if (use_pool) call decomp_pool%new_shape(complex_type, shp=(/max(engine%dtt_decomp_sp_target%x1count * dims(1), engine%dtt_decomp_sp_target%y2count * dims(2))/))
+         if (use_pool) call decomp_pool%new_shape(complex_type, shp=(/max(int(engine%dtt_decomp_sp_target%x1count, c_size_t) * int(dims(1), c_size_t), int(engine%dtt_decomp_sp_target%y2count, c_size_t) * int(dims(2), c_size_t))/))
 #endif
       end if
 

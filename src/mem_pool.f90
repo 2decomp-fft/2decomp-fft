@@ -824,8 +824,8 @@ contains
          new_size = max(new_size, fact * product(int(decomp%ysz, kind=c_size_t)))
          new_size = max(new_size, fact * product(int(decomp%zsz, kind=c_size_t)))
 #ifdef EVEN
-         new_size = max(new_size, int(decomp%x1count, c_size_t) * int(dims(1), c_size_t))
-         new_size = max(new_size, int(decomp%y2count, c_size_t) * int(dims(2), c_size_t))
+         new_size = max(new_size, fact * int(decomp%x1count, c_size_t) * int(dims(1), c_size_t))
+         new_size = max(new_size, fact * int(decomp%y2count, c_size_t) * int(dims(2), c_size_t))
 #endif
       else if (present(shp)) then
          new_size = fact * product(int(shp, kind=c_size_t))

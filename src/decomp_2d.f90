@@ -458,10 +458,8 @@ contains
       ! check if additional memory is required
       if (buf_size > decomp_buf_size) then
          decomp_buf_size = buf_size
-         if (use_pool) then
-            call decomp_pool%new_shape(decomp_pool_default_type, shp=(/buf_size/))
 #if defined(_GPU)
-         else
+         if (.not.use_pool) then
             if (associated(work1_r)) nullify (work1_r)
             if (associated(work2_r)) nullify (work2_r)
             if (associated(work1_c)) nullify (work1_c)
@@ -485,8 +483,8 @@ contains
             call c_f_pointer(c_loc(work1), work1_c, [buf_size])
             call c_f_pointer(c_loc(work2), work2_c, [buf_size])
             call decomp_2d_cumpi_init(buf_size, work1, work2)
-#endif
          end if
+#endif
       end if
 
    end subroutine decomp_info_init

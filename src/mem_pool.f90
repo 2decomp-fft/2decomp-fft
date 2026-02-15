@@ -9,7 +9,10 @@ module m_mem_pool
                               output_unit, error_unit
    use iso_c_binding, only: c_size_t, c_loc, c_associated, c_f_pointer, c_ptr, c_null_ptr
    use decomp_2d_constants
-   use decomp_2d_mpi, only: nrank, decomp_2d_abort, dims
+   use decomp_2d_mpi, only: nrank, decomp_2d_abort
+#ifdef EVEN
+   use decomp_2d_mpi, only: dims
+#endif
    use m_blk
    use m_info
    use mpi

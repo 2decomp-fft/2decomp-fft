@@ -10,6 +10,9 @@ module m_mem_pool
    use iso_c_binding, only: c_size_t, c_loc, c_associated, c_f_pointer, c_ptr, c_null_ptr
    use decomp_2d_constants
    use decomp_2d_mpi, only: nrank, decomp_2d_abort
+#ifdef EVEN
+   use decomp_2d_mpi, only: dims
+#endif
    use m_blk
    use m_info
    use mpi
@@ -823,6 +826,10 @@ contains
          new_size = fact * product(int(decomp%xsz, kind=c_size_t))
          new_size = max(new_size, fact * product(int(decomp%ysz, kind=c_size_t)))
          new_size = max(new_size, fact * product(int(decomp%zsz, kind=c_size_t)))
+#ifdef EVEN
+         new_size = max(new_size, fact * int(decomp%x1count, c_size_t) * int(dims(1), c_size_t))
+         new_size = max(new_size, fact * int(decomp%y2count, c_size_t) * int(dims(2), c_size_t))
+#endif
       else if (present(shp)) then
          new_size = fact * product(int(shp, kind=c_size_t))
       else

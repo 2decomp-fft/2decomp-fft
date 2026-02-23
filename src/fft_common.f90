@@ -221,9 +221,6 @@ subroutine decomp_2d_fft_engine_init(engine, pencil, nx, ny, nz, &
    !                        the line below will make sure complex arrays fit in the memory pool
    !
    if (use_pool) call decomp_pool%new_shape(complex_type, engine%sp)
-#ifdef EVEN
-   if (use_pool) call decomp_pool%new_shape(complex_type, shp=(/max(int(engine%sp%x1count, c_size_t) * int(dims(1), c_size_t), int(engine%sp%y2count, c_size_t) * int(dims(2), c_size_t))/))
-#endif
 
    ! Warning : replace the default engine
    call engine%use_it(opt_force=.true.)

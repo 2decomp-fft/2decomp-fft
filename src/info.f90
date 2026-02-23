@@ -13,6 +13,12 @@ module m_info
       integer, dimension(3) :: xst, xen, xsz ! x-pencil
       integer, dimension(3) :: yst, yen, ysz ! y-pencil
       integer, dimension(3) :: zst, zen, zsz ! z-pencil
+#ifdef EVEN                                                                      
+      ! buffer counts for MPI_ALLTOALL for padded-alltoall                       
+      integer :: x1count, y1count, y2count, z2count                                         
+      ! evenly distributed data                                                          
+      logical :: even                                                                       
+#endif
    end type info
 
    ! derived type to store decomposition info for a given global data size
@@ -31,13 +37,6 @@ module m_info
          x1cnts, y1cnts, y2cnts, z2cnts
       integer, allocatable, dimension(:) :: &
          x1disp, y1disp, y2disp, z2disp
-
-#ifdef EVEN
-      ! buffer counts for MPI_ALLTOALL for padded-alltoall
-      integer :: x1count, y1count, y2count, z2count
-      ! evenly distributed data
-      logical :: even
-#endif
 
       ! Default halo extents per pencil
       integer, dimension(3) :: xlevel = [0, 0, 0]

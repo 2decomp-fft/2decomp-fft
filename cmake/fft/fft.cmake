@@ -31,7 +31,7 @@
 # CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-if(${FFT_Choice} MATCHES "fftw")
+if(${FFT_Choice} MATCHES "fftw_f03")
   configure_file(${CMAKE_SOURCE_DIR}/cmake/fft/downloadFindFFTW.cmake.in findFFTW-download/CMakeLists.txt)
   execute_process(COMMAND ${CMAKE_COMMAND} -G "${CMAKE_GENERATOR}" .
           RESULT_VARIABLE result
@@ -58,6 +58,8 @@ if(${FFT_Choice} MATCHES "fftw")
 
   #add_definitions("-lfftw3 -lfftw3f")
 
+elseif(${FFT_Choice} MATCHES "fftw")
+  message(ERROR_CRITICAL "FFTW3 legacy interface is not supported")
 elseif(${FFT_Choice} MATCHES "mkl")
   set(MKL_INTERFACE "lp64")
   set(MKL_THREADING "sequential")

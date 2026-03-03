@@ -118,9 +118,12 @@ program interp
    call alloc_y(u2b, grid)
    call alloc_z(u3b, grid)
    ! Interpolation
+   !$acc data copyin(u1, u2, u3), copy(u1b, u2b, u3b)
    call decomp_2d_interp_var3d(1, u1, u1b, grid)
    call decomp_2d_interp_var3d(2, u2, u2b, grid)
    call decomp_2d_interp_var3d(3, u3, u3b, grid)
+   !$acc update self(u1b, u2b, u3b)
+   !$acc end data
    ! Print 1D grids
    call show(grid, u1b, u2b, u3b)
    ! Free memory
@@ -134,9 +137,12 @@ program interp
    call alloc_y(u2b, grid)
    call alloc_z(u3b, grid)
    ! Interpolation
+   !$acc data copyin(u1, u2, u3), copy(u1b, u2b, u3b)
    call decomp_2d_interp_var3d(1, u1, u1b, grid)
    call decomp_2d_interp_var3d(2, u2, u2b, grid)
    call decomp_2d_interp_var3d(3, u3, u3b, grid)
+   !$acc update self(u1b, u2b, u3b)
+   !$acc end data
    ! Print 1D grids
    call show(grid, u1b, u2b, u3b)
    ! Free memory

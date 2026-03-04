@@ -177,25 +177,21 @@ contains
       integer :: i, j, k             ! local coordinate in varout
       integer :: iglob, jglob, kglob ! global coordinate in varout
       integer :: itarg, jtarg, ktarg ! local coordinate in varin
-      integer :: imax, jmax, kmax    ! Upper bound for the loop
 
-      imax = szout(1)
-      jmax = szout(2)
-      kmax = szout(3)
       ! If exact downsampling x2
       ! Keeps 2, 4, 6, ...
       ! Skip 1, 3, 5, ...
-      !$acc data copy(varout)
+      !$acc data copyin(szin, stin, totin, szout, stout, totout)
       !$acc parallel loop default(present)
-      do k = 1, kmax
+      do k = 1, szout(3)
          kglob = k + stout(3) - 1
          ktarg = nint(real(kglob * totin(3)) / totout(3)) - stin(3) + 1
          ktarg = max(1, min(szin(3), ktarg))
-         do j = 1, jmax
+         do j = 1, szout(2)
             jglob = j + stout(2) - 1
             jtarg = nint(real(jglob * totin(2)) / totout(2)) - stin(2) + 1
             jtarg = max(1, min(szin(2), jtarg))
-            do i = 1, imax
+            do i = 1, szout(1)
                iglob = i + stout(1) - 1
                itarg = nint(real(iglob * totin(1)) / totout(1)) - stin(1) + 1
                itarg = max(1, min(szin(1), itarg))

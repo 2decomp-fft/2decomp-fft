@@ -117,7 +117,7 @@ program interp
    call alloc_x(u1b, grid)
    call alloc_y(u2b, grid)
    call alloc_z(u3b, grid)
-   ! Interpolation
+   ! Interpolation from default "decomp_main" to "grid"
    !$acc data copyin(u1, u2, u3), copy(u1b, u2b, u3b)
    call decomp_2d_interp_var3d(1, u1, u1b, grid)
    call decomp_2d_interp_var3d(2, u2, u2b, grid)
@@ -131,12 +131,15 @@ program interp
    call decomp_info_finalize(grid)
 
    ! Interpolate on a coarse grid
-   call decomp_info_init(3*p_row, 3*max(p_row, p_col), 3*p_col, grid)
+   call decomp_info_init(max(nx/10, p_row), &
+                         max(ny/10, max(p_row, p_col)), &
+                         max(nz/10, p_col), &
+                         grid)
    ! Allocate memory
    call alloc_x(u1b, grid)
    call alloc_y(u2b, grid)
    call alloc_z(u3b, grid)
-   ! Interpolation
+   ! Interpolation from default "decomp_main" to "grid"
    !$acc data copyin(u1, u2, u3), copy(u1b, u2b, u3b)
    call decomp_2d_interp_var3d(1, u1, u1b, grid)
    call decomp_2d_interp_var3d(2, u2, u2b, grid)

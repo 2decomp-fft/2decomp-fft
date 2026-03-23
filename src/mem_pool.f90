@@ -319,6 +319,7 @@ contains
 
       ! Use the provided shape, or the default one
       if (present(shape)) then
+         allocate(shp(size(shape)))
          shp = int(shape, kind=c_size_t)
          if (product(int(shp, c_size_t)) > self%size) &
             call decomp_2d_abort(__FILE__, __LINE__, 2, "Invalid shape")
@@ -354,6 +355,7 @@ contains
 
       ! Use the provided shape, or the default one
       if (present(shape)) then
+         allocate(shp(size(shape)))
          shp = int(shape, kind=c_size_t)
          if (2_c_size_t * product(int(shp, c_size_t)) > self%size) &
             call decomp_2d_abort(__FILE__, __LINE__, 2, "Invalid shape")
@@ -389,6 +391,7 @@ contains
 
       ! Use the provided shape, or the default one
       if (present(shape)) then
+         allocate(shp(size(shape)))
          shp = int(shape, kind=c_size_t)
          if (2_c_size_t * product(int(shp, c_size_t)) > self%size) &
             call decomp_2d_abort(__FILE__, __LINE__, 2, "Invalid shape")
@@ -424,6 +427,7 @@ contains
 
       ! Use the provided shape, or the default one
       if (present(shape)) then
+         allocate(shp(size(shape)))
          shp = int(shape, kind=c_size_t)
          if (4_c_size_t * product(int(shp, c_size_t)) > self%size) &
             call decomp_2d_abort(__FILE__, __LINE__, 2, "Invalid shape")

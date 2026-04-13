@@ -181,6 +181,8 @@ contains
       ! If exact downsampling x2
       ! Keeps 2, 4, 6, ...
       ! Skip 1, 3, 5, ...
+      !$acc data copyin(szin, stin, totin, szout, stout, totout)
+      !$acc parallel loop default(present)
       do k = 1, szout(3)
          kglob = k + stout(3) - 1
          ktarg = nint(real(kglob * totin(3)) / totout(3)) - stin(3) + 1
@@ -197,6 +199,9 @@ contains
             end do
          end do
       end do
+      !$acc end loop
+      !$acc update self(varout)
+      !$acc end data
 
    end subroutine interp_var3d_basic
 

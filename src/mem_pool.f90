@@ -319,10 +319,12 @@ contains
 
       ! Use the provided shape, or the default one
       if (present(shape)) then
-         shp = shape
+         allocate(shp(size(shape)))
+         shp = int(shape, kind=c_size_t)
          if (product(int(shp, c_size_t)) > self%size) &
             call decomp_2d_abort(__FILE__, __LINE__, 2, "Invalid shape")
       else if (self%shapes(1, 1) /= mem_pool_none) then
+         allocate(shp(3))
          shp = self%shapes(:, 1)
       else
          call decomp_2d_abort(__FILE__, __LINE__, 2, "No shape available")
@@ -354,10 +356,12 @@ contains
 
       ! Use the provided shape, or the default one
       if (present(shape)) then
-         shp = shape
+         allocate(shp(size(shape)))
+         shp = int(shape, kind=c_size_t)
          if (2_c_size_t * product(int(shp, c_size_t)) > self%size) &
             call decomp_2d_abort(__FILE__, __LINE__, 2, "Invalid shape")
       else if (self%shapes(1, 2) /= mem_pool_none) then
+         allocate(shp(3))
          shp = self%shapes(:, 2)
       else
          call decomp_2d_abort(__FILE__, __LINE__, 2, "No shape available")
@@ -389,10 +393,12 @@ contains
 
       ! Use the provided shape, or the default one
       if (present(shape)) then
-         shp = shape
+         allocate(shp(size(shape)))
+         shp = int(shape, kind=c_size_t)
          if (2_c_size_t * product(int(shp, c_size_t)) > self%size) &
             call decomp_2d_abort(__FILE__, __LINE__, 2, "Invalid shape")
       else if (self%shapes(1, 3) /= mem_pool_none) then
+         allocate(shp(3))
          shp = self%shapes(:, 3)
       else
          call decomp_2d_abort(__FILE__, __LINE__, 2, "No shape available")
@@ -424,10 +430,12 @@ contains
 
       ! Use the provided shape, or the default one
       if (present(shape)) then
-         shp = shape
+         allocate(shp(size(shape)))
+         shp = int(shape, kind=c_size_t)
          if (4_c_size_t * product(int(shp, c_size_t)) > self%size) &
             call decomp_2d_abort(__FILE__, __LINE__, 2, "Invalid shape")
       else if (self%shapes(1, 4) /= mem_pool_none) then
+         allocate(shp(3))
          shp = self%shapes(:, 4)
       else
          call decomp_2d_abort(__FILE__, __LINE__, 2, "No shape available")

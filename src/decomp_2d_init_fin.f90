@@ -28,7 +28,7 @@
      integer, intent(in), optional :: comm
      logical, intent(in), optional :: complex_pool
 
-     integer :: errorcode, ierror, row, col, iounit
+     integer :: i, errorcode, ierror, row, col, iounit
      logical, dimension(2) :: periodic
 
      ! Prepare the profiler if it was not already prepared
@@ -50,6 +50,12 @@
 #else
      use_pool = .true.
 #endif
+
+     ! Set the default node repartition if needed
+     do i = 1, 2
+        if (decomp_partition_default(i) == DECOMP_PARTITION_UNDEF) &
+           decomp_partition_default(i) = DECOMP_PARTITION_LAST
+     end do
 
 #ifdef DEBUG
      ! Check if a modification of the debug level is needed
@@ -126,7 +132,7 @@
      call init_neighbour
 
      ! actually generate all 2D decomposition information
-     call decomp_info_init(nx, ny, nz, decomp_main)
+     call decomp_info_init(nx, ny, nz, decomp_main, decomp_partition_default)
 
      ! make a copy of the decomposition information associated with the
      ! default global size in these global variables so applications can
@@ -197,6 +203,8 @@
      call decomp_2d_mpi_comm_free(DECOMP_2D_COMM_CART_X)
      call decomp_2d_mpi_comm_free(DECOMP_2D_COMM_CART_Y)
      call decomp_2d_mpi_comm_free(DECOMP_2D_COMM_CART_Z)
+
+     decomp_partition_default = DECOMP_PARTITION_UNDEF
 
      call decomp_info_finalize(decomp_main)
 

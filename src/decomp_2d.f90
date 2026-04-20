@@ -68,6 +68,20 @@ module decomp_2d
    integer(kind(D2D_DEBUG_LEVEL_OFF)), public, save :: decomp_debug = D2D_DEBUG_LEVEL_OFF
 #endif
 
+   !
+   ! Extra points can be located on the first CPUs or on the last
+   !
+   ! 1st element of the array for the node repartition in row
+   ! 2nd element of the array for the node repartition in column
+   !
+   ! X pencil => row and col in Y and Z
+   ! Y pencil => row and col in X and Z
+   ! Z pencil => row and col in X and Y
+   !
+   ! The external code can set this variable before calling decomp_2d_init
+   !
+   integer, public, save :: decomp_partition_default(2) = DECOMP_PARTITION_UNDEF
+
    ! staring/ending index and size of data held by current processor
    ! duplicate 'decomp_main', needed by apps to define data structure
    integer, save, dimension(3), public :: xstart, xend, xsize  ! x-pencil
@@ -366,7 +380,7 @@ contains
    !  - multiple global sizes can co-exist in one application, each
    !    using its own DECOMP_INFO object
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-   subroutine decomp_info_init(nx, ny, nz, decomp)
+   subroutine decomp_info_init(nx, ny, nz, decomp, opt_partition)
 
       use, intrinsic:: iso_c_binding, only: c_f_pointer, c_loc
 
@@ -375,10 +389,11 @@ contains
       ! Arguments
       integer, intent(IN) :: nx, ny, nz
       TYPE(DECOMP_INFO), intent(INOUT) :: decomp
+      integer, intent(in), optional :: opt_partition(2)
 
       ! Local variables
       integer(c_size_t) :: buf_size
-      integer :: errorcode
+      integer :: errorcode, decomp_info_partition(2)
 #if defined(_GPU)
       integer :: status
 #endif
@@ -392,17 +407,27 @@ contains
                               'min(ny,nz) >= p_col')
       end if
 
+      ! Use the provided node repartition or the default one
+      if (present(opt_partition)) then
+         decomp_info_partition = opt_partition
+      else
+         decomp_info_partition = decomp_partition_default
+      end if
+
       ! distribute mesh points
       allocate (decomp%x1dist(0:dims(1) - 1), decomp%y1dist(0:dims(1) - 1), &
                 decomp%y2dist(0:dims(2) - 1), decomp%z2dist(0:dims(2) - 1))
-      call get_dist(nx, ny, nz, decomp)
+      call get_dist(nx, ny, nz, decomp_info_partition, decomp)
 
       ! generate partition information - starting/ending index etc.
       call partition(nx, ny, nz, (/1, 2, 3/), &
+                     decomp_info_partition, &
                      decomp%xst, decomp%xen, decomp%xsz)
       call partition(nx, ny, nz, (/2, 1, 3/), &
+                     decomp_info_partition, &
                      decomp%yst, decomp%yen, decomp%ysz)
       call partition(nx, ny, nz, (/2, 3, 1/), &
+                     decomp_info_partition, &
                      decomp%zst, decomp%zen, decomp%zsz)
 
       ! prepare send/receive buffer displacement and count for ALLTOALL(V)
@@ -446,7 +471,7 @@ contains
       if (buf_size > decomp_buf_size) then
          decomp_buf_size = buf_size
 #if defined(_GPU)
-         if (.not.use_pool) then
+         if (.not. use_pool) then
             if (associated(work1_r)) nullify (work1_r)
             if (associated(work2_r)) nullify (work2_r)
             if (associated(work1_c)) nullify (work1_c)
@@ -509,19 +534,25 @@ contains
    !                  valid values: 1 - distibute locally;
    !                                2 - distribute across p_row;
    !                                3 - distribute across p_col
+   !     part       - node repartition, valid values :
+   !                   1 - extra nodes on the first CPUs
+   !                   2 - extra nodes on the last CPUs
    !   OUTPUT:
    !     lstart(3)  - starting index
    !     lend(3)    - ending index
    !     lsize(3)   - size of the sub-block (redundant)
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-   subroutine partition(nx, ny, nz, pdim, lstart, lend, lsize)
+   subroutine partition(nx, ny, nz, pdim, part, lstart, lend, lsize)
 
       implicit none
 
+      ! Arguments
       integer, intent(IN) :: nx, ny, nz
       integer, dimension(3), intent(IN) :: pdim
+      integer, dimension(2), intent(IN) :: part
       integer, dimension(3), intent(OUT) :: lstart, lend, lsize
 
+      ! Local variables
       integer, allocatable, dimension(:) :: st, en, sz
       integer :: i, gsize
 
@@ -543,7 +574,7 @@ contains
             allocate (st(0:dims(1) - 1))
             allocate (en(0:dims(1) - 1))
             allocate (sz(0:dims(1) - 1))
-            call distribute(gsize, dims(1), st, en, sz)
+            call distribute(gsize, dims(1), part(1), st, en, sz)
             lstart(i) = st(coord(1))
             lend(i) = en(coord(1))
             lsize(i) = sz(coord(1))
@@ -552,7 +583,7 @@ contains
             allocate (st(0:dims(2) - 1))
             allocate (en(0:dims(2) - 1))
             allocate (sz(0:dims(2) - 1))
-            call distribute(gsize, dims(2), st, en, sz)
+            call distribute(gsize, dims(2), part(2), st, en, sz)
             lstart(i) = st(coord(2))
             lend(i) = en(coord(2))
             lsize(i) = sz(coord(2))
@@ -560,7 +591,6 @@ contains
          end if
 
       end do
-      return
 
    end subroutine partition
 
@@ -568,40 +598,49 @@ contains
    !   - distibutes grid points in one dimension
    !   - handles uneven distribution properly
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-   subroutine distribute(data1, proc, st, en, sz)
+   subroutine distribute(data1, proc, part, st, en, sz)
 
       implicit none
+
       ! data1 -- data size in any dimension to be partitioned
       ! proc  -- number of processors in that dimension
+      ! part  -- repartition of the nodes
       ! st    -- array of starting index
       ! en    -- array of ending index
       ! sz    -- array of local size  (redundent)
-      integer data1, proc, st(0:proc - 1), en(0:proc - 1), sz(0:proc - 1)
-      integer i, size1, nl, nu
 
-      size1 = data1 / proc
-      nu = data1 - size1 * proc
-      nl = proc - nu
+      ! Arguments
+      integer, intent(in) ::  data1, proc, part
+      integer, intent(out) :: st(0:proc - 1), en(0:proc - 1), sz(0:proc - 1)
+
+      ! Local variables
+      integer i
+
+      ! Compute the sizes
+      sz(:) = data1 / proc
+      if (part == DECOMP_PARTITION_FIRST) then
+         do i = 0, mod(data1, proc) - 1
+            sz(i) = sz(i) + 1
+         end do
+      else if (part == DECOMP_PARTITION_LAST) then
+         do i = proc - mod(data1, proc), proc - 1
+            sz(i) = sz(i) + 1
+         end do
+      else
+         call decomp_2d_abort(__FILE__, __LINE__, part, "Invalid value.")
+      end if
+
+      ! Compute start / end
       st(0) = 1
-      sz(0) = size1
-      en(0) = size1
-      do i = 1, nl - 1
-         st(i) = st(i - 1) + size1
-         sz(i) = size1
-         en(i) = en(i - 1) + size1
-      end do
-      size1 = size1 + 1
-      do i = nl, proc - 1
+      en(0) = sz(0)
+      do i = 1, proc - 1
          st(i) = en(i - 1) + 1
-         sz(i) = size1
-         en(i) = en(i - 1) + size1
+         en(i) = st(i) + sz(i) - 1
       end do
 
       ! Safety checks
       if (en(proc - 1) /= data1) &
          call decomp_2d_abort(__FILE__, __LINE__, en(proc - 1), "Invalid distribution.")
-      if (sz(proc - 1) /= (data1 - st(proc - 1) + 1)) &
-         call decomp_2d_abort(__FILE__, __LINE__, sz(proc - 1), "Invalid distribution.")
 
    end subroutine distribute
 
@@ -610,24 +649,28 @@ contains
    !    e.g. 17 meshes across 4 processor would be distibuted as (4,4,4,5)
    !    such global information is required locally at MPI_ALLTOALLV time
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-   subroutine get_dist(nx, ny, nz, decomp)
+   subroutine get_dist(nx, ny, nz, part, decomp)
 
       implicit none
 
+      ! Arguments
       integer, intent(IN) :: nx, ny, nz
+      integer, intent(IN) :: part(2)
       TYPE(DECOMP_INFO), intent(INOUT) :: decomp
+
+      ! Local variables
       integer, allocatable, dimension(:) :: st, en
 
       allocate (st(0:dims(1) - 1))
       allocate (en(0:dims(1) - 1))
-      call distribute(nx, dims(1), st, en, decomp%x1dist)
-      call distribute(ny, dims(1), st, en, decomp%y1dist)
+      call distribute(nx, dims(1), part(1), st, en, decomp%x1dist)
+      call distribute(ny, dims(1), part(1), st, en, decomp%y1dist)
       deallocate (st, en)
 
       allocate (st(0:dims(2) - 1))
       allocate (en(0:dims(2) - 1))
-      call distribute(ny, dims(2), st, en, decomp%y2dist)
-      call distribute(nz, dims(2), st, en, decomp%z2dist)
+      call distribute(ny, dims(2), part(2), st, en, decomp%y2dist)
+      call distribute(nz, dims(2), part(2), st, en, decomp%z2dist)
       deallocate (st, en)
 
       return

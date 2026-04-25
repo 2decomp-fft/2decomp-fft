@@ -11,9 +11,6 @@ module m_env_var
    ! Default is private
    private
 
-   ! Default value if no default value is provided
-   integer, parameter :: env_var_default_int = 0
-
    public :: get_env_var
 
    interface get_env_var

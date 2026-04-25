@@ -2,21 +2,11 @@
 
 ! Module for reading environment variables
 
-module m_env_var
+submodule(decomp_2d) m_env_var
 
    use decomp_2d_mpi
 
    implicit none
-
-   ! Default is private
-   private
-
-   public :: get_env_var
-
-   interface get_env_var
-      module procedure get_env_var_char
-      module procedure get_env_var_int
-   end interface get_env_var
 
 contains
 
@@ -35,15 +25,25 @@ contains
       ! Get the size of the environment variable
       call get_environment_variable(name, length=len, &
                                     status=ierror, trim_name=.true.)
+
       if (ierror == 1) then
+
+         ! The requested environment variable was not found
+         ! Set default output
          output = ''
-         call decomp_2d_warning(ierror, "Environment variable "// &
-                                trim(name)//" is not defined.")
+         ! Print a warning if the debug level is high enough
+         if (decomp_debug >= D2D_DEBUG_LEVEL_TRACE) &
+            call decomp_2d_warning(ierror, "Environment variable "// &
+                                   trim(name)//" is not defined.")
          return
+
       else if (ierror /= 0) then
+
+         ! This is a low probability event
          output = ''
          call decomp_2d_warning(ierror, "No support for environment variable")
          return
+
       end if
 
       ! Allocate the output variable
@@ -54,10 +54,13 @@ contains
                                     status=ierror, trim_name=.true.)
 
       if (ierror /= 0) then
+
+         ! This is a low probability event
          output = ''
          call decomp_2d_warning(__FILE__, __LINE__, ierror, &
-                                "Error when reading "//name)
+                                "Error when reading "//trim(name))
          return
+
       end if
 
    end function get_env_var_char
@@ -73,7 +76,7 @@ contains
       integer :: output
 
       ! Local variables
-      integer :: ierror
+      integer :: ierror, io_unit
       character(len=:), allocatable :: raw, fmt
 
       ! Get the raw output
@@ -81,17 +84,40 @@ contains
 
       ! Return if the environment variable was not available
       if (raw == '') then
+
+         ! Update the log if the debug level is high enough
+         if (decomp_debug >= D2D_DEBUG_LEVEL_TRACE) then
+            if (d2d_log_is_active()) then
+               io_unit = d2d_log_get_unit()
+               write (io_unit, *) trim(name)//" set to default ", output
+               call d2d_log_close_unit(io_unit)
+            end if
+         end if
+
+         ! Set the output to the default value
          output = default
+
+         ! Free memory and return
          deallocate (raw)
          return
+
       end if
 
       ! Format for the conversion
       allocate (character(len=3 + max(1, len(raw))) :: fmt)
-      write(fmt, '(*(g0))') '(i', max(1, len(raw)), ')'
+      write (fmt, '(*(g0))') '(i', max(1, len(raw)), ')'
 
-      ! Integer convertion
+      ! Character => Integer
       read (raw, fmt, iostat=ierror) output
+
+      ! Update the log if the debug level is high enough
+      if (decomp_debug >= D2D_DEBUG_LEVEL_INFO) then
+         if (d2d_log_is_active()) then
+            io_unit = d2d_log_get_unit()
+            write (io_unit, *) trim(name)//" set to ", output
+            call d2d_log_close_unit(io_unit)
+         end if
+      end if
 
       ! Free memory
       deallocate (fmt)
@@ -99,4 +125,4 @@ contains
 
    end function get_env_var_int
 
-end module m_env_var
+end submodule m_env_var

@@ -25,7 +25,6 @@ module decomp_2d
    use m_info, only: decomp_info => decomp_info ! Expose decomp_info from 2decomp
    use m_info, only: decomp_main => decomp_main ! Expose decomp_main from 2decomp
    use m_decomp_pool
-   use m_env_var
    use m_mem_pool
    use m_halo, only: init_neighbour
 
@@ -111,7 +110,8 @@ module decomp_2d
              get_decomp_dims, &
              d2d_log_is_active, &
              d2d_log_get_unit, &
-             d2d_log_close_unit
+             d2d_log_close_unit, &
+             d2d_get_env_var
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
    ! These are routines to perform global data transpositions
@@ -309,6 +309,18 @@ module decomp_2d
       module procedure alloc_z_dev_logs_short
 #endif
    end interface alloc_z
+
+   interface d2d_get_env_var
+      module function get_env_var_char(name)
+         character(len=*), intent(in) :: name
+         character(len=:), allocatable :: get_env_var_char
+      end function get_env_var_char
+      module function get_env_var_int(name, default)
+         character(len=*), intent(in) :: name
+         integer, intent(in) :: default
+         integer :: get_env_var_int
+      end function get_env_var_int
+   end interface d2d_get_env_var
 
    interface
 

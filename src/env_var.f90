@@ -88,9 +88,7 @@ contains
 
       ! Format for the conversion
       allocate (character(len=3 + max(1, len(raw))) :: fmt)
-      fmt(1:2) = '(i'
-      write (fmt(3:len(fmt) - 1), *) max(1, len(raw))
-      fmt(len(fmt):len(fmt)) = ')'
+      write(fmt, '(*(g0))') '(i', max(1, len(raw)), ')'
 
       ! Integer convertion
       read (raw, fmt, iostat=ierror) output

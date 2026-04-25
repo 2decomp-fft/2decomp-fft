@@ -11,7 +11,7 @@ submodule(decomp_2d) m_env_var
 contains
 
    ! Extract the raw environment variable
-   function get_env_var_char(name) result(output)
+   module function get_env_var_char(name) result(output)
 
       implicit none
 
@@ -66,7 +66,7 @@ contains
    end function get_env_var_char
 
    ! Extract the raw environment variable and convert to int
-   function get_env_var_int(name, default) result(output)
+   module function get_env_var_int(name, default) result(output)
 
       implicit none
 

@@ -28,7 +28,7 @@
      integer, intent(in), optional :: comm
      logical, intent(in), optional :: complex_pool
 
-     integer :: i, errorcode, ierror, row, col, iounit
+     integer :: errorcode, ierror, row, col, iounit
      logical, dimension(2) :: periodic
 
      ! Prepare the profiler if it was not already prepared
@@ -52,10 +52,12 @@
 #endif
 
      ! Set the default node repartition if needed
-     do i = 1, 2
-        if (decomp_partition_default(i) == DECOMP_PARTITION_UNDEF) &
-           decomp_partition_default(i) = DECOMP_PARTITION_LAST
-     end do
+     if (decomp_partition_default(1) == DECOMP_PARTITION_UNDEF) then
+        decomp_partition_default(1) = get_env_var("DECOMP_PARTITION_ROW", DECOMP_PARTITION_LAST)
+     end if
+     if (decomp_partition_default(2) == DECOMP_PARTITION_UNDEF) then
+        decomp_partition_default(2) = get_env_var("DECOMP_PARTITION_COL", DECOMP_PARTITION_LAST)
+     end if
 
 #ifdef DEBUG
      ! Check if a modification of the debug level is needed
@@ -235,37 +237,11 @@
   !
   ! Try to read the environment variable DECOMP_2D_DEBUG to change the debug level
   !
-  ! The expected value is an integer below 9999
-  !
   subroutine decomp_2d_debug
 
      implicit none
 
-     integer :: ierror
-     character(len=4) :: val
-     character(len=*), parameter :: varname = "DECOMP_2D_DEBUG"
-
-     ! Read the variable
-     call get_environment_variable(varname, value=val, status=ierror)
-
-     ! Return if no variable, or no support for env. variable
-     if (ierror >= 1) return
-
-     ! Minor error, print warning and return
-     if (ierror /= 0) then
-        call decomp_2d_warning(__FILE__, &
-                               __LINE__, &
-                               ierror, &
-                               "Error when reading DECOMP_2D_DEBUG : "//val)
-        return
-     end if
-
-     ! Conversion to integer if possible
-     read (val, '(i4)', iostat=ierror) decomp_debug
-     if (ierror /= 0) then
-        call decomp_2d_warning(__FILE__, __LINE__, ierror, &
-                               "Error when reading DECOMP_2D_DEBUG : "//val)
-     end if
+     decomp_debug = get_env_var("DECOMP_2D_DEBUG", decomp_debug)
 
   end subroutine decomp_2d_debug
 #endif

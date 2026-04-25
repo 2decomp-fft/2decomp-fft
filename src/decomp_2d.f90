@@ -25,6 +25,7 @@ module decomp_2d
    use m_info, only: decomp_info => decomp_info ! Expose decomp_info from 2decomp
    use m_info, only: decomp_main => decomp_main ! Expose decomp_main from 2decomp
    use m_decomp_pool
+   use m_env_var
    use m_mem_pool
    use m_halo, only: init_neighbour
 

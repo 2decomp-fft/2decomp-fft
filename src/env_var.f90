@@ -40,8 +40,8 @@ contains
                                     status=ierror, trim_name=.true.)
       if (ierror == 1) then
          output = ''
-         call decomp_2d_warning(ierror, "Environment variable " // &
-                                        trim(name) //" is not defined.")
+         call decomp_2d_warning(ierror, "Environment variable "// &
+                                trim(name)//" is not defined.")
          return
       else if (ierror /= 0) then
          output = ''
@@ -50,7 +50,7 @@ contains
       end if
 
       ! Allocate the output variable
-      allocate(character(len=max(1, len)) :: output)
+      allocate (character(len=max(1, len)) :: output)
 
       ! Get the environment variable
       call get_environment_variable(name, output, &
@@ -59,7 +59,7 @@ contains
       if (ierror /= 0) then
          output = ''
          call decomp_2d_warning(__FILE__, __LINE__, ierror, &
-                                "Error when reading " // name)
+                                "Error when reading "//name)
          return
       end if
 
@@ -85,22 +85,22 @@ contains
       ! Return if the environment variable was not available
       if (raw == '') then
          output = default
-         deallocate(raw)
+         deallocate (raw)
          return
       end if
 
       ! Format for the conversion
-      allocate(character(len = 3 + max(1,len(raw))) :: fmt)
+      allocate (character(len=3 + max(1, len(raw))) :: fmt)
       fmt(1:2) = '(i'
-      write(fmt(3:len(fmt)-1), *) max(1,len(raw))
+      write (fmt(3:len(fmt) - 1), *) max(1, len(raw))
       fmt(len(fmt):len(fmt)) = ')'
 
       ! Integer convertion
-      read(raw, fmt, iostat=ierror) output
+      read (raw, fmt, iostat=ierror) output
 
       ! Free memory
-      deallocate(fmt)
-      deallocate(raw)
+      deallocate (fmt)
+      deallocate (raw)
 
    end function get_env_var_int
 

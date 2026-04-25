@@ -10,9 +10,6 @@ module decomp_2d
    use factor
    use decomp_2d_constants
    use decomp_2d_mpi
-   use decomp_2d_mpi, only: DECOMP_2D_COMM_CART_X => DECOMP_2D_COMM_CART_X
-   use decomp_2d_mpi, only: DECOMP_2D_COMM_CART_Y => DECOMP_2D_COMM_CART_Y
-   use decomp_2d_mpi, only: DECOMP_2D_COMM_CART_Z => DECOMP_2D_COMM_CART_Z
    use decomp_2d_profiler
 #if defined(_GPU)
    use cudafor

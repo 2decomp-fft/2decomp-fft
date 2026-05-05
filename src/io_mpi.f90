@@ -792,6 +792,7 @@ contains
    !
    subroutine read_or_write(flag_read, io, sizes, subsizes, starts, &
                             opt_nb_req, &
+                            opt_mpi_datarep, &
                             freal, dreal, fcplx, dcplx, ints, logs)
 
       implicit none
@@ -800,6 +801,7 @@ contains
       type(d2d_io_mpi), intent(inout) :: io
       integer, dimension(3), intent(in) :: sizes, subsizes, starts
       integer, optional :: opt_nb_req
+      character(len=*), intent(in), optional :: opt_mpi_datarep
       real(real32), contiguous, dimension(:, :, :), optional :: freal
       real(real64), contiguous, dimension(:, :, :), optional :: dreal
       complex(real32), contiguous, dimension(:, :, :), optional :: fcplx
@@ -808,6 +810,7 @@ contains
       logical, contiguous, dimension(:, :, :), optional :: logs
 
       logical :: non_blocking
+      character(len=:), allocatable :: mpi_datarep
       integer :: ierror, data_type, newtype, type_bytes
 
       ! Safety check
@@ -821,6 +824,15 @@ contains
          if (opt_nb_req /= MPI_REQUEST_NULL) then
             call decomp_2d_abort(__FILE__, __LINE__, -1, "Provided MPI request was not finished "//io%label)
          end if
+      end if
+
+      ! Allow portable MPI IO
+      if (present(opt_mpi_datarep)) then
+         allocate (character(len=max(1, len(opt_mpi_datarep))) :: mpi_datarep)
+         mpi_datarep = opt_mpi_datarep
+      else
+         allocate (character(len=len('native')) :: mpi_datarep)
+         mpi_datarep = 'native'
       end if
 
       ! Allow non-blocking MPI IO
@@ -857,7 +869,7 @@ contains
       if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_TYPE_CREATE_SUBARRAY")
       call MPI_TYPE_COMMIT(newtype, ierror)
       if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_TYPE_COMMIT")
-      call MPI_FILE_SET_VIEW(io%fh, io%disp, data_type, newtype, 'native', io%mpi_file_set_view_info, ierror)
+      call MPI_FILE_SET_VIEW(io%fh, io%disp, data_type, newtype, mpi_datarep, io%mpi_file_set_view_info, ierror)
       if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_FILE_SET_VIEW")
       if (flag_read) then
          if (non_blocking) then
@@ -933,6 +945,9 @@ contains
       io%disp = io%disp + product(int(sizes, kind=MPI_OFFSET_KIND)) &
                 * int(type_bytes, kind=MPI_OFFSET_KIND)
 
+      ! Free memory
+      deallocate(mpi_datarep)
+
    end subroutine read_or_write
 
    !
@@ -940,6 +955,7 @@ contains
    !
    subroutine read_or_write_scalar(flag_read, io, size, subsize, &
                                    opt_nb_req, &
+                                   opt_mpi_datarep, &
                                    freal, dreal, fcplx, dcplx, ints, logs)
 
       implicit none
@@ -948,6 +964,7 @@ contains
       type(d2d_io_mpi), intent(inout) :: io
       integer, intent(in) :: size, subsize
       integer, optional :: opt_nb_req
+      character(len=*), intent(in), optional :: opt_mpi_datarep
       real(real32), contiguous, dimension(:), optional :: freal
       real(real64), contiguous, dimension(:), optional :: dreal
       complex(real32), contiguous, dimension(:), optional :: fcplx
@@ -956,6 +973,7 @@ contains
       logical, contiguous, dimension(:), optional :: logs
 
       logical :: non_blocking
+      character(len=:), allocatable :: mpi_datarep
       integer :: ierror, data_type, type_bytes
 
       ! Safety check
@@ -969,6 +987,15 @@ contains
          if (opt_nb_req /= MPI_REQUEST_NULL) then
             call decomp_2d_abort(__FILE__, __LINE__, -1, "Provided MPI request was not finished "//io%label)
          end if
+      end if
+
+      ! Allow portable MPI IO
+      if (present(opt_mpi_datarep)) then
+         allocate (character(len=max(1, len(opt_mpi_datarep))) :: mpi_datarep)
+         mpi_datarep = opt_mpi_datarep
+      else
+         allocate (character(len=len('native')) :: mpi_datarep)
+         mpi_datarep = 'native'
       end if
 
       ! Allow non-blocking MPI IO
@@ -1000,7 +1027,7 @@ contains
       if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_TYPE_SIZE")
 
       ! Do the MPI IO
-      call MPI_FILE_SET_VIEW(io%fh, io%disp, data_type, data_type, 'native', io%mpi_file_set_view_info, ierror)
+      call MPI_FILE_SET_VIEW(io%fh, io%disp, data_type, data_type, mpi_datarep, io%mpi_file_set_view_info, ierror)
       if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_FILE_SET_VIEW")
       if (flag_read) then
          if (non_blocking) then
@@ -1073,6 +1100,9 @@ contains
       ! Update displacement for the next write operation
       io%disp = io%disp + &
                 int(size, kind=MPI_OFFSET_KIND) * int(type_bytes, kind=MPI_OFFSET_KIND)
+
+      ! Free memory
+      deallocate(mpi_datarep)
 
    end subroutine read_or_write_scalar
 

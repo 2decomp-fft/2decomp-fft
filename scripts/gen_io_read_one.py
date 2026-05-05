@@ -141,7 +141,6 @@ for i in range(nformat):
         f.write("                       opt_mpi_datarep=opt_mpi_datarep, &\n")
         if (i==2):
             f.write("                       freal=tmp)\n")
-            f.write("                       opt_mpi_datarep=opt_mpi_datarep)\n")
             f.write("         var = real(tmp, kind=real64)\n")
         elif (i==3):
             f.write("                       fcplx=tmp)\n")

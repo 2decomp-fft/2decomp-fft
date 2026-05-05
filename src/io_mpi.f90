@@ -16,6 +16,7 @@
 !   - opt_reduce_prec : optional, file in single precision
 !   - opt_decomp : optional, decomp_info object describing the array. decomp_main is used when this is not provided
 !   - opt_nb_req : optional, MPI_REQUEST associated with the non-blocking MPI-IO operation
+!   - opt_mpi_datarep : 'native', 'internal' or 'external32'
 !   - opt_io : optional, use it to close the file when the request is completed (non-blocking MPI-IO)
 !
 
@@ -35,6 +36,7 @@
 !   - opt_reduce_prec : optional, file in single precision
 !   - opt_decomp : optional, decomp_info object describing the array. decomp_main is used when this is not provided
 !   - opt_nb_req : optional, MPI_REQUEST associated with the non-blocking MPI-IO operation
+!   - opt_mpi_datarep : 'native', 'internal' or 'external32'
 !
 
 !
@@ -58,6 +60,7 @@
 !   - opt_reduce_prec : optional, file in single precision
 !   - opt_decomp : optional, decomp_info object describing the array. decomp_main is used when this is not provided
 !   - opt_nb_req : optional, MPI_REQUEST associated with the non-blocking MPI-IO operation
+!   - opt_mpi_datarep : 'native', 'internal' or 'external32'
 !   - opt_io : optional, use it to close the file when the request is completed (non-blocking MPI-IO)
 !
 
@@ -75,6 +78,7 @@
 !   - opt_reduce_prec : optional, read the file in single precision
 !   - opt_decomp : optional, decomp_info object describing the array. decomp_main is used when this is not provided
 !   - opt_nb_req : optional, MPI_REQUEST associated with the non-blocking MPI-IO operation
+!   - opt_mpi_datarep : 'native', 'internal' or 'external32'
 !   - opt_io : optional, use it to close the file when the request is completed (non-blocking MPI-IO)
 !
 
@@ -84,6 +88,7 @@
 ! Arguments :
 !   - io : d2d_io_mpi object obtained when opening the file (mode=decomp_2d_write_mode or decomp_2d_append_mode)
 !   - n : size of the array
+!   - opt_mpi_datarep : 'native', 'internal' or 'external32'
 !   - var : 3D array (real / complex / integer / logical)
 !
 
@@ -250,6 +255,7 @@ contains
    !   - opt_dirname : This is mandatory if no IO reader / writer was provided
    !   - opt_mpi_xxx_info : Hints for MPI IO operations
    !   - opt_nb_req : id of the request for non-blocking MPI IO
+   !   - opt_mpi_datarep : 'native', 'internal' or 'external32'
    !   - freal / dreal / fcplx / dcplx / ints / logs : array
    !
    !   If opt_dirname is present, MPI IO will write to the file opt_dirname/varname
@@ -260,6 +266,7 @@ contains
                         opt_mpi_file_open_info, &
                         opt_mpi_file_set_view_info, &
                         opt_nb_req, &
+                        opt_mpi_datarep, &
                         opt_io, &
                         freal, dreal, fcplx, dcplx, ints, logs)
 
@@ -272,6 +279,7 @@ contains
       integer, intent(in), optional :: opt_mpi_file_open_info
       integer, intent(in), optional :: opt_mpi_file_set_view_info
       integer, optional :: opt_nb_req
+      character(len=*), intent(in), optional :: opt_mpi_datarep
       type(d2d_io_mpi), optional :: opt_io
       real(real32), contiguous, dimension(:, :, :), intent(IN), optional :: freal
       real(real64), contiguous, dimension(:, :, :), intent(IN), optional :: dreal
@@ -295,6 +303,7 @@ contains
                           opt_mpi_file_set_view_info=opt_mpi_file_set_view_info)
          call write_var(opt_io, ipencil, decomp, &
                         opt_nb_req=opt_nb_req, &
+                        opt_mpi_datarep=opt_mpi_datarep, &
                         freal=freal, &
                         dreal=dreal, &
                         fcplx=fcplx, &
@@ -307,6 +316,7 @@ contains
                       opt_mpi_file_open_info=opt_mpi_file_open_info, &
                       opt_mpi_file_set_view_info=opt_mpi_file_set_view_info)
          call write_var(io, ipencil, decomp, &
+                        opt_mpi_datarep=opt_mpi_datarep, &
                         freal=freal, &
                         dreal=dreal, &
                         fcplx=fcplx, &
@@ -328,6 +338,7 @@ contains
    !   - opt_dirname : This is mandatory if no IO reader / writer was provided
    !   - opt_mpi_xxx_info : Hints for MPI IO operations
    !   - opt_nb_req : id of the request for non-blocking MPI IO
+   !   - opt_mpi_datarep : 'native', 'internal' or 'external32'
    !   - freal / dreal / fcplx / dcplx / ints / logs : array
    !
    !   If opt_dirname is present, MPI IO will read from the file opt_dirname/varname
@@ -338,6 +349,7 @@ contains
                        opt_mpi_file_open_info, &
                        opt_mpi_file_set_view_info, &
                        opt_nb_req, &
+                       opt_mpi_datarep, &
                        opt_io, &
                        freal, dreal, fcplx, dcplx, ints, logs)
 
@@ -350,6 +362,7 @@ contains
       integer, intent(in), optional :: opt_mpi_file_open_info
       integer, intent(in), optional :: opt_mpi_file_set_view_info
       integer, optional :: opt_nb_req
+      character(len=*), intent(in), optional :: opt_mpi_datarep
       type(d2d_io_mpi), optional :: opt_io
       real(real32), contiguous, dimension(:, :, :), intent(OUT), optional :: freal
       real(real64), contiguous, dimension(:, :, :), intent(OUT), optional :: dreal
@@ -373,6 +386,7 @@ contains
                           opt_mpi_file_set_view_info=opt_mpi_file_set_view_info)
          call read_var(opt_io, ipencil, decomp, &
                        opt_nb_req=opt_nb_req, &
+                       opt_mpi_datarep=opt_mpi_datarep, &
                        freal=freal, &
                        dreal=dreal, &
                        fcplx=fcplx, &
@@ -385,6 +399,7 @@ contains
                       opt_mpi_file_open_info=opt_mpi_file_open_info, &
                       opt_mpi_file_set_view_info=opt_mpi_file_set_view_info)
          call read_var(io, ipencil, decomp, &
+                       opt_mpi_datarep=opt_mpi_datarep, &
                        freal=freal, &
                        dreal=dreal, &
                        fcplx=fcplx, &
@@ -404,10 +419,12 @@ contains
    !   - ipencil : pencil orientation of the variable
    !   - decomp : decomp_info for the variable
    !   - opt_nb_req : id of the request for non-blocking MPI IO
+   !   - opt_mpi_datarep : 'native', 'internal' or 'external32'
    !   - freal / dreal / fcplx / dcplx / ints / logs : array
    !
    subroutine write_var(io, ipencil, decomp, &
                         opt_nb_req, &
+                        opt_mpi_datarep, &
                         freal, dreal, fcplx, dcplx, ints, logs)
 
       implicit none
@@ -416,6 +433,7 @@ contains
       integer, intent(IN) :: ipencil
       TYPE(DECOMP_INFO), intent(IN) :: decomp
       integer, optional :: opt_nb_req
+      character(len=*), intent(in), optional :: opt_mpi_datarep
       real(real32), contiguous, dimension(:, :, :), intent(IN), optional :: freal
       real(real64), contiguous, dimension(:, :, :), intent(IN), optional :: dreal
       complex(real32), contiguous, dimension(:, :, :), intent(IN), optional :: fcplx
@@ -445,6 +463,7 @@ contains
       ! MPI IO
       call read_or_write(.false., io, sizes, subsizes, starts, &
                          opt_nb_req=opt_nb_req, &
+                         opt_mpi_datarep=opt_mpi_datarep, &
                          freal=freal, &
                          dreal=dreal, &
                          fcplx=fcplx, &
@@ -462,10 +481,12 @@ contains
    !   - ipencil : pencil orientation of the variable
    !   - decomp : decomp_info for the variable
    !   - opt_nb_req : id of the request for non-blocking MPI IO
+   !   - opt_mpi_datarep : 'native', 'internal' or 'external32'
    !   - freal / dreal / fcplx / dcplx / ints / logs : array
    !
    subroutine read_var(io, ipencil, decomp, &
                        opt_nb_req, &
+                       opt_mpi_datarep, &
                        freal, dreal, fcplx, dcplx, ints, logs)
 
       implicit none
@@ -474,6 +495,7 @@ contains
       integer, intent(IN) :: ipencil
       TYPE(DECOMP_INFO), intent(IN) :: decomp
       integer, optional :: opt_nb_req
+      character(len=*), intent(in), optional :: opt_mpi_datarep
       real(real32), contiguous, dimension(:, :, :), intent(OUT), optional :: freal
       real(real64), contiguous, dimension(:, :, :), intent(OUT), optional :: dreal
       complex(real32), contiguous, dimension(:, :, :), intent(OUT), optional :: fcplx
@@ -503,6 +525,7 @@ contains
       ! MPI IO
       call read_or_write(.true., io, sizes, subsizes, starts, &
                          opt_nb_req=opt_nb_req, &
+                         opt_mpi_datarep=opt_mpi_datarep, &
                          freal=freal, &
                          dreal=dreal, &
                          fcplx=fcplx, &
@@ -523,6 +546,7 @@ contains
    !   - opt_dirname : This is mandatory if no IO reader / writer was provided
    !   - opt_mpi_xxx_info : Hints for MPI IO operations
    !   - opt_nb_req : id of the request for non-blocking MPI IO
+   !   - opt_mpi_datarep : 'native', 'internal' or 'external32'
    !   - freal / dreal / fcplx / dcplx / ints / logs : array
    !
    !   If opt_dirname is present, MPI IO will write to the file opt_dirname/varname
@@ -533,6 +557,7 @@ contains
                           opt_mpi_file_open_info, &
                           opt_mpi_file_set_view_info, &
                           opt_nb_req, &
+                          opt_mpi_datarep, &
                           opt_io, &
                           freal, dreal, fcplx, dcplx, ints, logs)
 
@@ -546,6 +571,7 @@ contains
       integer, intent(in), optional :: opt_mpi_file_open_info
       integer, intent(in), optional :: opt_mpi_file_set_view_info
       integer, optional :: opt_nb_req
+      character(len=*), intent(in), optional :: opt_mpi_datarep
       type(d2d_io_mpi), optional :: opt_io
       real(real32), contiguous, dimension(:, :, :), intent(IN), optional :: freal
       real(real64), contiguous, dimension(:, :, :), intent(IN), optional :: dreal
@@ -585,6 +611,7 @@ contains
                           opt_mpi_file_set_view_info=opt_mpi_file_set_view_info)
          call read_or_write(.false., opt_io, sizes, subsizes, starts, &
                             opt_nb_req=opt_nb_req, &
+                            opt_mpi_datarep=opt_mpi_datarep, &
                             freal=freal, &
                             dreal=dreal, &
                             fcplx=fcplx, &
@@ -597,6 +624,7 @@ contains
                       opt_mpi_file_open_info=opt_mpi_file_open_info, &
                       opt_mpi_file_set_view_info=opt_mpi_file_set_view_info)
          call read_or_write(.false., io, sizes, subsizes, starts, &
+                            opt_mpi_datarep=opt_mpi_datarep, &
                             freal=freal, &
                             dreal=dreal, &
                             fcplx=fcplx, &
@@ -619,6 +647,7 @@ contains
    !   - opt_dirname : This is mandatory if no IO reader / writer was provided
    !   - opt_mpi_xxx_info : Hints for MPI IO operations
    !   - opt_nb_req : id of the request for non-blocking MPI IO
+   !   - opt_mpi_datarep : 'native', 'internal' or 'external32'
    !   - freal / dreal / fcplx / dcplx / ints / logs : array
    !
    !   If opt_dirname is present, MPI IO will write read from the file opt_dirname/varname
@@ -629,6 +658,7 @@ contains
                          opt_mpi_file_open_info, &
                          opt_mpi_file_set_view_info, &
                          opt_nb_req, &
+                         opt_mpi_datarep, &
                          opt_io, &
                          freal, dreal, fcplx, dcplx, ints, logs)
 
@@ -642,6 +672,7 @@ contains
       integer, intent(in), optional :: opt_mpi_file_open_info
       integer, intent(in), optional :: opt_mpi_file_set_view_info
       integer, optional :: opt_nb_req
+      character(len=*), intent(in), optional :: opt_mpi_datarep
       type(d2d_io_mpi), optional :: opt_io
       real(real32), contiguous, dimension(:, :, :), intent(OUT), optional :: freal
       real(real64), contiguous, dimension(:, :, :), intent(OUT), optional :: dreal
@@ -681,6 +712,7 @@ contains
                           opt_mpi_file_set_view_info=opt_mpi_file_set_view_info)
          call read_or_write(.true., opt_io, sizes, subsizes, starts, &
                             opt_nb_req=opt_nb_req, &
+                            opt_mpi_datarep=opt_mpi_datarep, &
                             freal=freal, &
                             dreal=dreal, &
                             fcplx=fcplx, &
@@ -694,6 +726,7 @@ contains
                       opt_mpi_file_set_view_info=opt_mpi_file_set_view_info)
          call read_or_write(.true., io, sizes, subsizes, starts, &
                             opt_nb_req=opt_nb_req, &
+                            opt_mpi_datarep=opt_mpi_datarep, &
                             freal=freal, &
                             dreal=dreal, &
                             fcplx=fcplx, &
@@ -711,15 +744,18 @@ contains
    ! Inputs
    !   - io : d2d_io_mpi object obtained when opening the file
    !   - n : size for the array
+   !   - opt_mpi_datarep : 'native', 'internal' or 'external32'
    !   - freal / dreal / fcplx / dcplx / ints / logs : array
    !
    subroutine write_scalar(io, n, &
+                           opt_mpi_datarep, &
                            freal, dreal, fcplx, dcplx, ints, logs)
 
       implicit none
 
       type(d2d_io_mpi), intent(INOUT) :: io
       integer, intent(in) :: n
+      character(len=*), intent(in), optional :: opt_mpi_datarep
       real(real32), contiguous, dimension(:), intent(IN), optional :: freal
       real(real64), contiguous, dimension(:), intent(IN), optional :: dreal
       complex(real32), contiguous, dimension(:), intent(IN), optional :: fcplx
@@ -739,6 +775,7 @@ contains
 
       ! MPI IO
       call read_or_write_scalar(.false., io, size, subsize, &
+                                opt_mpi_datarep=opt_mpi_datarep, &
                                 freal=freal, &
                                 dreal=dreal, &
                                 fcplx=fcplx, &
@@ -754,15 +791,18 @@ contains
    ! Inputs
    !   - io : d2d_io_mpi object obtained when opening the file
    !   - n : size for the array
+   !   - opt_mpi_datarep : 'native', 'internal' or 'external32'
    !   - freal / dreal / fcplx / dcplx / ints / logs : array
    !
    subroutine read_scalar(io, n, &
+                          opt_mpi_datarep, &
                           freal, dreal, fcplx, dcplx, ints, logs)
 
       implicit none
 
       type(d2d_io_mpi), intent(INOUT) :: io
       integer, intent(in) :: n
+      character(len=*), intent(in), optional :: opt_mpi_datarep
       real(real32), contiguous, dimension(:), intent(OUT), optional :: freal
       real(real64), contiguous, dimension(:), intent(OUT), optional :: dreal
       complex(real32), contiguous, dimension(:), intent(OUT), optional :: fcplx
@@ -778,6 +818,7 @@ contains
 
       ! MPI IO
       call read_or_write_scalar(.true., io, size, subsize, &
+                                opt_mpi_datarep=opt_mpi_datarep, &
                                 freal=freal, &
                                 dreal=dreal, &
                                 fcplx=fcplx, &

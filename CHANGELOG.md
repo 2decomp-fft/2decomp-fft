@@ -14,6 +14,8 @@ _e.g._ vX.Y - YYYY-MM-DD and a new "Unreleased" section started above.
 - Add the possibility to combine DFT and r2r DCT / DST transforms when using the backend `fftw_f03` [PR #427](https://github.com/2decomp-fft/2decomp-fft/pull/427)
 - A short halo exchange interface which requires only the array and pencil orientation (with optional halo depth, otherwise default depth is used)
 - Halo exchange subroutines have been separated from the `update_halo` interface - `update_halo` retains the original behaviour of returning a new array with added halo entries, `halo_exchange` takes a halo-extended array and performs the data exchange to fill the halo entries (and is used internally by `update_halo`).
+- Allow the external code to select the node repartition. See [issue 439](https://github.com/2decomp-fft/2decomp-fft/issues/439) and [PR 440](https://github.com/2decomp-fft/2decomp-fft/pull/440).
+- Add a module to read environment variables. See [PR 440](https://github.com/2decomp-fft/2decomp-fft/pull/440).
 - Allow portable MPI IO. See [PR #433](https://github.com/2decomp-fft/2decomp-fft/pull/443).
 
 ### Fixed

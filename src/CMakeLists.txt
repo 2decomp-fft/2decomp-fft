@@ -12,6 +12,7 @@ file(GLOB files_decomp factor.f90
 		       io_utilities.f90
 		       interp.f90
 		       mem_pool.f90
+		       env_var.f90
 		       transpose_x_to_y.f90
 		       transpose_y_to_x.f90
 		       transpose_y_to_z.f90

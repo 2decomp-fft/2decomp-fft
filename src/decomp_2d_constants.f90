@@ -129,6 +129,13 @@ module decomp_2d_constants
 #endif
 
    !
+   ! Extra points can be located on the first CPUs or on the last
+   !
+   integer, parameter, public :: DECOMP_PARTITION_UNDEF = 0
+   integer, parameter, public :: DECOMP_PARTITION_FIRST = 1
+   integer, parameter, public :: DECOMP_PARTITION_LAST = 2
+
+   !
    ! Major and minor version number
    !
    integer, parameter :: D2D_MAJOR = 2

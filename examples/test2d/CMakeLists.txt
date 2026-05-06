@@ -13,6 +13,11 @@ set(case "timing2d_complex")
 set(case_dir "${test_dir}/${case}")
 CreateMPITest("${case_dir}" "${case}" "${files_timing2d_complex}" "" "" "" "1")
 
+file(GLOB files_node_order node_order.f90)
+set(case "node_order")
+set(case_dir "${test_dir}/${case}")
+CreateMPITest("${case_dir}" "${case}" "${files_node_order}" "" "" "" "1")
+
 if (NOT BUILD_TARGET MATCHES "gpu")
   file(GLOB files_decomp_pool decomp_pool.f90)
   set(case "decomp_pool")

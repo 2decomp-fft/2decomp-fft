@@ -53,8 +53,16 @@
 
 #ifdef DEBUG
      ! Check if a modification of the debug level is needed
-     call decomp_2d_debug()
+     decomp_debug = d2d_get_env_var("DECOMP_2D_DEBUG", decomp_debug)
 #endif
+
+     ! Set the default node repartition if needed
+     if (decomp_partition_default(1) == DECOMP_PARTITION_UNDEF) then
+        decomp_partition_default(1) = d2d_get_env_var("DECOMP_PARTITION_ROW", DECOMP_PARTITION_LAST)
+     end if
+     if (decomp_partition_default(2) == DECOMP_PARTITION_UNDEF) then
+        decomp_partition_default(2) = d2d_get_env_var("DECOMP_PARTITION_COL", DECOMP_PARTITION_LAST)
+     end if
 
      nx_global = nx
      ny_global = ny
@@ -126,7 +134,7 @@
      call init_neighbour
 
      ! actually generate all 2D decomposition information
-     call decomp_info_init(nx, ny, nz, decomp_main)
+     call decomp_info_init(nx, ny, nz, decomp_main, decomp_partition_default)
 
      ! make a copy of the decomposition information associated with the
      ! default global size in these global variables so applications can
@@ -198,6 +206,8 @@
      call decomp_2d_mpi_comm_free(DECOMP_2D_COMM_CART_Y)
      call decomp_2d_mpi_comm_free(DECOMP_2D_COMM_CART_Z)
 
+     decomp_partition_default = DECOMP_PARTITION_UNDEF
+
      call decomp_info_finalize(decomp_main)
 
      decomp_buf_size = 0
@@ -222,45 +232,6 @@
 
      return
   end subroutine decomp_2d_finalize_ref
-
-#ifdef DEBUG
-  !
-  ! Try to read the environment variable DECOMP_2D_DEBUG to change the debug level
-  !
-  ! The expected value is an integer below 9999
-  !
-  subroutine decomp_2d_debug
-
-     implicit none
-
-     integer :: ierror
-     character(len=4) :: val
-     character(len=*), parameter :: varname = "DECOMP_2D_DEBUG"
-
-     ! Read the variable
-     call get_environment_variable(varname, value=val, status=ierror)
-
-     ! Return if no variable, or no support for env. variable
-     if (ierror >= 1) return
-
-     ! Minor error, print warning and return
-     if (ierror /= 0) then
-        call decomp_2d_warning(__FILE__, &
-                               __LINE__, &
-                               ierror, &
-                               "Error when reading DECOMP_2D_DEBUG : "//val)
-        return
-     end if
-
-     ! Conversion to integer if possible
-     read (val, '(i4)', iostat=ierror) decomp_debug
-     if (ierror /= 0) then
-        call decomp_2d_warning(__FILE__, __LINE__, ierror, &
-                               "Error when reading DECOMP_2D_DEBUG : "//val)
-     end if
-
-  end subroutine decomp_2d_debug
-#endif
 
   !---------------------------------------------------------------------
   ! Auto-tuning algorithm to select the best 2D processor grid

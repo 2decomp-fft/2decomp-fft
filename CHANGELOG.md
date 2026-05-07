@@ -22,6 +22,7 @@ _e.g._ vX.Y - YYYY-MM-DD and a new "Unreleased" section started above.
 - Fixed the calculations of the displacement for MPI_ALL_TO_ALLV communication to avoid issue with 03 optimisation with come compilers [PR #422](https://github.com/2decomp-fft/2decomp-fft/pull/422)
 - Fixed halo operations in case of periodicity and 1D domain decomposition [PR #426](https://github.com/2decomp-fft/2decomp-fft/pull/426)
 - Fixed the memory pool and the size of the buffers when the number of cells is very high [PR #432](https://github.com/2decomp-fft/2decomp-fft/pull/432). See [issue 431](https://github.com/2decomp-fft/2decomp-fft/issues/431).
+- Restored variable `real2_type` for mpi_maxloc operations. See [PR #441](https://github.com/2decomp-fft/2decomp-fft/pull/441).
 
 ### Changed
 

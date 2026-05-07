@@ -65,6 +65,17 @@ module decomp_2d
    integer(kind(D2D_DEBUG_LEVEL_OFF)), public, save :: decomp_debug = D2D_DEBUG_LEVEL_OFF
 #endif
 
+   double precision, save, public :: d2d_t_y2z_pack = 0.d0
+   double precision, save, public :: d2d_t_y2z_mpi = 0.d0
+   double precision, save, public :: d2d_t_y2z_unpack = 0.d0
+   double precision, save, public :: d2d_t_z2y_pack = 0.d0
+   double precision, save, public :: d2d_t_z2y_mpi = 0.d0
+   double precision, save, public :: d2d_t_z2y_unpack = 0.d0
+   integer, save, public :: d2d_n_y2z_mpi_calls = 0
+   integer, save, public :: d2d_n_z2y_mpi_calls = 0
+   integer, save, public :: d2d_n_y2z_use_device_ptr = 0
+   integer, save, public :: d2d_n_z2y_use_device_ptr = 0
+
    !
    ! Extra points can be located on the first CPUs or on the last
    !
@@ -93,6 +104,13 @@ module decomp_2d
    ! Real / complex pointers to GPU buffers
    real(mytype), pointer, contiguous, dimension(:) :: work1_r, work2_r
    complex(mytype), pointer, contiguous, dimension(:) :: work1_c, work2_c
+#elif defined(_OPENMP_GPU)
+   ! Shared real/complex host buffers persistently mapped on the OpenMP device
+   real(mytype), target, allocatable, dimension(:) :: work1, work2
+   ! Real / complex pointers to shared buffers
+   real(mytype), pointer, contiguous, dimension(:) :: work1_r, work2_r
+   complex(mytype), pointer, contiguous, dimension(:) :: work1_c, work2_c
+   logical, save :: work_omp_mapped = .false.
 #endif
 
    ! public user routines
@@ -404,7 +422,7 @@ contains
       ! Local variables
       integer(c_size_t) :: buf_size
       integer :: errorcode, decomp_info_partition(2)
-#if defined(_GPU)
+#if defined(_GPU) || defined(_OPENMP_GPU)
       integer :: status
 #endif
 
@@ -506,6 +524,37 @@ contains
             call c_f_pointer(c_loc(work2), work2_c, [buf_size])
             call decomp_2d_cumpi_init(buf_size, work1, work2)
          end if
+#elif defined(_OPENMP_GPU)
+         if (associated(work1_r)) nullify (work1_r)
+         if (associated(work2_r)) nullify (work2_r)
+         if (associated(work1_c)) nullify (work1_c)
+         if (associated(work2_c)) nullify (work2_c)
+         if (allocated(work1)) then
+            if (work_omp_mapped) then
+               !$omp target exit data map(delete:work1(1:size(work1)), work2(1:size(work2)))
+               work_omp_mapped = .false.
+            end if
+            deallocate (work1)
+         end if
+         if (allocated(work2)) deallocate (work2)
+         allocate (work1(2_c_size_t * buf_size), STAT=status)
+         if (status /= 0) then
+            errorcode = 2
+            call decomp_2d_abort(__FILE__, __LINE__, errorcode, &
+                                 'Out of memory when allocating 2DECOMP workspace')
+         end if
+         allocate (work2(2_c_size_t * buf_size), STAT=status)
+         if (status /= 0) then
+            errorcode = 2
+            call decomp_2d_abort(__FILE__, __LINE__, errorcode, &
+                                 'Out of memory when allocating 2DECOMP workspace')
+         end if
+         call c_f_pointer(c_loc(work1), work1_r, [buf_size])
+         call c_f_pointer(c_loc(work2), work2_r, [buf_size])
+         call c_f_pointer(c_loc(work1), work1_c, [buf_size])
+         call c_f_pointer(c_loc(work2), work2_c, [buf_size])
+         !$omp target enter data map(alloc:work1(1:size(work1)), work2(1:size(work2)))
+         work_omp_mapped = .true.
 #endif
       end if
 

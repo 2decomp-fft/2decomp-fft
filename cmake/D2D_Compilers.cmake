@@ -55,9 +55,68 @@ if (NOT FLAGS_SET)
   set(FLAGS_SET 1 CACHE INTERNAL "Flags are set")
 endif()
 
-# Add OpenMP: to be used only for pure CPU
-if (ENABLE_OMP)
+# Add OpenMP for CPU threading or target offload
+if (ENABLE_OMP OR ENABLE_OPENMP_OFFLOAD)
   find_package(OpenMP)
+endif()
+
+if (ENABLE_OPENMP_OFFLOAD)
+  set(D2D_OPENMP_OFFLOAD_ARCH "gfx942" CACHE STRING
+      "OpenMP GPU offload target arch, e.g. gfx942 for MI300A/MI300X")
+  set(D2D_OPENMP_OFFLOAD_FLAGS "" CACHE STRING
+      "Extra compiler/linker flags for OpenMP GPU offload, e.g. '-fopenmp --offload-arch=gfx942'")
+
+  set(D2D_OPENMP_OFFLOAD_FLAGS_LIST "")
+
+  if (Fortran_COMPILER_NAME MATCHES "Flang")
+    include(CheckFortranCompilerFlag)
+
+    if (D2D_OPENMP_OFFLOAD_FLAGS)
+      separate_arguments(D2D_OPENMP_OFFLOAD_FLAGS_LIST NATIVE_COMMAND "${D2D_OPENMP_OFFLOAD_FLAGS}")
+    else()
+      set(_d2d_openmp_offload_candidates
+          "-fopenmp --offload-arch=${D2D_OPENMP_OFFLOAD_ARCH}"
+          "-fopenmp -fopenmp-targets=amdgcn-amd-amdhsa --offload-arch=${D2D_OPENMP_OFFLOAD_ARCH}"
+          "-fopenmp -fopenmp-targets=amdgcn-amd-amdhsa -Xopenmp-target=amdgcn-amd-amdhsa -march=${D2D_OPENMP_OFFLOAD_ARCH}")
+      foreach(_d2d_flag_cand IN LISTS _d2d_openmp_offload_candidates)
+        string(MAKE_C_IDENTIFIER "D2D_FORTRAN_FLAG_${_d2d_flag_cand}" _d2d_flag_cand_id)
+        check_fortran_compiler_flag("${_d2d_flag_cand}" ${_d2d_flag_cand_id})
+        if (${_d2d_flag_cand_id})
+          separate_arguments(D2D_OPENMP_OFFLOAD_FLAGS_LIST NATIVE_COMMAND "${_d2d_flag_cand}")
+          set(D2D_OPENMP_OFFLOAD_FLAGS "${_d2d_flag_cand}" CACHE STRING
+              "Extra compiler/linker flags for OpenMP GPU offload, e.g. '-fopenmp --offload-arch=gfx942'" FORCE)
+          break()
+        endif()
+      endforeach()
+    endif()
+
+    if (D2D_OPENMP_OFFLOAD_FLAGS_LIST)
+      message(STATUS "OpenMP GPU offload flags: ${D2D_OPENMP_OFFLOAD_FLAGS_LIST}")
+    else()
+      message(WARNING
+              "ENABLE_OPENMP_OFFLOAD=ON but no supported AMD OpenMP offload flag combination was detected "
+              "for ${CMAKE_Fortran_COMPILER}. Set D2D_OPENMP_OFFLOAD_FLAGS manually if needed.")
+    endif()
+  elseif (D2D_OPENMP_OFFLOAD_FLAGS)
+    separate_arguments(D2D_OPENMP_OFFLOAD_FLAGS_LIST NATIVE_COMMAND "${D2D_OPENMP_OFFLOAD_FLAGS}")
+  elseif (NOT OPENMP_FOUND AND NOT Fortran_COMPILER_NAME MATCHES "Cray")
+    message(FATAL_ERROR "ENABLE_OPENMP_OFFLOAD requires a Fortran OpenMP-capable compiler")
+  endif()
+
+  if (D2D_OPENMP_OFFLOAD_FLAGS_LIST)
+    foreach(_d2d_openmp_flag IN LISTS D2D_OPENMP_OFFLOAD_FLAGS_LIST)
+      add_compile_options($<$<COMPILE_LANGUAGE:Fortran>:${_d2d_openmp_flag}>)
+    endforeach()
+    add_link_options(${D2D_OPENMP_OFFLOAD_FLAGS_LIST})
+  endif()
+endif()
+
+if (ENABLE_OPENACC AND Fortran_COMPILER_NAME MATCHES "Cray")
+  add_link_options(-h acc)
+endif()
+
+if (ENABLE_OPENMP_OFFLOAD AND Fortran_COMPILER_NAME MATCHES "Cray")
+  add_link_options(-h omp)
 endif()
 
 if (CMAKE_BUILD_TYPE MATCHES "DEBUG")

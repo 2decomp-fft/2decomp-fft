@@ -1,0 +1,173 @@
+{
+  "version": 3,
+  "cmakeMinimumRequired": {
+    "major": 3,
+    "minor": 20,
+    "patch": 0
+  },
+  "configurePresets": [
+    {
+      "name": "nvidia-cuda-base",
+      "hidden": true,
+      "generator": "Unix Makefiles",
+      "binaryDir": "${sourceDir}/build/${presetName}",
+      "cacheVariables": {
+        "BUILD_TARGET": "gpu",
+        "ENABLE_CUDA": "ON",
+        "ENABLE_OPENACC": "ON",
+        "ENABLE_OPENMP_OFFLOAD": "OFF",
+        "ENABLE_NCCL": "OFF",
+        "FFT_Choice": "cufft",
+        "IO_BACKEND": "mpi",
+        "BUILD_TESTING": "ON"
+      }
+    },
+    {
+      "name": "amd-openmp-base",
+      "hidden": true,
+      "generator": "Unix Makefiles",
+      "binaryDir": "${sourceDir}/build/${presetName}",
+      "cacheVariables": {
+        "BUILD_TARGET": "gpu",
+        "ENABLE_CUDA": "OFF",
+        "ENABLE_OPENACC": "OFF",
+        "ENABLE_OPENMP_OFFLOAD": "ON",
+        "ENABLE_NCCL": "OFF",
+        "FFT_Choice": "generic",
+        "IO_BACKEND": "mpi",
+        "BUILD_TESTING": "ON",
+        "D2D_OPENMP_OFFLOAD_ARCH": "gfx942",
+        "CMAKE_Fortran_COMPILER": "mpif90"
+      }
+    },
+    {
+      "name": "rtx4000-cuda",
+      "inherits": "nvidia-cuda-base",
+      "displayName": "NVIDIA Quadro RTX 4000 CUDA",
+      "description": "CUDA/cuFFT build for Quadro RTX 4000, compute capability 7.5.",
+      "cacheVariables": {
+        "SET_CUDA_ARCH": "75",
+        "CMAKE_CUDA_ARCHITECTURES": "75"
+      }
+    },
+    {
+      "name": "rtx6000-cuda",
+      "inherits": "nvidia-cuda-base",
+      "displayName": "NVIDIA RTX 6000 Ada CUDA",
+      "description": "CUDA/cuFFT build for RTX 6000 Ada, compute capability 8.9.",
+      "cacheVariables": {
+        "SET_CUDA_ARCH": "89",
+        "CMAKE_CUDA_ARCHITECTURES": "89"
+      }
+    },
+    {
+      "name": "v100-cuda",
+      "inherits": "nvidia-cuda-base",
+      "displayName": "NVIDIA V100 CUDA",
+      "description": "CUDA/cuFFT build for V100, compute capability 7.0.",
+      "cacheVariables": {
+        "SET_CUDA_ARCH": "70",
+        "CMAKE_CUDA_ARCHITECTURES": "70"
+      }
+    },
+    {
+      "name": "a100-cuda",
+      "inherits": "nvidia-cuda-base",
+      "displayName": "NVIDIA A100 CUDA",
+      "description": "CUDA/cuFFT build for A100, compute capability 8.0.",
+      "cacheVariables": {
+        "SET_CUDA_ARCH": "80",
+        "CMAKE_CUDA_ARCHITECTURES": "80"
+      }
+    },
+    {
+      "name": "h100-cuda",
+      "inherits": "nvidia-cuda-base",
+      "displayName": "NVIDIA H100 CUDA",
+      "description": "CUDA/cuFFT build for H100, compute capability 9.0.",
+      "cacheVariables": {
+        "SET_CUDA_ARCH": "90",
+        "CMAKE_CUDA_ARCHITECTURES": "90"
+      }
+    },
+    {
+      "name": "h200-cuda",
+      "inherits": "nvidia-cuda-base",
+      "displayName": "NVIDIA H200 CUDA",
+      "description": "CUDA/cuFFT build for H200, compute capability 9.0.",
+      "cacheVariables": {
+        "SET_CUDA_ARCH": "90",
+        "CMAKE_CUDA_ARCHITECTURES": "90"
+      }
+    },
+    {
+      "name": "b200-cuda",
+      "inherits": "nvidia-cuda-base",
+      "displayName": "NVIDIA B200 CUDA",
+      "description": "CUDA/cuFFT build for B200, compute capability 10.0.",
+      "cacheVariables": {
+        "SET_CUDA_ARCH": "100",
+        "CMAKE_CUDA_ARCHITECTURES": "100"
+      }
+    },
+    {
+      "name": "mi300a-openmp-mpi",
+      "inherits": "amd-openmp-base",
+      "displayName": "AMD MI300A OpenMP Offload MPI",
+      "description": "OpenMP target offload build for MI300A using gfx942, MPI, and generic FFT."
+    },
+    {
+      "name": "mi300x-openmp-mpi",
+      "inherits": "amd-openmp-base",
+      "displayName": "AMD MI300X OpenMP Offload MPI",
+      "description": "OpenMP target offload build for MI300X using gfx942, MPI, and generic FFT."
+    }
+  ],
+  "buildPresets": [
+    {
+      "name": "rtx4000-cuda",
+      "configurePreset": "rtx4000-cuda",
+      "jobs": 8
+    },
+    {
+      "name": "rtx6000-cuda",
+      "configurePreset": "rtx6000-cuda",
+      "jobs": 8
+    },
+    {
+      "name": "v100-cuda",
+      "configurePreset": "v100-cuda",
+      "jobs": 8
+    },
+    {
+      "name": "a100-cuda",
+      "configurePreset": "a100-cuda",
+      "jobs": 8
+    },
+    {
+      "name": "h100-cuda",
+      "configurePreset": "h100-cuda",
+      "jobs": 8
+    },
+    {
+      "name": "h200-cuda",
+      "configurePreset": "h200-cuda",
+      "jobs": 8
+    },
+    {
+      "name": "b200-cuda",
+      "configurePreset": "b200-cuda",
+      "jobs": 8
+    },
+    {
+      "name": "mi300a-openmp-mpi",
+      "configurePreset": "mi300a-openmp-mpi",
+      "jobs": 8
+    },
+    {
+      "name": "mi300x-openmp-mpi",
+      "configurePreset": "mi300x-openmp-mpi",
+      "jobs": 8
+    }
+  ]
+}

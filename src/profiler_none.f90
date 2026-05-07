@@ -1,7 +1,11 @@
 !! SPDX-License-Identifier: BSD-3-Clause
 
 ! Preprocessor macro to deal with unused variables
+#if defined(__flang__) || defined(__FLANG)
+#define unused(x)
+#else
 #define unused(x) associate(tmp => x); end associate
+#endif
 
 !
 ! Dummy module when there is no profiler

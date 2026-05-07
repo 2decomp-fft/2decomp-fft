@@ -45,7 +45,7 @@
      if (nz <= 0) call decomp_2d_abort(__FILE__, __LINE__, nz, "Invalid value for nz")
 
      ! Check if the memory pool is available
-#if defined(_GPU)
+#if defined(_GPU) || defined(_OPENMP_GPU)
      use_pool = .false.
 #else
      use_pool = .true.
@@ -77,6 +77,17 @@
         periodic_y = .false.
         periodic_z = .false.
      end if
+
+     d2d_t_y2z_pack = 0.d0
+     d2d_t_y2z_mpi = 0.d0
+     d2d_t_y2z_unpack = 0.d0
+     d2d_t_z2y_pack = 0.d0
+     d2d_t_z2y_mpi = 0.d0
+     d2d_t_z2y_unpack = 0.d0
+     d2d_n_y2z_mpi_calls = 0
+     d2d_n_z2y_mpi_calls = 0
+     d2d_n_y2z_use_device_ptr = 0
+     d2d_n_z2y_use_device_ptr = 0
 
      if (p_row <= 0 .or. p_col <= 0) then
         ! determine the best 2D processor grid
@@ -222,6 +233,17 @@
 #if defined(_NCCL)
      call decomp_2d_nccl_fin()
 #endif
+#elif defined(_OPENMP_GPU)
+     if (associated(work1_r)) nullify (work1_r)
+     if (associated(work2_r)) nullify (work2_r)
+     if (associated(work1_c)) nullify (work1_c)
+     if (associated(work2_c)) nullify (work2_c)
+     if (work_omp_mapped) then
+        !$omp target exit data map(delete:work1(1:size(work1)), work2(1:size(work2)))
+        work_omp_mapped = .false.
+     end if
+     if (allocated(work1)) deallocate (work1)
+     if (allocated(work2)) deallocate (work2)
 #endif
 
      call decomp_2d_mpi_fin()

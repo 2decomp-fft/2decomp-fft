@@ -17,6 +17,12 @@ macro(DefineD2DTest run_dir
   foreach(ff IN LISTS loc_files)
     file(COPY ${ff} DESTINATION ${run_dir})
   endforeach()
+  if (BUILD_TARGET MATCHES "gpu" AND EXISTS "${run_dir}/bind.sh")
+    file(CHMOD "${run_dir}/bind.sh"
+         PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE
+                     GROUP_READ GROUP_EXECUTE
+                     WORLD_READ WORLD_EXECUTE)
+  endif()
   # Add includes directories and create executable
   include_directories(${CMAKE_SOURCE_DIR}/src)
   if (FFT_Choice MATCHES "fftw_f03")
@@ -37,7 +43,7 @@ macro(DefineD2DTest run_dir
   endforeach()
   # Linking
   target_link_libraries(${case} PRIVATE decomp2d examples_utils)
-  if (OPENMP_FOUND AND ENABLE_OMP)
+  if (OPENMP_FOUND AND (ENABLE_OMP OR ENABLE_OPENMP_OFFLOAD))
     target_link_libraries(${case} PRIVATE OpenMP::OpenMP_Fortran)
     if (Fortran_COMPILER_NAME MATCHES "Cray")
       target_link_options(${case} PRIVATE -h omp)
@@ -80,7 +86,8 @@ macro(CreateMPITest run_dir
   DefineD2DTest("${run_dir}" "${case}" "${app_src}" "${exe_dep}" "${defs}" "${files}" "${OMP_THREADS}")
   # Test launch parameters
   if (BUILD_TARGET MATCHES "gpu")
-    add_test(NAME ${case} COMMAND ${MPIEXEC_EXECUTABLE} ${MPIEXEC_NUMPROC_FLAG} ${MPI_NUMPROCS} ./bind.sh $<TARGET_FILE:${case}> ${TEST_ARGUMENTS} WORKING_DIRECTORY ${run_dir})
+    add_test(NAME ${case} COMMAND ${MPIEXEC_EXECUTABLE} ${MPIEXEC_NUMPROC_FLAG} ${MPI_NUMPROCS} /bin/bash ${run_dir}/bind.sh $<TARGET_FILE:${case}> ${TEST_ARGUMENTS} WORKING_DIRECTORY ${run_dir})
+    set_tests_properties(${case} PROPERTIES RUN_SERIAL TRUE)
   else ()  
     add_test(NAME ${case} COMMAND ${MPIEXEC_EXECUTABLE} ${MPIEXEC_NUMPROC_FLAG} ${MPI_NUMPROCS} $<TARGET_FILE:${case}> ${TEST_ARGUMENTS} WORKING_DIRECTORY ${run_dir})
     if (OPENMP_FOUND AND ENABLE_OMP)

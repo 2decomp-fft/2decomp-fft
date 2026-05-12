@@ -26,6 +26,14 @@ if [[ -z "${EXTRA_CPU:-}" ]]; then
   EXTRA_CPU=0
 fi
 
+if [[ -z "${GPUS_PER_NUMA:-}" ]]; then
+  GPUS_PER_NUMA=6
+fi
+
+if [[ -z "${CORES_PER_NUMA:-}" ]]; then
+  CORES_PER_NUMA=24
+fi
+
 # Determine the currently visible GPU list from existing env or Slurm metadata.
 VISIBLE_GPUS="${ROCR_VISIBLE_DEVICES:-${HIP_VISIBLE_DEVICES:-${CUDA_VISIBLE_DEVICES:-${SLURM_STEP_GPUS:-${SLURM_JOB_GPUS:-}}}}}"
 CPU_BASES=(0 24 48 72)
@@ -38,25 +46,49 @@ if [[ -n "${VISIBLE_GPUS}" ]]; then
   else
     SELECTED_GPU="${GPU_LIST[0]}"
   fi
-  export CUDA_VISIBLE_DEVICES="${SELECTED_GPU}"
-  export HIP_VISIBLE_DEVICES="${SELECTED_GPU}"
-  export ROCR_VISIBLE_DEVICES="${SELECTED_GPU}"
   echo "[LOG] rank=${GLOBAL_RANK} local=${LOCAL_RANK}: bind from visible list -> GPU ${SELECTED_GPU}"
 else
-  export CUDA_VISIBLE_DEVICES="${LOCAL_RANK}"
-  export HIP_VISIBLE_DEVICES="${LOCAL_RANK}"
-  export ROCR_VISIBLE_DEVICES="${LOCAL_RANK}"
-  echo "[LOG] rank=${GLOBAL_RANK} local=${LOCAL_RANK}: bind by local rank -> GPU ${LOCAL_RANK}"
+  SELECTED_GPU="${LOCAL_RANK}"
+  echo "[LOG] rank=${GLOBAL_RANK} local=${LOCAL_RANK}: bind by local rank -> GPU ${SELECTED_GPU}"
 fi
 
-if [[ "${SELECTED_GPU}" =~ ^[0-3]$ ]]; then
-  CPU_START=$((CPU_BASES[SELECTED_GPU] + CPU_SHIFT))
+GPU_BIND_BACKEND="${GPU_BIND_BACKEND:-rocm}"
+case "${GPU_BIND_BACKEND}" in
+  cuda)
+    export CUDA_VISIBLE_DEVICES="${SELECTED_GPU}"
+    unset HIP_VISIBLE_DEVICES
+    unset ROCR_VISIBLE_DEVICES
+    ;;
+  rocm)
+    export ROCR_VISIBLE_DEVICES="${SELECTED_GPU}"
+    unset HIP_VISIBLE_DEVICES
+    unset CUDA_VISIBLE_DEVICES
+    ;;
+  *)
+    echo "[ERROR] GPU_BIND_BACKEND must be either 'rocm' or 'cuda' (got '${GPU_BIND_BACKEND}')" >&2
+    exit 2
+    ;;
+esac
+
+# After masking to a single visible GPU, OpenMP should use logical device 0.
+export OMP_DEFAULT_DEVICE=0
+
+if [[ "${SELECTED_GPU}" =~ ^[0-9]+$ ]]; then
+  GPU_NUMA=$((SELECTED_GPU / GPUS_PER_NUMA))
+  GPU_LOCAL_INDEX=$((SELECTED_GPU % GPUS_PER_NUMA))
+  CPU_SLOT_STRIDE=$((CORES_PER_NUMA / GPUS_PER_NUMA))
+  if (( GPU_NUMA < ${#CPU_BASES[@]} )); then
+    CPU_START=$((CPU_BASES[GPU_NUMA] + GPU_LOCAL_INDEX * CPU_SLOT_STRIDE + CPU_SHIFT))
+  else
+    CPU_START=$((RANK_STRIDE * LOCAL_RANK + CPU_SHIFT))
+  fi
 else
   CPU_START=$((RANK_STRIDE * LOCAL_RANK + CPU_SHIFT))
 fi
 CPU_STOP=$((CPU_START + OMP_NUM_THREADS * OMP_STRIDE - 1 + EXTRA_CPU))
 export GOMP_CPU_AFFINITY="${CPU_START}-${CPU_STOP}:${OMP_STRIDE}"
 
+echo "[LOG] rank=${GLOBAL_RANK} local=${LOCAL_RANK}: backend=${GPU_BIND_BACKEND} physical_gpu=${SELECTED_GPU} gpu_numa=${GPU_NUMA:-unknown} CUDA=${CUDA_VISIBLE_DEVICES:-unset} HIP=${HIP_VISIBLE_DEVICES:-unset} ROCR=${ROCR_VISIBLE_DEVICES:-unset} OMP=${OMP_DEFAULT_DEVICE}"
 echo "[LOG] rank=${GLOBAL_RANK} local=${LOCAL_RANK}: cpu=${GOMP_CPU_AFFINITY} local_size=${LOCAL_SIZE}"
 
 echo

@@ -1,4 +1,4 @@
-# Compiler F;ags for NAG
+# Compiler Flags for NAG
 
 set(D2D_FFLAGS "-fpp")
 set(D2D_FFLAGS_RELEASE "-O3")

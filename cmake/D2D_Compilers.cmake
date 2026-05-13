@@ -5,7 +5,10 @@ message(STATUS "COMP ID ${Fortran_COMPILER_NAME}")
 message(STATUS "Fortran compiler name ${Fortran_COMPILER_NAME}")
 message(STATUS "Fortran compiler version ${CMAKE_Fortran_COMPILER_VERSION}")
 
-
+# Add OpenMP for CPU threading or target offload
+if (ENABLE_OMP OR ENABLE_OPENMP_OFFLOAD)
+  find_package(OpenMP)
+endif()
 
 if (Fortran_COMPILER_NAME MATCHES "GNU")
   # gfortran
@@ -55,10 +58,6 @@ if (NOT FLAGS_SET)
   set(FLAGS_SET 1 CACHE INTERNAL "Flags are set")
 endif()
 
-# Add OpenMP for CPU threading or target offload
-if (ENABLE_OMP OR ENABLE_OPENMP_OFFLOAD)
-  find_package(OpenMP)
-endif()
 
 if (ENABLE_OPENMP_OFFLOAD)
   set(D2D_OPENMP_OFFLOAD_ARCH "gfx942" CACHE STRING

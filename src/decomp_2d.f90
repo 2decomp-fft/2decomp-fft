@@ -5,7 +5,6 @@
 module decomp_2d
 
    use MPI
-   use iso_c_binding, only: c_size_t
    use, intrinsic :: iso_fortran_env, only: real32, real64
    use factor
    use decomp_2d_constants
@@ -19,6 +18,10 @@ module decomp_2d
    use decomp_2d_nccl
 #endif
 #endif
+#if defined(_OPENMP_GPU)
+   use iso_c_binding
+   use hipfort
+#endif  
    use m_info, only: decomp_info => decomp_info ! Expose decomp_info from 2decomp
    use m_info, only: decomp_main => decomp_main ! Expose decomp_main from 2decomp
    use m_decomp_pool
@@ -105,12 +108,8 @@ module decomp_2d
    real(mytype), pointer, contiguous, dimension(:) :: work1_r, work2_r
    complex(mytype), pointer, contiguous, dimension(:) :: work1_c, work2_c
 #elif defined(_OPENMP_GPU)
-   ! Shared real/complex host buffers persistently mapped on the OpenMP device
-   real(mytype), target, allocatable, dimension(:) :: work1, work2
-   ! Real / complex pointers to shared buffers
-   real(mytype), pointer, contiguous, dimension(:) :: work1_r, work2_r
-   complex(mytype), pointer, contiguous, dimension(:) :: work1_c, work2_c
-   logical, save :: work_omp_mapped = .false.
+   real(mytype), pointer, contiguous, dimension(:) :: work1_r_d, work2_r_d
+   complex(mytype), pointer, contiguous, dimension(:) :: work1_c_d, work2_c_d
 #endif
 
    ! public user routines
@@ -424,6 +423,7 @@ contains
       integer :: errorcode, decomp_info_partition(2)
 #if defined(_GPU) || defined(_OPENMP_GPU)
       integer :: status
+      integer :: ierr
 #endif
 
       ! verify the global size can actually be distributed as pencils
@@ -525,36 +525,10 @@ contains
             call decomp_2d_cumpi_init(buf_size, work1, work2)
          end if
 #elif defined(_OPENMP_GPU)
-         if (associated(work1_r)) nullify (work1_r)
-         if (associated(work2_r)) nullify (work2_r)
-         if (associated(work1_c)) nullify (work1_c)
-         if (associated(work2_c)) nullify (work2_c)
-         if (allocated(work1)) then
-            if (work_omp_mapped) then
-               !$omp target exit data map(delete:work1(1:size(work1)), work2(1:size(work2)))
-               work_omp_mapped = .false.
-            end if
-            deallocate (work1)
-         end if
-         if (allocated(work2)) deallocate (work2)
-         allocate (work1(2_c_size_t * buf_size), STAT=status)
-         if (status /= 0) then
-            errorcode = 2
-            call decomp_2d_abort(__FILE__, __LINE__, errorcode, &
-                                 'Out of memory when allocating 2DECOMP workspace')
-         end if
-         allocate (work2(2_c_size_t * buf_size), STAT=status)
-         if (status /= 0) then
-            errorcode = 2
-            call decomp_2d_abort(__FILE__, __LINE__, errorcode, &
-                                 'Out of memory when allocating 2DECOMP workspace')
-         end if
-         call c_f_pointer(c_loc(work1), work1_r, [buf_size])
-         call c_f_pointer(c_loc(work2), work2_r, [buf_size])
-         call c_f_pointer(c_loc(work1), work1_c, [buf_size])
-         call c_f_pointer(c_loc(work2), work2_c, [buf_size])
-         !$omp target enter data map(alloc:work1(1:size(work1)), work2(1:size(work2)))
-         work_omp_mapped = .true.
+         ierr = hipMalloc(work1_r_d, buf_size)
+         ierr = hipMalloc(work2_r_d, buf_size)
+         ierr = hipMalloc(work1_c_d, 2_c_size_t * buf_size)
+         ierr = hipMalloc(work2_c_d, 2_c_size_t * buf_size)
 #endif
       end if
 

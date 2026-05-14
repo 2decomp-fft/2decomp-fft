@@ -66,10 +66,8 @@ contains
 #endif
 #endif
       else
-#if defined(_GPU)
+#if defined(_GPU) || defined(_OPENMP_GPU)
          call transpose_y_to_z_real(src, dst, decomp, work1_r_d, work2_r_d)
-#elif defined(_OPENMP_GPU)
-         call transpose_y_to_z_real(src, dst, decomp, work1_r, work2_r)
 #else
          if (use_pool) then
             call decomp_pool_get(work1_r)
@@ -129,18 +127,10 @@ contains
                                                decomp%y2count, &
                                                decomp%z2count)
 #     else
-#       if defined(_OPENMP_GPU)
          d2d_n_y2z_use_device_ptr = d2d_n_y2z_use_device_ptr + 1
-         !$omp target data map(present,alloc:wk1,wk2) use_device_ptr(wk1, wk2)
          call MPI_ALLTOALL(wk1, decomp%y2count, real_type, &
                            wk2, decomp%z2count, real_type, &
                            DECOMP_2D_COMM_ROW, ierror)
-         !$omp end target data
-#       else
-         call MPI_ALLTOALL(wk1, decomp%y2count, real_type, &
-                           wk2, decomp%z2count, real_type, &
-                           DECOMP_2D_COMM_ROW, ierror)
-#       endif
          if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_ALLTOALL")
 #     endif
 #   else
@@ -156,18 +146,10 @@ contains
                                                decomp%y2count, &
                                                decomp%z2count)
 #   else
-#     if defined(_OPENMP_GPU)
          d2d_n_y2z_use_device_ptr = d2d_n_y2z_use_device_ptr + 1
-         !$omp target data map(present,alloc:wk1,wk2) use_device_ptr(wk1, wk2)
          call MPI_ALLTOALL(wk1, decomp%y2count, real_type, &
                            wk2, decomp%z2count, real_type, &
                            DECOMP_2D_COMM_ROW, ierror)
-         !$omp end target data
-#     else
-         call MPI_ALLTOALL(wk1, decomp%y2count, real_type, &
-                           wk2, decomp%z2count, real_type, &
-                           DECOMP_2D_COMM_ROW, ierror)
-#     endif
          if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_ALLTOALL")
 #   endif
       end if
@@ -183,19 +165,11 @@ contains
                                             decomp%z2cnts, &
                                             dims(2))
 #     else
-      ! CUDA aware MPI
-#       if defined(_OPENMP_GPU)
+      ! GPU aware MPI
       d2d_n_y2z_use_device_ptr = d2d_n_y2z_use_device_ptr + 1
-      !$omp target data map(present,alloc:wk1,wk2) use_device_ptr(wk1, wk2)
       call MPI_ALLTOALLV(wk1, decomp%y2cnts, decomp%y2disp, real_type, &
                          wk2, decomp%z2cnts, decomp%z2disp, real_type, &
                          DECOMP_2D_COMM_ROW, ierror)
-      !$omp end target data
-#       else
-      call MPI_ALLTOALLV(wk1, decomp%y2cnts, decomp%y2disp, real_type, &
-                         wk2, decomp%z2cnts, decomp%z2disp, real_type, &
-                         DECOMP_2D_COMM_ROW, ierror)
-#       endif
       if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_ALLTOALLV")
 
 #     endif
@@ -302,7 +276,7 @@ contains
          call transpose_y_to_z_complex(src, dst, decomp, work1_c_d, work2_c_d, &
                                        work1_r_d, work2_r_d)
 #elif defined(_OPENMP_GPU)
-         call transpose_y_to_z_complex(src, dst, decomp, work1_c, work2_c)
+         call transpose_y_to_z_complex(src, dst, decomp, work1_c_d, work2_c_d)
 #else
          if (use_pool) then
             call decomp_pool_get(work1_c)
@@ -364,17 +338,9 @@ contains
                                                 decomp%y2count, &
                                                 decomp%z2count)
 #     else
-#       if defined(_OPENMP_GPU)
-         !$omp target data map(present,alloc:wk1,wk2) use_device_ptr(wk1, wk2)
          call MPI_ALLTOALL(wk1, decomp%y2count, complex_type, &
                            wk2, decomp%z2count, complex_type, &
                            DECOMP_2D_COMM_ROW, ierror)
-         !$omp end target data
-#       else
-         call MPI_ALLTOALL(wk1, decomp%y2count, complex_type, &
-                           wk2, decomp%z2count, complex_type, &
-                           DECOMP_2D_COMM_ROW, ierror)
-#       endif
          if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_ALLTOALL")
 #     endif
 #   else
@@ -392,17 +358,9 @@ contains
                                                 decomp%y2count, &
                                                 decomp%z2count)
 #     else
-#       if defined(_OPENMP_GPU)
-         !$omp target data map(present,alloc:wk1,wk2) use_device_ptr(wk1, wk2)
          call MPI_ALLTOALL(wk1, decomp%y2count, complex_type, &
                            wk2, decomp%z2count, complex_type, &
                            DECOMP_2D_COMM_ROW, ierror)
-         !$omp end target data
-#       else
-         call MPI_ALLTOALL(wk1, decomp%y2count, complex_type, &
-                           wk2, decomp%z2count, complex_type, &
-                           DECOMP_2D_COMM_ROW, ierror)
-#       endif
          if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_ALLTOALL")
 #     endif
       end if
@@ -418,17 +376,9 @@ contains
                                              decomp%z2cnts, &
                                              dims(2))
 #     else
-#       if defined(_OPENMP_GPU)
-      !$omp target data map(present,alloc:wk1,wk2) use_device_ptr(wk1, wk2)
       call MPI_ALLTOALLV(wk1, decomp%y2cnts, decomp%y2disp, complex_type, &
                          wk2, decomp%z2cnts, decomp%z2disp, complex_type, &
                          DECOMP_2D_COMM_ROW, ierror)
-      !$omp end target data
-#       else
-      call MPI_ALLTOALLV(wk1, decomp%y2cnts, decomp%y2disp, complex_type, &
-                         wk2, decomp%z2cnts, decomp%z2disp, complex_type, &
-                         DECOMP_2D_COMM_ROW, ierror)
-#       endif
       if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_ALLTOALLV")
 #     endif
 #   else
@@ -522,7 +472,7 @@ contains
          !$acc end host_data
          if (istat /= 0) call decomp_2d_abort(__FILE__, __LINE__, istat, "cudaMemcpy2D")
 #elif defined(_OPENMP_GPU)
-         !$omp target teams distribute parallel do private(pos) collapse(3) map(present,alloc:in,out)
+         !$omp target teams distribute parallel do private(pos) collapse(3) map(present,alloc:in)
          do k = 1, n3
             do j = i1, i2
                do i = 1, n1
@@ -593,7 +543,7 @@ contains
          !$acc end host_data
          if (istat /= 0) call decomp_2d_abort(__FILE__, __LINE__, istat, "cudaMemcpy2D")
 #elif defined(_OPENMP_GPU)
-         !$omp target teams distribute parallel do private(pos) collapse(3) map(present,alloc:in,out)
+         !$omp target teams distribute parallel do private(pos) collapse(3) map(present,alloc:in)
          do k = 1, n3
             do j = i1, i2
                do i = 1, n1
@@ -664,7 +614,7 @@ contains
          !$acc end host_data
          if (istat /= 0) call decomp_2d_abort(__FILE__, __LINE__, istat, "cudaMemcpy2D")
 #elif defined(_OPENMP_GPU)
-         !$omp target teams distribute parallel do private(pos) collapse(3) map(present,alloc:in,out)
+         !$omp target teams distribute parallel do private(pos) collapse(3) map(present,alloc:out)
          do k = i1, i2
             do j = 1, n2
                do i = 1, n1
@@ -734,7 +684,7 @@ contains
          !$acc end host_data
          if (istat /= 0) call decomp_2d_abort(__FILE__, __LINE__, istat, "cudaMemcpy2D")
 #elif defined(_OPENMP_GPU)
-         !$omp target teams distribute parallel do private(pos) collapse(3) map(present,alloc:in,out)
+         !$omp target teams distribute parallel do private(pos) collapse(3) map(present,alloc:out)
          do k = i1, i2
             do j = 1, n2
                do i = 1, n1

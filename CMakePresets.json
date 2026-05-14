@@ -114,13 +114,23 @@
       "name": "mi300a-openmp-mpi",
       "inherits": "amd-openmp-base",
       "displayName": "AMD MI300A OpenMP Offload MPI",
-      "description": "OpenMP target offload build for MI300A using gfx942, MPI, and generic FFT."
+      "description": "OpenMP target offload build for MI300A using gfx942, MPI, and generic FFT.",
+      "cacheVariables": {
+        "CMAKE_Fortran_COMPILER": "/shared/apps/ubuntu/opt/rocmplus-7.2.0/openmpi-5.0.10-ucc-1.6.0-ucx-1.19.1-xpmem-2.7.4/bin/mpif90",
+       "CMAKE_TRY_COMPILE_TARGET_TYPE": "STATIC_LIBRARY",
+       "CMAKE_Fortran_FLAGS": "-O2 -fopenmp -cpp -I/shared/apps/ubuntu/opt/rocm-7.2.0/include/hipfort/amdgcn -lhipfort-amdgcn -lhipfft -lamdhip64 --offload-arch=gfx942",
+       "CMAKE_EXE_LINKER_FLAGS": "-L/shared/apps/ubuntu/opt/rocm-7.2.0/lib -lhipfort-amdgcn -lhipfft -lamdhip64 -fopenmp --offload-arch=gfx942"
+     }
     },
     {
       "name": "mi300x-openmp-mpi",
       "inherits": "amd-openmp-base",
       "displayName": "AMD MI300X OpenMP Offload MPI",
-      "description": "OpenMP target offload build for MI300X using gfx942, MPI, and generic FFT."
+      "description": "OpenMP target offload build for MI300X using gfx942, MPI, and generic FFT.",
+      "cacheVariables": {
+        "CMAKE_Fortran_FLAGS": "-O2 -fopenmp -cpp -I$env{ROCM_PATH}/include/hipfort/amdgcn --offload-arch=gfx942",
+        "CMAKE_EXE_LINKER_FLAGS": "-L$env{ROCM_PATH}/lib -lhipfort-amdgcn -lhipfft -lamdhip64 -fopenmp --offload-arch=gfx942"
+     }
     }
   ],
   "buildPresets": [

@@ -233,17 +233,7 @@
 #if defined(_NCCL)
      call decomp_2d_nccl_fin()
 #endif
-#elif defined(_OPENMP_GPU)
-     if (associated(work1_r)) nullify (work1_r)
-     if (associated(work2_r)) nullify (work2_r)
-     if (associated(work1_c)) nullify (work1_c)
-     if (associated(work2_c)) nullify (work2_c)
-     if (work_omp_mapped) then
-        !$omp target exit data map(delete:work1(1:size(work1)), work2(1:size(work2)))
-        work_omp_mapped = .false.
-     end if
-     if (allocated(work1)) deallocate (work1)
-     if (allocated(work2)) deallocate (work2)
+
 #endif
 
      call decomp_2d_mpi_fin()

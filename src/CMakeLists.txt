@@ -112,6 +112,19 @@ elseif(MKL_FOUND)
   target_link_libraries(decomp2d PUBLIC $<LINK_ONLY:MKL::MKL>)
 endif(FFTW_FOUND)
 
+#target_include_directories(decomp2d PUBLIC /shared/apps/ubuntu/opt/rocm-7.2.0/lib)
+
+set(ROCM_PATH /shared/apps/ubuntu/opt/rocm-7.2.0)
+target_link_libraries(decomp2d PUBLIC 
+	${ROCM_PATH}/lib/libhipfort-amdgcn.a 
+	${ROCM_PATH}/lib/libhipfft.so 
+	${ROCM_PATH}/lib/libamdhip64.so
+)
+target_link_options(decomp2d PUBLIC
+	-fopenmp
+	--offload-arch=gfx942
+)
+
 if (ENABLE_PROFILER)
   target_compile_definitions(decomp2d PUBLIC -DPROFILER)
   if (caliper_FOUND)

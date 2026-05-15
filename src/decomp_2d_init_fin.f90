@@ -224,13 +224,12 @@
 #endif
 #endif
 
-     call decomp_2d_mpi_fin()
-
      if (decomp_profiler_d2d) call decomp_profiler_end("decomp_2d_fin")
      ! Finalize the profiler
      call decomp_profiler_fin()
 
-     return
+     call decomp_2d_mpi_fin()
+
   end subroutine decomp_2d_finalize_ref
 
   !---------------------------------------------------------------------

@@ -8,9 +8,10 @@
 !
 module decomp_2d_profiler
 
+   use, intrinsic :: iso_fortran_env, only: real64
    use decomp_2d_constants, only: decomp_profiler_none
-   use decomp_2d_mpi, only : nrank, decomp_2d_abort, decomp_2d_mpi_allreduce
-   use MPI, only : MPI_WTIME, MPI_MAX, MPI_MIN, MPI_SUM
+   use decomp_2d_mpi, only: nrank, nproc, decomp_2d_abort, decomp_2d_mpi_allreduce
+   use MPI, only: MPI_WTIME, MPI_MAX, MPI_MIN, MPI_SUM
 
    implicit none
 
@@ -94,13 +95,13 @@ contains
 
       ! Allocate memory if needed
       if (nmax_timers > 0) then
-         allocate(timer(nmax_timers))
+         allocate (timer(nmax_timers))
          timer = 0.d0
-         allocate(timer_start(nmax_timers))
+         allocate (timer_start(nmax_timers))
          timer_start = 0.d0
-         allocate(timer_n(nmax_timers))
+         allocate (timer_n(nmax_timers))
          timer_n = 0
-         allocate(timer_name(nmax_timers))
+         allocate (timer_name(nmax_timers))
       end if
 
    end subroutine decomp_profiler_init_noarg
@@ -120,10 +121,10 @@ contains
       if (nmax_timers > 0) then
          ncur_timers = 0
          nmax_timers = 0
-         deallocate(timer)
-         deallocate(timer_start)
-         deallocate(timer_n)
-         deallocate(timer_name)
+         deallocate (timer)
+         deallocate (timer_start)
+         deallocate (timer_n)
+         deallocate (timer_name)
       end if
 
    end subroutine decomp_profiler_fin_noarg
@@ -255,7 +256,7 @@ contains
       ncur_timers = ncur_timers + 1
       if (ncur_timers > nmax_timers) call decomp_2d_abort(__FILE__, __LINE__, ncur_timers, "Invalid number of timers")
       output = ncur_timers
-      timer_name(output)(:) = ''
+      timer_name(output) (:) = ''
       timer_name(output) = trim(name)
 
    end function timer_find_or_create
@@ -279,7 +280,7 @@ contains
       if (output > 0) return
 
       ! Timer not found, error
-      call decomp_2d_abort(__FILE__, __LINE__, output, "Timer " // trim(name) // "not available")
+      call decomp_2d_abort(__FILE__, __LINE__, output, "Timer "//trim(name)//"not available")
 
    end function timer_find
 
@@ -298,7 +299,7 @@ contains
       if (ncur_timers <= 0) return
 
       ! Get the IO unit
-      if (nrank == 0) open(newunit=io_unit, file='decomp_2d_perf.log', form='formatted')
+      if (nrank == 0) open (newunit=io_unit, file='decomp_2d_perf.log', form='formatted')
 
       do id = 1, ncur_timers
          ! Compute min, max and average
@@ -309,13 +310,13 @@ contains
          timer_avg = timer_avg / real(timer_n(id), real64) / real(nproc, real64)
          ! Print
          if (nrank == 0) then
-            write(io_unit, *) "Timer " // trim(timer_name(id)) // " avg, min, max"
-            write(io_unit, *) "   ", real(timer_avg, 4), real(timer_min, 4), real(timer_max, 4)
+            write (io_unit, *) "Timer "//trim(timer_name(id))//" avg, min, max"
+            write (io_unit, *) "   ", real(timer_avg, 4), real(timer_min, 4), real(timer_max, 4)
          end if
       end do
 
       ! Close the IO unit
-      if (nrank == 0) close(io_unit)
+      if (nrank == 0) close (io_unit)
 
    end subroutine timer_print
 

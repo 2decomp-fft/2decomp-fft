@@ -273,14 +273,14 @@ contains
       integer :: output
 
       ! Safety check
-      if (nmax_timers <= 0) call decomp_2d_abort(__FILE__, __LINE__, nmax_timers, "Invalid number of timers")
+      if (ncur_timers <= 0) call decomp_2d_abort(__FILE__, __LINE__, ncur_timers, "Invalid number of timers")
 
       ! Try to find the given name
       output = timer_search(name)
       if (output > 0) return
 
       ! Timer not found, error
-      call decomp_2d_abort(__FILE__, __LINE__, output, "Timer "//trim(name)//"not available")
+      call decomp_2d_abort(__FILE__, __LINE__, output, "Timer "//trim(name)//" not available")
 
    end function timer_find
 

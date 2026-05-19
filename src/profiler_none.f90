@@ -307,6 +307,8 @@ contains
          call decomp_2d_mpi_allreduce(time, timer_min, MPI_MIN)
          call decomp_2d_mpi_allreduce(time, timer_max, MPI_MAX)
          call decomp_2d_mpi_allreduce(time, timer_avg, MPI_SUM)
+         timer_min = timer_min / real(timer_n(id), real64)
+         timer_max = timer_max / real(timer_n(id), real64)
          timer_avg = timer_avg / real(timer_n(id), real64) / real(nproc, real64)
          ! Print
          if (nrank == 0) then

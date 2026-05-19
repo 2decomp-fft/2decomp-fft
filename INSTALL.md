@@ -180,6 +180,7 @@ $ cmake -S $path_to_sources -B $path_to_build_directory -DENABLE_PROFILER=calipe
 ```
 where `ENABLE_PROFILER` is set to the profiling tool desired, currently supported values are: `caliper`.
 Note that when using `caliper` a C++ compiler is required as indicated in the above command line.
+A generic profiler is integrated in the library when caliper is not available.
 
 ## Miscellaneous
 

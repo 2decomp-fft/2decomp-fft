@@ -193,7 +193,7 @@ contains
       ! Get the ID of the provided timer
       id = timer_find(timer_name)
 
-      ! Update the timer
+      ! Increment the timer duration and the associated counter
       deltaT = MPI_WTIME() - timer_start(id)
       timer(id) = timer(id) + deltaT
       timer_n(id) = timer_n(id) + 1

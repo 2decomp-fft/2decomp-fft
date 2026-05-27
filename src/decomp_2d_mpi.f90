@@ -19,10 +19,18 @@ module decomp_2d_mpi
 
    public :: decomp_2d_mpi_init, &
              decomp_2d_mpi_fin, &
+             decomp_2d_mpi_allreduce, &
              decomp_2d_mpi_comm_free, &
              decomp_2d_mpi_wait, &
              decomp_2d_abort, &
              decomp_2d_warning
+
+   interface decomp_2d_mpi_allreduce
+      module procedure decomp_2d_mpi_allreduce_freal
+      module procedure decomp_2d_mpi_allreduce_freal_inplace
+      module procedure decomp_2d_mpi_allreduce_dreal
+      module procedure decomp_2d_mpi_allreduce_dreal_inplace
+   end interface decomp_2d_mpi_allreduce
 
    interface decomp_2d_abort
       module procedure decomp_2d_abort_basic
@@ -101,6 +109,76 @@ contains
       decomp_2d_comm = MPI_COMM_NULL
 
    end subroutine decomp_2d_mpi_fin
+
+   ! Small wrapper to perform MPI_ALLREDUCE operations on scalars
+   subroutine decomp_2d_mpi_allreduce_freal(data, output, operation)
+
+      implicit none
+
+      ! Arguments
+      real(real32), intent(in) :: data
+      integer, intent(in) :: operation
+      real(real32), intent(out) :: output
+
+      ! Local variable
+      integer :: ierror
+
+      call MPI_ALLREDUCE(data, output, 1, MPI_REAL, operation, decomp_2d_comm, ierror)
+      if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_ALLREDUCE")
+
+   end subroutine decomp_2d_mpi_allreduce_freal
+
+   ! Small wrapper to perform MPI_ALLREDUCE operations on scalars
+   subroutine decomp_2d_mpi_allreduce_freal_inplace(data, operation)
+
+      implicit none
+
+      ! Arguments
+      real(real32), intent(inout) :: data
+      integer, intent(in) :: operation
+      
+      ! Local variable
+      integer :: ierror
+      
+      call MPI_ALLREDUCE(MPI_IN_PLACE, data, 1, MPI_REAL, operation, decomp_2d_comm, ierror)
+      if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_ALLREDUCE")
+   
+   end subroutine decomp_2d_mpi_allreduce_freal_inplace
+
+   ! Small wrapper to perform MPI_ALLREDUCE operations on scalars
+   subroutine decomp_2d_mpi_allreduce_dreal(data, output, operation)
+
+      implicit none
+
+      ! Arguments
+      real(real64), intent(in) :: data
+      integer, intent(in) :: operation
+      real(real64), intent(out) :: output
+
+      ! Local variable
+      integer :: ierror
+
+      call MPI_ALLREDUCE(data, output, 1, MPI_DOUBLE_PRECISION, operation, decomp_2d_comm, ierror)
+      if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_ALLREDUCE")
+
+   end subroutine decomp_2d_mpi_allreduce_dreal
+
+   ! Small wrapper to perform MPI_ALLREDUCE operations on scalars
+   subroutine decomp_2d_mpi_allreduce_dreal_inplace(data, operation)
+
+      implicit none
+
+      ! Arguments
+      real(real64), intent(inout) :: data
+      integer, intent(in) :: operation
+      
+      ! Local variable
+      integer :: ierror
+      
+      call MPI_ALLREDUCE(MPI_IN_PLACE, data, 1, MPI_DOUBLE_PRECISION, operation, decomp_2d_comm, ierror)
+      if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_ALLREDUCE")
+   
+   end subroutine decomp_2d_mpi_allreduce_dreal_inplace
 
    !
    ! Small wrapper to free a MPI communicator

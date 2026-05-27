@@ -84,16 +84,17 @@ on the system/node and not the maximum number of MPI tasks.
 The 2DECOMP&FFT library has integrated profiling support via external libraries, see the Profiling
 section of [INSTALL.md](INSTALL.md) for instructions on configuring a profiling build.
 Currently, support for profiling is provided by the `caliper` library.
+A generic profiler is also available.
 
-When the profiling is active, one can tune it before calling `decomp_2d_init` using the subroutine
+One can tune the profiler before calling `decomp_2d_init` using the subroutine
 `decomp_profiler_prep`. 
 The input argument for this subroutine is a logical array of size 4. 
 Each input allow activation / deactivation of the profiling as follows :
 
-1. Profile transpose operations (default : true)
-2. Profile IO operations (default : true)
-3. Profile FFT operations (default : true)
-4. Profile decomp_2d init / fin subroutines (default : true)
+1. Profile transpose operations (default : true for caliper, false otherwise)
+2. Profile IO operations (default : true for caliper, false otherwise)
+3. Profile FFT operations (default : true for caliper, false otherwise)
+4. Profile decomp_2d init / fin subroutines (default : true for caliper, false otherwise)
 
 ## FFT backends
 

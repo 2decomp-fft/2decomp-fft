@@ -32,7 +32,8 @@ for i in range(nformat):
     f.write("   subroutine read_var_"+ext[i]+"(io, ipencil, var, &\n")
     f.write("                             opt_reduce_prec, &\n")
     f.write("                             opt_decomp, &\n")
-    f.write("                             opt_nb_req)\n")
+    f.write("                             opt_nb_req, &\n")
+    f.write("                             opt_mpi_datarep)\n")
     f.write("\n")
     f.write("      implicit none\n")
     f.write("\n")
@@ -58,6 +59,7 @@ for i in range(nformat):
     f.write("      logical, intent(in), optional :: opt_reduce_prec\n")
     f.write("      TYPE(DECOMP_INFO), target, intent(IN), optional :: opt_decomp\n")
     f.write("      integer, intent(inout), optional :: opt_nb_req\n")
+    f.write("      character(len=*), intent(in), optional :: opt_mpi_datarep\n")
     f.write("\n")
     #
     # Local variables
@@ -101,6 +103,7 @@ for i in range(nformat):
     if (i==0 or i==1 or i==4 or i==5):
         f.write("      call read_var(io, ipencil, decomp, &\n")
         f.write("                    opt_nb_req=opt_nb_req, &\n")
+        f.write("                    opt_mpi_datarep=opt_mpi_datarep, &\n")
         if (i==0):
             f.write("                    freal=var)\n")
         elif (i==1):
@@ -120,6 +123,7 @@ for i in range(nformat):
         f.write("            call alloc_z(tmp, decomp)\n")
         f.write("         end if\n")
         f.write("         call read_var(io, ipencil, decomp, &\n")
+        f.write("                       opt_mpi_datarep=opt_mpi_datarep, &\n")
         if (i==2):
             f.write("                      freal=tmp)\n")
             f.write("         var = real(tmp, kind=real32)\n")
@@ -130,6 +134,7 @@ for i in range(nformat):
         f.write("      else\n")
         f.write("         call read_var(io, ipencil, decomp, &\n")
         f.write("                       opt_nb_req=opt_nb_req, &\n")
+        f.write("                       opt_mpi_datarep=opt_mpi_datarep, &\n")
         if (i==2):
             f.write("                           dreal=var)\n")
         elif (i==3):

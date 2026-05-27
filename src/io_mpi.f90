@@ -16,6 +16,7 @@
 !   - opt_reduce_prec : optional, file in single precision
 !   - opt_decomp : optional, decomp_info object describing the array. decomp_main is used when this is not provided
 !   - opt_nb_req : optional, MPI_REQUEST associated with the non-blocking MPI-IO operation
+!   - opt_mpi_datarep : 'native', 'internal' or 'external32'
 !   - opt_io : optional, use it to close the file when the request is completed (non-blocking MPI-IO)
 !
 
@@ -35,6 +36,7 @@
 !   - opt_reduce_prec : optional, file in single precision
 !   - opt_decomp : optional, decomp_info object describing the array. decomp_main is used when this is not provided
 !   - opt_nb_req : optional, MPI_REQUEST associated with the non-blocking MPI-IO operation
+!   - opt_mpi_datarep : 'native', 'internal' or 'external32'
 !
 
 !
@@ -58,6 +60,7 @@
 !   - opt_reduce_prec : optional, file in single precision
 !   - opt_decomp : optional, decomp_info object describing the array. decomp_main is used when this is not provided
 !   - opt_nb_req : optional, MPI_REQUEST associated with the non-blocking MPI-IO operation
+!   - opt_mpi_datarep : 'native', 'internal' or 'external32'
 !   - opt_io : optional, use it to close the file when the request is completed (non-blocking MPI-IO)
 !
 
@@ -75,6 +78,7 @@
 !   - opt_reduce_prec : optional, read the file in single precision
 !   - opt_decomp : optional, decomp_info object describing the array. decomp_main is used when this is not provided
 !   - opt_nb_req : optional, MPI_REQUEST associated with the non-blocking MPI-IO operation
+!   - opt_mpi_datarep : 'native', 'internal' or 'external32'
 !   - opt_io : optional, use it to close the file when the request is completed (non-blocking MPI-IO)
 !
 
@@ -84,6 +88,7 @@
 ! Arguments :
 !   - io : d2d_io_mpi object obtained when opening the file (mode=decomp_2d_write_mode or decomp_2d_append_mode)
 !   - n : size of the array
+!   - opt_mpi_datarep : 'native', 'internal' or 'external32'
 !   - var : 3D array (real / complex / integer / logical)
 !
 
@@ -250,6 +255,7 @@ contains
    !   - opt_dirname : This is mandatory if no IO reader / writer was provided
    !   - opt_mpi_xxx_info : Hints for MPI IO operations
    !   - opt_nb_req : id of the request for non-blocking MPI IO
+   !   - opt_mpi_datarep : 'native', 'internal' or 'external32'
    !   - freal / dreal / fcplx / dcplx / ints / logs : array
    !
    !   If opt_dirname is present, MPI IO will write to the file opt_dirname/varname
@@ -260,6 +266,7 @@ contains
                         opt_mpi_file_open_info, &
                         opt_mpi_file_set_view_info, &
                         opt_nb_req, &
+                        opt_mpi_datarep, &
                         opt_io, &
                         freal, dreal, fcplx, dcplx, ints, logs)
 
@@ -272,6 +279,7 @@ contains
       integer, intent(in), optional :: opt_mpi_file_open_info
       integer, intent(in), optional :: opt_mpi_file_set_view_info
       integer, optional :: opt_nb_req
+      character(len=*), intent(in), optional :: opt_mpi_datarep
       type(d2d_io_mpi), optional :: opt_io
       real(real32), contiguous, dimension(:, :, :), intent(IN), optional :: freal
       real(real64), contiguous, dimension(:, :, :), intent(IN), optional :: dreal
@@ -295,6 +303,7 @@ contains
                           opt_mpi_file_set_view_info=opt_mpi_file_set_view_info)
          call write_var(opt_io, ipencil, decomp, &
                         opt_nb_req=opt_nb_req, &
+                        opt_mpi_datarep=opt_mpi_datarep, &
                         freal=freal, &
                         dreal=dreal, &
                         fcplx=fcplx, &
@@ -307,6 +316,7 @@ contains
                       opt_mpi_file_open_info=opt_mpi_file_open_info, &
                       opt_mpi_file_set_view_info=opt_mpi_file_set_view_info)
          call write_var(io, ipencil, decomp, &
+                        opt_mpi_datarep=opt_mpi_datarep, &
                         freal=freal, &
                         dreal=dreal, &
                         fcplx=fcplx, &
@@ -328,6 +338,7 @@ contains
    !   - opt_dirname : This is mandatory if no IO reader / writer was provided
    !   - opt_mpi_xxx_info : Hints for MPI IO operations
    !   - opt_nb_req : id of the request for non-blocking MPI IO
+   !   - opt_mpi_datarep : 'native', 'internal' or 'external32'
    !   - freal / dreal / fcplx / dcplx / ints / logs : array
    !
    !   If opt_dirname is present, MPI IO will read from the file opt_dirname/varname
@@ -338,6 +349,7 @@ contains
                        opt_mpi_file_open_info, &
                        opt_mpi_file_set_view_info, &
                        opt_nb_req, &
+                       opt_mpi_datarep, &
                        opt_io, &
                        freal, dreal, fcplx, dcplx, ints, logs)
 
@@ -350,6 +362,7 @@ contains
       integer, intent(in), optional :: opt_mpi_file_open_info
       integer, intent(in), optional :: opt_mpi_file_set_view_info
       integer, optional :: opt_nb_req
+      character(len=*), intent(in), optional :: opt_mpi_datarep
       type(d2d_io_mpi), optional :: opt_io
       real(real32), contiguous, dimension(:, :, :), intent(OUT), optional :: freal
       real(real64), contiguous, dimension(:, :, :), intent(OUT), optional :: dreal
@@ -373,6 +386,7 @@ contains
                           opt_mpi_file_set_view_info=opt_mpi_file_set_view_info)
          call read_var(opt_io, ipencil, decomp, &
                        opt_nb_req=opt_nb_req, &
+                       opt_mpi_datarep=opt_mpi_datarep, &
                        freal=freal, &
                        dreal=dreal, &
                        fcplx=fcplx, &
@@ -385,6 +399,7 @@ contains
                       opt_mpi_file_open_info=opt_mpi_file_open_info, &
                       opt_mpi_file_set_view_info=opt_mpi_file_set_view_info)
          call read_var(io, ipencil, decomp, &
+                       opt_mpi_datarep=opt_mpi_datarep, &
                        freal=freal, &
                        dreal=dreal, &
                        fcplx=fcplx, &
@@ -404,10 +419,12 @@ contains
    !   - ipencil : pencil orientation of the variable
    !   - decomp : decomp_info for the variable
    !   - opt_nb_req : id of the request for non-blocking MPI IO
+   !   - opt_mpi_datarep : 'native', 'internal' or 'external32'
    !   - freal / dreal / fcplx / dcplx / ints / logs : array
    !
    subroutine write_var(io, ipencil, decomp, &
                         opt_nb_req, &
+                        opt_mpi_datarep, &
                         freal, dreal, fcplx, dcplx, ints, logs)
 
       implicit none
@@ -416,6 +433,7 @@ contains
       integer, intent(IN) :: ipencil
       TYPE(DECOMP_INFO), intent(IN) :: decomp
       integer, optional :: opt_nb_req
+      character(len=*), intent(in), optional :: opt_mpi_datarep
       real(real32), contiguous, dimension(:, :, :), intent(IN), optional :: freal
       real(real64), contiguous, dimension(:, :, :), intent(IN), optional :: dreal
       complex(real32), contiguous, dimension(:, :, :), intent(IN), optional :: fcplx
@@ -445,6 +463,7 @@ contains
       ! MPI IO
       call read_or_write(.false., io, sizes, subsizes, starts, &
                          opt_nb_req=opt_nb_req, &
+                         opt_mpi_datarep=opt_mpi_datarep, &
                          freal=freal, &
                          dreal=dreal, &
                          fcplx=fcplx, &
@@ -462,10 +481,12 @@ contains
    !   - ipencil : pencil orientation of the variable
    !   - decomp : decomp_info for the variable
    !   - opt_nb_req : id of the request for non-blocking MPI IO
+   !   - opt_mpi_datarep : 'native', 'internal' or 'external32'
    !   - freal / dreal / fcplx / dcplx / ints / logs : array
    !
    subroutine read_var(io, ipencil, decomp, &
                        opt_nb_req, &
+                       opt_mpi_datarep, &
                        freal, dreal, fcplx, dcplx, ints, logs)
 
       implicit none
@@ -474,6 +495,7 @@ contains
       integer, intent(IN) :: ipencil
       TYPE(DECOMP_INFO), intent(IN) :: decomp
       integer, optional :: opt_nb_req
+      character(len=*), intent(in), optional :: opt_mpi_datarep
       real(real32), contiguous, dimension(:, :, :), intent(OUT), optional :: freal
       real(real64), contiguous, dimension(:, :, :), intent(OUT), optional :: dreal
       complex(real32), contiguous, dimension(:, :, :), intent(OUT), optional :: fcplx
@@ -503,6 +525,7 @@ contains
       ! MPI IO
       call read_or_write(.true., io, sizes, subsizes, starts, &
                          opt_nb_req=opt_nb_req, &
+                         opt_mpi_datarep=opt_mpi_datarep, &
                          freal=freal, &
                          dreal=dreal, &
                          fcplx=fcplx, &
@@ -523,6 +546,7 @@ contains
    !   - opt_dirname : This is mandatory if no IO reader / writer was provided
    !   - opt_mpi_xxx_info : Hints for MPI IO operations
    !   - opt_nb_req : id of the request for non-blocking MPI IO
+   !   - opt_mpi_datarep : 'native', 'internal' or 'external32'
    !   - freal / dreal / fcplx / dcplx / ints / logs : array
    !
    !   If opt_dirname is present, MPI IO will write to the file opt_dirname/varname
@@ -533,6 +557,7 @@ contains
                           opt_mpi_file_open_info, &
                           opt_mpi_file_set_view_info, &
                           opt_nb_req, &
+                          opt_mpi_datarep, &
                           opt_io, &
                           freal, dreal, fcplx, dcplx, ints, logs)
 
@@ -546,6 +571,7 @@ contains
       integer, intent(in), optional :: opt_mpi_file_open_info
       integer, intent(in), optional :: opt_mpi_file_set_view_info
       integer, optional :: opt_nb_req
+      character(len=*), intent(in), optional :: opt_mpi_datarep
       type(d2d_io_mpi), optional :: opt_io
       real(real32), contiguous, dimension(:, :, :), intent(IN), optional :: freal
       real(real64), contiguous, dimension(:, :, :), intent(IN), optional :: dreal
@@ -585,6 +611,7 @@ contains
                           opt_mpi_file_set_view_info=opt_mpi_file_set_view_info)
          call read_or_write(.false., opt_io, sizes, subsizes, starts, &
                             opt_nb_req=opt_nb_req, &
+                            opt_mpi_datarep=opt_mpi_datarep, &
                             freal=freal, &
                             dreal=dreal, &
                             fcplx=fcplx, &
@@ -597,6 +624,7 @@ contains
                       opt_mpi_file_open_info=opt_mpi_file_open_info, &
                       opt_mpi_file_set_view_info=opt_mpi_file_set_view_info)
          call read_or_write(.false., io, sizes, subsizes, starts, &
+                            opt_mpi_datarep=opt_mpi_datarep, &
                             freal=freal, &
                             dreal=dreal, &
                             fcplx=fcplx, &
@@ -619,6 +647,7 @@ contains
    !   - opt_dirname : This is mandatory if no IO reader / writer was provided
    !   - opt_mpi_xxx_info : Hints for MPI IO operations
    !   - opt_nb_req : id of the request for non-blocking MPI IO
+   !   - opt_mpi_datarep : 'native', 'internal' or 'external32'
    !   - freal / dreal / fcplx / dcplx / ints / logs : array
    !
    !   If opt_dirname is present, MPI IO will write read from the file opt_dirname/varname
@@ -629,6 +658,7 @@ contains
                          opt_mpi_file_open_info, &
                          opt_mpi_file_set_view_info, &
                          opt_nb_req, &
+                         opt_mpi_datarep, &
                          opt_io, &
                          freal, dreal, fcplx, dcplx, ints, logs)
 
@@ -642,6 +672,7 @@ contains
       integer, intent(in), optional :: opt_mpi_file_open_info
       integer, intent(in), optional :: opt_mpi_file_set_view_info
       integer, optional :: opt_nb_req
+      character(len=*), intent(in), optional :: opt_mpi_datarep
       type(d2d_io_mpi), optional :: opt_io
       real(real32), contiguous, dimension(:, :, :), intent(OUT), optional :: freal
       real(real64), contiguous, dimension(:, :, :), intent(OUT), optional :: dreal
@@ -681,6 +712,7 @@ contains
                           opt_mpi_file_set_view_info=opt_mpi_file_set_view_info)
          call read_or_write(.true., opt_io, sizes, subsizes, starts, &
                             opt_nb_req=opt_nb_req, &
+                            opt_mpi_datarep=opt_mpi_datarep, &
                             freal=freal, &
                             dreal=dreal, &
                             fcplx=fcplx, &
@@ -694,6 +726,7 @@ contains
                       opt_mpi_file_set_view_info=opt_mpi_file_set_view_info)
          call read_or_write(.true., io, sizes, subsizes, starts, &
                             opt_nb_req=opt_nb_req, &
+                            opt_mpi_datarep=opt_mpi_datarep, &
                             freal=freal, &
                             dreal=dreal, &
                             fcplx=fcplx, &
@@ -711,15 +744,18 @@ contains
    ! Inputs
    !   - io : d2d_io_mpi object obtained when opening the file
    !   - n : size for the array
+   !   - opt_mpi_datarep : 'native', 'internal' or 'external32'
    !   - freal / dreal / fcplx / dcplx / ints / logs : array
    !
    subroutine write_scalar(io, n, &
+                           opt_mpi_datarep, &
                            freal, dreal, fcplx, dcplx, ints, logs)
 
       implicit none
 
       type(d2d_io_mpi), intent(INOUT) :: io
       integer, intent(in) :: n
+      character(len=*), intent(in), optional :: opt_mpi_datarep
       real(real32), contiguous, dimension(:), intent(IN), optional :: freal
       real(real64), contiguous, dimension(:), intent(IN), optional :: dreal
       complex(real32), contiguous, dimension(:), intent(IN), optional :: fcplx
@@ -739,6 +775,7 @@ contains
 
       ! MPI IO
       call read_or_write_scalar(.false., io, size, subsize, &
+                                opt_mpi_datarep=opt_mpi_datarep, &
                                 freal=freal, &
                                 dreal=dreal, &
                                 fcplx=fcplx, &
@@ -754,15 +791,18 @@ contains
    ! Inputs
    !   - io : d2d_io_mpi object obtained when opening the file
    !   - n : size for the array
+   !   - opt_mpi_datarep : 'native', 'internal' or 'external32'
    !   - freal / dreal / fcplx / dcplx / ints / logs : array
    !
    subroutine read_scalar(io, n, &
+                          opt_mpi_datarep, &
                           freal, dreal, fcplx, dcplx, ints, logs)
 
       implicit none
 
       type(d2d_io_mpi), intent(INOUT) :: io
       integer, intent(in) :: n
+      character(len=*), intent(in), optional :: opt_mpi_datarep
       real(real32), contiguous, dimension(:), intent(OUT), optional :: freal
       real(real64), contiguous, dimension(:), intent(OUT), optional :: dreal
       complex(real32), contiguous, dimension(:), intent(OUT), optional :: fcplx
@@ -778,6 +818,7 @@ contains
 
       ! MPI IO
       call read_or_write_scalar(.true., io, size, subsize, &
+                                opt_mpi_datarep=opt_mpi_datarep, &
                                 freal=freal, &
                                 dreal=dreal, &
                                 fcplx=fcplx, &
@@ -792,6 +833,7 @@ contains
    !
    subroutine read_or_write(flag_read, io, sizes, subsizes, starts, &
                             opt_nb_req, &
+                            opt_mpi_datarep, &
                             freal, dreal, fcplx, dcplx, ints, logs)
 
       implicit none
@@ -800,6 +842,7 @@ contains
       type(d2d_io_mpi), intent(inout) :: io
       integer, dimension(3), intent(in) :: sizes, subsizes, starts
       integer, optional :: opt_nb_req
+      character(len=*), intent(in), optional :: opt_mpi_datarep
       real(real32), contiguous, dimension(:, :, :), optional :: freal
       real(real64), contiguous, dimension(:, :, :), optional :: dreal
       complex(real32), contiguous, dimension(:, :, :), optional :: fcplx
@@ -808,6 +851,7 @@ contains
       logical, contiguous, dimension(:, :, :), optional :: logs
 
       logical :: non_blocking
+      character(len=:), allocatable :: mpi_datarep
       integer :: ierror, data_type, newtype, type_bytes
 
       ! Safety check
@@ -821,6 +865,15 @@ contains
          if (opt_nb_req /= MPI_REQUEST_NULL) then
             call decomp_2d_abort(__FILE__, __LINE__, -1, "Provided MPI request was not finished "//io%label)
          end if
+      end if
+
+      ! Allow portable MPI IO
+      if (present(opt_mpi_datarep)) then
+         allocate (character(len=max(1, len(opt_mpi_datarep))) :: mpi_datarep)
+         mpi_datarep = opt_mpi_datarep
+      else
+         allocate (character(len=len('native')) :: mpi_datarep)
+         mpi_datarep = 'native'
       end if
 
       ! Allow non-blocking MPI IO
@@ -857,7 +910,7 @@ contains
       if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_TYPE_CREATE_SUBARRAY")
       call MPI_TYPE_COMMIT(newtype, ierror)
       if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_TYPE_COMMIT")
-      call MPI_FILE_SET_VIEW(io%fh, io%disp, data_type, newtype, 'native', io%mpi_file_set_view_info, ierror)
+      call MPI_FILE_SET_VIEW(io%fh, io%disp, data_type, newtype, mpi_datarep, io%mpi_file_set_view_info, ierror)
       if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_FILE_SET_VIEW")
       if (flag_read) then
          if (non_blocking) then
@@ -933,6 +986,9 @@ contains
       io%disp = io%disp + product(int(sizes, kind=MPI_OFFSET_KIND)) &
                 * int(type_bytes, kind=MPI_OFFSET_KIND)
 
+      ! Free memory
+      deallocate (mpi_datarep)
+
    end subroutine read_or_write
 
    !
@@ -940,6 +996,7 @@ contains
    !
    subroutine read_or_write_scalar(flag_read, io, size, subsize, &
                                    opt_nb_req, &
+                                   opt_mpi_datarep, &
                                    freal, dreal, fcplx, dcplx, ints, logs)
 
       implicit none
@@ -948,6 +1005,7 @@ contains
       type(d2d_io_mpi), intent(inout) :: io
       integer, intent(in) :: size, subsize
       integer, optional :: opt_nb_req
+      character(len=*), intent(in), optional :: opt_mpi_datarep
       real(real32), contiguous, dimension(:), optional :: freal
       real(real64), contiguous, dimension(:), optional :: dreal
       complex(real32), contiguous, dimension(:), optional :: fcplx
@@ -956,6 +1014,7 @@ contains
       logical, contiguous, dimension(:), optional :: logs
 
       logical :: non_blocking
+      character(len=:), allocatable :: mpi_datarep
       integer :: ierror, data_type, type_bytes
 
       ! Safety check
@@ -969,6 +1028,15 @@ contains
          if (opt_nb_req /= MPI_REQUEST_NULL) then
             call decomp_2d_abort(__FILE__, __LINE__, -1, "Provided MPI request was not finished "//io%label)
          end if
+      end if
+
+      ! Allow portable MPI IO
+      if (present(opt_mpi_datarep)) then
+         allocate (character(len=max(1, len(opt_mpi_datarep))) :: mpi_datarep)
+         mpi_datarep = opt_mpi_datarep
+      else
+         allocate (character(len=len('native')) :: mpi_datarep)
+         mpi_datarep = 'native'
       end if
 
       ! Allow non-blocking MPI IO
@@ -1000,7 +1068,7 @@ contains
       if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_TYPE_SIZE")
 
       ! Do the MPI IO
-      call MPI_FILE_SET_VIEW(io%fh, io%disp, data_type, data_type, 'native', io%mpi_file_set_view_info, ierror)
+      call MPI_FILE_SET_VIEW(io%fh, io%disp, data_type, data_type, mpi_datarep, io%mpi_file_set_view_info, ierror)
       if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_FILE_SET_VIEW")
       if (flag_read) then
          if (non_blocking) then
@@ -1074,6 +1142,9 @@ contains
       io%disp = io%disp + &
                 int(size, kind=MPI_OFFSET_KIND) * int(type_bytes, kind=MPI_OFFSET_KIND)
 
+      ! Free memory
+      deallocate (mpi_datarep)
+
    end subroutine read_or_write_scalar
 
    !
@@ -1090,6 +1161,7 @@ contains
                               opt_reduce_prec, &
                               opt_decomp, &
                               opt_nb_req, &
+                              opt_mpi_datarep, &
                               opt_io)
 
       implicit none
@@ -1104,6 +1176,7 @@ contains
       logical, intent(in), optional :: opt_reduce_prec
       TYPE(DECOMP_INFO), target, intent(IN), optional :: opt_decomp
       integer, intent(inout), optional :: opt_nb_req
+      character(len=*), intent(in), optional :: opt_mpi_datarep
       type(d2d_io_mpi), intent(inout), optional :: opt_io
       ! Local variable(s)
       TYPE(DECOMP_INFO), pointer :: decomp
@@ -1122,6 +1195,7 @@ contains
                      opt_mpi_file_open_info=opt_mpi_file_open_info, &
                      opt_mpi_file_set_view_info=opt_mpi_file_set_view_info, &
                      opt_nb_req=opt_nb_req, &
+                     opt_mpi_datarep=opt_mpi_datarep, &
                      opt_io=opt_io, &
                      freal=var)
 
@@ -1140,6 +1214,7 @@ contains
                               opt_reduce_prec, &
                               opt_decomp, &
                               opt_nb_req, &
+                              opt_mpi_datarep, &
                               opt_io)
 
       implicit none
@@ -1154,6 +1229,7 @@ contains
       logical, intent(in), optional :: opt_reduce_prec
       TYPE(DECOMP_INFO), target, intent(IN), optional :: opt_decomp
       integer, intent(inout), optional :: opt_nb_req
+      character(len=*), intent(in), optional :: opt_mpi_datarep
       type(d2d_io_mpi), intent(inout), optional :: opt_io
       ! Local variable(s)
       TYPE(DECOMP_INFO), pointer :: decomp
@@ -1172,6 +1248,7 @@ contains
                      opt_mpi_file_open_info=opt_mpi_file_open_info, &
                      opt_mpi_file_set_view_info=opt_mpi_file_set_view_info, &
                      opt_nb_req=opt_nb_req, &
+                     opt_mpi_datarep=opt_mpi_datarep, &
                      opt_io=opt_io, &
                      fcplx=var)
 
@@ -1190,6 +1267,7 @@ contains
                               opt_reduce_prec, &
                               opt_decomp, &
                               opt_nb_req, &
+                              opt_mpi_datarep, &
                               opt_io)
 
       implicit none
@@ -1204,6 +1282,7 @@ contains
       logical, intent(in), optional :: opt_reduce_prec
       TYPE(DECOMP_INFO), target, intent(IN), optional :: opt_decomp
       integer, intent(inout), optional :: opt_nb_req
+      character(len=*), intent(in), optional :: opt_mpi_datarep
       type(d2d_io_mpi), intent(inout), optional :: opt_io
       ! Local variable(s)
       logical :: reduce
@@ -1233,6 +1312,7 @@ contains
                         opt_dirname=opt_dirname, &
                         opt_mpi_file_open_info=opt_mpi_file_open_info, &
                         opt_mpi_file_set_view_info=opt_mpi_file_set_view_info, &
+                        opt_mpi_datarep=opt_mpi_datarep, &
                         freal=tmp)
          deallocate (tmp)
       else
@@ -1241,6 +1321,7 @@ contains
                         opt_mpi_file_open_info=opt_mpi_file_open_info, &
                         opt_mpi_file_set_view_info=opt_mpi_file_set_view_info, &
                         opt_nb_req=opt_nb_req, &
+                        opt_mpi_datarep=opt_mpi_datarep, &
                         opt_io=opt_io, &
                         dreal=var)
       end if
@@ -1258,6 +1339,7 @@ contains
                               opt_reduce_prec, &
                               opt_decomp, &
                               opt_nb_req, &
+                              opt_mpi_datarep, &
                               opt_io)
 
       implicit none
@@ -1272,6 +1354,7 @@ contains
       logical, intent(in), optional :: opt_reduce_prec
       TYPE(DECOMP_INFO), target, intent(IN), optional :: opt_decomp
       integer, intent(inout), optional :: opt_nb_req
+      character(len=*), intent(in), optional :: opt_mpi_datarep
       type(d2d_io_mpi), intent(inout), optional :: opt_io
       ! Local variable(s)
       logical :: reduce
@@ -1301,6 +1384,7 @@ contains
                         opt_dirname=opt_dirname, &
                         opt_mpi_file_open_info=opt_mpi_file_open_info, &
                         opt_mpi_file_set_view_info=opt_mpi_file_set_view_info, &
+                        opt_mpi_datarep=opt_mpi_datarep, &
                         fcplx=tmp)
          deallocate (tmp)
       else
@@ -1309,6 +1393,7 @@ contains
                         opt_mpi_file_open_info=opt_mpi_file_open_info, &
                         opt_mpi_file_set_view_info=opt_mpi_file_set_view_info, &
                         opt_nb_req=opt_nb_req, &
+                        opt_mpi_datarep=opt_mpi_datarep, &
                         opt_io=opt_io, &
                         dcplx=var)
       end if
@@ -1326,6 +1411,7 @@ contains
                              opt_reduce_prec, &
                              opt_decomp, &
                              opt_nb_req, &
+                             opt_mpi_datarep, &
                              opt_io)
 
       implicit none
@@ -1340,6 +1426,7 @@ contains
       logical, intent(in), optional :: opt_reduce_prec
       TYPE(DECOMP_INFO), target, intent(IN), optional :: opt_decomp
       integer, intent(inout), optional :: opt_nb_req
+      character(len=*), intent(in), optional :: opt_mpi_datarep
       type(d2d_io_mpi), intent(inout), optional :: opt_io
       ! Local variable(s)
       TYPE(DECOMP_INFO), pointer :: decomp
@@ -1358,6 +1445,7 @@ contains
                      opt_mpi_file_open_info=opt_mpi_file_open_info, &
                      opt_mpi_file_set_view_info=opt_mpi_file_set_view_info, &
                      opt_nb_req=opt_nb_req, &
+                     opt_mpi_datarep=opt_mpi_datarep, &
                      opt_io=opt_io, &
                      ints=var)
 
@@ -1376,6 +1464,7 @@ contains
                              opt_reduce_prec, &
                              opt_decomp, &
                              opt_nb_req, &
+                             opt_mpi_datarep, &
                              opt_io)
 
       implicit none
@@ -1390,6 +1479,7 @@ contains
       logical, intent(in), optional :: opt_reduce_prec
       TYPE(DECOMP_INFO), target, intent(IN), optional :: opt_decomp
       integer, intent(inout), optional :: opt_nb_req
+      character(len=*), intent(in), optional :: opt_mpi_datarep
       type(d2d_io_mpi), intent(inout), optional :: opt_io
       ! Local variable(s)
       TYPE(DECOMP_INFO), pointer :: decomp
@@ -1408,6 +1498,7 @@ contains
                      opt_mpi_file_open_info=opt_mpi_file_open_info, &
                      opt_mpi_file_set_view_info=opt_mpi_file_set_view_info, &
                      opt_nb_req=opt_nb_req, &
+                     opt_mpi_datarep=opt_mpi_datarep, &
                      opt_io=opt_io, &
                      logs=var)
 
@@ -1434,6 +1525,7 @@ contains
                              opt_reduce_prec, &
                              opt_decomp, &
                              opt_nb_req, &
+                             opt_mpi_datarep, &
                              opt_io)
 
       implicit none
@@ -1448,6 +1540,7 @@ contains
       logical, intent(in), optional :: opt_reduce_prec
       TYPE(DECOMP_INFO), target, intent(IN), optional :: opt_decomp
       integer, intent(inout), optional :: opt_nb_req
+      character(len=*), intent(in), optional :: opt_mpi_datarep
       type(d2d_io_mpi), intent(inout), optional :: opt_io
       ! Local variable(s)
       TYPE(DECOMP_INFO), pointer :: decomp
@@ -1466,6 +1559,7 @@ contains
                     opt_mpi_file_open_info=opt_mpi_file_open_info, &
                     opt_mpi_file_set_view_info=opt_mpi_file_set_view_info, &
                     opt_nb_req=opt_nb_req, &
+                    opt_mpi_datarep=opt_mpi_datarep, &
                     opt_io=opt_io, &
                     freal=var)
 
@@ -1484,6 +1578,7 @@ contains
                              opt_reduce_prec, &
                              opt_decomp, &
                              opt_nb_req, &
+                             opt_mpi_datarep, &
                              opt_io)
 
       implicit none
@@ -1498,6 +1593,7 @@ contains
       logical, intent(in), optional :: opt_reduce_prec
       TYPE(DECOMP_INFO), target, intent(IN), optional :: opt_decomp
       integer, intent(inout), optional :: opt_nb_req
+      character(len=*), intent(in), optional :: opt_mpi_datarep
       type(d2d_io_mpi), intent(inout), optional :: opt_io
       ! Local variable(s)
       TYPE(DECOMP_INFO), pointer :: decomp
@@ -1516,6 +1612,7 @@ contains
                     opt_mpi_file_open_info=opt_mpi_file_open_info, &
                     opt_mpi_file_set_view_info=opt_mpi_file_set_view_info, &
                     opt_nb_req=opt_nb_req, &
+                    opt_mpi_datarep=opt_mpi_datarep, &
                     opt_io=opt_io, &
                     fcplx=var)
 
@@ -1534,6 +1631,7 @@ contains
                              opt_reduce_prec, &
                              opt_decomp, &
                              opt_nb_req, &
+                             opt_mpi_datarep, &
                              opt_io)
 
       implicit none
@@ -1548,6 +1646,7 @@ contains
       logical, intent(in), optional :: opt_reduce_prec
       TYPE(DECOMP_INFO), target, intent(IN), optional :: opt_decomp
       integer, intent(inout), optional :: opt_nb_req
+      character(len=*), intent(in), optional :: opt_mpi_datarep
       type(d2d_io_mpi), intent(inout), optional :: opt_io
       ! Local variable(s)
       logical :: reduce
@@ -1583,6 +1682,7 @@ contains
                        opt_dirname=opt_dirname, &
                        opt_mpi_file_open_info=opt_mpi_file_open_info, &
                        opt_mpi_file_set_view_info=opt_mpi_file_set_view_info, &
+                       opt_mpi_datarep=opt_mpi_datarep, &
                        freal=tmp)
          var = real(tmp, kind=real64)
          deallocate (tmp)
@@ -1594,6 +1694,7 @@ contains
                        opt_mpi_file_open_info=opt_mpi_file_open_info, &
                        opt_mpi_file_set_view_info=opt_mpi_file_set_view_info, &
                        opt_nb_req=opt_nb_req, &
+                       opt_mpi_datarep=opt_mpi_datarep, &
                        opt_io=opt_io, &
                        dreal=var)
 
@@ -1612,6 +1713,7 @@ contains
                              opt_reduce_prec, &
                              opt_decomp, &
                              opt_nb_req, &
+                             opt_mpi_datarep, &
                              opt_io)
 
       implicit none
@@ -1626,6 +1728,7 @@ contains
       logical, intent(in), optional :: opt_reduce_prec
       TYPE(DECOMP_INFO), target, intent(IN), optional :: opt_decomp
       integer, intent(inout), optional :: opt_nb_req
+      character(len=*), intent(in), optional :: opt_mpi_datarep
       type(d2d_io_mpi), intent(inout), optional :: opt_io
       ! Local variable(s)
       logical :: reduce
@@ -1661,6 +1764,7 @@ contains
                        opt_dirname=opt_dirname, &
                        opt_mpi_file_open_info=opt_mpi_file_open_info, &
                        opt_mpi_file_set_view_info=opt_mpi_file_set_view_info, &
+                       opt_mpi_datarep=opt_mpi_datarep, &
                        fcplx=tmp)
          var = cmplx(tmp, kind=real64)
          deallocate (tmp)
@@ -1672,6 +1776,7 @@ contains
                        opt_mpi_file_open_info=opt_mpi_file_open_info, &
                        opt_mpi_file_set_view_info=opt_mpi_file_set_view_info, &
                        opt_nb_req=opt_nb_req, &
+                       opt_mpi_datarep=opt_mpi_datarep, &
                        opt_io=opt_io, &
                        dcplx=var)
 
@@ -1690,6 +1795,7 @@ contains
                             opt_reduce_prec, &
                             opt_decomp, &
                             opt_nb_req, &
+                            opt_mpi_datarep, &
                             opt_io)
 
       implicit none
@@ -1704,6 +1810,7 @@ contains
       logical, intent(in), optional :: opt_reduce_prec
       TYPE(DECOMP_INFO), target, intent(IN), optional :: opt_decomp
       integer, intent(inout), optional :: opt_nb_req
+      character(len=*), intent(in), optional :: opt_mpi_datarep
       type(d2d_io_mpi), intent(inout), optional :: opt_io
       ! Local variable(s)
       TYPE(DECOMP_INFO), pointer :: decomp
@@ -1722,6 +1829,7 @@ contains
                     opt_mpi_file_open_info=opt_mpi_file_open_info, &
                     opt_mpi_file_set_view_info=opt_mpi_file_set_view_info, &
                     opt_nb_req=opt_nb_req, &
+                    opt_mpi_datarep=opt_mpi_datarep, &
                     opt_io=opt_io, &
                     ints=var)
 
@@ -1740,6 +1848,7 @@ contains
                             opt_reduce_prec, &
                             opt_decomp, &
                             opt_nb_req, &
+                            opt_mpi_datarep, &
                             opt_io)
 
       implicit none
@@ -1754,6 +1863,7 @@ contains
       logical, intent(in), optional :: opt_reduce_prec
       TYPE(DECOMP_INFO), target, intent(IN), optional :: opt_decomp
       integer, intent(inout), optional :: opt_nb_req
+      character(len=*), intent(in), optional :: opt_mpi_datarep
       type(d2d_io_mpi), intent(inout), optional :: opt_io
       ! Local variable(s)
       TYPE(DECOMP_INFO), pointer :: decomp
@@ -1772,6 +1882,7 @@ contains
                     opt_mpi_file_open_info=opt_mpi_file_open_info, &
                     opt_mpi_file_set_view_info=opt_mpi_file_set_view_info, &
                     opt_nb_req=opt_nb_req, &
+                    opt_mpi_datarep=opt_mpi_datarep, &
                     opt_io=opt_io, &
                     logs=var)
 
@@ -1794,7 +1905,8 @@ contains
    subroutine write_var_freal(io, ipencil, var, &
                               opt_reduce_prec, &
                               opt_decomp, &
-                              opt_nb_req)
+                              opt_nb_req, &
+                              opt_mpi_datarep)
 
       implicit none
 
@@ -1805,6 +1917,7 @@ contains
       logical, intent(in), optional :: opt_reduce_prec
       TYPE(DECOMP_INFO), target, intent(IN), optional :: opt_decomp
       integer, intent(inout), optional :: opt_nb_req
+      character(len=*), intent(in), optional :: opt_mpi_datarep
 
       ! Local variable(s)
       TYPE(DECOMP_INFO), pointer :: decomp
@@ -1820,6 +1933,7 @@ contains
 
       call write_var(io, ipencil, decomp, &
                      opt_nb_req=opt_nb_req, &
+                     opt_mpi_datarep=opt_mpi_datarep, &
                      freal=var)
 
       nullify (decomp)
@@ -1833,7 +1947,8 @@ contains
    subroutine write_var_fcplx(io, ipencil, var, &
                               opt_reduce_prec, &
                               opt_decomp, &
-                              opt_nb_req)
+                              opt_nb_req, &
+                              opt_mpi_datarep)
 
       implicit none
 
@@ -1844,6 +1959,7 @@ contains
       logical, intent(in), optional :: opt_reduce_prec
       TYPE(DECOMP_INFO), target, intent(IN), optional :: opt_decomp
       integer, intent(inout), optional :: opt_nb_req
+      character(len=*), intent(in), optional :: opt_mpi_datarep
 
       ! Local variable(s)
       TYPE(DECOMP_INFO), pointer :: decomp
@@ -1859,6 +1975,7 @@ contains
 
       call write_var(io, ipencil, decomp, &
                      opt_nb_req=opt_nb_req, &
+                     opt_mpi_datarep=opt_mpi_datarep, &
                      fcplx=var)
 
       nullify (decomp)
@@ -1872,7 +1989,8 @@ contains
    subroutine write_var_dreal(io, ipencil, var, &
                               opt_reduce_prec, &
                               opt_decomp, &
-                              opt_nb_req)
+                              opt_nb_req, &
+                              opt_mpi_datarep)
 
       implicit none
 
@@ -1883,6 +2001,7 @@ contains
       logical, intent(in), optional :: opt_reduce_prec
       TYPE(DECOMP_INFO), target, intent(IN), optional :: opt_decomp
       integer, intent(inout), optional :: opt_nb_req
+      character(len=*), intent(in), optional :: opt_mpi_datarep
 
       ! Local variable(s)
       logical :: reduce
@@ -1909,11 +2028,13 @@ contains
          allocate (tmp(size(var, 1), size(var, 2), size(var, 3)))
          tmp = real(var, kind=real32)
          call write_var(io, ipencil, decomp, &
+                        opt_mpi_datarep=opt_mpi_datarep, &
                         freal=tmp)
          deallocate (tmp)
       else
          call write_var(io, ipencil, decomp, &
                         opt_nb_req=opt_nb_req, &
+                        opt_mpi_datarep=opt_mpi_datarep, &
                         dreal=var)
       end if
 
@@ -1926,7 +2047,8 @@ contains
    subroutine write_var_dcplx(io, ipencil, var, &
                               opt_reduce_prec, &
                               opt_decomp, &
-                              opt_nb_req)
+                              opt_nb_req, &
+                              opt_mpi_datarep)
 
       implicit none
 
@@ -1937,6 +2059,7 @@ contains
       logical, intent(in), optional :: opt_reduce_prec
       TYPE(DECOMP_INFO), target, intent(IN), optional :: opt_decomp
       integer, intent(inout), optional :: opt_nb_req
+      character(len=*), intent(in), optional :: opt_mpi_datarep
 
       ! Local variable(s)
       logical :: reduce
@@ -1963,11 +2086,13 @@ contains
          allocate (tmp(size(var, 1), size(var, 2), size(var, 3)))
          tmp = cmplx(var, kind=real32)
          call write_var(io, ipencil, decomp, &
+                        opt_mpi_datarep=opt_mpi_datarep, &
                         fcplx=tmp)
          deallocate (tmp)
       else
          call write_var(io, ipencil, decomp, &
                         opt_nb_req=opt_nb_req, &
+                        opt_mpi_datarep=opt_mpi_datarep, &
                         dcplx=var)
       end if
 
@@ -1980,7 +2105,8 @@ contains
    subroutine write_var_ints(io, ipencil, var, &
                              opt_reduce_prec, &
                              opt_decomp, &
-                             opt_nb_req)
+                             opt_nb_req, &
+                             opt_mpi_datarep)
 
       implicit none
 
@@ -1991,6 +2117,7 @@ contains
       logical, intent(in), optional :: opt_reduce_prec
       TYPE(DECOMP_INFO), target, intent(IN), optional :: opt_decomp
       integer, intent(inout), optional :: opt_nb_req
+      character(len=*), intent(in), optional :: opt_mpi_datarep
 
       ! Local variable(s)
       TYPE(DECOMP_INFO), pointer :: decomp
@@ -2006,6 +2133,7 @@ contains
 
       call write_var(io, ipencil, decomp, &
                      opt_nb_req=opt_nb_req, &
+                     opt_mpi_datarep=opt_mpi_datarep, &
                      ints=var)
 
       nullify (decomp)
@@ -2019,7 +2147,8 @@ contains
    subroutine write_var_logs(io, ipencil, var, &
                              opt_reduce_prec, &
                              opt_decomp, &
-                             opt_nb_req)
+                             opt_nb_req, &
+                             opt_mpi_datarep)
 
       implicit none
 
@@ -2030,6 +2159,7 @@ contains
       logical, intent(in), optional :: opt_reduce_prec
       TYPE(DECOMP_INFO), target, intent(IN), optional :: opt_decomp
       integer, intent(inout), optional :: opt_nb_req
+      character(len=*), intent(in), optional :: opt_mpi_datarep
 
       ! Local variable(s)
       TYPE(DECOMP_INFO), pointer :: decomp
@@ -2045,6 +2175,7 @@ contains
 
       call write_var(io, ipencil, decomp, &
                      opt_nb_req=opt_nb_req, &
+                     opt_mpi_datarep=opt_mpi_datarep, &
                      logs=var)
 
       nullify (decomp)
@@ -2066,7 +2197,8 @@ contains
    subroutine read_var_freal(io, ipencil, var, &
                              opt_reduce_prec, &
                              opt_decomp, &
-                             opt_nb_req)
+                             opt_nb_req, &
+                             opt_mpi_datarep)
 
       implicit none
 
@@ -2077,6 +2209,7 @@ contains
       logical, intent(in), optional :: opt_reduce_prec
       TYPE(DECOMP_INFO), target, intent(IN), optional :: opt_decomp
       integer, intent(inout), optional :: opt_nb_req
+      character(len=*), intent(in), optional :: opt_mpi_datarep
 
       ! Local variable(s)
       TYPE(DECOMP_INFO), pointer :: decomp
@@ -2092,6 +2225,7 @@ contains
 
       call read_var(io, ipencil, decomp, &
                     opt_nb_req=opt_nb_req, &
+                    opt_mpi_datarep=opt_mpi_datarep, &
                     freal=var)
 
       nullify (decomp)
@@ -2105,7 +2239,8 @@ contains
    subroutine read_var_fcplx(io, ipencil, var, &
                              opt_reduce_prec, &
                              opt_decomp, &
-                             opt_nb_req)
+                             opt_nb_req, &
+                             opt_mpi_datarep)
 
       implicit none
 
@@ -2116,6 +2251,7 @@ contains
       logical, intent(in), optional :: opt_reduce_prec
       TYPE(DECOMP_INFO), target, intent(IN), optional :: opt_decomp
       integer, intent(inout), optional :: opt_nb_req
+      character(len=*), intent(in), optional :: opt_mpi_datarep
 
       ! Local variable(s)
       TYPE(DECOMP_INFO), pointer :: decomp
@@ -2131,6 +2267,7 @@ contains
 
       call read_var(io, ipencil, decomp, &
                     opt_nb_req=opt_nb_req, &
+                    opt_mpi_datarep=opt_mpi_datarep, &
                     fcplx=var)
 
       nullify (decomp)
@@ -2144,7 +2281,8 @@ contains
    subroutine read_var_dreal(io, ipencil, var, &
                              opt_reduce_prec, &
                              opt_decomp, &
-                             opt_nb_req)
+                             opt_nb_req, &
+                             opt_mpi_datarep)
 
       implicit none
 
@@ -2155,6 +2293,7 @@ contains
       logical, intent(in), optional :: opt_reduce_prec
       TYPE(DECOMP_INFO), target, intent(IN), optional :: opt_decomp
       integer, intent(inout), optional :: opt_nb_req
+      character(len=*), intent(in), optional :: opt_mpi_datarep
 
       ! Local variable(s)
       logical :: reduce
@@ -2186,12 +2325,14 @@ contains
             call alloc_z(tmp, decomp)
          end if
          call read_var(io, ipencil, decomp, &
+                       opt_mpi_datarep=opt_mpi_datarep, &
                        freal=tmp)
          var = real(tmp, kind=real32)
          deallocate (tmp)
       else
          call read_var(io, ipencil, decomp, &
                        opt_nb_req=opt_nb_req, &
+                       opt_mpi_datarep=opt_mpi_datarep, &
                        dreal=var)
       end if
 
@@ -2204,7 +2345,8 @@ contains
    subroutine read_var_dcplx(io, ipencil, var, &
                              opt_reduce_prec, &
                              opt_decomp, &
-                             opt_nb_req)
+                             opt_nb_req, &
+                             opt_mpi_datarep)
 
       implicit none
 
@@ -2215,6 +2357,7 @@ contains
       logical, intent(in), optional :: opt_reduce_prec
       TYPE(DECOMP_INFO), target, intent(IN), optional :: opt_decomp
       integer, intent(inout), optional :: opt_nb_req
+      character(len=*), intent(in), optional :: opt_mpi_datarep
 
       ! Local variable(s)
       logical :: reduce
@@ -2246,12 +2389,14 @@ contains
             call alloc_z(tmp, decomp)
          end if
          call read_var(io, ipencil, decomp, &
+                       opt_mpi_datarep=opt_mpi_datarep, &
                        fcplx=tmp)
          var = cmplx(tmp, kind=real64)
          deallocate (tmp)
       else
          call read_var(io, ipencil, decomp, &
                        opt_nb_req=opt_nb_req, &
+                       opt_mpi_datarep=opt_mpi_datarep, &
                        dcplx=var)
       end if
 
@@ -2264,7 +2409,8 @@ contains
    subroutine read_var_ints(io, ipencil, var, &
                             opt_reduce_prec, &
                             opt_decomp, &
-                            opt_nb_req)
+                            opt_nb_req, &
+                            opt_mpi_datarep)
 
       implicit none
 
@@ -2275,6 +2421,7 @@ contains
       logical, intent(in), optional :: opt_reduce_prec
       TYPE(DECOMP_INFO), target, intent(IN), optional :: opt_decomp
       integer, intent(inout), optional :: opt_nb_req
+      character(len=*), intent(in), optional :: opt_mpi_datarep
 
       ! Local variable(s)
       TYPE(DECOMP_INFO), pointer :: decomp
@@ -2290,6 +2437,7 @@ contains
 
       call read_var(io, ipencil, decomp, &
                     opt_nb_req=opt_nb_req, &
+                    opt_mpi_datarep=opt_mpi_datarep, &
                     ints=var)
 
       nullify (decomp)
@@ -2303,7 +2451,8 @@ contains
    subroutine read_var_logs(io, ipencil, var, &
                             opt_reduce_prec, &
                             opt_decomp, &
-                            opt_nb_req)
+                            opt_nb_req, &
+                            opt_mpi_datarep)
 
       implicit none
 
@@ -2314,6 +2463,7 @@ contains
       logical, intent(in), optional :: opt_reduce_prec
       TYPE(DECOMP_INFO), target, intent(IN), optional :: opt_decomp
       integer, intent(inout), optional :: opt_nb_req
+      character(len=*), intent(in), optional :: opt_mpi_datarep
 
       ! Local variable(s)
       TYPE(DECOMP_INFO), pointer :: decomp
@@ -2329,6 +2479,7 @@ contains
 
       call read_var(io, ipencil, decomp, &
                     opt_nb_req=opt_nb_req, &
+                    opt_mpi_datarep=opt_mpi_datarep, &
                     logs=var)
 
       nullify (decomp)
@@ -2356,6 +2507,7 @@ contains
                                 opt_reduce_prec, &
                                 opt_decomp, &
                                 opt_nb_req, &
+                                opt_mpi_datarep, &
                                 opt_io)
 
       implicit none
@@ -2372,6 +2524,7 @@ contains
       logical, intent(in), optional :: opt_reduce_prec
       TYPE(DECOMP_INFO), target, intent(IN), optional :: opt_decomp
       integer, intent(inout), optional :: opt_nb_req
+      character(len=*), intent(in), optional :: opt_mpi_datarep
       type(d2d_io_mpi), intent(inout), optional :: opt_io
       ! Local variables
       real(real32), allocatable, dimension(:, :, :) :: var2d
@@ -2405,6 +2558,7 @@ contains
                           opt_mpi_file_open_info=opt_mpi_file_open_info, &
                           opt_mpi_file_set_view_info=opt_mpi_file_set_view_info, &
                           opt_nb_req=opt_nb_req, &
+                          opt_mpi_datarep=opt_mpi_datarep, &
                           opt_io=opt_io, &
                           freal=var)
       else
@@ -2434,6 +2588,7 @@ contains
                           opt_dirname=opt_dirname, &
                           opt_mpi_file_open_info=opt_mpi_file_open_info, &
                           opt_mpi_file_set_view_info=opt_mpi_file_set_view_info, &
+                          opt_mpi_datarep=opt_mpi_datarep, &
                           freal=var2d)
          deallocate (var2d)
       end if
@@ -2456,6 +2611,7 @@ contains
                                 opt_reduce_prec, &
                                 opt_decomp, &
                                 opt_nb_req, &
+                                opt_mpi_datarep, &
                                 opt_io)
 
       implicit none
@@ -2472,6 +2628,7 @@ contains
       logical, intent(in), optional :: opt_reduce_prec
       TYPE(DECOMP_INFO), target, intent(IN), optional :: opt_decomp
       integer, intent(inout), optional :: opt_nb_req
+      character(len=*), intent(in), optional :: opt_mpi_datarep
       type(d2d_io_mpi), intent(inout), optional :: opt_io
       ! Local variables
       complex(real32), allocatable, dimension(:, :, :) :: var2d
@@ -2505,6 +2662,7 @@ contains
                           opt_mpi_file_open_info=opt_mpi_file_open_info, &
                           opt_mpi_file_set_view_info=opt_mpi_file_set_view_info, &
                           opt_nb_req=opt_nb_req, &
+                          opt_mpi_datarep=opt_mpi_datarep, &
                           opt_io=opt_io, &
                           fcplx=var)
       else
@@ -2534,6 +2692,7 @@ contains
                           opt_dirname=opt_dirname, &
                           opt_mpi_file_open_info=opt_mpi_file_open_info, &
                           opt_mpi_file_set_view_info=opt_mpi_file_set_view_info, &
+                          opt_mpi_datarep=opt_mpi_datarep, &
                           fcplx=var2d)
          deallocate (var2d)
       end if
@@ -2556,6 +2715,7 @@ contains
                                 opt_reduce_prec, &
                                 opt_decomp, &
                                 opt_nb_req, &
+                                opt_mpi_datarep, &
                                 opt_io)
 
       implicit none
@@ -2572,6 +2732,7 @@ contains
       logical, intent(in), optional :: opt_reduce_prec
       TYPE(DECOMP_INFO), target, intent(IN), optional :: opt_decomp
       integer, intent(inout), optional :: opt_nb_req
+      character(len=*), intent(in), optional :: opt_mpi_datarep
       type(d2d_io_mpi), intent(inout), optional :: opt_io
       ! Local variables
       logical :: reduce
@@ -2618,6 +2779,7 @@ contains
                              opt_dirname=opt_dirname, &
                              opt_mpi_file_open_info=opt_mpi_file_open_info, &
                              opt_mpi_file_set_view_info=opt_mpi_file_set_view_info, &
+                             opt_mpi_datarep=opt_mpi_datarep, &
                              freal=var2dbis)
          else
             call write_plane(ipencil, varname, decomp, nplanes, &
@@ -2625,6 +2787,7 @@ contains
                              opt_mpi_file_open_info=opt_mpi_file_open_info, &
                              opt_mpi_file_set_view_info=opt_mpi_file_set_view_info, &
                              opt_nb_req=opt_nb_req, &
+                             opt_mpi_datarep=opt_mpi_datarep, &
                              opt_io=opt_io, &
                              dreal=var)
          end if
@@ -2677,12 +2840,14 @@ contains
                              opt_dirname=opt_dirname, &
                              opt_mpi_file_open_info=opt_mpi_file_open_info, &
                              opt_mpi_file_set_view_info=opt_mpi_file_set_view_info, &
+                             opt_mpi_datarep=opt_mpi_datarep, &
                              freal=var2dbis)
          else
             call write_plane(ipencil, varname, decomp, nplanes, &
                              opt_dirname=opt_dirname, &
                              opt_mpi_file_open_info=opt_mpi_file_open_info, &
                              opt_mpi_file_set_view_info=opt_mpi_file_set_view_info, &
+                             opt_mpi_datarep=opt_mpi_datarep, &
                              dreal=var2d)
          end if
       end if
@@ -2704,6 +2869,7 @@ contains
                                 opt_reduce_prec, &
                                 opt_decomp, &
                                 opt_nb_req, &
+                                opt_mpi_datarep, &
                                 opt_io)
 
       implicit none
@@ -2720,6 +2886,7 @@ contains
       logical, intent(in), optional :: opt_reduce_prec
       TYPE(DECOMP_INFO), target, intent(IN), optional :: opt_decomp
       integer, intent(inout), optional :: opt_nb_req
+      character(len=*), intent(in), optional :: opt_mpi_datarep
       type(d2d_io_mpi), intent(inout), optional :: opt_io
       ! Local variables
       logical :: reduce
@@ -2766,6 +2933,7 @@ contains
                              opt_dirname=opt_dirname, &
                              opt_mpi_file_open_info=opt_mpi_file_open_info, &
                              opt_mpi_file_set_view_info=opt_mpi_file_set_view_info, &
+                             opt_mpi_datarep=opt_mpi_datarep, &
                              fcplx=var2dbis)
          else
             call write_plane(ipencil, varname, decomp, nplanes, &
@@ -2773,6 +2941,7 @@ contains
                              opt_mpi_file_open_info=opt_mpi_file_open_info, &
                              opt_mpi_file_set_view_info=opt_mpi_file_set_view_info, &
                              opt_nb_req=opt_nb_req, &
+                             opt_mpi_datarep=opt_mpi_datarep, &
                              opt_io=opt_io, &
                              dcplx=var)
          end if
@@ -2825,12 +2994,14 @@ contains
                              opt_dirname=opt_dirname, &
                              opt_mpi_file_open_info=opt_mpi_file_open_info, &
                              opt_mpi_file_set_view_info=opt_mpi_file_set_view_info, &
+                             opt_mpi_datarep=opt_mpi_datarep, &
                              fcplx=var2dbis)
          else
             call write_plane(ipencil, varname, decomp, nplanes, &
                              opt_dirname=opt_dirname, &
                              opt_mpi_file_open_info=opt_mpi_file_open_info, &
                              opt_mpi_file_set_view_info=opt_mpi_file_set_view_info, &
+                             opt_mpi_datarep=opt_mpi_datarep, &
                              dcplx=var2d)
          end if
       end if
@@ -2852,6 +3023,7 @@ contains
                                opt_reduce_prec, &
                                opt_decomp, &
                                opt_nb_req, &
+                               opt_mpi_datarep, &
                                opt_io)
 
       implicit none
@@ -2868,6 +3040,7 @@ contains
       logical, intent(in), optional :: opt_reduce_prec
       TYPE(DECOMP_INFO), target, intent(IN), optional :: opt_decomp
       integer, intent(inout), optional :: opt_nb_req
+      character(len=*), intent(in), optional :: opt_mpi_datarep
       type(d2d_io_mpi), intent(inout), optional :: opt_io
       ! Local variables
       integer, allocatable, dimension(:, :, :) :: var2d
@@ -2901,6 +3074,7 @@ contains
                           opt_mpi_file_open_info=opt_mpi_file_open_info, &
                           opt_mpi_file_set_view_info=opt_mpi_file_set_view_info, &
                           opt_nb_req=opt_nb_req, &
+                          opt_mpi_datarep=opt_mpi_datarep, &
                           opt_io=opt_io, &
                           ints=var)
       else
@@ -2930,6 +3104,7 @@ contains
                           opt_dirname=opt_dirname, &
                           opt_mpi_file_open_info=opt_mpi_file_open_info, &
                           opt_mpi_file_set_view_info=opt_mpi_file_set_view_info, &
+                          opt_mpi_datarep=opt_mpi_datarep, &
                           ints=var2d)
          deallocate (var2d)
       end if
@@ -2952,6 +3127,7 @@ contains
                                opt_reduce_prec, &
                                opt_decomp, &
                                opt_nb_req, &
+                               opt_mpi_datarep, &
                                opt_io)
 
       implicit none
@@ -2968,6 +3144,7 @@ contains
       logical, intent(in), optional :: opt_reduce_prec
       TYPE(DECOMP_INFO), target, intent(IN), optional :: opt_decomp
       integer, intent(inout), optional :: opt_nb_req
+      character(len=*), intent(in), optional :: opt_mpi_datarep
       type(d2d_io_mpi), intent(inout), optional :: opt_io
       ! Local variables
       logical, allocatable, dimension(:, :, :) :: var2d
@@ -3001,6 +3178,7 @@ contains
                           opt_mpi_file_open_info=opt_mpi_file_open_info, &
                           opt_mpi_file_set_view_info=opt_mpi_file_set_view_info, &
                           opt_nb_req=opt_nb_req, &
+                          opt_mpi_datarep=opt_mpi_datarep, &
                           opt_io=opt_io, &
                           logs=var)
       else
@@ -3030,6 +3208,7 @@ contains
                           opt_dirname=opt_dirname, &
                           opt_mpi_file_open_info=opt_mpi_file_open_info, &
                           opt_mpi_file_set_view_info=opt_mpi_file_set_view_info, &
+                          opt_mpi_datarep=opt_mpi_datarep, &
                           logs=var2d)
          deallocate (var2d)
       end if
@@ -3058,6 +3237,7 @@ contains
                                opt_reduce_prec, &
                                opt_decomp, &
                                opt_nb_req, &
+                               opt_mpi_datarep, &
                                opt_io)
 
       implicit none
@@ -3073,6 +3253,7 @@ contains
       logical, intent(in), optional :: opt_reduce_prec
       TYPE(DECOMP_INFO), target, intent(IN), optional :: opt_decomp
       integer, intent(inout), optional :: opt_nb_req
+      character(len=*), intent(in), optional :: opt_mpi_datarep
       type(d2d_io_mpi), intent(inout), optional :: opt_io
       ! Local variables
       TYPE(DECOMP_INFO), pointer :: decomp
@@ -3091,6 +3272,7 @@ contains
                       opt_mpi_file_open_info=opt_mpi_file_open_info, &
                       opt_mpi_file_set_view_info=opt_mpi_file_set_view_info, &
                       opt_nb_req=opt_nb_req, &
+                      opt_mpi_datarep=opt_mpi_datarep, &
                       opt_io=opt_io, &
                       freal=var)
 
@@ -3110,6 +3292,7 @@ contains
                                opt_reduce_prec, &
                                opt_decomp, &
                                opt_nb_req, &
+                               opt_mpi_datarep, &
                                opt_io)
 
       implicit none
@@ -3125,6 +3308,7 @@ contains
       logical, intent(in), optional :: opt_reduce_prec
       TYPE(DECOMP_INFO), target, intent(IN), optional :: opt_decomp
       integer, intent(inout), optional :: opt_nb_req
+      character(len=*), intent(in), optional :: opt_mpi_datarep
       type(d2d_io_mpi), intent(inout), optional :: opt_io
       ! Local variables
       TYPE(DECOMP_INFO), pointer :: decomp
@@ -3143,6 +3327,7 @@ contains
                       opt_mpi_file_open_info=opt_mpi_file_open_info, &
                       opt_mpi_file_set_view_info=opt_mpi_file_set_view_info, &
                       opt_nb_req=opt_nb_req, &
+                      opt_mpi_datarep=opt_mpi_datarep, &
                       opt_io=opt_io, &
                       fcplx=var)
 
@@ -3162,6 +3347,7 @@ contains
                                opt_reduce_prec, &
                                opt_decomp, &
                                opt_nb_req, &
+                               opt_mpi_datarep, &
                                opt_io)
 
       implicit none
@@ -3177,6 +3363,7 @@ contains
       logical, intent(in), optional :: opt_reduce_prec
       TYPE(DECOMP_INFO), target, intent(IN), optional :: opt_decomp
       integer, intent(inout), optional :: opt_nb_req
+      character(len=*), intent(in), optional :: opt_mpi_datarep
       type(d2d_io_mpi), intent(inout), optional :: opt_io
       ! Local variables
       logical :: reduce
@@ -3208,6 +3395,7 @@ contains
                          opt_dirname=opt_dirname, &
                          opt_mpi_file_open_info=opt_mpi_file_open_info, &
                          opt_mpi_file_set_view_info=opt_mpi_file_set_view_info, &
+                         opt_mpi_datarep=opt_mpi_datarep, &
                          freal=tmp)
          var = real(tmp, kind=real64)
          deallocate (tmp)
@@ -3217,6 +3405,7 @@ contains
                          opt_mpi_file_open_info=opt_mpi_file_open_info, &
                          opt_mpi_file_set_view_info=opt_mpi_file_set_view_info, &
                          opt_nb_req=opt_nb_req, &
+                         opt_mpi_datarep=opt_mpi_datarep, &
                          opt_io=opt_io, &
                          dreal=var)
       end if
@@ -3234,6 +3423,7 @@ contains
                                opt_reduce_prec, &
                                opt_decomp, &
                                opt_nb_req, &
+                               opt_mpi_datarep, &
                                opt_io)
 
       implicit none
@@ -3249,6 +3439,7 @@ contains
       logical, intent(in), optional :: opt_reduce_prec
       TYPE(DECOMP_INFO), target, intent(IN), optional :: opt_decomp
       integer, intent(inout), optional :: opt_nb_req
+      character(len=*), intent(in), optional :: opt_mpi_datarep
       type(d2d_io_mpi), intent(inout), optional :: opt_io
       ! Local variables
       logical :: reduce
@@ -3280,6 +3471,7 @@ contains
                          opt_dirname=opt_dirname, &
                          opt_mpi_file_open_info=opt_mpi_file_open_info, &
                          opt_mpi_file_set_view_info=opt_mpi_file_set_view_info, &
+                         opt_mpi_datarep=opt_mpi_datarep, &
                          fcplx=tmp)
          var = cmplx(tmp, kind=real64)
          deallocate (tmp)
@@ -3289,6 +3481,7 @@ contains
                          opt_mpi_file_open_info=opt_mpi_file_open_info, &
                          opt_mpi_file_set_view_info=opt_mpi_file_set_view_info, &
                          opt_nb_req=opt_nb_req, &
+                         opt_mpi_datarep=opt_mpi_datarep, &
                          opt_io=opt_io, &
                          dcplx=var)
       end if
@@ -3306,6 +3499,7 @@ contains
                               opt_reduce_prec, &
                               opt_decomp, &
                               opt_nb_req, &
+                              opt_mpi_datarep, &
                               opt_io)
 
       implicit none
@@ -3321,6 +3515,7 @@ contains
       logical, intent(in), optional :: opt_reduce_prec
       TYPE(DECOMP_INFO), target, intent(IN), optional :: opt_decomp
       integer, intent(inout), optional :: opt_nb_req
+      character(len=*), intent(in), optional :: opt_mpi_datarep
       type(d2d_io_mpi), intent(inout), optional :: opt_io
       ! Local variables
       TYPE(DECOMP_INFO), pointer :: decomp
@@ -3339,6 +3534,7 @@ contains
                       opt_mpi_file_open_info=opt_mpi_file_open_info, &
                       opt_mpi_file_set_view_info=opt_mpi_file_set_view_info, &
                       opt_nb_req=opt_nb_req, &
+                      opt_mpi_datarep=opt_mpi_datarep, &
                       opt_io=opt_io, &
                       ints=var)
 
@@ -3358,6 +3554,7 @@ contains
                               opt_reduce_prec, &
                               opt_decomp, &
                               opt_nb_req, &
+                              opt_mpi_datarep, &
                               opt_io)
 
       implicit none
@@ -3373,6 +3570,7 @@ contains
       logical, intent(in), optional :: opt_reduce_prec
       TYPE(DECOMP_INFO), target, intent(IN), optional :: opt_decomp
       integer, intent(inout), optional :: opt_nb_req
+      character(len=*), intent(in), optional :: opt_mpi_datarep
       type(d2d_io_mpi), intent(inout), optional :: opt_io
       ! Local variables
       TYPE(DECOMP_INFO), pointer :: decomp
@@ -3391,6 +3589,7 @@ contains
                       opt_mpi_file_open_info=opt_mpi_file_open_info, &
                       opt_mpi_file_set_view_info=opt_mpi_file_set_view_info, &
                       opt_nb_req=opt_nb_req, &
+                      opt_mpi_datarep=opt_mpi_datarep, &
                       opt_io=opt_io, &
                       logs=var)
 
@@ -3411,103 +3610,115 @@ contains
    !
    !
    !
-   subroutine write_scalar_freal(io, n, var)
+   subroutine write_scalar_freal(io, n, var, opt_mpi_datarep)
 
       implicit none
 
       ! Arguments
       type(d2d_io_mpi), intent(INOUT) :: io
       integer, intent(IN) :: n
+      character(len=*), intent(in), optional :: opt_mpi_datarep
       real(real32), contiguous, dimension(:), intent(IN) :: var
 
       if (decomp_profiler_io) call decomp_profiler_start("io_write_scalar")
 
       call write_scalar(io, n, &
+                        opt_mpi_datarep=opt_mpi_datarep, &
                         freal=var)
       if (decomp_profiler_io) call decomp_profiler_end("io_write_scalar")
 
    end subroutine write_scalar_freal
    !
-   subroutine write_scalar_fcplx(io, n, var)
+   subroutine write_scalar_fcplx(io, n, var, opt_mpi_datarep)
 
       implicit none
 
       ! Arguments
       type(d2d_io_mpi), intent(INOUT) :: io
       integer, intent(IN) :: n
+      character(len=*), intent(in), optional :: opt_mpi_datarep
       complex(real32), contiguous, dimension(:), intent(IN) :: var
 
       if (decomp_profiler_io) call decomp_profiler_start("io_write_scalar")
 
       call write_scalar(io, n, &
+                        opt_mpi_datarep=opt_mpi_datarep, &
                         fcplx=var)
       if (decomp_profiler_io) call decomp_profiler_end("io_write_scalar")
 
    end subroutine write_scalar_fcplx
    !
-   subroutine write_scalar_dreal(io, n, var)
+   subroutine write_scalar_dreal(io, n, var, opt_mpi_datarep)
 
       implicit none
 
       ! Arguments
       type(d2d_io_mpi), intent(INOUT) :: io
       integer, intent(IN) :: n
+      character(len=*), intent(in), optional :: opt_mpi_datarep
       real(real64), contiguous, dimension(:), intent(IN) :: var
 
       if (decomp_profiler_io) call decomp_profiler_start("io_write_scalar")
 
       call write_scalar(io, n, &
+                        opt_mpi_datarep=opt_mpi_datarep, &
                         dreal=var)
       if (decomp_profiler_io) call decomp_profiler_end("io_write_scalar")
 
    end subroutine write_scalar_dreal
    !
-   subroutine write_scalar_dcplx(io, n, var)
+   subroutine write_scalar_dcplx(io, n, var, opt_mpi_datarep)
 
       implicit none
 
       ! Arguments
       type(d2d_io_mpi), intent(INOUT) :: io
       integer, intent(IN) :: n
+      character(len=*), intent(in), optional :: opt_mpi_datarep
       complex(real64), contiguous, dimension(:), intent(IN) :: var
 
       if (decomp_profiler_io) call decomp_profiler_start("io_write_scalar")
 
       call write_scalar(io, n, &
+                        opt_mpi_datarep=opt_mpi_datarep, &
                         dcplx=var)
       if (decomp_profiler_io) call decomp_profiler_end("io_write_scalar")
 
    end subroutine write_scalar_dcplx
    !
-   subroutine write_scalar_ints(io, n, var)
+   subroutine write_scalar_ints(io, n, var, opt_mpi_datarep)
 
       implicit none
 
       ! Arguments
       type(d2d_io_mpi), intent(INOUT) :: io
       integer, intent(IN) :: n
+      character(len=*), intent(in), optional :: opt_mpi_datarep
       integer, contiguous, dimension(:), intent(IN) :: var
 
       if (decomp_profiler_io) call decomp_profiler_start("io_write_scalar")
 
       call write_scalar(io, n, &
+                        opt_mpi_datarep=opt_mpi_datarep, &
                         ints=var)
       if (decomp_profiler_io) call decomp_profiler_end("io_write_scalar")
 
    end subroutine write_scalar_ints
    !
-   subroutine write_scalar_logs(io, n, var)
+   subroutine write_scalar_logs(io, n, var, opt_mpi_datarep)
 
       implicit none
 
       ! Arguments
       type(d2d_io_mpi), intent(INOUT) :: io
       integer, intent(IN) :: n
+      character(len=*), intent(in), optional :: opt_mpi_datarep
       logical, contiguous, dimension(:), intent(IN) :: var
 
       if (decomp_profiler_io) call decomp_profiler_start("io_write_scalar")
 
       call write_scalar(io, n, &
+                        opt_mpi_datarep=opt_mpi_datarep, &
                         logs=var)
       if (decomp_profiler_io) call decomp_profiler_end("io_write_scalar")
 
@@ -3521,103 +3732,115 @@ contains
    !
    !
    !
-   subroutine read_scalar_freal(io, n, var)
+   subroutine read_scalar_freal(io, n, var, opt_mpi_datarep)
 
       implicit none
 
       ! Arguments
       type(d2d_io_mpi), intent(INOUT) :: io
       integer, intent(IN) :: n
+      character(len=*), intent(in), optional :: opt_mpi_datarep
       real(real32), contiguous, dimension(:), intent(OUT) :: var
 
       if (decomp_profiler_io) call decomp_profiler_start("io_read_scalar")
 
       call read_scalar(io, n, &
+                       opt_mpi_datarep=opt_mpi_datarep, &
                        freal=var)
       if (decomp_profiler_io) call decomp_profiler_end("io_read_scalar")
 
    end subroutine read_scalar_freal
    !
-   subroutine read_scalar_fcplx(io, n, var)
+   subroutine read_scalar_fcplx(io, n, var, opt_mpi_datarep)
 
       implicit none
 
       ! Arguments
       type(d2d_io_mpi), intent(INOUT) :: io
       integer, intent(IN) :: n
+      character(len=*), intent(in), optional :: opt_mpi_datarep
       complex(real32), contiguous, dimension(:), intent(OUT) :: var
 
       if (decomp_profiler_io) call decomp_profiler_start("io_read_scalar")
 
       call read_scalar(io, n, &
+                       opt_mpi_datarep=opt_mpi_datarep, &
                        fcplx=var)
       if (decomp_profiler_io) call decomp_profiler_end("io_read_scalar")
 
    end subroutine read_scalar_fcplx
    !
-   subroutine read_scalar_dreal(io, n, var)
+   subroutine read_scalar_dreal(io, n, var, opt_mpi_datarep)
 
       implicit none
 
       ! Arguments
       type(d2d_io_mpi), intent(INOUT) :: io
       integer, intent(IN) :: n
+      character(len=*), intent(in), optional :: opt_mpi_datarep
       real(real64), contiguous, dimension(:), intent(OUT) :: var
 
       if (decomp_profiler_io) call decomp_profiler_start("io_read_scalar")
 
       call read_scalar(io, n, &
+                       opt_mpi_datarep=opt_mpi_datarep, &
                        dreal=var)
       if (decomp_profiler_io) call decomp_profiler_end("io_read_scalar")
 
    end subroutine read_scalar_dreal
    !
-   subroutine read_scalar_dcplx(io, n, var)
+   subroutine read_scalar_dcplx(io, n, var, opt_mpi_datarep)
 
       implicit none
 
       ! Arguments
       type(d2d_io_mpi), intent(INOUT) :: io
       integer, intent(IN) :: n
+      character(len=*), intent(in), optional :: opt_mpi_datarep
       complex(real64), contiguous, dimension(:), intent(OUT) :: var
 
       if (decomp_profiler_io) call decomp_profiler_start("io_read_scalar")
 
       call read_scalar(io, n, &
+                       opt_mpi_datarep=opt_mpi_datarep, &
                        dcplx=var)
       if (decomp_profiler_io) call decomp_profiler_end("io_read_scalar")
 
    end subroutine read_scalar_dcplx
    !
-   subroutine read_scalar_ints(io, n, var)
+   subroutine read_scalar_ints(io, n, var, opt_mpi_datarep)
 
       implicit none
 
       ! Arguments
       type(d2d_io_mpi), intent(INOUT) :: io
       integer, intent(IN) :: n
+      character(len=*), intent(in), optional :: opt_mpi_datarep
       integer, contiguous, dimension(:), intent(OUT) :: var
 
       if (decomp_profiler_io) call decomp_profiler_start("io_read_scalar")
 
       call read_scalar(io, n, &
+                       opt_mpi_datarep=opt_mpi_datarep, &
                        ints=var)
       if (decomp_profiler_io) call decomp_profiler_end("io_read_scalar")
 
    end subroutine read_scalar_ints
    !
-   subroutine read_scalar_logs(io, n, var)
+   subroutine read_scalar_logs(io, n, var, opt_mpi_datarep)
 
       implicit none
 
       ! Arguments
       type(d2d_io_mpi), intent(INOUT) :: io
       integer, intent(IN) :: n
+      character(len=*), intent(in), optional :: opt_mpi_datarep
       logical, contiguous, dimension(:), intent(OUT) :: var
 
       if (decomp_profiler_io) call decomp_profiler_start("io_read_scalar")
 
       call read_scalar(io, n, &
+                       opt_mpi_datarep=opt_mpi_datarep, &
                        logs=var)
       if (decomp_profiler_io) call decomp_profiler_end("io_read_scalar")
 

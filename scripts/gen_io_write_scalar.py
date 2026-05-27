@@ -29,7 +29,7 @@ for i in range(nformat):
     #
     # Header
     #
-    f.write("   subroutine write_scalar_"+ext[i]+"(io, n, var)\n")
+    f.write("   subroutine write_scalar_"+ext[i]+"(io, n, var, opt_mpi_datarep)\n")
     f.write("\n")
     f.write("      implicit none\n")
     f.write("\n")
@@ -39,6 +39,7 @@ for i in range(nformat):
     f.write("      ! Arguments\n")
     f.write("      type(d2d_io_mpi), intent(INOUT) :: io\n")
     f.write("      integer, intent(IN) :: n\n")
+    f.write("      character(len=*), intent(in), optional :: opt_mpi_datarep\n")
     if (i==0):
         f.write("      real(real32), contiguous, dimension(:), intent(IN) :: var\n")
     elif (i==2):
@@ -63,6 +64,7 @@ for i in range(nformat):
     #
     if (i==0 or i==1 or i==2 or i==3 or i==4 or i==5):
         f.write("      call write_scalar(io, n, &\n")
+        f.write("                        opt_mpi_datarep=opt_mpi_datarep, &\n")
         if (i==0):
             f.write("                        freal=var)\n")
         elif (i==1):

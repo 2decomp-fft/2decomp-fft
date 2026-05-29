@@ -38,6 +38,7 @@ for i in range(nformat):
     f.write("                                opt_reduce_prec, &\n")
     f.write("                                opt_decomp, &\n")
     f.write("                                opt_nb_req, &\n")
+    f.write("                                opt_mpi_datarep, &\n")
     f.write("                                opt_io)\n")
     f.write("\n")
     f.write("      implicit none\n")
@@ -68,6 +69,7 @@ for i in range(nformat):
     f.write("      logical, intent(in), optional :: opt_reduce_prec\n")
     f.write("      TYPE(DECOMP_INFO), target, intent(IN), optional :: opt_decomp\n")
     f.write("      integer, intent(inout), optional :: opt_nb_req\n")
+    f.write("      character(len=*), intent(in), optional :: opt_mpi_datarep\n")
     f.write("      type(d2d_io_mpi), intent(inout), optional :: opt_io")
     f.write("\n")
     #
@@ -138,6 +140,7 @@ for i in range(nformat):
         f.write("                          opt_mpi_file_open_info=opt_mpi_file_open_info, &\n")
         f.write("                          opt_mpi_file_set_view_info=opt_mpi_file_set_view_info, &\n")
         f.write("                          opt_nb_req=opt_nb_req, &\n")
+        f.write("                          opt_mpi_datarep=opt_mpi_datarep, &\n")
         f.write("                          opt_io=opt_io, &\n")
         if (i==0):
             f.write("                          freal=var)\n")
@@ -183,6 +186,7 @@ for i in range(nformat):
         f.write("                          opt_dirname=opt_dirname, &\n")
         f.write("                          opt_mpi_file_open_info=opt_mpi_file_open_info, &\n")
         f.write("                          opt_mpi_file_set_view_info=opt_mpi_file_set_view_info, &\n")
+        f.write("                          opt_mpi_datarep=opt_mpi_datarep, &\n")
         if (i==0):
             f.write("                          freal=var2d)\n")
         elif (i==1):
@@ -208,6 +212,7 @@ for i in range(nformat):
         f.write("                             opt_dirname=opt_dirname, &\n")
         f.write("                             opt_mpi_file_open_info=opt_mpi_file_open_info, &\n")
         f.write("                             opt_mpi_file_set_view_info=opt_mpi_file_set_view_info, &\n")
+        f.write("                             opt_mpi_datarep=opt_mpi_datarep, &\n")
         if (i==2):
             f.write("                             freal=var2dbis)\n")
         elif (i==3):
@@ -218,6 +223,7 @@ for i in range(nformat):
         f.write("                             opt_mpi_file_open_info=opt_mpi_file_open_info, &\n")
         f.write("                             opt_mpi_file_set_view_info=opt_mpi_file_set_view_info, &\n")
         f.write("                             opt_nb_req=opt_nb_req, &\n")
+        f.write("                             opt_mpi_datarep=opt_mpi_datarep, &\n")
         f.write("                             opt_io=opt_io, &\n")
         if (i==2):
             f.write("                             dreal=var)\n")
@@ -294,6 +300,7 @@ for i in range(nformat):
         f.write("                             opt_dirname=opt_dirname, &\n")
         f.write("                             opt_mpi_file_open_info=opt_mpi_file_open_info, &\n")
         f.write("                             opt_mpi_file_set_view_info=opt_mpi_file_set_view_info, &\n")
+        f.write("                             opt_mpi_datarep=opt_mpi_datarep, &\n")
         if (i==2):
             f.write("                             freal=var2dbis)\n")
         elif (i==3):
@@ -303,6 +310,7 @@ for i in range(nformat):
         f.write("                             opt_dirname=opt_dirname, &\n")
         f.write("                             opt_mpi_file_open_info=opt_mpi_file_open_info, &\n")
         f.write("                             opt_mpi_file_set_view_info=opt_mpi_file_set_view_info, &\n")
+        f.write("                             opt_mpi_datarep=opt_mpi_datarep, &\n")
         if (i==2):
             f.write("                             dreal=var2d)\n")
         elif (i==3):

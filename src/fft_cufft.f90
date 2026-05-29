@@ -290,7 +290,7 @@ module decomp_2d_fft
       !
       ! Allocate the X (or Z) buffer for r2c and c2r transforms if needed
       !
-      if (maxval(dims) == 1) then
+      if (maxval(dims) > 1) then
          if (engine%format == PHYSICAL_IN_X) then
             call alloc_x(engine%wk13, engine%sp)
          else if (engine%format == PHYSICAL_IN_Z) then

@@ -270,29 +270,32 @@ module decomp_2d_fft
       integer :: i, j, istat
 
       !
-      ! Allocate the workspace for intermediate y-pencil data
-      ! The largest memory block needed is the one for c2c transforms
+      ! Allocate Y buffers only in case of pencil decomposition
       !
-      call alloc_y(engine%wk2_c2c, engine%ph)
+      if (minval(dims) > 1) then
+         !
+         ! Allocate the workspace for intermediate y-pencil data
+         ! The largest memory block needed is the one for c2c transforms
+         !
+         call alloc_y(engine%wk2_c2c, engine%ph)
+         !
+         ! A smaller memory block is needed for r2c and c2r transforms
+         ! wk2_c2c and wk2_r2c start at the same memory location
+         !
+         !    Size of wk2_c2c : ph%ysz(1), ph%ysz(2), ph%ysz(3)
+         !    Size of wk2_r2c : sp%ysz(1), sp%ysz(2), sp%ysz(3)
+         !
+         call c_f_pointer(c_loc(engine%wk2_c2c), engine%wk2_r2c, engine%sp%ysz)
+      end if
       !
-      ! A smaller memory block is needed for r2c and c2r transforms
-      ! wk2_c2c and wk2_r2c start at the same memory location
+      ! Allocate the X (or Z) buffer for r2c and c2r transforms if needed
       !
-      !    Size of wk2_c2c : ph%ysz(1), ph%ysz(2), ph%ysz(3)
-      !    Size of wk2_r2c : sp%ysz(1), sp%ysz(2), sp%ysz(3)
-      !
-      call c_f_pointer(c_loc(engine%wk2_c2c), engine%wk2_r2c, engine%sp%ysz)
-      !
-      ! Allocate the workspace for r2c and c2r transforms
-      !
-      ! wk13 can not be easily fused with wk2_*2c due to statements such as
-      ! transpose_y_to_x(wk2_r2c, wk13, sp)
-      ! transpose_y_to_z(wk2_r2c, wk13, sp)
-      !
-      if (engine%format == PHYSICAL_IN_X) then
-         call alloc_x(engine%wk13, engine%sp)
-      else if (engine%format == PHYSICAL_IN_Z) then
-         call alloc_z(engine%wk13, engine%sp)
+      if (maxval(dims) == 1) then
+         if (engine%format == PHYSICAL_IN_X) then
+            call alloc_x(engine%wk13, engine%sp)
+         else if (engine%format == PHYSICAL_IN_Z) then
+            call alloc_z(engine%wk13, engine%sp)
+         end if
       end if
 
       call decomp_2d_fft_log("cuFFT")
@@ -441,9 +444,9 @@ module decomp_2d_fft
 
       integer :: i, j, istat
 
-      nullify (wk2_c2c)
-      nullify (wk2_r2c)
-      nullify (wk13)
+      if (associated(wk2_c2c)) nullify (wk2_c2c)
+      if (associated(wk2_r2c)) nullify (wk2_r2c)
+      if (associated(wk13)) nullify (wk13)
 
       if (present(engine)) then
 
@@ -474,9 +477,11 @@ module decomp_2d_fft
 
       type(decomp_2d_fft_engine), target, intent(in) :: engine
 
-      wk2_c2c => engine%wk2_c2c
-      wk2_r2c => engine%wk2_r2c
-      wk13 => engine%wk13
+      if (allocated(engine%wk2_c2c)) then
+         wk2_c2c => engine%wk2_c2c
+         wk2_r2c => engine%wk2_r2c
+      end if
+      if (allocated(engine%wk13)) wk13 => engine%wk13
       plan => engine%plan
       cufft_workspace => engine%cufft_workspace
 
@@ -687,7 +692,7 @@ module decomp_2d_fft
 
       if (decomp_profiler_fft) call decomp_profiler_start("fft_c2c")
 
-      !$acc data create(wk2_c2c) present(in,out)
+      !$acc data if (minval(dims) > 1) create(wk2_c2c) present(in,out)
 
       if (format == PHYSICAL_IN_X .AND. isign == DECOMP_2D_FFT_FORWARD .OR. &
           format == PHYSICAL_IN_Z .AND. isign == DECOMP_2D_FFT_BACKWARD) then
@@ -836,7 +841,8 @@ module decomp_2d_fft
 
       if (decomp_profiler_fft) call decomp_profiler_start("fft_r2c")
 
-      !$acc data create(wk13,wk2_r2c) present(in_r,out_c)
+      !$acc data create(wk13) present(in_r,out_c)
+      !$acc data if (minval(dims) > 1) create(wk2_r2c)
 
       if (format == PHYSICAL_IN_X) then
 
@@ -844,9 +850,6 @@ module decomp_2d_fft
          if (dims(1)==1 .and. dims(2)==1) then
             ! Single rank : output available in X, Y and Z
             call r2c_1m_x(in_r, out_c)
-         else if (dims(1)==1) then
-            ! Slab : Y buffer available in X
-            call r2c_1m_x(in_r, wk2_r2c)
          else
             ! Default : use X buffer
             call r2c_1m_x(in_r, wk13)
@@ -856,18 +859,27 @@ module decomp_2d_fft
          if (dims(1)==1 .and. dims(2)==1) then
             ! Single rank : output available in X, Y and Z
             call c2c_1m_y(out_c, -1, plan(0, 2))
+         else if (dims(1)==1) then
+            ! Slab : X buffer available in X and Y
+            call c2c_1m_y(wk13, -1, plan(0, 2))
          else if (dims(2)==1) then
             ! Slab : output available in Y and Z
             call transpose_x_to_y(wk13, out_c, sp)
             call c2c_1m_y(out_c, -1, plan(0, 2))
          else
-            ! Default : transpose if needed
-            if (dims(1) > 1) call transpose_x_to_y(wk13, wk2_r2c, sp)
+            ! Pencil : transpose is needed
+            call transpose_x_to_y(wk13, wk2_r2c, sp)
             call c2c_1m_y(wk2_r2c, -1, plan(0, 2))
          end if
 
          ! ===== Swap Y --> Z; 1D FFTs in Z =====
-         if (dims(2) > 1) call transpose_y_to_z(wk2_r2c, out_c, sp)
+         if (dims(1)==1 .and. dims(2) > 1) then
+            ! Slab, X buffer available in X and Y
+            call transpose_y_to_z(wk13, out_c, sp)
+         else if (minval(dims) > 1) then
+            ! Pencil
+            call transpose_y_to_z(wk2_r2c, out_c, sp)
+         end if
          call c2c_1m_z(out_c, -1, plan(0, 3))
 
       else if (format == PHYSICAL_IN_Z) then
@@ -876,9 +888,6 @@ module decomp_2d_fft
          if (dims(1)==1 .and. dims(2)==1) then
             ! Single rank : output available in X, Y and Z
             call r2c_1m_z(in_r, out_c)
-         else if (dims(2)==1) then
-            ! Slab : Y buffer available in Z
-            call r2c_1m_z(in_r, wk2_r2c)
          else
             ! Default : use Z buffer
             call r2c_1m_z(in_r, wk13)
@@ -888,22 +897,32 @@ module decomp_2d_fft
          if (dims(1)==1 .and. dims(2)==1) then
             ! Single rank : output available in X, Y and Z
             call c2c_1m_y(out_c, -1, plan(0, 2))
+         else if (dims(2)==1) then
+            ! Slab : Z buffer available in Y and Z
+            call c2c_1m_y(wk13, -1, plan(0, 2))
          else if (dims(1)==1) then
             ! Slab : output available in X and Y
             call transpose_z_to_y(wk13, out_c, sp)
             call c2c_1m_y(out_c, -1, plan(0, 2))
          else
-            ! Default : transpose if needed
-            if (dims(2) > 1) call transpose_z_to_y(wk13, wk2_r2c, sp)
+            ! Pencil : transpose is needed
+            call transpose_z_to_y(wk13, wk2_r2c, sp)
             call c2c_1m_y(wk2_r2c, -1, plan(0, 2))
          end if
 
          ! ===== Swap Y --> X; 1D FFTs in X =====
-         if (dims(1) > 1) call transpose_y_to_x(wk2_r2c, out_c, sp)
+         if (dims(2)==1 .and. dims(1) > 1) then
+            ! Slab : Z buffer available in Y and Z
+            call transpose_y_to_x(wk13, out_c, sp)
+         else if (minval(dims) > 1) then
+            ! Pencil
+            call transpose_y_to_x(wk2_r2c, out_c, sp)
+         end if
          call c2c_1m_x(out_c, -1, plan(0, 1))
 
       end if
 
+      !$acc end data
       !$acc end data
 
       if (decomp_profiler_fft) call decomp_profiler_end("fft_r2c")
@@ -926,7 +945,8 @@ module decomp_2d_fft
 
       if (decomp_profiler_fft) call decomp_profiler_start("fft_c2r")
 
-      !$acc data create(wk2_r2c,wk13) present(in_c,out_r)
+      !$acc data create(wk13) present(in_c,out_r)
+      !$acc data if (minval(dims) > 1) create(wk2_r2c)
 
       if (format == PHYSICAL_IN_X) then
 
@@ -1067,6 +1087,7 @@ module decomp_2d_fft
          deallocate (wk1)
       end if
 
+      !$acc end data
       !$acc end data
 
       if (decomp_profiler_fft) call decomp_profiler_end("fft_c2r")

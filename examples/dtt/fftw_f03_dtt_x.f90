@@ -93,7 +93,7 @@ program dtt_x
    do j = dttxi, dttxf
       do k = dttyi, dttyf
          do l = dttzi, dttzf
-            if (nrank == 0) write(*,*) "Testing Case j,k,l", j,k,l
+            if (nrank == 0) write (*, *) "Testing Case j,k,l", j, k, l
             ! Init the FFT engine
             call dtt_engine%init(pencil=PHYSICAL_IN_X, &
                                  nx=nx, ny=ny, nz=nz, &

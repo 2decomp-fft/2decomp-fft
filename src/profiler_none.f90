@@ -377,19 +377,19 @@ contains
       logical, save, dimension(4) :: store
 
       if (prof_pause) then
-        store(1) = decomp_profiler_transpose
-        store(2) = decomp_profiler_io
-        store(3) = decomp_profiler_fft
-        store(4) = decomp_profiler_d2d
-        decomp_profiler_transpose = .false.
-        decomp_profiler_io = .false.
-        decomp_profiler_fft = .false.
-        decomp_profiler_d2d = .false.
+         store(1) = decomp_profiler_transpose
+         store(2) = decomp_profiler_io
+         store(3) = decomp_profiler_fft
+         store(4) = decomp_profiler_d2d
+         decomp_profiler_transpose = .false.
+         decomp_profiler_io = .false.
+         decomp_profiler_fft = .false.
+         decomp_profiler_d2d = .false.
       else
-        decomp_profiler_transpose = store(1)
-        decomp_profiler_io = store(2)
-        decomp_profiler_fft = store(3)
-        decomp_profiler_d2d = store(4)
+         decomp_profiler_transpose = store(1)
+         decomp_profiler_io = store(2)
+         decomp_profiler_fft = store(3)
+         decomp_profiler_d2d = store(4)
       end if
 
    end subroutine profiler_pause_or_resume

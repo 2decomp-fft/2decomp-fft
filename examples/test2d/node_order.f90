@@ -47,7 +47,7 @@ program node_order
    ! 3D array in Z : X / Y are distributed in row / col
    !
    ! Valid values are :
-   !    DECOMP_PARTITION_FIRST => the first CPUs will have extra nodes 
+   !    DECOMP_PARTITION_FIRST => the first CPUs will have extra nodes
    !    DECOMP_PARTITION_LAST => the last CPUs will have the extra nodes
    !
    ! The default value is DECOMP_PARTITION_LAST
@@ -68,13 +68,13 @@ program node_order
    ! Print the setup of the decomp_info objects
    io_unit = d2d_log_get_unit()
    if (d2d_log_is_active()) &
-      write(io_unit, *) '==========================================================='
+      write (io_unit, *) '==========================================================='
    call decomp_info_print(decomp1, io_unit, "first_last")
    if (d2d_log_is_active()) &
-      write(io_unit, *) '==========================================================='
+      write (io_unit, *) '==========================================================='
    call decomp_info_print(decomp2, io_unit, "last_first")
    if (d2d_log_is_active()) &
-      write(io_unit, *) '==========================================================='
+      write (io_unit, *) '==========================================================='
    call d2d_log_close_unit(io_unit)
 
    call decomp_info_finalize(decomp1)

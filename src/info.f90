@@ -13,11 +13,11 @@ module m_info
       integer, dimension(3) :: xst, xen, xsz ! x-pencil
       integer, dimension(3) :: yst, yen, ysz ! y-pencil
       integer, dimension(3) :: zst, zen, zsz ! z-pencil
-#ifdef EVEN                                                                      
-      ! buffer counts for MPI_ALLTOALL for padded-alltoall                       
-      integer :: x1count, y1count, y2count, z2count                                         
-      ! evenly distributed data                                                          
-      logical :: even                                                                       
+#ifdef EVEN
+      ! buffer counts for MPI_ALLTOALL for padded-alltoall
+      integer :: x1count, y1count, y2count, z2count
+      ! evenly distributed data
+      logical :: even
 #endif
    end type info
 

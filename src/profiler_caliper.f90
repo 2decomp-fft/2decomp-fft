@@ -75,7 +75,7 @@ module decomp_2d_profiler
    interface decomp_profiler_pause
       module procedure decomp_profiler_pause_noarg
    end interface decomp_profiler_pause
-   
+
    ! Generic interface to resume profiling
    interface decomp_profiler_resume
       module procedure decomp_profiler_resume_noarg
@@ -189,25 +189,25 @@ contains
    end subroutine decomp_profiler_end_char
 
    !
-   ! Pause profiling operations                                                             
+   ! Pause profiling operations
    !
-   subroutine decomp_profiler_pause_noarg()                                                 
-      
-      implicit none                                                                         
-      
-      call profiler_pause_or_resume(.true.)                                                 
-   
-   end subroutine decomp_profiler_pause_noarg                                               
-   
+   subroutine decomp_profiler_pause_noarg()
+
+      implicit none
+
+      call profiler_pause_or_resume(.true.)
+
+   end subroutine decomp_profiler_pause_noarg
+
    !
-   ! Resume profiling operations                                                            
+   ! Resume profiling operations
    !
-   subroutine decomp_profiler_resume_noarg()                                                
-      
-      implicit none                                                                         
-      
-      call profiler_pause_or_resume(.false.)                                                
-   
+   subroutine decomp_profiler_resume_noarg()
+
+      implicit none
+
+      call profiler_pause_or_resume(.false.)
+
    end subroutine decomp_profiler_resume_noarg
 
    !
@@ -247,19 +247,19 @@ contains
       logical, save, dimension(4) :: store
 
       if (prof_pause) then
-        store(1) = decomp_profiler_transpose
-        store(2) = decomp_profiler_io
-        store(3) = decomp_profiler_fft
-        store(4) = decomp_profiler_d2d
-        decomp_profiler_transpose = .false.
-        decomp_profiler_io = .false.
-        decomp_profiler_fft = .false.
-        decomp_profiler_d2d = .false.
+         store(1) = decomp_profiler_transpose
+         store(2) = decomp_profiler_io
+         store(3) = decomp_profiler_fft
+         store(4) = decomp_profiler_d2d
+         decomp_profiler_transpose = .false.
+         decomp_profiler_io = .false.
+         decomp_profiler_fft = .false.
+         decomp_profiler_d2d = .false.
       else
-        decomp_profiler_transpose = store(1)
-        decomp_profiler_io = store(2)
-        decomp_profiler_fft = store(3)
-        decomp_profiler_d2d = store(4)
+         decomp_profiler_transpose = store(1)
+         decomp_profiler_io = store(2)
+         decomp_profiler_fft = store(3)
+         decomp_profiler_d2d = store(4)
       end if
 
    end subroutine profiler_pause_or_resume

@@ -136,13 +136,13 @@ contains
       ! Arguments
       real(real32), intent(inout) :: data
       integer, intent(in) :: operation
-      
+
       ! Local variable
       integer :: ierror
-      
+
       call MPI_ALLREDUCE(MPI_IN_PLACE, data, 1, MPI_REAL, operation, decomp_2d_comm, ierror)
       if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_ALLREDUCE")
-   
+
    end subroutine decomp_2d_mpi_allreduce_freal_inplace
 
    ! Small wrapper to perform MPI_ALLREDUCE operations on scalars
@@ -171,13 +171,13 @@ contains
       ! Arguments
       real(real64), intent(inout) :: data
       integer, intent(in) :: operation
-      
+
       ! Local variable
       integer :: ierror
-      
+
       call MPI_ALLREDUCE(MPI_IN_PLACE, data, 1, MPI_DOUBLE_PRECISION, operation, decomp_2d_comm, ierror)
       if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_ALLREDUCE")
-   
+
    end subroutine decomp_2d_mpi_allreduce_dreal_inplace
 
    !

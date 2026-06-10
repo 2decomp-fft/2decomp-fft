@@ -5,6 +5,7 @@ program timing2d_real
    use decomp_2d
    use decomp_2d_constants
    use decomp_2d_mpi
+   use decomp_2d_profiler
    use decomp_2d_testing
 #if defined(_GPU)
    use cudafor
@@ -108,6 +109,9 @@ program timing2d_real
    end if
 #endif
 
+   ! Pause profiling
+   call decomp_profiler_pause()
+
    t1 = MPI_WTIME()
    call transpose_x_to_y(u1, u2)
    call transpose_y_to_z(u2, u3)
@@ -125,6 +129,10 @@ program timing2d_real
    if (nrank == 0) then
       write (*, *) 'Tot time it 0 ', t1
    end if
+
+   ! Resume profiling
+   call decomp_profiler_resume()
+
    do iter = 1, niter
       !!!!!!!!!!!!!!!!!!!!!!!
       ! x-pencil ==> y-pencil

@@ -5,6 +5,7 @@ program fft_c2c_x
    use decomp_2d_fft
    use decomp_2d_constants
    use decomp_2d_mpi
+   use decomp_2d_profiler
    use decomp_2d_testing
    use MPI
 #if defined(_GPU)
@@ -72,6 +73,9 @@ program fft_c2c_x
       end do
    end do
 
+   ! Pause profiling
+   call decomp_profiler_pause()
+
    !$acc data copyin(in) copy(out)
    ! First iterations out of the counting loop
    t1 = MPI_WTIME()
@@ -92,6 +96,10 @@ program fft_c2c_x
       write (*, *) '     time (sec): ', t1, t3
       write (*, *) ''
    end if
+
+   ! Resume profiling
+   call decomp_profiler_resume()
+
    ! Init the time
    t2 = 0.d0
    t4 = 0.d0

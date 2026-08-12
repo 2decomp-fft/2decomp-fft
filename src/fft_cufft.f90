@@ -270,29 +270,32 @@ module decomp_2d_fft
       integer :: i, j, istat
 
       !
-      ! Allocate the workspace for intermediate y-pencil data
-      ! The largest memory block needed is the one for c2c transforms
+      ! Allocate Y buffers only in case of pencil decomposition
       !
-      call alloc_y(engine%wk2_c2c, engine%ph)
+      if (minval(dims) > 1) then
+         !
+         ! Allocate the workspace for intermediate y-pencil data
+         ! The largest memory block needed is the one for c2c transforms
+         !
+         call alloc_y(engine%wk2_c2c, engine%ph)
+         !
+         ! A smaller memory block is needed for r2c and c2r transforms
+         ! wk2_c2c and wk2_r2c start at the same memory location
+         !
+         !    Size of wk2_c2c : ph%ysz(1), ph%ysz(2), ph%ysz(3)
+         !    Size of wk2_r2c : sp%ysz(1), sp%ysz(2), sp%ysz(3)
+         !
+         call c_f_pointer(c_loc(engine%wk2_c2c), engine%wk2_r2c, engine%sp%ysz)
+      end if
       !
-      ! A smaller memory block is needed for r2c and c2r transforms
-      ! wk2_c2c and wk2_r2c start at the same memory location
+      ! Allocate the X (or Z) buffer for r2c and c2r transforms if needed
       !
-      !    Size of wk2_c2c : ph%ysz(1), ph%ysz(2), ph%ysz(3)
-      !    Size of wk2_r2c : sp%ysz(1), sp%ysz(2), sp%ysz(3)
-      !
-      call c_f_pointer(c_loc(engine%wk2_c2c), engine%wk2_r2c, engine%sp%ysz)
-      !
-      ! Allocate the workspace for r2c and c2r transforms
-      !
-      ! wk13 can not be easily fused with wk2_*2c due to statements such as
-      ! transpose_y_to_x(wk2_r2c, wk13, sp)
-      ! transpose_y_to_z(wk2_r2c, wk13, sp)
-      !
-      if (engine%format == PHYSICAL_IN_X) then
-         call alloc_x(engine%wk13, engine%sp)
-      else if (engine%format == PHYSICAL_IN_Z) then
-         call alloc_z(engine%wk13, engine%sp)
+      if (maxval(dims) > 1) then
+         if (engine%format == PHYSICAL_IN_X) then
+            call alloc_x(engine%wk13, engine%sp)
+         else if (engine%format == PHYSICAL_IN_Z) then
+            call alloc_z(engine%wk13, engine%sp)
+         end if
       end if
 
       call decomp_2d_fft_log("cuFFT")
@@ -441,9 +444,9 @@ module decomp_2d_fft
 
       integer :: i, j, istat
 
-      nullify (wk2_c2c)
-      nullify (wk2_r2c)
-      nullify (wk13)
+      if (associated(wk2_c2c)) nullify (wk2_c2c)
+      if (associated(wk2_r2c)) nullify (wk2_r2c)
+      if (associated(wk13)) nullify (wk13)
 
       if (present(engine)) then
 
@@ -474,9 +477,11 @@ module decomp_2d_fft
 
       type(decomp_2d_fft_engine), target, intent(in) :: engine
 
-      wk2_c2c => engine%wk2_c2c
-      wk2_r2c => engine%wk2_r2c
-      wk13 => engine%wk13
+      if (allocated(engine%wk2_c2c)) then
+         wk2_c2c => engine%wk2_c2c
+         wk2_r2c => engine%wk2_r2c
+      end if
+      if (allocated(engine%wk13)) wk13 => engine%wk13
       plan => engine%plan
       cufft_workspace => engine%cufft_workspace
 
@@ -687,7 +692,7 @@ module decomp_2d_fft
 
       if (decomp_profiler_fft) call decomp_profiler_start("fft_c2c")
 
-      !$acc data create(wk2_c2c) present(in,out)
+      !$acc data if (minval(dims) > 1) create(wk2_c2c) present(in,out)
 
       if (format == PHYSICAL_IN_X .AND. isign == DECOMP_2D_FFT_FORWARD .OR. &
           format == PHYSICAL_IN_Z .AND. isign == DECOMP_2D_FFT_BACKWARD) then
@@ -706,31 +711,45 @@ module decomp_2d_fft
          end if
 
          ! ===== Swap X --> Y; 1D FFTs in Y =====
-
-         if (dims(1) > 1) then
-            if (inplace) then
-               call transpose_x_to_y(in, wk2_c2c, ph)
-            else
-               call transpose_x_to_y(wk1, wk2_c2c, ph)
-            end if
-            call c2c_1m_y(wk2_c2c, isign, plan(isign, 2))
-         else
+         if (dims(1)==1) then
+            ! Single rank or slab : input available in X and Y
             if (inplace) then
                call c2c_1m_y(in, isign, plan(isign, 2))
             else
                call c2c_1m_y(wk1, isign, plan(isign, 2))
             end if
+         else
+            if (dims(2)==1) then
+               ! Slab : output available in Y and Z
+               if (inplace) then
+                  call transpose_x_to_y(in, out, ph)
+               else
+                  call transpose_x_to_y(wk1, out, ph)
+               end if
+               call c2c_1m_y(out, isign, plan(isign, 2))
+            else
+               ! Pencil : use Y buffer
+               if (inplace) then
+                  call transpose_x_to_y(in, wk2_c2c, ph)
+               else
+                  call transpose_x_to_y(wk1, wk2_c2c, ph)
+               end if
+               call c2c_1m_y(wk2_c2c, isign, plan(isign, 2))
+            end if
          end if
 
          ! ===== Swap Y --> Z; 1D FFTs in Z =====
-         if (dims(1) > 1) then
-            call transpose_y_to_z(wk2_c2c, out, ph)
-         else
+         if (dims(1)==1) then
+            ! Single rank : use transpose to copy input inside output
+            ! Slab : input available in X and Y
             if (inplace) then
                call transpose_y_to_z(in, out, ph)
             else
                call transpose_y_to_z(wk1, out, ph)
             end if
+         else if (dims(2) > 1) then
+            ! Slab or pencil : transpose if needed
+            call transpose_y_to_z(wk2_c2c, out, ph)
          end if
          call c2c_1m_z(out, isign, plan(isign, 3))
 
@@ -752,24 +771,44 @@ module decomp_2d_fft
          end if
 
          ! ===== Swap Z --> Y; 1D FFTs in Y =====
-         if (dims(1) > 1) then
+         if (dims(2)==1) then
+            ! Single rank or slab : input available in Y and Z
             if (inplace) then
-               call transpose_z_to_y(in, wk2_c2c, ph)
+               call c2c_1m_y(in, isign, plan(isign, 2))
             else
-               call transpose_z_to_y(wk1, wk2_c2c, ph)
+               call c2c_1m_y(wk1, isign, plan(isign, 2))
             end if
-            call c2c_1m_y(wk2_c2c, isign, plan(isign, 2))
-         else  ! out==wk2_c2c if 1D decomposition
-            if (inplace) then
-               call transpose_z_to_y(in, out, ph)
+         else
+            if (dims(1)==1) then
+               ! Slab : output available in X and Y
+               if (inplace) then
+                  call transpose_z_to_y(in, out, ph)
+               else
+                  call transpose_z_to_y(wk1, out, ph)
+               end if
+               call c2c_1m_y(out, isign, plan(isign, 2))
             else
-               call transpose_z_to_y(wk1, out, ph)
+               ! Pencil : use Y buffer
+               if (inplace) then
+                  call transpose_z_to_y(in, wk2_c2c, ph)
+               else
+                  call transpose_z_to_y(wk1, wk2_c2c, ph) 
+               end if 
+               call c2c_1m_y(wk2_c2c, isign, plan(isign, 2))
             end if
-            call c2c_1m_y(out, isign, plan(isign, 2))
          end if
 
          ! ===== Swap Y --> X; 1D FFTs in X =====
-         if (dims(1) > 1) then
+         if (dims(2)==1) then
+            ! Single rank : use transpose to copy input inside output
+            ! Slab : input available in Y and Z
+            if (inplace) then
+               call transpose_y_to_x(in, out, ph)
+            else
+               call transpose_y_to_x(wk1, out, ph)
+            end if
+         else if (dims(1) > 1) then
+            ! Slab or pencil : transpose if needed
             call transpose_y_to_x(wk2_c2c, out, ph)
          end if
          call c2c_1m_x(out, isign, plan(isign, 1))
@@ -794,139 +833,96 @@ module decomp_2d_fft
    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
    subroutine fft_3d_r2c(in_r, out_c)
 
-      !use nvtx
-
       implicit none
 
       ! Arguments
       real(mytype), dimension(:, :, :), intent(IN) :: in_r
       complex(mytype), dimension(:, :, :), intent(OUT) :: out_c
 
-      ! Local variables
-#ifdef DEBUG
-      integer :: i, j, k
-      integer, dimension(3) :: dim3d
-#endif
-
       if (decomp_profiler_fft) call decomp_profiler_start("fft_r2c")
 
-      !$acc data create(wk13,wk2_r2c) present(in_r,out_c)
+      !$acc data create(wk13) present(in_r,out_c)
+      !$acc data if (minval(dims) > 1) create(wk2_r2c)
 
       if (format == PHYSICAL_IN_X) then
 
          ! ===== 1D FFTs in X =====
-         call r2c_1m_x(in_r, wk13)
+         if (dims(1)==1 .and. dims(2)==1) then
+            ! Single rank : output available in X, Y and Z
+            call r2c_1m_x(in_r, out_c)
+         else
+            ! Default : use X buffer
+            call r2c_1m_x(in_r, wk13)
+         end if
 
          ! ===== Swap X --> Y; 1D FFTs in Y =====
-         if (dims(1) > 1) then
+         if (dims(1)==1 .and. dims(2)==1) then
+            ! Single rank : output available in X, Y and Z
+            call c2c_1m_y(out_c, -1, plan(0, 2))
+         else if (dims(1)==1) then
+            ! Slab : X buffer available in X and Y
+            call c2c_1m_y(wk13, -1, plan(0, 2))
+         else if (dims(2)==1) then
+            ! Slab : output available in Y and Z
+            call transpose_x_to_y(wk13, out_c, sp)
+            call c2c_1m_y(out_c, -1, plan(0, 2))
+         else
+            ! Pencil : transpose is needed
             call transpose_x_to_y(wk13, wk2_r2c, sp)
             call c2c_1m_y(wk2_r2c, -1, plan(0, 2))
-         else
-            call c2c_1m_y(wk13, -1, plan(0, 2))
          end if
 
          ! ===== Swap Y --> Z; 1D FFTs in Z =====
-         if (dims(1) > 1) then
-            call transpose_y_to_z(wk2_r2c, out_c, sp)
-         else
+         if (dims(1)==1 .and. dims(2) > 1) then
+            ! Slab, X buffer available in X and Y
             call transpose_y_to_z(wk13, out_c, sp)
+         else if (minval(dims) > 1) then
+            ! Pencil
+            call transpose_y_to_z(wk2_r2c, out_c, sp)
          end if
          call c2c_1m_z(out_c, -1, plan(0, 3))
 
       else if (format == PHYSICAL_IN_Z) then
 
-#ifdef DEBUG
-         dim3d = shape(in_r)
-         do k = 1, dim3d(3), dim3d(3) / 8
-            do j = 1, dim3d(2), dim3d(2) / 8
-               do i = 1, dim3d(1), dim3d(1) / 8
-                  print "(i3,1x,i3,1x,i3,1x,e12.5,1x,e12.5)", i, j, k, real(in_r(i, j, k))
-               end do
-            end do
-         end do
-#endif
-
          ! ===== 1D FFTs in Z =====
-         !call nvtxStartRange("Z r2c_1m_z")
-         call r2c_1m_z(in_r, wk13)
-         !call nvtxEndRange("Z r2c_1m_z")
+         if (dims(1)==1 .and. dims(2)==1) then
+            ! Single rank : output available in X, Y and Z
+            call r2c_1m_z(in_r, out_c)
+         else
+            ! Default : use Z buffer
+            call r2c_1m_z(in_r, wk13)
+         end if
 
          ! ===== Swap Z --> Y; 1D FFTs in Y =====
-         if (dims(1) > 1) then
-            !call nvtxStartRange("Z1 transpose_z_to_y")
-            call transpose_z_to_y(wk13, wk2_r2c, sp)
-            !call nvtxEndRange
-            !call nvtxStartRange("Z1 c2c_1m_y")
-            call c2c_1m_y(wk2_r2c, -1, plan(0, 2))
-            !call nvtxEndRange
-
-#ifdef DEBUG
-            write (*, *) 'c2c_1m_y'
-            dim3d = shape(wk2_r2c)
-            do k = 1, dim3d(3), dim3d(3) / 8
-               do j = 1, dim3d(2), dim3d(2) / 8
-                  do i = 1, dim3d(1), dim3d(1) / 8
-                     print "(i3,1x,i3,1x,i3,1x,e12.5,1x,e12.5)", i, j, k, real(wk2_r2c(i, j, k)), &
-                        aimag(wk2_r2c(i, j, k))
-                  end do
-               end do
-            end do
-            write (*, *)
-            write (*, *)
-#endif
-
-         else  ! out_c==wk2_r2c if 1D decomposition
-            !call nvtxStartRange("Z transpose_z_to_y")
-            call transpose_z_to_y(wk13, out_c, sp)
-            !call nvtxEndRange
-            !call nvtxStartRange("Z c2c_1m_y")
+         if (dims(1)==1 .and. dims(2)==1) then
+            ! Single rank : output available in X, Y and Z
             call c2c_1m_y(out_c, -1, plan(0, 2))
-            !call nvtxEndRange
-
-#ifdef DEBUG
-            write (*, *) 'c2c_1m_y2'
-            dim3d = shape(out_c)
-            do k = 1, dim3d(3), dim3d(3) / 8
-               do j = 1, dim3d(2), dim3d(2) / 8
-                  do i = 1, dim3d(1), dim3d(1) / 8
-                     print "(i3,1x,i3,1x,i3,1x,e12.5,1x,e12.5)", i, j, k, real(out_c(i, j, k)), &
-                        aimag(out_c(i, j, k))
-                  end do
-               end do
-            end do
-            write (*, *)
-            write (*, *)
-#endif
-
+         else if (dims(2)==1) then
+            ! Slab : Z buffer available in Y and Z
+            call c2c_1m_y(wk13, -1, plan(0, 2))
+         else if (dims(1)==1) then
+            ! Slab : output available in X and Y
+            call transpose_z_to_y(wk13, out_c, sp)
+            call c2c_1m_y(out_c, -1, plan(0, 2))
+         else
+            ! Pencil : transpose is needed
+            call transpose_z_to_y(wk13, wk2_r2c, sp)
+            call c2c_1m_y(wk2_r2c, -1, plan(0, 2))
          end if
 
          ! ===== Swap Y --> X; 1D FFTs in X =====
-         if (dims(1) > 1) then
-            !call nvtxStartRange("Z1 transpose_y_to_x")
+         if (dims(2)==1 .and. dims(1) > 1) then
+            ! Slab : Z buffer available in Y and Z
+            call transpose_y_to_x(wk13, out_c, sp)
+         else if (minval(dims) > 1) then
+            ! Pencil
             call transpose_y_to_x(wk2_r2c, out_c, sp)
-            !call nvtxEndRange
          end if
-         !call nvtxStartRange("c2c_1m_x")
          call c2c_1m_x(out_c, -1, plan(0, 1))
-         !call nvtxEndRange
-
-#ifdef DEBUG
-         write (*, *) 'c2c_1m_x'
-         dim3d = shape(out_c)
-         do k = 1, dim3d(3), dim3d(3) / 8
-            do j = 1, dim3d(2), dim3d(2) / 8
-               do i = 1, dim3d(1), dim3d(1) / 8
-                  print "(i3,1x,i3,1x,i3,1x,e12.5,1x,e12.5)", i, j, k, real(out_c(i, j, k)), &
-                     aimag(out_c(i, j, k))
-               end do
-            end do
-         end do
-         write (*, *)
-         write (*, *)
-#endif
 
       end if
 
+      !$acc end data
       !$acc end data
 
       if (decomp_profiler_fft) call decomp_profiler_end("fft_r2c")
@@ -946,14 +942,11 @@ module decomp_2d_fft
 
       ! Local variables
       complex(mytype), allocatable, dimension(:, :, :) :: wk1
-#ifdef DEBUG
-      integer :: i, j, k
-      integer, dimension(3) :: dim3d
-#endif
 
       if (decomp_profiler_fft) call decomp_profiler_start("fft_c2r")
 
-      !$acc data create(wk2_r2c,wk13) present(in_c,out_r)
+      !$acc data create(wk13) present(in_c,out_r)
+      !$acc data if (minval(dims) > 1) create(wk2_r2c)
 
       if (format == PHYSICAL_IN_X) then
 
@@ -971,57 +964,58 @@ module decomp_2d_fft
          end if
 
          ! ===== Swap Z --> Y; 1D FFTs in Y =====
-         if (inplace) then
-            call transpose_z_to_y(in_c, wk2_r2c, sp)
+         if (dims(2)==1) then
+            ! Slab : input available in Y and Z
+            if (inplace) then
+               call c2c_1m_y(in_c, 1, plan(2, 2))
+            else
+               call c2c_1m_y(wk1, 1, plan(2, 2))
+            end if
+         else if (dims(1)==1) then
+            ! Slab : final buffer available in X and Y
+            if (inplace) then
+               call transpose_z_to_y(in_c, wk13, sp)
+            else
+               call transpose_z_to_y(wk1, wk13, sp)
+            end if
+            call c2c_1m_y(wk13, 1, plan(2, 2))
          else
-            call transpose_z_to_y(wk1, wk2_r2c, sp)
+            ! Pencil : use Y buffer
+            if (inplace) then
+               call transpose_z_to_y(in_c, wk2_r2c, sp)
+            else
+               call transpose_z_to_y(wk1, wk2_r2c, sp)
+            end if
+            call c2c_1m_y(wk2_r2c, 1, plan(2, 2))
          end if
-         call c2c_1m_y(wk2_r2c, 1, plan(2, 2))
 
          ! ===== Swap Y --> X; 1D FFTs in X =====
-         if (dims(1) > 1) then
-            call transpose_y_to_x(wk2_r2c, wk13, sp)
-            call c2r_1m_x(wk13, out_r)
+         if (dims(2)==1 .and. dims(1)==1) then
+            ! Single rank : input available in X, Y and Z
+            if (inplace) then
+               call c2r_1m_x(in_c, out_r)
+            else
+               call c2r_1m_x(wk1, out_r)
+            end if
          else
-            call c2r_1m_x(wk2_r2c, out_r)
+            ! Default : transpose if needed, use final buffer
+            if (dims(2)==1) then
+               if (inplace) then
+                  call transpose_y_to_x(in_c, wk13, sp)
+               else
+                  call transpose_y_to_x(wk1, wk13, sp)
+               end if
+            else if (dims(1) > 1) then
+               call transpose_y_to_x(wk2_r2c, wk13, sp)
+            end if
+            call c2r_1m_x(wk13, out_r)
          end if
 
       else if (format == PHYSICAL_IN_Z) then
 
-#ifdef DEBUG
-         write (*, *) 'Back Init c2c_1m_x line 788'
-         dim3d = shape(in_c)
-         do k = 1, dim3d(3), dim3d(3) / 8
-            do j = 1, dim3d(2), dim3d(2) / 8
-               do i = 1, dim3d(1), dim3d(1) / 8
-                  print "(i3,1x,i3,1x,i3,1x,e12.5,1x,e12.5)", i, j, k, real(in_c(i, j, k)), &
-                     aimag(in_c(i, j, k))
-               end do
-            end do
-         end do
-         write (*, *)
-         write (*, *)
-#endif
-
          ! ===== 1D FFTs in X =====
          if (inplace) then
             call c2c_1m_x(in_c, 1, plan(2, 1))
-
-#ifdef DEBUG
-            write (*, *) 'Back c2c_1m_x overwrite line 804'
-            dim3d = shape(in_c)
-            do k = 1, dim3d(3), dim3d(3) / 8
-               do j = 1, dim3d(2), dim3d(2) / 8
-                  do i = 1, dim3d(1), dim3d(1) / 8
-                     print "(i3,1x,i3,1x,i3,1x,e12.5,1x,e12.5)", i, j, k, real(in_c(i, j, k)), &
-                        aimag(in_c(i, j, k))
-                  end do
-               end do
-            end do
-            write (*, *)
-            write (*, *)
-#endif
-
          else
             call alloc_x(wk1, sp)
             !$acc enter data create(wk1) async
@@ -1030,129 +1024,59 @@ module decomp_2d_fft
             wk1(:, :, :) = in_c(:, :, :)
             !$acc end kernels
             call c2c_1m_x(wk1, 1, plan(2, 1))
-
-#ifdef DEBUG
-            write (*, *) 'Back2 c2c_1m_x line 821'
-            dim3d = shape(wk1)
-            do k = 1, dim3d(3), dim3d(1) / 8
-               do j = 1, dim3d(2), dim3d(2) / 8
-                  do i = 1, dim3d(1), dim3d(1) / 8
-                     print "(i3,1x,i3,1x,i3,1x,e12.5,1x,e12.5)", i, j, k, real(wk1(i, j, k)), &
-                        aimag(wk1(i, j, k))
-                  end do
-               end do
-            end do
-            write (*, *)
-            write (*, *)
-#endif
-
          end if
 
          ! ===== Swap X --> Y; 1D FFTs in Y =====
-         if (dims(1) > 1) then
-            if (inplace) then
-               call transpose_x_to_y(in_c, wk2_r2c, sp)
-            else
-               call transpose_x_to_y(wk1, wk2_r2c, sp)
-            end if
-            call c2c_1m_y(wk2_r2c, 1, plan(2, 2))
-
-#ifdef DEBUG
-            write (*, *) 'Back c2c_1m_y line 844'
-            dim3d = shape(wk2_r2c)
-            do k = 1, dim3d(3), dim3d(3) / 8
-               do j = 1, dim3d(2), dim3d(2) / 8
-                  do i = 1, dim3d(1), dim3d(1) / 8
-                     print "(i3,1x,i3,1x,i3,1x,e12.5,1x,e12.5)", i, j, k, real(wk2_r2c(i, j, k)), &
-                        aimag(wk2_r2c(i, j, k))
-                  end do
-               end do
-            end do
-            write (*, *)
-            write (*, *)
-#endif
-
-         else  ! in_c==wk2_r2c if 1D decomposition
+         if (dims(1)==1) then
+            ! Slab : input available in X and Y
             if (inplace) then
                call c2c_1m_y(in_c, 1, plan(2, 2))
-
-#ifdef DEBUG
-               write (*, *) 'Back2 c2c_1m_y line 860'
-               dim3d = shape(in_c)
-               do k = 1, dim3d(3), dim3d(3) / 8
-                  do j = 1, dim3d(2), dim3d(2) / 8
-                     do i = 1, dim3d(1), dim3d(1) / 8
-                        print "(i3,1x,i3,1x,i3,1x,e12.5,1x,e12.5)", i, j, k, real(in_c(i, j, k)), &
-                           aimag(in_c(i, j, k))
-                     end do
-                  end do
-               end do
-               write (*, *)
-               write (*, *)
-#endif
-
             else
                call c2c_1m_y(wk1, 1, plan(2, 2))
-
-#ifdef DEBUG
-               write (*, *) 'Back3 c2c_1m_y line 875'
-               dim3d = shape(wk1)
-               do k = 1, dim3d(3), dim3d(3) / 8
-                  do j = 1, dim3d(2), dim3d(2) / 8
-                     do i = 1, dim3d(1), dim3d(1) / 8
-                        print "(i3,1x,i3,1x,i3,1x,e12.5,1x,e12.5)", i, j, k, real(wk1(i, j, k)), &
-                           aimag(wk1(i, j, k))
-                     end do
-                  end do
-               end do
-               write (*, *)
-               write (*, *)
-#endif
-
+            end if
+         else
+            if (dims(2)==1) then
+               ! Slab : final buffer available in Y and Z
+               if (dims(1) > 1) then
+                  if (inplace) then
+                     call transpose_x_to_y(in_c, wk13, sp)
+                  else
+                     call transpose_x_to_y(wk1, wk13, sp)
+                  end if
+               end if
+               call c2c_1m_y(wk13, 1, plan(2, 2))
+            else
+               ! Pencil : use Y buffer
+               if (inplace) then
+                  call transpose_x_to_y(in_c, wk2_r2c, sp)
+               else
+                  call transpose_x_to_y(wk1, wk2_r2c, sp)
+               end if
+               call c2c_1m_y(wk2_r2c, 1, plan(2, 2))
             end if
          end if
 
          ! ===== Swap Y --> Z; 1D FFTs in Z =====
-         if (dims(1) > 1) then
-            call transpose_y_to_z(wk2_r2c, wk13, sp)
-         else
+         if (dims(1)==1 .and. dims(2)==1) then
+            ! Single rank : input available in X, Y and Z
             if (inplace) then
-               call transpose_y_to_z(in_c, wk13, sp)
+               call c2r_1m_z(in_c, out_r)
             else
-               call transpose_y_to_z(wk1, wk13, sp)
+               call c2r_1m_z(wk1, out_r)
             end if
+         else
+            ! Default : transpose if needed, use final buffer
+            if (dims(1)==1) then
+               if (inplace) then
+                  call transpose_y_to_z(in_c, wk13, sp)
+               else
+                  call transpose_y_to_z(wk1, wk13, sp)
+               end if
+            else if (dims(2) > 1) then
+               call transpose_y_to_z(wk2_r2c, wk13, sp)
+            end if
+            call c2r_1m_z(wk13, out_r)
          end if
-
-#ifdef DEBUG
-         write (*, *) 'Back2 after tr_y2z'
-         dim3d = shape(wk13)
-         do k = 1, dim3d(3), dim3d(3) / 8
-            do j = 1, dim3d(2), dim3d(2) / 8
-               do i = 1, dim3d(1), dim3d(1) / 8
-                  print "(i3,1x,i3,1x,i3,1x,e12.5,1x,e12.5)", i, j, k, real(wk13(i, j, k)), &
-                     aimag(wk13(i, j, k))
-               end do
-            end do
-         end do
-         write (*, *)
-         write (*, *)
-#endif
-
-         call c2r_1m_z(wk13, out_r)
-
-#ifdef DEBUG
-         write (*, *) 'Back2 c2r_1m_z out_r line 902'
-         dim3d = shape(out_r)
-         do k = 1, dim3d(3), dim3d(3) / 8
-            do j = 1, dim3d(2), dim3d(2) / 8
-               do i = 1, dim3d(1), dim3d(1) / 8
-                  print "(i3,1x,i3,1x,i3,1x,e12.5,1x,e12.5)", i, j, k, real(out_r(i, j, k))
-               end do
-            end do
-         end do
-         write (*, *)
-         write (*, *)
-#endif
 
       end if
 
@@ -1163,6 +1087,7 @@ module decomp_2d_fft
          deallocate (wk1)
       end if
 
+      !$acc end data
       !$acc end data
 
       if (decomp_profiler_fft) call decomp_profiler_end("fft_c2r")

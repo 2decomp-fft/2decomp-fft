@@ -2,7 +2,7 @@
 if (ENABLE_OPENACC)
   include(FindOpenACC)
   if(OpenACC_Fortran_FOUND)
-    message(STATUS "OpenACC for Fotran Compiler Found, version ${OpenACC_Fortran_VERSION_MAJOR}.${OpenACC_Fortran_VERSION_MINOR}")
+    message(STATUS "OpenACC for Fortran Compiler Found, version ${OpenACC_Fortran_VERSION_MAJOR}.${OpenACC_Fortran_VERSION_MINOR}")
   else()
     message(ERROR_CRITICAL "No OpenACC support detected")
   endif()

@@ -93,7 +93,7 @@ contains
       ! Create the config manager with basic reporting
       mgr = ConfigManager_new()
       call manager_error(mgr)
-      call mgr%add("runtime-report")
+      call mgr%add("runtime-report,calc.inclusive")
       call manager_error(mgr)
 
       ! Start the manager

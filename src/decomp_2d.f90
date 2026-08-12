@@ -481,7 +481,7 @@ contains
       if (buf_size > decomp_buf_size) then
          decomp_buf_size = buf_size
 #if defined(_GPU)
-         if (.not. use_pool) then
+         if (maxval(dims) > 1 .and. (.not. use_pool)) then
             if (associated(work1_r)) nullify (work1_r)
             if (associated(work2_r)) nullify (work2_r)
             if (associated(work1_c)) nullify (work1_c)

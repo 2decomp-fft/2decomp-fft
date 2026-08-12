@@ -26,6 +26,7 @@ _e.g._ vX.Y - YYYY-MM-DD and a new "Unreleased" section started above.
 - Fixed halo operations in case of periodicity and 1D domain decomposition [PR #426](https://github.com/2decomp-fft/2decomp-fft/pull/426)
 - Fixed the memory pool and the size of the buffers when the number of cells is very high [PR #432](https://github.com/2decomp-fft/2decomp-fft/pull/432). See [issue 431](https://github.com/2decomp-fft/2decomp-fft/issues/431).
 - Restored variable `real2_type` for mpi_maxloc operations. See [PR #441](https://github.com/2decomp-fft/2decomp-fft/pull/441).
+- Update Nvidia compiler CPU flags. See [issue #452](https://github.com/2decomp-fft/2decomp-fft/issues/452).
 
 ### Changed
 

@@ -1,10 +1,7 @@
 !! SPDX-License-Identifier: BSD-3-Clause
 
-! Preprocessor macro to deal with unused variables
-#define unused(x) associate(tmp => x); end associate
-
 !
-! Dummy module when there is no profiler
+! Generic module with basic profiling capability
 !
 module decomp_2d_profiler
 
@@ -21,7 +18,7 @@ module decomp_2d_profiler
    !    1 => Caliper (https://github.com/LLNL/Caliper)
    !
    integer, save, public :: decomp_profiler = decomp_profiler_none
-   ! Default : profile everything
+   ! Default : do not profile with the generic module
    logical, parameter :: default_profiler = .false.
    logical, save, public :: decomp_profiler_transpose = default_profiler
    logical, save, public :: decomp_profiler_io = default_profiler
@@ -46,7 +43,9 @@ module decomp_2d_profiler
              decomp_profiler_prep, &
              decomp_profiler_log, &
              decomp_profiler_start, &
-             decomp_profiler_end
+             decomp_profiler_end, &
+             decomp_profiler_pause, &
+             decomp_profiler_resume
 
    ! Generic interface to initialize the profiler
    interface decomp_profiler_init
@@ -77,6 +76,16 @@ module decomp_2d_profiler
    interface decomp_profiler_end
       module procedure decomp_profiler_end_char
    end interface decomp_profiler_end
+
+   ! Generic interface to pause profiling
+   interface decomp_profiler_pause
+      module procedure decomp_profiler_pause_noarg
+   end interface decomp_profiler_pause
+
+   ! Generic interface to resume profiling
+   interface decomp_profiler_resume
+      module procedure decomp_profiler_resume_noarg
+   end interface decomp_profiler_resume
 
 contains
 
@@ -116,6 +125,10 @@ contains
       call timer_print()
 
       decomp_profiler = decomp_profiler_none
+      decomp_profiler_transpose = default_profiler
+      decomp_profiler_io = default_profiler
+      decomp_profiler_fft = default_profiler
+      decomp_profiler_d2d = default_profiler
 
       ! Free memory if needed
       if (nmax_timers > 0) then
@@ -130,7 +143,7 @@ contains
    end subroutine decomp_profiler_fin_noarg
 
    !
-   ! Dummy log setup
+   ! Generic log setup
    !
    subroutine decomp_profiler_log_int(io_unit)
 
@@ -148,7 +161,7 @@ contains
    end subroutine decomp_profiler_log_int
 
    !
-   ! Dummy setup
+   ! Generic setup. Must be called before decomp_profiler_start.
    !
    subroutine decomp_profiler_prep_bool(profiler_setup)
 
@@ -158,12 +171,18 @@ contains
 
       decomp_profiler = decomp_profiler_none
 
-      unused(profiler_setup)
+      ! Change the setup if provided
+      if (present(profiler_setup)) then
+         decomp_profiler_transpose = profiler_setup(1)
+         decomp_profiler_io = profiler_setup(2)
+         decomp_profiler_fft = profiler_setup(3)
+         decomp_profiler_d2d = profiler_setup(4)
+      end if
 
    end subroutine decomp_profiler_prep_bool
 
    !
-   ! Dummy start a timer
+   ! Start a timer
    !
    subroutine decomp_profiler_start_char(timer_name)
 
@@ -177,7 +196,7 @@ contains
    end subroutine decomp_profiler_start_char
 
    !
-   ! Dummy stop a timer
+   ! Stop a timer
    !
    subroutine decomp_profiler_end_char(timer_name)
 
@@ -199,6 +218,28 @@ contains
       timer_n(id) = timer_n(id) + 1
 
    end subroutine decomp_profiler_end_char
+
+   !
+   ! Pause profiling operations
+   !
+   subroutine decomp_profiler_pause_noarg()
+
+      implicit none
+
+      call profiler_pause_or_resume(.true.)
+
+   end subroutine decomp_profiler_pause_noarg
+
+   !
+   ! Resume profiling operations
+   !
+   subroutine decomp_profiler_resume_noarg()
+
+      implicit none
+
+      call profiler_pause_or_resume(.false.)
+
+   end subroutine decomp_profiler_resume_noarg
 
    !
    ! Try to find a timer with the provided name
@@ -321,5 +362,36 @@ contains
       if (nrank == 0) close (io_unit)
 
    end subroutine timer_print
+
+   !
+   ! Pause or resume profiling operations
+   !
+   subroutine profiler_pause_or_resume(prof_pause)
+
+      implicit none
+
+      ! Arugment
+      logical, intent(in) :: prof_pause
+
+      ! Local variable
+      logical, save, dimension(4) :: store
+
+      if (prof_pause) then
+         store(1) = decomp_profiler_transpose
+         store(2) = decomp_profiler_io
+         store(3) = decomp_profiler_fft
+         store(4) = decomp_profiler_d2d
+         decomp_profiler_transpose = .false.
+         decomp_profiler_io = .false.
+         decomp_profiler_fft = .false.
+         decomp_profiler_d2d = .false.
+      else
+         decomp_profiler_transpose = store(1)
+         decomp_profiler_io = store(2)
+         decomp_profiler_fft = store(3)
+         decomp_profiler_d2d = store(4)
+      end if
+
+   end subroutine profiler_pause_or_resume
 
 end module decomp_2d_profiler

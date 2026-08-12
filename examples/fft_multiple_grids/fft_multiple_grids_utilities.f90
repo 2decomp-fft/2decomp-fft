@@ -18,6 +18,7 @@ contains
       use decomp_2d_constants
       use decomp_2d_fft
       use decomp_2d_mpi
+      use decomp_2d_profiler
       use MPI
       use reference_data
 #if defined(_GPU)
@@ -72,6 +73,9 @@ contains
          end do
       end do
 
+      ! Pause profiling
+      call decomp_profiler_pause()
+
       !$acc data copyin(in), copyout(out)
 
       ! First iteration is out of the loop with a dedicated timer
@@ -108,6 +112,9 @@ contains
          write (*, *) '     time (sec): ', t1 / dble(nproc), t2 / dble(nproc)
          write (*, *) ''
       end if
+
+      ! Resume profiling
+      call decomp_profiler_resume()
 
       ! Init the timer and run the tests
       t1 = 0.d0

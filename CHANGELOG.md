@@ -18,6 +18,7 @@ _e.g._ vX.Y - YYYY-MM-DD and a new "Unreleased" section started above.
 - Add a module to read environment variables. See [PR 440](https://github.com/2decomp-fft/2decomp-fft/pull/440).
 - Allow portable MPI IO. See [PR #443](https://github.com/2decomp-fft/2decomp-fft/pull/443).
 - Add a generic profiling capability. See [PR 445](https://github.com/2decomp-fft/2decomp-fft/pull/445).
+- Add pause / resume profiling capability. See [PR 451](https://github.com/2decomp-fft/2decomp-fft/pull/451)
 
 ### Fixed
 

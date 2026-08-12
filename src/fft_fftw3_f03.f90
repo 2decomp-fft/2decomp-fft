@@ -385,19 +385,19 @@ contains
             engine%dtt_decomp_yz => engine%sp
             engine%dtt_decomp_sp => engine%sp
          else if (engine%dtt(1) == FFTW_FORWARD) then
-            call decomp_info_init((engine%nx_fft - engine%dtt(7)) / 2 + 1, engine%ny_fft, engine%nz_fft, engine%dtt_decomp_sp_target)
+           call decomp_info_init((engine%nx_fft - engine%dtt(7)) / 2 + 1, engine%ny_fft, engine%nz_fft, engine%dtt_decomp_sp_target)
             engine%dtt_decomp_xy => engine%dtt_decomp_sp_target
             engine%dtt_decomp_yz => engine%dtt_decomp_sp_target
             engine%dtt_decomp_sp => engine%dtt_decomp_sp_target
          else if (engine%dtt(2) == FFTW_FORWARD) then
             engine%dtt_decomp_xy => engine%ph
-            call decomp_info_init(engine%nx_fft, (engine%ny_fft - engine%dtt(8)) / 2 + 1, engine%nz_fft, engine%dtt_decomp_sp_target)
+           call decomp_info_init(engine%nx_fft, (engine%ny_fft - engine%dtt(8)) / 2 + 1, engine%nz_fft, engine%dtt_decomp_sp_target)
             engine%dtt_decomp_yz => engine%dtt_decomp_sp_target
             engine%dtt_decomp_sp => engine%dtt_decomp_sp_target
          else if (engine%dtt(3) == FFTW_FORWARD) then
             engine%dtt_decomp_xy => engine%ph
             engine%dtt_decomp_yz => engine%ph
-            call decomp_info_init(engine%nx_fft, engine%ny_fft, (engine%nz_fft - engine%dtt(9)) / 2 + 1, engine%dtt_decomp_sp_target)
+           call decomp_info_init(engine%nx_fft, engine%ny_fft, (engine%nz_fft - engine%dtt(9)) / 2 + 1, engine%dtt_decomp_sp_target)
             engine%dtt_decomp_sp => engine%dtt_decomp_sp_target
          else
             engine%dtt_decomp_xy => engine%ph
@@ -410,19 +410,19 @@ contains
             engine%dtt_decomp_xy => engine%sp
             engine%dtt_decomp_sp => engine%sp
          else if (engine%dtt(3) == FFTW_FORWARD) then
-            call decomp_info_init(engine%nx_fft, engine%ny_fft, (engine%nz_fft - engine%dtt(9)) / 2 + 1, engine%dtt_decomp_sp_target)
+           call decomp_info_init(engine%nx_fft, engine%ny_fft, (engine%nz_fft - engine%dtt(9)) / 2 + 1, engine%dtt_decomp_sp_target)
             engine%dtt_decomp_yz => engine%dtt_decomp_sp_target
             engine%dtt_decomp_xy => engine%dtt_decomp_sp_target
             engine%dtt_decomp_sp => engine%dtt_decomp_sp_target
          else if (engine%dtt(2) == FFTW_FORWARD) then
             engine%dtt_decomp_yz => engine%ph
-            call decomp_info_init(engine%nx_fft, (engine%ny_fft - engine%dtt(8)) / 2 + 1, engine%nz_fft, engine%dtt_decomp_sp_target)
+           call decomp_info_init(engine%nx_fft, (engine%ny_fft - engine%dtt(8)) / 2 + 1, engine%nz_fft, engine%dtt_decomp_sp_target)
             engine%dtt_decomp_xy => engine%dtt_decomp_sp_target
             engine%dtt_decomp_sp => engine%dtt_decomp_sp_target
          else if (engine%dtt(1) == FFTW_FORWARD) then
             engine%dtt_decomp_yz => engine%ph
             engine%dtt_decomp_xy => engine%ph
-            call decomp_info_init((engine%nx_fft - engine%dtt(7)) / 2 + 1, engine%ny_fft, engine%nz_fft, engine%dtt_decomp_sp_target)
+           call decomp_info_init((engine%nx_fft - engine%dtt(7)) / 2 + 1, engine%ny_fft, engine%nz_fft, engine%dtt_decomp_sp_target)
             engine%dtt_decomp_sp => engine%dtt_decomp_sp_target
          else
             engine%dtt_decomp_yz => engine%ph

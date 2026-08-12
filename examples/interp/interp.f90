@@ -64,7 +64,7 @@ program interp
    do k = st3, en3
       do j = st2, en2
          do i = st1, en1
-            u1(i, j, k) = real(i, mytype) + real(j-1, mytype) + real(k-1, mytype)
+            u1(i, j, k) = real(i, mytype) + real(j - 1, mytype) + real(k - 1, mytype)
          end do
       end do
    end do
@@ -82,7 +82,7 @@ program interp
    do k = st3, en3
       do j = st2, en2
          do i = st1, en1
-            u2(i, j, k) = real(i-1, mytype) + real(j, mytype) + real(k-1, mytype)
+            u2(i, j, k) = real(i - 1, mytype) + real(j, mytype) + real(k - 1, mytype)
          end do
       end do
    end do
@@ -100,7 +100,7 @@ program interp
    do k = st3, en3
       do j = st2, en2
          do i = st1, en1
-            u3(i, j, k) = real(i-1, mytype) + real(j-1, mytype) + real(k, mytype)
+            u3(i, j, k) = real(i - 1, mytype) + real(j - 1, mytype) + real(k, mytype)
          end do
       end do
    end do
@@ -112,7 +112,7 @@ program interp
    call show(decomp_main, u1, u2, u3)
 
    ! Interpolate on a slightly smaller grid
-   call decomp_info_init(nx-1, ny-1, nz-1, grid)
+   call decomp_info_init(nx - 1, ny - 1, nz - 1, grid)
    ! Allocate memory
    call alloc_x(u1b, grid)
    call alloc_y(u2b, grid)
@@ -131,9 +131,9 @@ program interp
    call decomp_info_finalize(grid)
 
    ! Interpolate on a coarse grid
-   call decomp_info_init(max(nx/10, p_row), &
-                         max(ny/10, max(p_row, p_col)), &
-                         max(nz/10, p_col), &
+   call decomp_info_init(max(nx / 10, p_row), &
+                         max(ny / 10, max(p_row, p_col)), &
+                         max(nz / 10, p_col), &
                          grid)
    ! Allocate memory
    call alloc_x(u1b, grid)
@@ -165,31 +165,31 @@ contains
       implicit none
 
       type(decomp_info), intent(in) :: info
-      real(mytype), dimension(:,:,:), intent(in) :: x, y, z
+      real(mytype), dimension(:, :, :), intent(in) :: x, y, z
 
       integer :: ierr
 
       ! Only the initial array will have the x grid located at j=1 and k=1
       if (info%xst(2) == 1 .and. info%xst(3) == 1) then
-         write(*,*) "x data at j=1 and k=1"
-         write(*,*) "  Size ", info%xsz(1)
-         write(*,*) real(x(:,1,1), 4)
+         write (*, *) "x data at j=1 and k=1"
+         write (*, *) "  Size ", info%xsz(1)
+         write (*, *) real(x(:, 1, 1), 4)
       end if
       call MPI_Barrier(MPI_COMM_WORLD, ierr)
 
       ! Only the initial array will have the y grid located at i=1 and k=1
       if (info%yst(1) == 1 .and. info%yst(3) == 1) then
-         write(*,*) "y data at i=1 and k=1"
-         write(*,*) "  Size ", info%ysz(2)
-         write(*,*) real(y(1,:,1), 4)
-      end if                 
+         write (*, *) "y data at i=1 and k=1"
+         write (*, *) "  Size ", info%ysz(2)
+         write (*, *) real(y(1, :, 1), 4)
+      end if
       call MPI_Barrier(MPI_COMM_WORLD, ierr)
 
       ! Only the initial array will have the z grid located at i=1 and j=1
       if (info%zst(1) == 1 .and. info%zst(2) == 1) then
-         write(*,*) "z data at i=1 and j=1"
-         write(*,*) "  Size ", info%zsz(3)
-         write(*,*) real(z(1,1,:), 4)
+         write (*, *) "z data at i=1 and j=1"
+         write (*, *) "  Size ", info%zsz(3)
+         write (*, *) real(z(1, 1, :), 4)
       end if
       call MPI_Barrier(MPI_COMM_WORLD, ierr)
 

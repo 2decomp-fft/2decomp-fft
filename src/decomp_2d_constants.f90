@@ -142,7 +142,7 @@ module decomp_2d_constants
    !
    integer, parameter :: D2D_MAJOR = 2
    integer, parameter :: D2D_MINOR = 2
-   logical, parameter :: D2D_RELEASE = .false.
+   logical, parameter :: D2D_RELEASE = .true.
 
 end module decomp_2d_constants
 

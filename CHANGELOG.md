@@ -10,6 +10,14 @@ _e.g._ vX.Y - YYYY-MM-DD and a new "Unreleased" section started above.
 ## Unreleased
 
 ### Added
+### Fixed
+### Changed
+### Deprecated
+### Removed
+
+## v2.2 - 2026/10/14
+
+### Added
 
 - Add the possibility to combine DFT and r2r DCT / DST transforms when using the backend `fftw_f03` [PR #427](https://github.com/2decomp-fft/2decomp-fft/pull/427)
 - A short halo exchange interface which requires only the array and pencil orientation (with optional halo depth, otherwise default depth is used)

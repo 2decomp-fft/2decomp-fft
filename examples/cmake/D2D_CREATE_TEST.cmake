@@ -37,6 +37,9 @@ macro(DefineD2DTest run_dir
   endforeach()
   # Linking
   target_link_libraries(${case} PRIVATE decomp2d examples_utils)
+  if (MPI_FOUND)
+    target_link_libraries(${case} PRIVATE MPI::MPI_Fortran)
+  endif (MPI_FOUND)
   if (OPENMP_FOUND AND ENABLE_OMP)
     target_link_libraries(${case} PRIVATE OpenMP::OpenMP_Fortran)
     if (Fortran_COMPILER_NAME MATCHES "Cray")

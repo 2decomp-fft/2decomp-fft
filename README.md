@@ -7,7 +7,7 @@ detailed instructions about installation and linking to the library within an ex
 can be found in the [install section](INSTALL.md).
 Please have a look at [HOWTO.md](HOWTO.md) and at the examples [examples](examples/README.md) for how to use the library with your application
 
-## Building The System
+## Building
 
 The build system is driven by `CMake`. It is good practice to directly point to the MPI Fortran wrapper 
 that you would like to use to guarantee consistency between Fortran compiler and MPI. 

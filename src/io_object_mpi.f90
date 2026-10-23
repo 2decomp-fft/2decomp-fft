@@ -14,6 +14,7 @@
 ! Arguments :
 !   - filename : name of the file
 !   - mode : decomp_2d_write_mode, decomp_2d_read_mode or decomp_2d_append_mode
+!   - opt_comm : optional, MPI communicator
 !   - opt_dirname : optional, folder where the file is located
 !   - opt_info1 : optional, MPI hints provided to MPI_FILE_OPEN
 !   - opt_info2 : optional, MPI hints provided to MPI_FILE_SET_VIEW
@@ -42,6 +43,7 @@ module decomp_2d_io_object_mpi
 
    ! derived type to store info for a MPI-IO reader / writer
    type, public :: d2d_io_mpi
+      integer :: comm                                       ! MPI communicator
       character(:), allocatable :: label                    ! Label of the writer
       logical :: is_open = .false.                          ! True if the writer is open
       integer, public :: fh                                 ! File handle
@@ -72,6 +74,7 @@ contains
    ! Open the given MPI-IO reader / writer
    !
    subroutine d2d_io_mpi_open(writer, filename, mode, &
+                              opt_comm, &
                               opt_dirname, &
                               opt_mpi_file_open_info, &
                               opt_mpi_file_set_view_info)
@@ -81,6 +84,7 @@ contains
       class(d2d_io_mpi), intent(inout) :: writer
       character(len=*), intent(in) :: filename
       integer, intent(in) :: mode
+      integer, intent(in), optional :: opt_comm
       character(len=*), intent(in), optional :: opt_dirname
       integer, intent(in), optional :: opt_mpi_file_open_info, &
                                        opt_mpi_file_set_view_info
@@ -98,6 +102,13 @@ contains
             call decomp_2d_abort(__FILE__, __LINE__, -1, &
                                  "Writer was not closed (undefined label)")
          end if
+      end if
+
+      ! The external code can specify a MPI communicator
+      if (present(opt_comm)) then
+         writer%comm = opt_comm
+      else
+         writer%comm = decomp_2d_comm
       end if
 
       ! The external code can provide hints for MPI IO
@@ -132,14 +143,14 @@ contains
 
       ! Open IO
       if (present(opt_dirname)) then
-         call MPI_FILE_OPEN(decomp_2d_comm, &
+         call MPI_FILE_OPEN(writer%comm, &
                             opt_dirname//"/"//filename, &
                             access_mode, &
                             writer%mpi_file_open_info, &
                             writer%fh, &
                             ierror)
       else
-         call MPI_FILE_OPEN(decomp_2d_comm, &
+         call MPI_FILE_OPEN(writer%comm, &
                             filename, &
                             access_mode, &
                             writer%mpi_file_open_info, &
@@ -193,6 +204,7 @@ contains
       end if
 
       ! Clear the writer
+      writer%comm = MPI_COMM_NULL
       deallocate (writer%label)
       writer%is_open = .false.
       writer%disp = 0_MPI_OFFSET_KIND
@@ -226,12 +238,13 @@ contains
          write (iounit, *) ""
       end if
 
-      ! Print tuff
+      ! Print stuff
       if (allocated(writer%label)) then
          write (iounit, *) "  d2d_mpi_io "//writer%label
       else
          write (iounit, *) "  d2d_mpi_io, label undefined"
       end if
+      write (iounit, *) "  MPI communicator ", writer%comm
       write (iounit, *) "  is_open ", writer%is_open
       write (iounit, *) "  fh ", writer%fh
       write (iounit, *) "  disp ", writer%disp

@@ -43,14 +43,12 @@ module decomp_2d_io_object_mpi
 
    ! derived type to store info for a MPI-IO reader / writer
    type, public :: d2d_io_mpi
-      integer :: comm                                       ! MPI communicator
+      integer :: comm = MPI_COMM_NULL                       ! MPI communicator
       character(:), allocatable :: label                    ! Label of the writer
       logical :: is_open = .false.                          ! True if the writer is open
       integer, public :: fh                                 ! File handle
       integer(kind=MPI_OFFSET_KIND), public :: disp         ! Displacement offset
       ! Hints for MPI IO
-      !    The external code can allocate / associate the pointers
-      !    If allocated, the external code should deallocate
       integer, public :: mpi_file_open_info = MPI_INFO_NULL
       integer, public :: mpi_file_set_view_info = MPI_INFO_NULL
    contains
@@ -106,8 +104,10 @@ contains
 
       ! The external code can specify a MPI communicator
       if (present(opt_comm)) then
+         ! Provided MPI communicator
          writer%comm = opt_comm
       else
+         ! Default MPI communicator
          writer%comm = decomp_2d_comm
       end if
 

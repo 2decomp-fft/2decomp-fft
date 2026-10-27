@@ -15,7 +15,8 @@ module decomp_2d_io_utilities
 
    private
 
-   public :: io_get_size
+   public :: io_get_size, &
+             subdomain_size_start
 
 contains
 
@@ -61,5 +62,34 @@ contains
       end if
 
    end subroutine io_get_size
+
+   !
+   ! Extract the local size and start for the subdomain
+   !
+   subroutine subdomain_size_start(subsize, substart, subindex, start, end, decomp_st, decomp_en)
+
+      implicit none
+
+      integer, dimension(3), intent(out) :: subsize, substart, subindex
+      integer, dimension(3), intent(in) :: start, end, decomp_st, decomp_en
+
+      integer :: i
+
+      ! Subsize
+      do i = 1, 3
+         subsize(i) = min(decomp_en(i), end(i)) - max(decomp_st(i), start(i)) + 1
+      end do
+
+      ! Offset only when the local domain starts after the subdomain
+      do i = 1, 3
+         substart(i) = max(0, decomp_st(i) - start(i))
+      end do
+
+      ! Convert subdomain loop to 3D array index
+      do i = 1, 3
+         subindex(i) = max(0, start(i) - decomp_st(i))
+      end do
+
+   end subroutine subdomain_size_start
 
 end module decomp_2d_io_utilities

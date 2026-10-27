@@ -43,3 +43,8 @@ file(GLOB files_mpi_non_blocking io_mpi_non_blocking.f90)
 set(case "io_mpi_non_blocking")
 set(case_dir "${test_dir}/${case}")
 CreateMPITest("${case_dir}" "${case}" "${files_mpi_non_blocking}" "" "${def_clmpx}" "${file_list}" "1")
+
+file(GLOB files_test io_subdomain.f90)
+set(case "io_subdomain")
+set(case_dir "${test_dir}/io_write_subdomain")
+CreateMPITest("${case_dir}" "${case}" "${files_test}" "" "${def_clmpx}" "${file_list}" "1")

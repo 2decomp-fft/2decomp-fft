@@ -98,6 +98,23 @@
 ! Same arguments as decomp_2d_write_scalar except for the IO object, it should be opened with mode=decomp_2d_read_mode
 !
 
+!
+! The external code writing a subset of a 3D array to a file will call decomp_2d_write_subdomain
+!
+! Arguments :
+!   - ipencil : pencil orientation of the input data
+!   - var : 3D array (real / complex / integer / logical)
+!   - varname : name of the file
+!   - start : starting index for the subdomain
+!   - end : ending index for the subdomain
+!   - opt_dirname : optional, name of the folder containing the file
+!   - opt_mpi_file_open_info : optional, MPI hints provided to MPI_FILE_OPEN
+!   - opt_mpi_file_set_view_info : optional, MPI hints provided to MPI_FILE_SET_VIEW
+!   - opt_reduce_prec : optional, file in single precision
+!   - opt_decomp : optional, decomp_info object describing the array. decomp_main is used when this is not provided
+!   - opt_mpi_datarep : 'native', 'internal' or 'external32'
+!
+
 module decomp_2d_io
 
    use decomp_2d
@@ -123,7 +140,8 @@ module decomp_2d_io
              decomp_2d_write_plane, &
              decomp_2d_read_plane, &
              decomp_2d_write_scalar, &
-             decomp_2d_read_scalar
+             decomp_2d_read_scalar, &
+             decomp_2d_write_subdomain
 
    ! Generic interface to handle multiple data types
 
@@ -198,6 +216,15 @@ module decomp_2d_io
       module procedure read_scalar_ints
       module procedure read_scalar_logs
    end interface decomp_2d_read_scalar
+
+   interface decomp_2d_write_subdomain
+      module procedure write_subdomain_freal
+      module procedure write_subdomain_fcplx
+      module procedure write_subdomain_dreal
+      module procedure write_subdomain_dcplx
+      module procedure write_subdomain_ints
+      module procedure write_subdomain_logs
+   end interface decomp_2d_write_subdomain
 
 contains
 
@@ -827,6 +854,153 @@ contains
                                 logs=logs)
 
    end subroutine read_scalar
+
+   !
+   ! Low-level. Using MPI-IO to write a 3D array to a file
+   !
+   ! Inputs
+   !   - ipencil : pencil orientation of the variable
+   !   - varname : name of the variable
+   !   - decomp : decomp_info for the variable
+   !   - start : staring index for the subdomain
+   !   - end : ending index for the subdomain
+   !   - opt_dirname : This is mandatory if no IO reader / writer was provided
+   !   - opt_mpi_xxx_info : Hints for MPI IO operations
+   !   - opt_mpi_datarep : 'native', 'internal' or 'external32'
+   !   - freal / dreal / fcplx / dcplx / ints / logs : array
+   !
+   !   If opt_dirname is present, MPI IO will write to the file opt_dirname/varname
+   !   Otherwise, MPI IO will write to the file varname
+   !
+   subroutine write_subdomain(ipencil, varname, decomp, start, end, &
+                              opt_dirname, &
+                              opt_mpi_file_open_info, &
+                              opt_mpi_file_set_view_info, &
+                              opt_mpi_datarep, &
+                              freal, dreal, fcplx, dcplx, ints, logs)
+
+      implicit none
+
+      integer, intent(IN) :: ipencil
+      character(len=*), intent(in) :: varname
+      TYPE(DECOMP_INFO), intent(IN) :: decomp
+      integer, dimension(3), intent(in) :: start, end
+      character(len=*), intent(in), optional :: opt_dirname
+      integer, intent(in), optional :: opt_mpi_file_open_info
+      integer, intent(in), optional :: opt_mpi_file_set_view_info
+      character(len=*), intent(in), optional :: opt_mpi_datarep
+      real(real32), contiguous, dimension(:, :, :), intent(IN), optional :: freal
+      real(real64), contiguous, dimension(:, :, :), intent(IN), optional :: dreal
+      complex(real32), contiguous, dimension(:, :, :), intent(IN), optional :: fcplx
+      complex(real64), contiguous, dimension(:, :, :), intent(IN), optional :: dcplx
+      integer, contiguous, dimension(:, :, :), intent(IN), optional :: ints
+      logical, contiguous, dimension(:, :, :), intent(IN), optional :: logs
+
+      type(d2d_io_mpi) :: io
+      integer :: i, j, k, ii, jj, kk
+      integer :: color, key, comm, ierror
+      integer, dimension(3) :: sizes, subsize, substart, subindex
+      real(real32), allocatable, dimension(:,:,:) :: wkfreal
+      real(real64), allocatable, dimension(:,:,:) :: wkdreal
+      complex(real32), allocatable, dimension(:,:,:) :: wkfcplx
+      complex(real64), allocatable, dimension(:,:,:) :: wkdcplx
+      integer, allocatable, dimension(:,:,:) :: wkints
+      logical, allocatable, dimension(:,:,:) :: wklogs
+
+      ! Safety check
+      if ((ipencil < 1) .or. (ipencil > 3)) then
+         call decomp_2d_abort(__FILE__, __LINE__, ipencil, "Error invalid value of ipencil")
+      end if
+      if (minval(start) < 1) then
+         call decomp_2d_abort(__FILE__, __LINE__, minval(start), "Error invalid value of start")
+      end if
+      if (any(end < start)) then
+         call decomp_2d_abort(__FILE__, __LINE__, minval(end - start), "Error invalid value of start / end")
+      end if
+      if (end(1) > decomp%xsz(1)) then
+         call decomp_2d_abort(__FILE__, __LINE__, end(1), "Error invalid value of end")
+      end if
+      if (end(2) > decomp%ysz(2)) then
+         call decomp_2d_abort(__FILE__, __LINE__, end(2), "Error invalid value of end")
+      end if
+      if (end(3) > decomp%zsz(3)) then
+         call decomp_2d_abort(__FILE__, __LINE__, end(3), "Error invalid value of end")
+      end if
+
+      ! Split the communicator
+      color = 1
+      key = 1
+      if (ipencil == 1 .and. any(decomp%xst > end .or. decomp%xen < start)) color = 2
+      if (ipencil == 2 .and. any(decomp%yst > end .or. decomp%yen < start)) color = 2
+      if (ipencil == 3 .and. any(decomp%zst > end .or. decomp%zen < start)) color = 2
+      call MPI_COMM_SPLIT(decomp_2d_comm, color, key, comm, ierror)
+      if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_COMM_SPLIT")
+
+      ! MPI ranks without IO can return
+      if (color == 2) then
+         call decomp_2d_mpi_comm_free(comm)
+         return
+      end if
+
+      ! Compute the subdomain size and the local size / start / index
+      sizes = end - start + 1
+      if (ipencil == 1) call subdomain_size_start(subsize, substart, subindex, start, end, decomp%xst, decomp%xen)
+      if (ipencil == 2) call subdomain_size_start(subsize, substart, subindex, start, end, decomp%yst, decomp%yen)
+      if (ipencil == 3) call subdomain_size_start(subsize, substart, subindex, start, end, decomp%zst, decomp%zen)
+
+      ! Allocate a new array
+      if (present(freal)) allocate(wkfreal(subsize(1), subsize(2), subsize(3)))
+      if (present(dreal)) allocate(wkdreal(subsize(1), subsize(2), subsize(3)))
+      if (present(fcplx)) allocate(wkfcplx(subsize(1), subsize(2), subsize(3)))
+      if (present(dcplx)) allocate(wkdcplx(subsize(1), subsize(2), subsize(3)))
+      if (present(ints)) allocate(wkints(subsize(1), subsize(2), subsize(3)))
+      if (present(logs)) allocate(wklogs(subsize(1), subsize(2), subsize(3)))
+
+      ! Copy from the original to the new array
+      do k = 1, subsize(3)
+         kk = k + subindex(3)
+         do j = 1, subsize(2)
+            jj = j + subindex(2)
+            do i = 1, subsize(1)
+               ii = i + subindex(1)
+               if (present(freal)) wkfreal(i, j, k) = freal(ii, jj, kk)
+               if (present(dreal)) wkdreal(i, j, k) = dreal(ii, jj, kk)
+               if (present(fcplx)) wkfcplx(i, j, k) = fcplx(ii, jj, kk)
+               if (present(dcplx)) wkdcplx(i, j, k) = dcplx(ii, jj, kk)
+               if (present(ints)) wkints(i, j, k) = ints(ii, jj, kk)
+               if (present(logs)) wklogs(i,j,k) = logs(ii, jj, kk)
+            end do
+         end do
+      end do
+
+      ! MPI-IO
+      call io%open(varname, decomp_2d_write_mode, &
+                   opt_comm = comm, &
+                   opt_dirname=opt_dirname, &
+                   opt_mpi_file_open_info=opt_mpi_file_open_info, &
+                   opt_mpi_file_set_view_info=opt_mpi_file_set_view_info)
+      call read_or_write(.false., io, sizes, subsize, substart, &
+                         opt_mpi_datarep=opt_mpi_datarep, &
+                         freal=wkfreal, &
+                         dreal=wkdreal, &
+                         fcplx=wkfcplx, &
+                         dcplx=wkdcplx, &
+                         ints=wkints, &
+                         logs=wklogs)
+      call io%close()
+
+      ! Free memory
+      if (allocated(wkfreal)) deallocate(wkfreal)
+      if (allocated(wkdreal)) deallocate(wkdreal)
+      if (allocated(wkfcplx)) deallocate(wkfcplx)
+      if (allocated(wkfcplx)) deallocate(wkdcplx)
+      if (allocated(wkints)) deallocate(wkints)
+      if (allocated(wklogs)) deallocate(wklogs)
+
+      ! Release the MPI communicator
+      call decomp_2d_mpi_comm_free(comm)
+
+   end subroutine write_subdomain
 
    !
    ! Low-level MPI-IO subroutine performing the read / write operations for 3D arrays
@@ -3845,6 +4019,346 @@ contains
       if (decomp_profiler_io) call decomp_profiler_end("io_read_scalar")
 
    end subroutine read_scalar_logs
+   !
+
+   !
+   !
+   !
+   ! The code below was generated with the script io_write_subdomain located in the folder scripts
+   !
+   !
+   !
+   subroutine write_subdomain_freal(ipencil, var, varname, start, end, &
+                                    opt_dirname, &
+                                    opt_mpi_file_open_info, &
+                                    opt_mpi_file_set_view_info, &
+                                    opt_reduce_prec, &
+                                    opt_decomp, &
+                                    opt_mpi_datarep)
+
+      implicit none
+
+      ! Arguments
+      integer, intent(IN) :: ipencil
+      real(real32), contiguous, dimension(:, :, :), intent(IN) :: var
+      character(len=*), intent(in) :: varname
+      integer, dimension(3), intent(in) :: start, end
+      character(len=*), intent(in), optional :: opt_dirname
+      integer, intent(in), optional :: opt_mpi_file_open_info
+      integer, intent(in), optional :: opt_mpi_file_set_view_info
+      logical, intent(in), optional :: opt_reduce_prec
+      TYPE(DECOMP_INFO), target, intent(IN), optional :: opt_decomp
+      character(len=*), intent(in), optional :: opt_mpi_datarep
+
+      ! Local variable(s)
+      TYPE(DECOMP_INFO), pointer :: decomp
+
+      if (decomp_profiler_io) call decomp_profiler_start("io_write_subdomain")
+
+      ! Use the provided decomp_info or the default one
+      if (present(opt_decomp)) then
+         decomp => opt_decomp
+      else
+         decomp => decomp_main
+      end if
+
+      call write_subdomain(ipencil, varname, decomp, start, end, &
+                           opt_dirname=opt_dirname, &
+                           opt_mpi_file_open_info=opt_mpi_file_open_info, &
+                           opt_mpi_file_set_view_info=opt_mpi_file_set_view_info, &
+                           opt_mpi_datarep=opt_mpi_datarep, &
+                           freal=var)
+
+      nullify (decomp)
+
+      associate (p => opt_reduce_prec); end associate
+
+      if (decomp_profiler_io) call decomp_profiler_end("io_write_subdomain")
+
+   end subroutine write_subdomain_freal
+   !
+   subroutine write_subdomain_fcplx(ipencil, var, varname, start, end, &
+                                    opt_dirname, &
+                                    opt_mpi_file_open_info, &
+                                    opt_mpi_file_set_view_info, &
+                                    opt_reduce_prec, &
+                                    opt_decomp, &
+                                    opt_mpi_datarep)
+
+      implicit none
+
+      ! Arguments
+      integer, intent(IN) :: ipencil
+      complex(real32), contiguous, dimension(:, :, :), intent(IN) :: var
+      character(len=*), intent(in) :: varname
+      integer, dimension(3), intent(in) :: start, end
+      character(len=*), intent(in), optional :: opt_dirname
+      integer, intent(in), optional :: opt_mpi_file_open_info
+      integer, intent(in), optional :: opt_mpi_file_set_view_info
+      logical, intent(in), optional :: opt_reduce_prec
+      TYPE(DECOMP_INFO), target, intent(IN), optional :: opt_decomp
+      character(len=*), intent(in), optional :: opt_mpi_datarep
+
+      ! Local variable(s)
+      TYPE(DECOMP_INFO), pointer :: decomp
+
+      if (decomp_profiler_io) call decomp_profiler_start("io_write_subdomain")
+
+      ! Use the provided decomp_info or the default one
+      if (present(opt_decomp)) then
+         decomp => opt_decomp
+      else
+         decomp => decomp_main
+      end if
+
+      call write_subdomain(ipencil, varname, decomp, start, end, &
+                           opt_dirname=opt_dirname, &
+                           opt_mpi_file_open_info=opt_mpi_file_open_info, &
+                           opt_mpi_file_set_view_info=opt_mpi_file_set_view_info, &
+                           opt_mpi_datarep=opt_mpi_datarep, &
+                           fcplx=var)
+
+      nullify (decomp)
+
+      associate (p => opt_reduce_prec); end associate
+
+      if (decomp_profiler_io) call decomp_profiler_end("io_write_subdomain")
+
+   end subroutine write_subdomain_fcplx
+   !
+   subroutine write_subdomain_dreal(ipencil, var, varname, start, end, &
+                                    opt_dirname, &
+                                    opt_mpi_file_open_info, &
+                                    opt_mpi_file_set_view_info, &
+                                    opt_reduce_prec, &
+                                    opt_decomp, &
+                                    opt_mpi_datarep)
+
+      implicit none
+
+      ! Arguments
+      integer, intent(IN) :: ipencil
+      real(real64), contiguous, dimension(:, :, :), intent(IN) :: var
+      character(len=*), intent(in) :: varname
+      integer, dimension(3), intent(in) :: start, end
+      character(len=*), intent(in), optional :: opt_dirname
+      integer, intent(in), optional :: opt_mpi_file_open_info
+      integer, intent(in), optional :: opt_mpi_file_set_view_info
+      logical, intent(in), optional :: opt_reduce_prec
+      TYPE(DECOMP_INFO), target, intent(IN), optional :: opt_decomp
+      character(len=*), intent(in), optional :: opt_mpi_datarep
+
+      ! Local variable(s)
+      logical :: reduce
+      real(real32), allocatable, dimension(:, :, :) :: tmp
+      TYPE(DECOMP_INFO), pointer :: decomp
+
+      if (decomp_profiler_io) call decomp_profiler_start("io_write_subdomain")
+
+      ! Use the provided decomp_info or the default one
+      if (present(opt_decomp)) then
+         decomp => opt_decomp
+      else
+         decomp => decomp_main
+      end if
+
+      ! One can write to single precision using opt_reduce_prec
+      if (present(opt_reduce_prec)) then
+         reduce = opt_reduce_prec
+      else
+         reduce = default_opt_reduce_prec
+      end if
+
+      if (reduce) then
+         allocate(tmp(size(var, 1), size(var, 2), size(var, 3)))
+         tmp = real(var, kind=real32)
+         call write_subdomain(ipencil, varname, decomp, start, end, &
+                              opt_dirname=opt_dirname, &
+                              opt_mpi_file_open_info=opt_mpi_file_open_info, &
+                              opt_mpi_file_set_view_info=opt_mpi_file_set_view_info, &
+                              opt_mpi_datarep=opt_mpi_datarep, &
+                              freal=tmp)
+         deallocate(tmp)
+      else
+         call write_subdomain(ipencil, varname, decomp, start, end, &
+                              opt_dirname=opt_dirname, &
+                              opt_mpi_file_open_info=opt_mpi_file_open_info, &
+                              opt_mpi_file_set_view_info=opt_mpi_file_set_view_info, &
+                              opt_mpi_datarep=opt_mpi_datarep, &
+                              dreal=var)
+      end if
+
+      nullify (decomp)
+
+      if (decomp_profiler_io) call decomp_profiler_end("io_write_subdomain")
+
+   end subroutine write_subdomain_dreal
+   !
+   subroutine write_subdomain_dcplx(ipencil, var, varname, start, end, &
+                                    opt_dirname, &
+                                    opt_mpi_file_open_info, &
+                                    opt_mpi_file_set_view_info, &
+                                    opt_reduce_prec, &
+                                    opt_decomp, &
+                                    opt_mpi_datarep)
+
+      implicit none
+
+      ! Arguments
+      integer, intent(IN) :: ipencil
+      complex(real64), contiguous, dimension(:, :, :), intent(IN) :: var
+      character(len=*), intent(in) :: varname
+      integer, dimension(3), intent(in) :: start, end
+      character(len=*), intent(in), optional :: opt_dirname
+      integer, intent(in), optional :: opt_mpi_file_open_info
+      integer, intent(in), optional :: opt_mpi_file_set_view_info
+      logical, intent(in), optional :: opt_reduce_prec
+      TYPE(DECOMP_INFO), target, intent(IN), optional :: opt_decomp
+      character(len=*), intent(in), optional :: opt_mpi_datarep
+
+      ! Local variable(s)
+      logical :: reduce
+      complex(real32), allocatable, dimension(:, :, :) :: tmp
+      TYPE(DECOMP_INFO), pointer :: decomp
+
+      if (decomp_profiler_io) call decomp_profiler_start("io_write_subdomain")
+
+      ! Use the provided decomp_info or the default one
+      if (present(opt_decomp)) then
+         decomp => opt_decomp
+      else
+         decomp => decomp_main
+      end if
+
+      ! One can write to single precision using opt_reduce_prec
+      if (present(opt_reduce_prec)) then
+         reduce = opt_reduce_prec
+      else
+         reduce = default_opt_reduce_prec
+      end if
+
+      if (reduce) then
+         allocate(tmp(size(var, 1), size(var, 2), size(var, 3)))
+         tmp = cmplx(var, kind=real32)
+         call write_subdomain(ipencil, varname, decomp, start, end, &
+                              opt_dirname=opt_dirname, &
+                              opt_mpi_file_open_info=opt_mpi_file_open_info, &
+                              opt_mpi_file_set_view_info=opt_mpi_file_set_view_info, &
+                              opt_mpi_datarep=opt_mpi_datarep, &
+                              fcplx=tmp)
+         deallocate(tmp)
+      else
+         call write_subdomain(ipencil, varname, decomp, start, end, &
+                              opt_dirname=opt_dirname, &
+                              opt_mpi_file_open_info=opt_mpi_file_open_info, &
+                              opt_mpi_file_set_view_info=opt_mpi_file_set_view_info, &
+                              opt_mpi_datarep=opt_mpi_datarep, &
+                              dcplx=var)
+      end if
+
+      nullify (decomp)
+
+      if (decomp_profiler_io) call decomp_profiler_end("io_write_subdomain")
+
+   end subroutine write_subdomain_dcplx
+   !
+   subroutine write_subdomain_ints(ipencil, var, varname, start, end, &
+                                    opt_dirname, &
+                                    opt_mpi_file_open_info, &
+                                    opt_mpi_file_set_view_info, &
+                                    opt_reduce_prec, &
+                                    opt_decomp, &
+                                    opt_mpi_datarep)
+
+      implicit none
+
+      ! Arguments
+      integer, intent(IN) :: ipencil
+      integer, contiguous, dimension(:, :, :), intent(IN) :: var
+      character(len=*), intent(in) :: varname
+      integer, dimension(3), intent(in) :: start, end
+      character(len=*), intent(in), optional :: opt_dirname
+      integer, intent(in), optional :: opt_mpi_file_open_info
+      integer, intent(in), optional :: opt_mpi_file_set_view_info
+      logical, intent(in), optional :: opt_reduce_prec
+      TYPE(DECOMP_INFO), target, intent(IN), optional :: opt_decomp
+      character(len=*), intent(in), optional :: opt_mpi_datarep
+
+      ! Local variable(s)
+      TYPE(DECOMP_INFO), pointer :: decomp
+
+      if (decomp_profiler_io) call decomp_profiler_start("io_write_subdomain")
+
+      ! Use the provided decomp_info or the default one
+      if (present(opt_decomp)) then
+         decomp => opt_decomp
+      else
+         decomp => decomp_main
+      end if
+
+      call write_subdomain(ipencil, varname, decomp, start, end, &
+                           opt_dirname=opt_dirname, &
+                           opt_mpi_file_open_info=opt_mpi_file_open_info, &
+                           opt_mpi_file_set_view_info=opt_mpi_file_set_view_info, &
+                           opt_mpi_datarep=opt_mpi_datarep, &
+                           ints=var)
+
+      nullify (decomp)
+
+      associate (p => opt_reduce_prec); end associate
+
+      if (decomp_profiler_io) call decomp_profiler_end("io_write_subdomain")
+
+   end subroutine write_subdomain_ints
+   !
+   subroutine write_subdomain_logs(ipencil, var, varname, start, end, &
+                                    opt_dirname, &
+                                    opt_mpi_file_open_info, &
+                                    opt_mpi_file_set_view_info, &
+                                    opt_reduce_prec, &
+                                    opt_decomp, &
+                                    opt_mpi_datarep)
+
+      implicit none
+
+      ! Arguments
+      integer, intent(IN) :: ipencil
+      logical, contiguous, dimension(:, :, :), intent(IN) :: var
+      character(len=*), intent(in) :: varname
+      integer, dimension(3), intent(in) :: start, end
+      character(len=*), intent(in), optional :: opt_dirname
+      integer, intent(in), optional :: opt_mpi_file_open_info
+      integer, intent(in), optional :: opt_mpi_file_set_view_info
+      logical, intent(in), optional :: opt_reduce_prec
+      TYPE(DECOMP_INFO), target, intent(IN), optional :: opt_decomp
+      character(len=*), intent(in), optional :: opt_mpi_datarep
+
+      ! Local variable(s)
+      TYPE(DECOMP_INFO), pointer :: decomp
+
+      if (decomp_profiler_io) call decomp_profiler_start("io_write_subdomain")
+
+      ! Use the provided decomp_info or the default one
+      if (present(opt_decomp)) then
+         decomp => opt_decomp
+      else
+         decomp => decomp_main
+      end if
+
+      call write_subdomain(ipencil, varname, decomp, start, end, &
+                           opt_dirname=opt_dirname, &
+                           opt_mpi_file_open_info=opt_mpi_file_open_info, &
+                           opt_mpi_file_set_view_info=opt_mpi_file_set_view_info, &
+                           opt_mpi_datarep=opt_mpi_datarep, &
+                           logs=var)
+
+      nullify (decomp)
+
+      associate (p => opt_reduce_prec); end associate
+
+      if (decomp_profiler_io) call decomp_profiler_end("io_write_subdomain")
+
+   end subroutine write_subdomain_logs
    !
 
 end module decomp_2d_io

@@ -10,6 +10,9 @@ _e.g._ vX.Y - YYYY-MM-DD and a new "Unreleased" section started above.
 ## Unreleased
 
 ### Added
+
+- Allow MPI IO for a subdomain. See [issue 450](https://github.com/2decomp-fft/2decomp-fft/issues/450) and [PR 457](https://github.com/2decomp-fft/2decomp-fft/pull/457).
+
 ### Fixed
 ### Changed
 ### Deprecated

@@ -122,7 +122,7 @@ for i in range(nformat):
     #
     if (i==2 or i==3):
         f.write("      if (reduce) then\n")
-        f.write("         allocate(tmp(size(var, 1), size(var, 2), size(var, 3)))\n")
+        f.write("         allocate (tmp(size(var, 1), size(var, 2), size(var, 3)))\n")
         if (i==2):
             f.write("         tmp = real(var, kind=real32)\n")
         if (i==3):
@@ -136,7 +136,7 @@ for i in range(nformat):
             f.write("                              freal=tmp)\n")
         elif (i==3):
             f.write("                              fcplx=tmp)\n")
-        f.write("         deallocate(tmp)\n")
+        f.write("         deallocate (tmp)\n")
         f.write("      else\n")
         f.write("         call write_subdomain(ipencil, varname, decomp, start, end, &\n")
         f.write("                              opt_dirname=opt_dirname, &\n")

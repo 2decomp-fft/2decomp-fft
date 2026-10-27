@@ -120,7 +120,7 @@ program io_subdomain
       call execute_command_line("diff out/ref_one_1.dat out/one_1.dat", exitstat=i)
       call execute_command_line("diff out/ref_one_2.dat out/one_2.dat", exitstat=j)
       call execute_command_line("diff out/ref_one_3.dat out/one_3.dat", exitstat=k)
-      if (i /= 0 .or. j /=0 .or. k /= 0) then
+      if (i /= 0 .or. j /= 0 .or. k /= 0) then
          print *, "Subdomain failed to reproduce write_one"
          stop 1
       end if
@@ -132,30 +132,30 @@ program io_subdomain
    call decomp_2d_write_plane(3, u3, 'ref_plane_3.dat', opt_iplane=nz / 2, opt_dirname='out', opt_reduce_prec=.false.)
 
    ! Write planes using subdomain
-   call decomp_2d_write_subdomain(1, u1, 'plane_1.dat', (/nx/2, 1, 1/), (/nx/2, ny, nz/), opt_dirname='out')
-   call decomp_2d_write_subdomain(2, u2, 'plane_2.dat', (/1, ny/2, 1/), (/nx, ny/2, nz/), opt_dirname='out')
-   call decomp_2d_write_subdomain(3, u3, 'plane_3.dat', (/1, 1, nz/2/), (/nx, ny, nz/2/), opt_dirname='out')
+   call decomp_2d_write_subdomain(1, u1, 'plane_1.dat', (/nx / 2, 1, 1/), (/nx / 2, ny, nz/), opt_dirname='out')
+   call decomp_2d_write_subdomain(2, u2, 'plane_2.dat', (/1, ny / 2, 1/), (/nx, ny / 2, nz/), opt_dirname='out')
+   call decomp_2d_write_subdomain(3, u3, 'plane_3.dat', (/1, 1, nz / 2/), (/nx, ny, nz / 2/), opt_dirname='out')
 
    ! Check
    if (nrank == 0) then
       call execute_command_line("diff out/ref_plane_1.dat out/plane_1.dat", exitstat=i)
       call execute_command_line("diff out/ref_plane_2.dat out/plane_2.dat", exitstat=j)
       call execute_command_line("diff out/ref_plane_3.dat out/plane_3.dat", exitstat=k)
-      if (i /= 0 .or. j /=0 .or. k /= 0) then
+      if (i /= 0 .or. j /= 0 .or. k /= 0) then
          print *, "Subdomain failed to reproduce write_plane"
          stop 2
       end if
    end if
 
    ! Split the main domain into blocks
-   call decomp_2d_write_subdomain(2, u2, 'x1_y1_z1.dat', (/1, 1, 1/), (/nx/2, ny/2, nz/2/), opt_dirname='out')
-   call decomp_2d_write_subdomain(2, u2, 'x1_y1_z2.dat', (/1, 1, nz/2+1/), (/nx/2, ny/2, nz/), opt_dirname='out')
-   call decomp_2d_write_subdomain(2, u2, 'x1_y2_z1.dat', (/1, ny/2+1, 1/), (/nx/2, ny, nz/2/), opt_dirname='out')
-   call decomp_2d_write_subdomain(2, u2, 'x1_y2_z2.dat', (/1, ny/2+1, nz/2+1/), (/nx/2, ny, nz/), opt_dirname='out')
-   call decomp_2d_write_subdomain(2, u2, 'x2_y1_z1.dat', (/nx/2+1, 1, 1/), (/nx, ny/2, nz/2/), opt_dirname='out')
-   call decomp_2d_write_subdomain(2, u2, 'x2_y1_z2.dat', (/nx/2+1, 1, nz/2+1/), (/nx, ny/2, nz/), opt_dirname='out')
-   call decomp_2d_write_subdomain(2, u2, 'x2_y2_z1.dat', (/nx/2+1, ny/2+1, 1/), (/nx, ny, nz/2/), opt_dirname='out')
-   call decomp_2d_write_subdomain(2, u2, 'x2_y2_z2.dat', (/nx/2+1, ny/2+1, nz/2+1/), (/nx, ny, nz/), opt_dirname='out')
+   call decomp_2d_write_subdomain(2, u2, 'x1_y1_z1.dat', (/1, 1, 1/), (/nx / 2, ny / 2, nz / 2/), opt_dirname='out')
+   call decomp_2d_write_subdomain(2, u2, 'x1_y1_z2.dat', (/1, 1, nz / 2 + 1/), (/nx / 2, ny / 2, nz/), opt_dirname='out')
+   call decomp_2d_write_subdomain(2, u2, 'x1_y2_z1.dat', (/1, ny / 2 + 1, 1/), (/nx / 2, ny, nz / 2/), opt_dirname='out')
+   call decomp_2d_write_subdomain(2, u2, 'x1_y2_z2.dat', (/1, ny / 2 + 1, nz / 2 + 1/), (/nx / 2, ny, nz/), opt_dirname='out')
+   call decomp_2d_write_subdomain(2, u2, 'x2_y1_z1.dat', (/nx / 2 + 1, 1, 1/), (/nx, ny / 2, nz / 2/), opt_dirname='out')
+   call decomp_2d_write_subdomain(2, u2, 'x2_y1_z2.dat', (/nx / 2 + 1, 1, nz / 2 + 1/), (/nx, ny / 2, nz/), opt_dirname='out')
+   call decomp_2d_write_subdomain(2, u2, 'x2_y2_z1.dat', (/nx / 2 + 1, ny / 2 + 1, 1/), (/nx, ny, nz / 2/), opt_dirname='out')
+   call decomp_2d_write_subdomain(2, u2, 'x2_y2_z2.dat', (/nx / 2 + 1, ny / 2 + 1, nz / 2 + 1/), (/nx, ny, nz/), opt_dirname='out')
 
    ! Check ?
    ! Reading subdomain is not possible currently

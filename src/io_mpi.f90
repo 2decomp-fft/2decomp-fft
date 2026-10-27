@@ -900,12 +900,12 @@ contains
       integer :: i, j, k, ii, jj, kk
       integer :: color, key, comm, ierror
       integer, dimension(3) :: sizes, subsize, substart, subindex
-      real(real32), allocatable, dimension(:,:,:) :: wkfreal
-      real(real64), allocatable, dimension(:,:,:) :: wkdreal
-      complex(real32), allocatable, dimension(:,:,:) :: wkfcplx
-      complex(real64), allocatable, dimension(:,:,:) :: wkdcplx
-      integer, allocatable, dimension(:,:,:) :: wkints
-      logical, allocatable, dimension(:,:,:) :: wklogs
+      real(real32), allocatable, dimension(:, :, :) :: wkfreal
+      real(real64), allocatable, dimension(:, :, :) :: wkdreal
+      complex(real32), allocatable, dimension(:, :, :) :: wkfcplx
+      complex(real64), allocatable, dimension(:, :, :) :: wkdcplx
+      integer, allocatable, dimension(:, :, :) :: wkints
+      logical, allocatable, dimension(:, :, :) :: wklogs
 
       ! Safety check
       if ((ipencil < 1) .or. (ipencil > 3)) then
@@ -949,12 +949,12 @@ contains
       if (ipencil == 3) call subdomain_size_start(subsize, substart, subindex, start, end, decomp%zst, decomp%zen)
 
       ! Allocate a new array
-      if (present(freal)) allocate(wkfreal(subsize(1), subsize(2), subsize(3)))
-      if (present(dreal)) allocate(wkdreal(subsize(1), subsize(2), subsize(3)))
-      if (present(fcplx)) allocate(wkfcplx(subsize(1), subsize(2), subsize(3)))
-      if (present(dcplx)) allocate(wkdcplx(subsize(1), subsize(2), subsize(3)))
-      if (present(ints)) allocate(wkints(subsize(1), subsize(2), subsize(3)))
-      if (present(logs)) allocate(wklogs(subsize(1), subsize(2), subsize(3)))
+      if (present(freal)) allocate (wkfreal(subsize(1), subsize(2), subsize(3)))
+      if (present(dreal)) allocate (wkdreal(subsize(1), subsize(2), subsize(3)))
+      if (present(fcplx)) allocate (wkfcplx(subsize(1), subsize(2), subsize(3)))
+      if (present(dcplx)) allocate (wkdcplx(subsize(1), subsize(2), subsize(3)))
+      if (present(ints)) allocate (wkints(subsize(1), subsize(2), subsize(3)))
+      if (present(logs)) allocate (wklogs(subsize(1), subsize(2), subsize(3)))
 
       ! Copy from the original to the new array
       do k = 1, subsize(3)
@@ -968,14 +968,14 @@ contains
                if (present(fcplx)) wkfcplx(i, j, k) = fcplx(ii, jj, kk)
                if (present(dcplx)) wkdcplx(i, j, k) = dcplx(ii, jj, kk)
                if (present(ints)) wkints(i, j, k) = ints(ii, jj, kk)
-               if (present(logs)) wklogs(i,j,k) = logs(ii, jj, kk)
+               if (present(logs)) wklogs(i, j, k) = logs(ii, jj, kk)
             end do
          end do
       end do
 
       ! MPI-IO
       call io%open(varname, decomp_2d_write_mode, &
-                   opt_comm = comm, &
+                   opt_comm=comm, &
                    opt_dirname=opt_dirname, &
                    opt_mpi_file_open_info=opt_mpi_file_open_info, &
                    opt_mpi_file_set_view_info=opt_mpi_file_set_view_info)
@@ -990,12 +990,12 @@ contains
       call io%close()
 
       ! Free memory
-      if (allocated(wkfreal)) deallocate(wkfreal)
-      if (allocated(wkdreal)) deallocate(wkdreal)
-      if (allocated(wkfcplx)) deallocate(wkfcplx)
-      if (allocated(wkfcplx)) deallocate(wkdcplx)
-      if (allocated(wkints)) deallocate(wkints)
-      if (allocated(wklogs)) deallocate(wklogs)
+      if (allocated(wkfreal)) deallocate (wkfreal)
+      if (allocated(wkdreal)) deallocate (wkdreal)
+      if (allocated(wkfcplx)) deallocate (wkfcplx)
+      if (allocated(wkfcplx)) deallocate (wkdcplx)
+      if (allocated(wkints)) deallocate (wkints)
+      if (allocated(wklogs)) deallocate (wklogs)
 
       ! Release the MPI communicator
       call decomp_2d_mpi_comm_free(comm)
@@ -4170,7 +4170,7 @@ contains
       end if
 
       if (reduce) then
-         allocate(tmp(size(var, 1), size(var, 2), size(var, 3)))
+         allocate (tmp(size(var, 1), size(var, 2), size(var, 3)))
          tmp = real(var, kind=real32)
          call write_subdomain(ipencil, varname, decomp, start, end, &
                               opt_dirname=opt_dirname, &
@@ -4178,7 +4178,7 @@ contains
                               opt_mpi_file_set_view_info=opt_mpi_file_set_view_info, &
                               opt_mpi_datarep=opt_mpi_datarep, &
                               freal=tmp)
-         deallocate(tmp)
+         deallocate (tmp)
       else
          call write_subdomain(ipencil, varname, decomp, start, end, &
                               opt_dirname=opt_dirname, &
@@ -4238,7 +4238,7 @@ contains
       end if
 
       if (reduce) then
-         allocate(tmp(size(var, 1), size(var, 2), size(var, 3)))
+         allocate (tmp(size(var, 1), size(var, 2), size(var, 3)))
          tmp = cmplx(var, kind=real32)
          call write_subdomain(ipencil, varname, decomp, start, end, &
                               opt_dirname=opt_dirname, &
@@ -4246,7 +4246,7 @@ contains
                               opt_mpi_file_set_view_info=opt_mpi_file_set_view_info, &
                               opt_mpi_datarep=opt_mpi_datarep, &
                               fcplx=tmp)
-         deallocate(tmp)
+         deallocate (tmp)
       else
          call write_subdomain(ipencil, varname, decomp, start, end, &
                               opt_dirname=opt_dirname, &
@@ -4263,12 +4263,12 @@ contains
    end subroutine write_subdomain_dcplx
    !
    subroutine write_subdomain_ints(ipencil, var, varname, start, end, &
-                                    opt_dirname, &
-                                    opt_mpi_file_open_info, &
-                                    opt_mpi_file_set_view_info, &
-                                    opt_reduce_prec, &
-                                    opt_decomp, &
-                                    opt_mpi_datarep)
+                                   opt_dirname, &
+                                   opt_mpi_file_open_info, &
+                                   opt_mpi_file_set_view_info, &
+                                   opt_reduce_prec, &
+                                   opt_decomp, &
+                                   opt_mpi_datarep)
 
       implicit none
 
@@ -4312,12 +4312,12 @@ contains
    end subroutine write_subdomain_ints
    !
    subroutine write_subdomain_logs(ipencil, var, varname, start, end, &
-                                    opt_dirname, &
-                                    opt_mpi_file_open_info, &
-                                    opt_mpi_file_set_view_info, &
-                                    opt_reduce_prec, &
-                                    opt_decomp, &
-                                    opt_mpi_datarep)
+                                   opt_dirname, &
+                                   opt_mpi_file_open_info, &
+                                   opt_mpi_file_set_view_info, &
+                                   opt_reduce_prec, &
+                                   opt_decomp, &
+                                   opt_mpi_datarep)
 
       implicit none
 
